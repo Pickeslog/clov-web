@@ -1,16 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { exchangeOAuthCode, submitOAuthConsent } from '../../../api/auth'
 import { useAuthStore } from '../../../stores/authStore'
 import * as S from './OAuthRedirect.style'
 
 const initialAgreements = { service: false, privacy: false, marketing: false }
+const exchangeRequests = new Map()
 
 export default function OAuthRedirect() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const setTokens = useAuthStore((state) => state.setTokens)
-  const exchangedCodeRef = useRef(null)
   const [status, setStatus] = useState('exchanging')
   const [registration, setRegistration] = useState(null)
   const [agreements, setAgreements] = useState(initialAgreements)
@@ -21,22 +21,19 @@ export default function OAuthRedirect() {
   useEffect(() => {
     if (!code) return
 
-    if (exchangedCodeRef.current === code) return
-    exchangedCodeRef.current = code
-
     let active = true
     const exchange = async () => {
       try {
-        const result = await exchangeOAuthCode(code)
+        const exchangeResult = await exchangeOnce(code)
         if (!active) return
 
-        if (result.authenticated) {
-          setTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken })
+        if (exchangeResult.authenticated) {
+          setTokens({ accessToken: exchangeResult.accessToken, refreshToken: exchangeResult.refreshToken })
           navigate('/', { replace: true })
           return
         }
 
-        setRegistration({ registrationToken: result.registrationToken, profile: result.profile })
+        setRegistration({ registrationToken: exchangeResult.registrationToken, profile: exchangeResult.profile })
         setStatus('consent')
       } catch (error) {
         if (!active) return
@@ -137,6 +134,13 @@ export default function OAuthRedirect() {
       </S.Panel>
     </S.Page>
   )
+}
+
+function exchangeOnce(code) {
+  if (!exchangeRequests.has(code)) {
+    exchangeRequests.set(code, exchangeOAuthCode(code))
+  }
+  return exchangeRequests.get(code)
 }
 
 function AgreementRow({ checked, label, required = false, onChange }) {

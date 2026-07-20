@@ -1,0 +1,13 @@
+/* 인증 화면 디자인 토큰 — 프로토타입 base 팔레트 이관. 다른 화면 토큰은 각 이관 시 추가. */
+:root {
+  --forest: #073b24;
+  --leaf: #16874b;
+  --mint: #50d990;
+  --cream: #f7fbf6;
+  --paper: #ffffff;
+  --text: #0e2d1d;
+  --muted: #638772;
+  --line: rgba(22, 135, 75, 0.18);
+  --glow: rgba(80, 217, 144, 0.22);
+  --warn: #b45309;
+}

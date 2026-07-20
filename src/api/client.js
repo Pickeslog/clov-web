@@ -6,6 +6,10 @@ const baseURL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api/
 
 export const api = axios.create({ baseURL })
 
+// 소셜 로그인 시작 URL — 백엔드 루트(/oauth2/...)라 /api/v1 base가 아니다.
+const apiOrigin = baseURL.replace(/\/api\/v1\/?$/, '')
+export const oauthAuthorizeUrl = (provider) => `${apiOrigin}/oauth2/authorization/${provider}`
+
 // refresh 전용 인스턴스 — 인터셉터 없음(재귀 방지).
 const refreshClient = axios.create({ baseURL })
 

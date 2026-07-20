@@ -5,3 +5,6 @@ import { api } from './client'
 export const signup = (payload) => api.post('/auth/signup', payload)
 export const login = (payload) => api.post('/auth/login', payload)
 export const logout = (refreshToken) => api.post('/auth/logout', { refreshToken })
+export const exchangeOAuthCode = (code) => api.post('/auth/oauth/exchange', { code })
+export const submitOAuthConsent = (registrationToken, agreements) =>
+  api.post('/auth/oauth/consent', { registrationToken, agreements })

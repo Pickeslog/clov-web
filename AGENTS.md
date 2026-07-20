@@ -4,7 +4,9 @@
 
 1. Read this file.
 2. Read `docs/API-CONTRACT.md`; its linked SSOT is the only API contract.
-3. Read the relevant screen specification in `../web-design-repository/` before implementing a screen or interaction.
+3. Read `../web-design-repository/docs/AI-TEAM-HARNESS.md` before starting an issue.
+4. Read `../web-design-repository/docs/CODE-CONVENTION.md` before naming or structuring new code.
+5. Read the relevant screen specification in `../web-design-repository/` before implementing a screen or interaction.
 
 ## Commands
 

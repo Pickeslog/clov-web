@@ -8,6 +8,7 @@ import { useAuthStore } from '../../../stores/authStore'
 const SECTIONS = [
   { key: 'feed', label: '추억피드', path: 'feed', ready: true },
   { key: 'letters', label: '행운편지', path: 'letters', ready: true },
+  { key: 'invite', label: '초대하기', path: 'invite', ready: true },
   { key: 'schedule', label: '일정계획', path: 'schedule', ready: true },
 ]
 

@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import { Link } from 'react-router-dom'
 
 export const Page = styled.main`
   min-height: 100vh;
@@ -22,6 +23,27 @@ export const Brand = styled.div`
   font-size: 1.2rem;
   letter-spacing: -0.02em;
   color: var(--forest);
+`
+
+export const HeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`
+
+export const JoinLink = styled(Link)`
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 14px;
+  background: var(--paper);
+  color: var(--leaf);
+  font-weight: 800;
+  font-size: 0.82rem;
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--mint);
+  }
 `
 
 export const LogoutBtn = styled.button`

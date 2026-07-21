@@ -1,14 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as S from './RoomList.style'
 import { getRooms, createRoom, toggleRoomFavorite } from '../../../api/room'
-import { getMyJoinRequests } from '../../../api/invite'
+import { getMyJoinRequests, requestJoin } from '../../../api/invite'
 import { useAuthStore } from '../../../stores/authStore'
 import Settings from '../../../components/Settings/Settings'
 
 const DAY = 86400000
-// planDate(YYYY-MM-DD, 자정) 까지 남은 일수. 오늘=0.
 const ddayOf = (planDate) => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -16,23 +15,22 @@ const ddayOf = (planDate) => {
 }
 const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
 
-// 이동 수단 — 계약 §6 transportType. 티켓 헤더 아이콘·색.
+// 이동 수단 — 계약 §6 transportType. 티켓 헤더 아이콘(tabler)·색.
 const TRANSPORTS = [
-  { value: 'airplane', label: '비행기', icon: '✈️', color: '#8e4585' },
-  { value: 'train', label: '기차', icon: '🚆', color: '#2a6f7d' },
-  { value: 'car', label: '자동차', icon: '🚗', color: '#3a7d44' },
-  { value: 'ship', label: '배', icon: '🚢', color: '#b5761f' },
+  { value: 'airplane', label: '비행기', icon: 'ti-plane', color: '#8e4585' },
+  { value: 'train', label: '기차', icon: 'ti-train', color: '#2a6f7d' },
+  { value: 'car', label: '자동차', icon: 'ti-car', color: '#3a7d44' },
+  { value: 'ship', label: '배', icon: 'ti-ship', color: '#b5761f' },
 ]
 const transportMeta = (t) => TRANSPORTS.find((x) => x.value === t) ?? TRANSPORTS[0]
 
 const SORTS = [
-  { key: 'default', label: '내 순서' },
-  { key: 'latest', label: '최신순' },
-  { key: 'oldest', label: '오래된 순' },
-  { key: 'favorite', label: '즐겨찾기' },
+  { key: 'default', label: '내 순서', icon: 'ti-layout-grid' },
+  { key: 'latest', label: '최신순', icon: 'ti-clock' },
+  { key: 'oldest', label: '오래된 순', icon: 'ti-history' },
+  { key: 'favorite', label: '즐겨찾기', icon: 'ti-star' },
 ]
 
-// 티켓 스카이라인(장식) — room id로 결정적 생성해 리렌더에도 안정.
 const skyline = (seed) => {
   let s = Number(seed) || 1
   return Array.from({ length: 16 }, () => {
@@ -42,10 +40,13 @@ const skyline = (seed) => {
 }
 const BARCODE = [2, 1, 3, 1, 2, 2, 1, 3, 2, 1, 1, 2, 3, 1, 2, 1, 3, 2, 1, 2, 2, 1, 3, 1, 2, 1, 2, 3]
 
+const Icon = ({ name }) => <i className={`ti ${name}`} aria-hidden="true" />
+
 export default function RoomList() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const clear = useAuthStore((state) => state.clear)
+  const createRef = useRef(null)
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -53,6 +54,7 @@ export default function RoomList() {
   const [message, setMessage] = useState('')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [sort, setSort] = useState('default')
+  const [joinCode, setJoinCode] = useState('')
 
   const rooms = useQuery({ queryKey: ['rooms'], queryFn: getRooms })
   const myRequests = useQuery({ queryKey: ['join-requests', 'mine'], queryFn: getMyJoinRequests })
@@ -81,6 +83,16 @@ export default function RoomList() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rooms'] }),
   })
 
+  const joinMutation = useMutation({
+    mutationFn: () => requestJoin({ inviteCode: joinCode.trim().toUpperCase() }),
+    onSuccess: () => {
+      setJoinCode('')
+      setMessage('가입 신청이 접수됐어요. 멤버가 수락하면 참여가 확정돼요.')
+      queryClient.invalidateQueries({ queryKey: ['join-requests', 'mine'] })
+    },
+    onError: (error) => setMessage(error.message ?? '참여에 실패했어요.'),
+  })
+
   const handleCreate = () => {
     setMessage('')
     if (!name.trim()) {
@@ -93,20 +105,20 @@ export default function RoomList() {
   return (
     <S.Page>
       <S.Header>
-        <S.Brand>Clov.</S.Brand>
+        <S.Brand><Icon name="ti-clover" /> Clov.</S.Brand>
         <S.HeaderActions>
-          <S.JoinLink to="/join">초대 코드로 참여하기</S.JoinLink>
-          <S.GhostBtn type="button" onClick={() => setSettingsOpen(true)}>설정</S.GhostBtn>
+          <S.JoinLink to="/join"><Icon name="ti-key" /> 초대 코드로 참여하기</S.JoinLink>
+          <S.GhostBtn type="button" onClick={() => setSettingsOpen(true)}><Icon name="ti-settings" /></S.GhostBtn>
           <S.GhostBtn type="button" onClick={clear}>로그아웃</S.GhostBtn>
         </S.HeaderActions>
       </S.Header>
 
       <S.Body>
-        <S.Intro>우리 우정공간들이에요</S.Intro>
+        <S.Intro><Icon name="ti-users" /> 우리 우정공간들이에요</S.Intro>
 
         {requestItems.length > 0 && (
           <S.ReqSection>
-            <S.ReqHead>요청한 방</S.ReqHead>
+            <S.ReqHead><Icon name="ti-history" /> 요청한 방</S.ReqHead>
             <S.ReqGrid>
               {requestItems.map((r) => {
                 const gone = r.roomStatus !== 'ACTIVE'
@@ -114,7 +126,9 @@ export default function RoomList() {
                 const label = gone ? '사라진 방' : r.status === 'REJECTED' ? '거절됨' : '수락 대기 중'
                 return (
                   <S.ReqCard key={r.id}>
-                    <S.ReqStatus $kind={kind}>{label}</S.ReqStatus>
+                    <S.ReqStatus $kind={kind}>
+                      <Icon name={gone ? 'ti-trash' : r.status === 'REJECTED' ? 'ti-x' : 'ti-clock'} /> {label}
+                    </S.ReqStatus>
                     <S.ReqName>{r.roomName}</S.ReqName>
                     <S.ReqMeta>
                       {gone ? '방이 사라졌어요. 신청도 취소됐어요.'
@@ -133,10 +147,25 @@ export default function RoomList() {
           <S.SortRow>
             {SORTS.map((s) => (
               <S.SortBtn key={s.key} type="button" $active={sort === s.key} onClick={() => setSort(s.key)}>
-                {s.label}
+                <Icon name={s.icon} /> {s.label}
               </S.SortBtn>
             ))}
           </S.SortRow>
+          <S.ToolbarRight>
+            <S.CodeInput
+              value={joinCode}
+              maxLength={20}
+              placeholder="방 코드 입력"
+              onChange={(e) => setJoinCode(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && joinCode.trim() && joinMutation.mutate()}
+            />
+            <S.EnterBtn type="button" disabled={!joinCode.trim() || joinMutation.isPending} onClick={() => joinMutation.mutate()}>
+              입장
+            </S.EnterBtn>
+            <S.MakeBtn type="button" onClick={() => createRef.current?.scrollIntoView({ behavior: 'smooth' })}>
+              <Icon name="ti-plus" /> 방 만들기
+            </S.MakeBtn>
+          </S.ToolbarRight>
         </S.Toolbar>
 
         {rooms.isPending && <S.State>불러오는 중…</S.State>}
@@ -159,7 +188,7 @@ export default function RoomList() {
                           <S.TkKick>오늘</S.TkKick>
                           <S.TkCode>CLOV</S.TkCode>
                         </S.TkCol>
-                        <S.TkMid>{'┈┈'} {tp.icon} {'┈┈'}</S.TkMid>
+                        <S.TkMid><span className="dash" /><Icon name={tp.icon} /><span className="dash" /></S.TkMid>
                         <S.TkCol $right>
                           <S.TkKick>D-DAY</S.TkKick>
                           <S.TkCode>{dday}</S.TkCode>
@@ -188,7 +217,7 @@ export default function RoomList() {
                           aria-label={room.isFavorite ? '즐겨찾기 해제' : '즐겨찾기'}
                           onClick={(e) => { e.stopPropagation(); favoriteMutation.mutate({ roomId: room.id, isFavorite: !room.isFavorite }) }}
                         >
-                          {room.isFavorite ? '★' : '☆'}
+                          <Icon name="ti-star" />
                         </S.TkStar>
                       </S.TkCorner>
                     </S.TkPax>
@@ -198,7 +227,7 @@ export default function RoomList() {
                         <S.TkCellLbl>다음 약속</S.TkCellLbl>
                         {room.nextPlan?.title
                           ? <S.TkCellVal>{room.nextPlan.title}</S.TkCellVal>
-                          : <S.TkCellEmpty>📅 약속을 정해보세요</S.TkCellEmpty>}
+                          : <S.TkCellEmpty><Icon name="ti-calendar-plus" /> 약속을 정해보세요</S.TkCellEmpty>}
                       </div>
                       <div>
                         <S.TkCellLbl>우정 레벨</S.TkCellLbl>
@@ -211,7 +240,7 @@ export default function RoomList() {
                       <S.TkBarcode aria-hidden="true">
                         {BARCODE.map((w, i) => <i key={i} style={{ width: `${w}px` }} />)}
                       </S.TkBarcode>
-                      <S.TkEnter>입장 ›</S.TkEnter>
+                      <S.TkEnter>입장 <Icon name="ti-chevron-right" /></S.TkEnter>
                     </S.TkStub>
                   </S.TkBody>
                 </S.Ticket>
@@ -220,8 +249,8 @@ export default function RoomList() {
           </S.Grid>
         )}
 
-        <S.CreateCard>
-          <S.CardTitle>새 우정공간 만들기</S.CardTitle>
+        <S.CreateCard ref={createRef}>
+          <S.CardTitle><Icon name="ti-plus" /> 새 우정공간 만들기</S.CardTitle>
           <S.Field>
             <S.Label htmlFor="room-name">공간 이름</S.Label>
             <S.Input id="room-name" value={name} placeholder="예: 제주 가치가자" maxLength={100} onChange={(e) => setName(e.target.value)} />
@@ -235,7 +264,7 @@ export default function RoomList() {
             <S.Chips>
               {TRANSPORTS.map((t) => (
                 <S.Chip key={t.value} type="button" $active={transportType === t.value} onClick={() => setTransportType(t.value)}>
-                  {t.icon} {t.label}
+                  <Icon name={t.icon} /> {t.label}
                 </S.Chip>
               ))}
             </S.Chips>

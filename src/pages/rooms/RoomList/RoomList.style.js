@@ -21,10 +21,19 @@ export const Page = styled.main`
   flex-direction: column;
   font-family: 'Outfit', sans-serif;
   color: ${C.text};
-  background:
-    radial-gradient(circle at 12% 8%, rgba(90, 122, 62, 0.22), transparent 32%),
-    radial-gradient(circle at 88% 92%, rgba(90, 122, 62, 0.16), transparent 36%),
-    ${C.body};
+  /* 프로토타입 global-theme.css — 따뜻한 우드 + 클로버 결(라이트). */
+  background-color: #f4ead8;
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.74), transparent 23rem),
+    radial-gradient(circle at 88% 18%, rgba(83, 116, 59, 0.18), transparent 24rem),
+    radial-gradient(circle at 52% 100%, rgba(25, 45, 30, 0.08), transparent 32rem),
+    repeating-linear-gradient(7deg, rgba(145, 94, 45, 0.13) 0 1px, transparent 1px 18px),
+    linear-gradient(145deg, #fff8ec 0%, #f1ead8 46%, #dce8d6 100%);
+  background-attachment: fixed;
+
+  i.ti {
+    vertical-align: -0.12em;
+  }
 `
 
 export const Header = styled.header`
@@ -42,6 +51,9 @@ export const Header = styled.header`
 `
 
 export const Brand = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-weight: 900;
   font-size: 1.15rem;
   letter-spacing: -0.02em;
@@ -55,6 +67,9 @@ export const HeaderActions = styled.div`
 `
 
 export const JoinLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   border: 1px solid ${C.border};
   border-radius: 999px;
   padding: 7px 14px;
@@ -107,10 +122,6 @@ export const Intro = styled.h1`
   border: 1px solid ${C.border};
   padding: 8px 16px;
   border-radius: 999px;
-
-  &::before {
-    content: '👥';
-  }
 `
 
 export const Toolbar = styled.div`
@@ -129,6 +140,9 @@ export const ReqSection = styled.section`
 
 export const ReqHead = styled.h2`
   align-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.85rem;
   font-weight: 800;
   color: ${C.text};
@@ -146,9 +160,9 @@ export const ReqGrid = styled.div`
 
 export const ReqCard = styled.div`
   padding: 16px;
-  border: 1.5px dashed ${C.border};
+  border: 1.5px dashed ${C.inputBdr};
   border-radius: 14px;
-  background: rgba(30, 32, 22, 0.6);
+  background: ${C.card};
   display: grid;
   gap: 8px;
   justify-items: start;
@@ -157,6 +171,9 @@ export const ReqCard = styled.div`
 const REQ_COLOR = { pending: '#9ccc65', rejected: '#f0997b', gone: '#b7c99a' }
 
 export const ReqStatus = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.72rem;
   font-weight: 800;
   padding: 3px 10px;
@@ -202,14 +219,79 @@ export const SortRow = styled.div`
 `
 
 export const SortBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 7px 14px;
-  border: 1px solid ${(p) => (p.$active ? C.inputBdr : C.border)};
+  border: 1px solid ${(p) => (p.$active ? C.accent : C.border)};
   border-radius: 999px;
-  background: ${(p) => (p.$active ? C.active : 'transparent')};
-  color: ${(p) => (p.$active ? C.accent : C.muted)};
+  background: ${(p) => (p.$active ? C.accent : C.card)};
+  color: ${(p) => (p.$active ? '#14150e' : C.muted)};
   font: inherit;
   font-weight: 800;
   font-size: 0.8rem;
+  cursor: pointer;
+`
+
+export const ToolbarRight = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+`
+
+export const CodeInput = styled.input`
+  width: 150px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid ${C.border};
+  border-radius: 999px;
+  background: ${C.inputBg};
+  color: ${C.text};
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  outline: none;
+
+  &::placeholder {
+    color: #6f7a5c;
+  }
+  &:focus {
+    border-color: ${C.inputBdr};
+  }
+`
+
+export const EnterBtn = styled.button`
+  height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: ${C.accent};
+  color: #14150e;
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+`
+
+export const MakeBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #3a5a24, #6b8f47 56%, #9ccc65);
+  color: #10140b;
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.82rem;
   cursor: pointer;
 `
 
@@ -292,9 +374,18 @@ export const TkCode = styled.span`
 
 export const TkMid = styled.div`
   flex: 1;
-  text-align: center;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.95);
+
+  .dash {
+    flex: 1;
+    max-width: 26px;
+    border-top: 1.5px dashed rgba(255, 255, 255, 0.55);
+  }
 `
 
 export const TkSkyline = styled.div`
@@ -435,6 +526,9 @@ export const TkBarcode = styled.div`
 `
 
 export const TkEnter = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   font-size: 11px;
   font-weight: 800;
   color: #357a58;
@@ -452,6 +546,9 @@ export const CreateCard = styled.section`
 `
 
 export const CardTitle = styled.h2`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 1.1rem;
   font-weight: 900;
   color: ${C.accent};
@@ -496,6 +593,9 @@ export const Chips = styled.div`
 `
 
 export const Chip = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 9px 16px;
   border: 1.5px solid ${(p) => (p.$active ? C.inputBdr : C.border)};
   border-radius: 999px;

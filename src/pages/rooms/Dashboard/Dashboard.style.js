@@ -59,6 +59,30 @@ export const LogoutBtn = styled.button`
   }
 `
 
+export const HeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`
+
+export const NotiBtn = styled(Link)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--muted);
+  text-decoration: none;
+  background: transparent;
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--line);
+    color: var(--forest);
+  }
+`
+
 export const Hero = styled.section`
   position: relative;
   margin: 24px auto 0;

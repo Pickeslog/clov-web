@@ -15,3 +15,8 @@ export const skipPlanMemory = (planId) => api.post(`/plans/${planId}/skip-memory
 export const addChecklist = (planId, payload) => api.post(`/plans/${planId}/checklists`, payload)
 export const updateChecklist = (checklistId, payload) => api.patch(`/checklists/${checklistId}`, payload)
 export const deleteChecklist = (checklistId) => api.delete(`/checklists/${checklistId}`)
+
+// 인생4컷(stage-photos, 계약 §9): 4단계 인증현황·presign(직전 단계 미완료 시 423 STAGE_LOCKED)·커밋(재업로드 409 STAGE_ALREADY_UPLOADED).
+export const getStagePhotos = (planId) => api.get(`/plans/${planId}/stage-photos`)
+export const presignStagePhoto = (planId, payload) => api.post(`/plans/${planId}/stage-photos/presign`, payload)
+export const commitStagePhoto = (planId, payload) => api.post(`/plans/${planId}/stage-photos`, payload)

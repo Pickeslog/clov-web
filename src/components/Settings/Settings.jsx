@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as S from './Settings.style'
 import {
   getMe, updateProfile, changePassword, deleteAccount,
-  getPreferences, updatePreferences,
+  getPreferences, updatePreferences, presignProfileImage,
 } from '../../api/user'
+import { uploadImage } from '../../lib/uploadImage'
 import { useAuthStore } from '../../stores/authStore'
 
 const LETTER_THEMES = [
@@ -52,6 +53,7 @@ function SettingsBody({ me, prefs }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const clear = useAuthStore((state) => state.clear)
+  const fileInputRef = useRef(null)
 
   const [nickname, setNickname] = useState(me.nickname ?? '')
   const [birthdate, setBirthdate] = useState(me.birthdate ?? '')
@@ -66,6 +68,14 @@ function SettingsBody({ me, prefs }) {
 
   const profileMutation = useMutation({
     mutationFn: updateProfile,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['me'] }),
+  })
+  // 프로필 이미지: presign → R2 PUT → PATCH /me profileImageUrl 커밋.
+  const imageMutation = useMutation({
+    mutationFn: async (file) => {
+      const imageUrl = await uploadImage(presignProfileImage, file)
+      return updateProfile({ profileImageUrl: imageUrl })
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['me'] }),
   })
   const passwordMutation = useMutation({
@@ -91,6 +101,34 @@ function SettingsBody({ me, prefs }) {
     <>
       <S.Section>
         <S.SectionTitle>프로필</S.SectionTitle>
+        <S.AvatarRow>
+          <S.Avatar>
+            {me.profileImageUrl
+              ? <img src={me.profileImageUrl} alt="프로필 이미지" />
+              : (me.nickname?.trim()?.[0] ?? '🙂')}
+          </S.Avatar>
+          <div>
+            <S.UploadBtn
+              type="button"
+              disabled={imageMutation.isPending}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {imageMutation.isPending ? '업로드 중…' : '사진 변경'}
+            </S.UploadBtn>
+            {imageMutation.isError && <S.Err>{imageMutation.error?.message}</S.Err>}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) imageMutation.mutate(file)
+              e.target.value = ''
+            }}
+          />
+        </S.AvatarRow>
         <S.ReadRow>
           <span>이메일</span>
           <strong>{me.email}</strong>

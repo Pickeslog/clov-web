@@ -199,6 +199,63 @@ export const CardMeta = styled.div`
   font-weight: 700;
 `
 
+export const ImageSection = styled.section`
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+`
+
+export const ImageGallery = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+`
+
+export const ImageItem = styled.figure`
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--cream);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`
+
+export const ImageControls = styled.figcaption`
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(7, 59, 36, 0.55);
+
+  button {
+    border: 0;
+    border-radius: 6px;
+    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--forest);
+    font: inherit;
+    font-size: 0.7rem;
+    font-weight: 800;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+`
+
 export const CommentsSection = styled.section`
   margin-top: 18px;
   padding-top: 14px;

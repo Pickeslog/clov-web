@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as S from './Feed.style'
@@ -11,8 +11,13 @@ import {
   getComments,
   createComment,
   deleteComment,
+  presignMemoryImage,
+  commitMemoryImage,
+  deleteMemoryImage,
+  reorderMemoryImages,
 } from '../../../api/memory'
 import { getRoomMembers } from '../../../api/room'
+import { uploadImage } from '../../../lib/uploadImage'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 
@@ -101,6 +106,29 @@ export default function Feed() {
       invalidateFeed()
       invalidateMemory()
     },
+  })
+
+  // 이미지: presign → R2 PUT → commit. 썸네일이 바뀔 수 있어 피드도 무효화.
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file) => {
+      const imageUrl = await uploadImage((base) => presignMemoryImage(selectedMemoryId, base), file)
+      return commitMemoryImage(selectedMemoryId, { imageUrl })
+    },
+    onSuccess: () => {
+      invalidateMemory()
+      invalidateFeed()
+    },
+  })
+  const deleteImageMutation = useMutation({
+    mutationFn: (imageId) => deleteMemoryImage(imageId),
+    onSuccess: () => {
+      invalidateMemory()
+      invalidateFeed()
+    },
+  })
+  const reorderImageMutation = useMutation({
+    mutationFn: (imageIds) => reorderMemoryImages(selectedMemoryId, { imageIds }),
+    onSuccess: invalidateMemory,
   })
 
   const items = feed.data?.items ?? []
@@ -197,6 +225,11 @@ export default function Feed() {
           onAddComment={(content) => addCommentMutation.mutate(content)}
           addingComment={addCommentMutation.isPending}
           onDeleteComment={(commentId) => deleteCommentMutation.mutate(commentId)}
+          onUploadImage={(file) => uploadImageMutation.mutate(file)}
+          uploadingImage={uploadImageMutation.isPending}
+          uploadImageError={uploadImageMutation.error?.message}
+          onDeleteImage={(imageId) => deleteImageMutation.mutate(imageId)}
+          onReorderImages={(imageIds) => reorderImageMutation.mutate(imageIds)}
         />
       )}
     </S.Page>
@@ -326,11 +359,17 @@ function MemoryDetailModal({
   onAddComment,
   addingComment,
   onDeleteComment,
+  onUploadImage,
+  uploadingImage,
+  uploadImageError,
+  onDeleteImage,
+  onReorderImages,
 }) {
   const [isEditing, setEditing] = useState(false)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [commentText, setCommentText] = useState('')
+  const imageInputRef = useRef(null)
 
   const handleAddComment = () => {
     if (!commentText.trim()) return
@@ -339,6 +378,16 @@ function MemoryDetailModal({
   }
 
   const isWriter = memory && String(memory.writer?.id) === String(currentUserId)
+  const images = memory?.images ?? []
+
+  // 이웃과 위치를 바꿔 순서 재정렬 → 새 imageIds 순서로 서버 반영.
+  const moveImage = (from, to) => {
+    if (to < 0 || to >= images.length) return
+    const ids = images.map((img) => img.id)
+    const [moved] = ids.splice(from, 1)
+    ids.splice(to, 0, moved)
+    onReorderImages(ids)
+  }
 
   const startEdit = () => {
     setTitle(memory.title)
@@ -366,6 +415,46 @@ function MemoryDetailModal({
             {memory.participants?.length > 0 && (
               <S.CardMeta>함께한 친구: {memory.participants.map((p) => p.nickname).join(', ')}</S.CardMeta>
             )}
+
+            <S.ImageSection>
+              <S.Label>사진</S.Label>
+              {images.length > 0 && (
+                <S.ImageGallery>
+                  {images.map((img, idx) => (
+                    <S.ImageItem key={img.id}>
+                      <img src={img.imageUrl} alt="추억 사진" />
+                      {isWriter && (
+                        <S.ImageControls>
+                          <button type="button" disabled={idx === 0} onClick={() => moveImage(idx, idx - 1)} aria-label="왼쪽으로">◀</button>
+                          <button type="button" onClick={() => onDeleteImage(img.id)} aria-label="삭제">✕</button>
+                          <button type="button" disabled={idx === images.length - 1} onClick={() => moveImage(idx, idx + 1)} aria-label="오른쪽으로">▶</button>
+                        </S.ImageControls>
+                      )}
+                    </S.ImageItem>
+                  ))}
+                </S.ImageGallery>
+              )}
+              {isWriter && (
+                <>
+                  <S.SecondaryBtn type="button" disabled={uploadingImage} onClick={() => imageInputRef.current?.click()}>
+                    {uploadingImage ? '업로드 중…' : '+ 사진 추가'}
+                  </S.SecondaryBtn>
+                  {uploadImageError && <S.ErrorText role="alert">{uploadImageError}</S.ErrorText>}
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(event) => {
+                      const file = event.target.files?.[0]
+                      if (file) onUploadImage(file)
+                      event.target.value = ''
+                    }}
+                  />
+                </>
+              )}
+              {!isWriter && images.length === 0 && <S.CommentEmpty>사진이 없습니다.</S.CommentEmpty>}
+            </S.ImageSection>
 
             <S.CommentsSection>
               <S.Label>댓글</S.Label>

@@ -199,6 +199,76 @@ export const CardMeta = styled.div`
   font-weight: 700;
 `
 
+export const CommentsSection = styled.section`
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+`
+
+export const CommentEmpty = styled.div`
+  padding: 8px 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+`
+
+export const CommentRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+
+  &:last-of-type {
+    border-bottom: 0;
+  }
+`
+
+export const CommentBody = styled.div`
+  min-width: 0;
+`
+
+export const CommentWriter = styled.div`
+  color: var(--leaf);
+  font-size: 0.76rem;
+  font-weight: 800;
+`
+
+export const CommentText = styled.div`
+  margin-top: 2px;
+  color: var(--text);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  word-break: break-word;
+`
+
+export const CommentDeleteBtn = styled.button`
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--warn);
+  }
+`
+
+export const CommentForm = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+
+  input {
+    flex: 1;
+    min-width: 0;
+  }
+`
+
 export const Overlay = styled.div`
   position: fixed;
   inset: 0;

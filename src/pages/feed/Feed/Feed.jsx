@@ -2,7 +2,16 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as S from './Feed.style'
-import { getMemories, getMemory, createMemory, updateMemory, deleteMemory } from '../../../api/memory'
+import {
+  getMemories,
+  getMemory,
+  createMemory,
+  updateMemory,
+  deleteMemory,
+  getComments,
+  createComment,
+  deleteComment,
+} from '../../../api/memory'
 import { getRoomMembers } from '../../../api/room'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
@@ -44,7 +53,15 @@ export default function Feed() {
     enabled: Boolean(selectedMemoryId),
   })
 
+  const comments = useQuery({
+    queryKey: ['memory', selectedMemoryId, 'comments'],
+    queryFn: () => getComments(selectedMemoryId),
+    enabled: Boolean(selectedMemoryId),
+  })
+
   const invalidateFeed = () => queryClient.invalidateQueries({ queryKey: ['memories', roomId] })
+  // ['memory', selectedMemoryId] 부분일치로 상세·댓글 쿼리를 함께 무효화한다(commentCount 동기화).
+  const invalidateMemory = () => queryClient.invalidateQueries({ queryKey: ['memory', selectedMemoryId] })
 
   const createMutation = useMutation({
     mutationFn: (payload) => createMemory(roomId, payload),
@@ -58,7 +75,7 @@ export default function Feed() {
     mutationFn: ({ memoryId, payload }) => updateMemory(memoryId, payload),
     onSuccess: () => {
       invalidateFeed()
-      queryClient.invalidateQueries({ queryKey: ['memory', selectedMemoryId] })
+      invalidateMemory()
     },
   })
 
@@ -67,6 +84,22 @@ export default function Feed() {
     onSuccess: () => {
       invalidateFeed()
       setSelectedMemoryId(null)
+    },
+  })
+
+  const addCommentMutation = useMutation({
+    mutationFn: (content) => createComment(selectedMemoryId, { content }),
+    onSuccess: () => {
+      invalidateFeed()
+      invalidateMemory()
+    },
+  })
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: (commentId) => deleteComment(commentId),
+    onSuccess: () => {
+      invalidateFeed()
+      invalidateMemory()
     },
   })
 
@@ -159,6 +192,11 @@ export default function Feed() {
           }}
           saving={updateMutation.isPending}
           deleting={deleteMutation.isPending}
+          comments={comments.data?.items ?? []}
+          commentsLoading={comments.isPending}
+          onAddComment={(content) => addCommentMutation.mutate(content)}
+          addingComment={addCommentMutation.isPending}
+          onDeleteComment={(commentId) => deleteCommentMutation.mutate(commentId)}
         />
       )}
     </S.Page>
@@ -274,10 +312,31 @@ function CreateMemoryModal({ members, submitting, errorMessage, onCancel, onSubm
   )
 }
 
-function MemoryDetailModal({ memory, isLoading, currentUserId, onClose, onSave, onDelete, saving, deleting }) {
+function MemoryDetailModal({
+  memory,
+  isLoading,
+  currentUserId,
+  onClose,
+  onSave,
+  onDelete,
+  saving,
+  deleting,
+  comments,
+  commentsLoading,
+  onAddComment,
+  addingComment,
+  onDeleteComment,
+}) {
   const [isEditing, setEditing] = useState(false)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [commentText, setCommentText] = useState('')
+
+  const handleAddComment = () => {
+    if (!commentText.trim()) return
+    onAddComment(commentText.trim())
+    setCommentText('')
+  }
 
   const isWriter = memory && String(memory.writer?.id) === String(currentUserId)
 
@@ -307,6 +366,39 @@ function MemoryDetailModal({ memory, isLoading, currentUserId, onClose, onSave, 
             {memory.participants?.length > 0 && (
               <S.CardMeta>함께한 친구: {memory.participants.map((p) => p.nickname).join(', ')}</S.CardMeta>
             )}
+
+            <S.CommentsSection>
+              <S.Label>댓글</S.Label>
+              {commentsLoading && <S.State>불러오는 중…</S.State>}
+              {!commentsLoading && comments.length === 0 && <S.CommentEmpty>첫 댓글을 남겨보세요.</S.CommentEmpty>}
+              {comments.map((comment) => (
+                <S.CommentRow key={comment.id}>
+                  <S.CommentBody>
+                    <S.CommentWriter>{comment.writer?.nickname}</S.CommentWriter>
+                    <S.CommentText>{comment.content}</S.CommentText>
+                  </S.CommentBody>
+                  {String(comment.writer?.id) === String(currentUserId) && (
+                    <S.CommentDeleteBtn type="button" onClick={() => onDeleteComment(comment.id)}>
+                      삭제
+                    </S.CommentDeleteBtn>
+                  )}
+                </S.CommentRow>
+              ))}
+              <S.CommentForm>
+                <S.Input
+                  value={commentText}
+                  maxLength={255}
+                  placeholder="한 줄 남기기"
+                  onChange={(event) => setCommentText(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') handleAddComment()
+                  }}
+                />
+                <S.SecondaryBtn type="button" disabled={!commentText.trim() || addingComment} onClick={handleAddComment}>
+                  {addingComment ? '등록 중…' : '등록'}
+                </S.SecondaryBtn>
+              </S.CommentForm>
+            </S.CommentsSection>
 
             <S.ModalActions>
               {isWriter && (

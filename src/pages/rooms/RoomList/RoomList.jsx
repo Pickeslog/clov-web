@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import * as S from './RoomList.style'
+import './roomlist.proto.css'
 import { getRooms, createRoom, toggleRoomFavorite } from '../../../api/room'
 import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/invite'
 import { useAuthStore } from '../../../stores/authStore'
@@ -21,10 +21,10 @@ const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
 const shortDest = (label) => (label || '').trim().split(/\s+/)[0].slice(0, 6)
 
 const TRANSPORTS = [
-  { value: 'airplane', label: '비행기', icon: 'ti-plane', color: '#8e4585' },
-  { value: 'train', label: '기차', icon: 'ti-train', color: '#2a6f7d' },
-  { value: 'car', label: '자동차', icon: 'ti-car', color: '#3a7d44' },
-  { value: 'ship', label: '배', icon: 'ti-ship', color: '#b5761f' },
+  { value: 'airplane', label: '비행기', icon: 'ti-plane' },
+  { value: 'train', label: '기차', icon: 'ti-train' },
+  { value: 'car', label: '자동차', icon: 'ti-car' },
+  { value: 'ship', label: '배', icon: 'ti-ship' },
 ]
 const transportMeta = (t) => TRANSPORTS.find((x) => x.value === t) ?? TRANSPORTS[0]
 const THEME_COLORS = ['#7CC6A6', '#8e4585', '#2a6f7d', '#b5761f', '#3a7d44', '#d4537e']
@@ -36,16 +36,42 @@ const SORTS = [
   { key: 'favorite', label: '즐겨찾기', icon: 'ti-star' },
 ]
 
+// 티켓 헤드 톤 — 프로토타입 TICKET_TONES(방 색이 없을 때) / 방 themeColor(있으면 그 색으로 그라디언트).
+const TICKET_TONES = [
+  { grad: 'linear-gradient(150deg,#22705a,#123f31)', kick: '#a7d3bf' },
+  { grad: 'linear-gradient(150deg,#1f6b6b,#0f3d3d)', kick: '#9ecfcf' },
+  { grad: 'linear-gradient(150deg,#4a6b3a,#2a4020)', kick: '#c1d3a5' },
+  { grad: 'linear-gradient(150deg,#6b8f71,#3f5c43)', kick: '#dcebde' },
+  { grad: 'linear-gradient(150deg,#2563a8,#123a63)', kick: '#aecdec' },
+  { grad: 'linear-gradient(150deg,#7c5cbf,#432f73)', kick: '#ddd0f2' },
+  { grad: 'linear-gradient(150deg,#d1603d,#8a3820)', kick: '#f6cdb4' },
+  { grad: 'linear-gradient(150deg,#c98a2e,#7a5216)', kick: '#f3ddaa' },
+  { grad: 'linear-gradient(150deg,#c94f7c,#7a2c4a)', kick: '#f5c3d6' },
+]
+const HEX6 = /^#[0-9a-fA-F]{6}$/
+const clampByte = (v) => Math.max(0, Math.min(255, Math.round(v)))
+const hexToRgb = (h) => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255] }
+const rgbToHex = (r, g, b) => '#' + [r, g, b].map((v) => clampByte(v).toString(16).padStart(2, '0')).join('')
+const darken = (h, f) => { const [r, g, b] = hexToRgb(h); return rgbToHex(r * f, g * f, b * f) }
+const lighten = (h, f) => { const [r, g, b] = hexToRgb(h); return rgbToHex(r + (255 - r) * f, g + (255 - g) * f, b + (255 - b) * f) }
+const hashIdx = (id, n) => { const s = String(id); let h = 0; for (let i = 0; i < s.length; i += 1) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h % n }
+const headTone = (room) => {
+  const c = room.themeColor
+  if (c && HEX6.test(c)) return { grad: `linear-gradient(150deg, ${c}, ${darken(c, 0.55)})`, kick: lighten(c, 0.55) }
+  return TICKET_TONES[hashIdx(room.id, TICKET_TONES.length)]
+}
+
 // 방 id 기반 결정적 스카이라인 — 프로토타입 buildSkyline과 동일(6~7개 넓은 막대 + 오른쪽 여백).
 const skyline = (seed) => {
-  let s = (Number(seed) || 1) * 9301 + 49297
+  const base = hashIdx(seed, 997) + 1
+  let s = base * 9301 + 49297
   const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280 }
-  const n = 6 + (seed % 2)
+  const n = 6 + (base % 2)
   return Array.from({ length: n }, () => ({ w: 7 + Math.floor(rnd() * 5), h: 12 + Math.floor(rnd() * 15) }))
 }
 const BARCODE = [2, 1, 3, 1, 2, 1, 3, 1, 2]
 
-const Icon = ({ name }) => <i className={`ti ${name}`} aria-hidden="true" />
+const Icon = ({ name, style }) => <i className={`ti ${name}`} style={style} aria-hidden="true" />
 
 export default function RoomList() {
   const navigate = useNavigate()
@@ -122,187 +148,197 @@ export default function RoomList() {
   }
 
   return (
-    <S.Page>
-      <S.Header>
-        <S.Brand><Icon name="ti-clover" /> Clov.</S.Brand>
-        <S.HeaderActions>
-          <S.JoinLink to="/join"><Icon name="ti-key" /> 초대 코드로 참여하기</S.JoinLink>
-          <S.GhostBtn type="button" onClick={() => setSettingsOpen(true)}><Icon name="ti-settings" /></S.GhostBtn>
-          <S.GhostBtn type="button" onClick={clear}>로그아웃</S.GhostBtn>
-        </S.HeaderActions>
-      </S.Header>
+    <div className="proto-roomlist">
+      <header className="rl-header">
+        <div className="rl-brand"><Icon name="ti-clover" /> Clov.</div>
+        <div className="rl-header-right">
+          <a className="rl-join-link" href="/join" onClick={(e) => { e.preventDefault(); navigate('/join') }}>
+            <Icon name="ti-key" /> 초대 코드로 참여하기
+          </a>
+          <button type="button" className="rl-ghost" onClick={() => setSettingsOpen(true)}><Icon name="ti-settings" /></button>
+          <button type="button" className="rl-ghost" onClick={clear}>로그아웃</button>
+        </div>
+      </header>
 
-      <S.Body>
-        <S.Intro><Icon name="ti-users" /> 우리 우정공간들이에요</S.Intro>
+      <main className="main">
+        <div className="toolbar">
+          <div className="greeting"><Icon name="ti-users" /> 우리 우정공간들이에요</div>
+        </div>
 
-        {requestItems.length > 0 && (
-          <S.ReqSection>
-            <S.ReqHead><Icon name="ti-history" /> 요청한 방</S.ReqHead>
-            <S.ReqGrid>
-              {requestItems.map((r) => {
-                const gone = r.roomStatus !== 'ACTIVE'
-                const kind = gone ? 'gone' : r.status === 'REJECTED' ? 'rejected' : 'pending'
-                const label = gone ? '사라진 방' : r.status === 'REJECTED' ? '거절됨' : '수락 대기 중'
-                return (
-                  <S.ReqCard key={r.id}>
-                    <S.ReqStatus $kind={kind}>
-                      <Icon name={gone ? 'ti-trash' : r.status === 'REJECTED' ? 'ti-x' : 'ti-clock'} /> {label}
-                    </S.ReqStatus>
-                    <S.ReqName>{r.roomName}</S.ReqName>
-                    <S.ReqMeta>
-                      {gone ? '방이 사라졌어요. 신청도 취소됐어요.'
-                        : r.status === 'REJECTED' ? '신청이 거절됐어요.'
-                          : '멤버가 수락하면 참여가 확정돼요.'}
-                    </S.ReqMeta>
-                    <S.ReqActions>
-                      {kind === 'pending' && (
-                        <S.ReqBtn type="button" disabled={cancelReqMutation.isPending}
-                          onClick={() => cancelReqMutation.mutate(r.id)}>요청 취소</S.ReqBtn>
-                      )}
-                      {kind === 'rejected' && (
-                        <S.ReqBtn type="button" $primary onClick={() => navigate('/join')}>재요청</S.ReqBtn>
-                      )}
-                      {kind !== 'pending' && (
-                        <S.ReqBtn type="button" onClick={() => setDismissed((d) => [...d, r.id])}>지우기</S.ReqBtn>
-                      )}
-                    </S.ReqActions>
-                  </S.ReqCard>
-                )
-              })}
-            </S.ReqGrid>
-          </S.ReqSection>
+        {editMode && (
+          <div className="edit-banner show">
+            <Icon name="ti-arrows-move" /> ◀ ▶ 로 순서를 바꿔 &quot;내 순서&quot;에 저장돼요.
+          </div>
         )}
 
-        <S.Toolbar>
-          <S.SortRow>
+        {requestItems.length > 0 && (
+          <div className="req-section">
+            <div className="req-head"><Icon name="ti-mailbox" /> 요청한 방</div>
+            <div className="req-grid">
+              {requestItems.map((r) => {
+                const gone = r.roomStatus !== 'ACTIVE'
+                const kind = gone ? 'vanished' : r.status === 'REJECTED' ? 'rejected' : 'pending'
+                const label = gone ? '사라진 방' : r.status === 'REJECTED' ? '거절됨' : '수락 대기 중'
+                const statusIcon = gone ? 'ti-bubble' : r.status === 'REJECTED' ? 'ti-x' : 'ti-clock'
+                return (
+                  <div className={`req-card ${kind}`} key={r.id}>
+                    <span className={`req-status ${kind}`}><Icon name={statusIcon} /> {label}</span>
+                    <div className="req-name">{r.roomName}</div>
+                    {kind === 'pending'
+                      ? <div className="req-meta">멤버가 수락하면 참여가 확정돼요</div>
+                      : <div className="req-note">{gone ? '모든 멤버가 나가 방이 사라졌어요. 신청도 취소됐어요.' : '신청이 거절됐어요.'}</div>}
+                    <div className="req-actions">
+                      {kind === 'pending' && (
+                        <button type="button" className="req-btn" disabled={cancelReqMutation.isPending}
+                          onClick={() => cancelReqMutation.mutate(r.id)}>요청 취소</button>
+                      )}
+                      {kind === 'rejected' && (
+                        <button type="button" className="req-btn primary" onClick={() => navigate('/join')}>재요청</button>
+                      )}
+                      {kind !== 'pending' && (
+                        <button type="button" className="req-btn" onClick={() => setDismissed((d) => [...d, r.id])}>지우기</button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="filter-row">
+          <div className="filter-tabs">
             {SORTS.map((s) => (
-              <S.SortBtn key={s.key} type="button" $active={sort === s.key} onClick={() => setSort(s.key)}>
+              <button type="button" key={s.key} className={`filter-btn${sort === s.key ? ' active' : ''}`} onClick={() => setSort(s.key)}>
                 <Icon name={s.icon} /> {s.label}
-              </S.SortBtn>
+              </button>
             ))}
-          </S.SortRow>
-          <S.ToolbarRight>
-            <S.CodeInput
+          </div>
+          <div className="toolbar-right">
+            <input
+              className="code-input"
               value={joinCode}
               maxLength={20}
               placeholder="방 코드 입력"
               onChange={(e) => { setJoinCode(e.target.value); setJoinMessage('') }}
               onKeyDown={(e) => e.key === 'Enter' && joinCode.trim() && joinMutation.mutate()}
             />
-            <S.EnterBtn type="button" disabled={!joinCode.trim() || joinMutation.isPending} onClick={() => joinMutation.mutate()}>
-              입장
-            </S.EnterBtn>
-            <S.MakeBtn type="button" onClick={() => setCreateOpen(true)}>
-              <Icon name="ti-plus" /> 방 만들기
-            </S.MakeBtn>
-            <S.EditBtn type="button" $active={editMode} onClick={() => setEditMode((v) => !v)}>
-              {editMode ? '완료' : '편집'}
-            </S.EditBtn>
-          </S.ToolbarRight>
-        </S.Toolbar>
-        {joinMessage && <S.JoinMsg role="alert">{joinMessage}</S.JoinMsg>}
-        {editMode && <S.EditHint><Icon name="ti-arrows-move" /> ◀ ▶ 로 순서를 바꿔 "내 순서"에 저장돼요.</S.EditHint>}
+            <button type="button" className="btn-enter" disabled={!joinCode.trim() || joinMutation.isPending} onClick={() => joinMutation.mutate()}>입장</button>
+            <button type="button" className="btn-create" onClick={() => setCreateOpen(true)}><Icon name="ti-plus" /> 방 만들기</button>
+            <button type="button" className={`btn-edit${editMode ? ' active' : ''}`} onClick={() => setEditMode((v) => !v)}>{editMode ? '완료' : '편집'}</button>
+          </div>
+        </div>
+        {joinMessage && <div className="rl-msg" role="alert">{joinMessage}</div>}
 
-        {rooms.isPending && <S.State>불러오는 중…</S.State>}
-        {rooms.isError && <S.State>목록을 불러오지 못했습니다. {rooms.error?.message}</S.State>}
+        {rooms.isPending && <div className="rl-state">불러오는 중…</div>}
+        {rooms.isError && <div className="rl-state">목록을 불러오지 못했습니다. {rooms.error?.message}</div>}
         {rooms.isSuccess && sortedRooms.length === 0 && (
-          <S.State>{sort === 'favorite' ? '즐겨찾기한 우정공간이 없어요.' : '아직 우정공간이 없어요. "방 만들기"로 첫 공간을 만들어보세요.'}</S.State>
+          <div className="rl-state">{sort === 'favorite' ? '즐겨찾기한 우정공간이 없어요.' : '아직 우정공간이 없어요. "방 만들기"로 첫 공간을 만들어보세요.'}</div>
         )}
 
         {sortedRooms.length > 0 && (
-          <S.Grid>
+          <div className="room-grid">
             {visibleRooms.map((room, i) => {
               const tp = transportMeta(room.transportType)
+              const tone = headTone(room)
               const hasPlan = Boolean(room.nextPlan?.planDate)
               const dday = hasPlan ? ddayLabel(ddayOf(room.nextPlan.planDate)) : null
               const idx = editMode ? i : safePage * PAGE_SIZE + i
+              const sky = skyline(room.id)
               return (
-                <S.Ticket key={room.id} type="button" onClick={() => !editMode && navigate(`/rooms/${room.id}`)} $edit={editMode}>
-                  <S.TkBody>
-                    <S.TkHead $color={room.themeColor || tp.color}>
-                      <S.TkRoute>
-                        <S.TkCol>
-                          <S.TkKick>오늘</S.TkKick>
-                          <S.TkCode>CLOV</S.TkCode>
-                        </S.TkCol>
-                        <S.TkMid>┈<Icon name={tp.icon} />┈</S.TkMid>
-                        <S.TkCol $right>
-                          <S.TkKick>{hasPlan ? dday : '약속 없음'}</S.TkKick>
-                          <S.TkCode $small={!hasPlan}>{hasPlan ? shortDest(room.nextPlan.title) : '자유'}</S.TkCode>
-                        </S.TkCol>
-                      </S.TkRoute>
-                      <S.TkSkyline>
-                        {skyline(room.id).map((b, k) => (<i key={k} style={{ width: `${b.w}px`, height: `${b.h}px` }} />))}
-                        <i style={{ flex: 1, background: 'none' }} />
-                      </S.TkSkyline>
-                    </S.TkHead>
-
-                    <S.TkPax>
-                      <div>
-                        <S.TkPaxKick>우정공간</S.TkPaxKick>
-                        <S.TkName>{room.name}</S.TkName>
-                        <S.TkAvs>
-                          <S.TkAv $primary>나</S.TkAv>
-                          {room.memberCount > 1 && <S.TkAvMore>+{room.memberCount - 1}</S.TkAvMore>}
-                        </S.TkAvs>
+                <div
+                  key={room.id}
+                  className={`room-card ticket${editMode ? ' edit-mode' : ''}`}
+                  role={editMode ? undefined : 'button'}
+                  tabIndex={editMode ? undefined : 0}
+                  onClick={() => !editMode && navigate(`/rooms/${room.id}`)}
+                  onKeyDown={(e) => { if (!editMode && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); navigate(`/rooms/${room.id}`) } }}
+                >
+                  <div className="tk-body">
+                    <div className="tk-head" style={{ background: tone.grad }}>
+                      <div className="tk-route">
+                        <div>
+                          <div className="tk-kick" style={{ color: tone.kick }}>오늘</div>
+                          <div className="tk-code">CLOV</div>
+                        </div>
+                        <div className="tk-mid" style={{ color: tone.kick }}>┈<Icon name={tp.icon} />┈</div>
+                        <div className="tk-dest">
+                          <div className="tk-kick" style={{ color: tone.kick }}>{hasPlan ? dday : '약속 없음'}</div>
+                          <div className="tk-code" style={hasPlan ? undefined : { fontSize: '13px' }}>{hasPlan ? shortDest(room.nextPlan.title) : '자유'}</div>
+                        </div>
                       </div>
-                      <S.TkCorner>
-                        <S.TkStar type="button" $active={room.isFavorite}
+                      <div className="tk-skyline">
+                        {sky.map((b, k) => (<i key={k} style={{ width: `${b.w}px`, height: `${b.h}px` }} />))}
+                        <i style={{ flex: 1, background: 'none' }} />
+                      </div>
+                    </div>
+
+                    <div className="tk-pax">
+                      <div style={{ minWidth: 0 }}>
+                        <div className="tk-pax-kick">우정공간</div>
+                        <div className="tk-name">{room.name}</div>
+                        <div className="tk-avs">
+                          <span className="tk-av" style={{ background: 'var(--primary)' }}>나</span>
+                          {room.memberCount > 1 && <span className="tk-av" style={{ background: '#6a7e73' }}>+{room.memberCount - 1}</span>}
+                        </div>
+                      </div>
+                      <div className="tk-corner">
+                        <button type="button" className="tk-star"
                           aria-label={room.isFavorite ? '즐겨찾기 해제' : '즐겨찾기'}
                           onClick={(e) => { e.stopPropagation(); favoriteMutation.mutate({ roomId: room.id, isFavorite: !room.isFavorite }) }}>
-                          <Icon name={room.isFavorite ? 'ti-star-filled' : 'ti-star'} />
-                        </S.TkStar>
-                      </S.TkCorner>
-                    </S.TkPax>
+                          <Icon name={room.isFavorite ? 'ti-star-filled' : 'ti-star'} style={{ color: room.isFavorite ? '#e6a23c' : '#c8c2b4' }} />
+                        </button>
+                      </div>
+                    </div>
 
                     {hasPlan ? (
-                      <S.TkGrid>
+                      <div className="tk-grid">
                         <div>
-                          <S.TkCellLbl>다음 약속</S.TkCellLbl>
-                          <S.TkCellVal>{room.nextPlan.title}</S.TkCellVal>
+                          <div className="tk-cell-lbl">다음 약속</div>
+                          <div className="tk-cell-val">{room.nextPlan.title}</div>
                         </div>
                         <div>
-                          <S.TkCellLbl>D-DAY</S.TkCellLbl>
-                          <S.TkCellVal $accent>{dday}</S.TkCellVal>
+                          <div className="tk-cell-lbl">D-DAY</div>
+                          <div className="tk-cell-val accent">{dday}</div>
                         </div>
-                      </S.TkGrid>
+                      </div>
                     ) : (
-                      <S.TkGrid $single>
-                        <S.TkCellLbl>다음 약속</S.TkCellLbl>
-                        <S.TkCellEmpty><Icon name="ti-plus" /> 약속을 정해보세요</S.TkCellEmpty>
-                      </S.TkGrid>
+                      <div className="tk-grid single">
+                        <div className="tk-cell-lbl">다음 약속</div>
+                        <div className="tk-cell-val empty"><Icon name="ti-plus" /> 약속을 정해보세요</div>
+                      </div>
                     )}
 
-                    <S.TkPerf />
+                    <div className="tk-perf" />
                     {editMode ? (
-                      <S.TkEditBar>
-                        <S.MoveBtn type="button" disabled={idx === 0} onClick={(e) => { e.stopPropagation(); moveRoom(idx, -1) }} aria-label="앞으로"><Icon name="ti-chevron-left" /></S.MoveBtn>
+                      <div className="tk-editbar">
+                        <button type="button" className="tk-move" disabled={idx === 0} onClick={(e) => { e.stopPropagation(); moveRoom(idx, -1) }} aria-label="앞으로"><Icon name="ti-chevron-left" /></button>
                         <span>순서 {idx + 1}</span>
-                        <S.MoveBtn type="button" disabled={idx === sortedRooms.length - 1} onClick={(e) => { e.stopPropagation(); moveRoom(idx, 1) }} aria-label="뒤로"><Icon name="ti-chevron-right" /></S.MoveBtn>
-                      </S.TkEditBar>
+                        <button type="button" className="tk-move" disabled={idx === sortedRooms.length - 1} onClick={(e) => { e.stopPropagation(); moveRoom(idx, 1) }} aria-label="뒤로"><Icon name="ti-chevron-right" /></button>
+                      </div>
                     ) : (
-                      <S.TkStub>
-                        <S.TkBarcode aria-hidden="true">{BARCODE.map((w, k) => <i key={k} style={{ width: `${w}px` }} />)}</S.TkBarcode>
-                        <S.TkEnter>입장 <Icon name="ti-chevron-right" /></S.TkEnter>
-                      </S.TkStub>
+                      <div className="tk-stub">
+                        <div className="tk-barcode">{BARCODE.map((w, k) => <i key={k} style={{ width: `${w}px` }} />)}</div>
+                        <span className="tk-enter">입장 <Icon name="ti-chevron-right" /></span>
+                      </div>
                     )}
-                  </S.TkBody>
-                </S.Ticket>
+                  </div>
+                </div>
               )
             })}
-          </S.Grid>
+          </div>
         )}
 
         {!editMode && totalPages > 1 && (
-          <S.Pagination>
-            <S.PageBtn type="button" disabled={safePage === 0} onClick={() => setPage(safePage - 1)} aria-label="이전"><Icon name="ti-chevron-left" /></S.PageBtn>
+          <div className="pagination">
+            <button type="button" className="page-btn" disabled={safePage === 0} onClick={() => setPage(safePage - 1)} aria-label="이전"><Icon name="ti-chevron-left" /></button>
             {Array.from({ length: totalPages }, (_, i) => (
-              <S.PageNum key={i} type="button" $active={safePage === i} onClick={() => setPage(i)}>{i + 1}</S.PageNum>
+              <button type="button" key={i} className={`page-btn${safePage === i ? ' active' : ''}`} onClick={() => setPage(i)}>{i + 1}</button>
             ))}
-            <S.PageBtn type="button" disabled={safePage === totalPages - 1} onClick={() => setPage(safePage + 1)} aria-label="다음"><Icon name="ti-chevron-right" /></S.PageBtn>
-          </S.Pagination>
+            <button type="button" className="page-btn" disabled={safePage === totalPages - 1} onClick={() => setPage(safePage + 1)} aria-label="다음"><Icon name="ti-chevron-right" /></button>
+          </div>
         )}
-      </S.Body>
+      </main>
 
       {createOpen && (
         <CreateRoomModal
@@ -311,7 +347,7 @@ export default function RoomList() {
         />
       )}
       {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
-    </S.Page>
+    </div>
   )
 }
 
@@ -336,57 +372,57 @@ function CreateRoomModal({ onClose, onCreated }) {
 
   const tp = transportMeta(transportType)
   return (
-    <S.Overlay onClick={onClose}>
-      <S.Modal onClick={(e) => e.stopPropagation()}>
-        <S.ModalHead>
-          <S.ModalTitle><Icon name="ti-plus" /> 새 우정공간 만들기</S.ModalTitle>
-          <S.ModalClose type="button" onClick={onClose} aria-label="닫기"><Icon name="ti-x" /></S.ModalClose>
-        </S.ModalHead>
-        <S.ModalDesc>친구들과 함께할 공간을 만들어보세요.</S.ModalDesc>
+    <div className="rl-overlay" onClick={onClose}>
+      <div className="rl-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="rl-modal-head">
+          <div className="rl-modal-title"><Icon name="ti-plus" /> 새 우정공간 만들기</div>
+          <button type="button" className="rl-modal-close" onClick={onClose} aria-label="닫기"><Icon name="ti-x" /></button>
+        </div>
+        <div className="rl-modal-sub">친구들과 함께할 공간을 만들어보세요.</div>
 
-        <S.Field>
-          <S.Label>대표 사진 <S.LabelHint>이동수단 아이콘 + 테마 색상으로 표시돼요</S.LabelHint></S.Label>
-          <S.CoverPreview style={{ background: `linear-gradient(135deg, ${themeColor}, rgba(0,0,0,0.28))` }}>
+        <div className="field-wrap">
+          <div className="field-label">대표 사진 <span className="field-hint">이동수단 아이콘 + 테마 색상으로 표시돼요</span></div>
+          <div className="cover-preview" style={{ background: `linear-gradient(135deg, ${themeColor}, rgba(0,0,0,0.28))` }}>
             <Icon name={tp.icon} />
-          </S.CoverPreview>
-        </S.Field>
+          </div>
+        </div>
 
-        <S.Field>
-          <S.Label>테마 색상</S.Label>
-          <S.Swatches>
+        <div className="field-wrap">
+          <div className="field-label">테마 색상</div>
+          <div className="swatches">
             {THEME_COLORS.map((c) => (
-              <S.Swatch key={c} type="button" $active={themeColor === c} style={{ background: c }}
+              <button type="button" key={c} className={`swatch${themeColor === c ? ' on' : ''}`} style={{ background: c }}
                 aria-label={`색상 ${c}`} onClick={() => setThemeColor(c)} />
             ))}
-          </S.Swatches>
-        </S.Field>
+          </div>
+        </div>
 
-        <S.Field>
-          <S.Label>이동 수단</S.Label>
-          <S.Chips>
+        <div className="field-wrap">
+          <div className="field-label">이동 수단</div>
+          <div className="chips">
             {TRANSPORTS.map((t) => (
-              <S.Chip key={t.value} type="button" $active={transportType === t.value} onClick={() => setTransportType(t.value)}>
+              <button type="button" key={t.value} className={`chip${transportType === t.value ? ' on' : ''}`} onClick={() => setTransportType(t.value)}>
                 <Icon name={t.icon} /> {t.label}
-              </S.Chip>
+              </button>
             ))}
-          </S.Chips>
-        </S.Field>
+          </div>
+        </div>
 
-        <S.Field>
-          <S.Label htmlFor="room-name">우정공간 이름 *</S.Label>
-          <S.Input id="room-name" value={name} placeholder="예: 제주 가치가자" maxLength={100} onChange={(e) => setName(e.target.value)} autoFocus />
-        </S.Field>
+        <div className="field-wrap">
+          <div className="field-label"><label htmlFor="room-name">우정공간 이름 *</label></div>
+          <input className="text-input" id="room-name" value={name} placeholder="예: 제주 가치가자" maxLength={100} onChange={(e) => setName(e.target.value)} autoFocus />
+        </div>
 
-        <S.Field>
-          <S.Label htmlFor="room-desc">소개글 (선택, 60자)</S.Label>
-          <S.Input id="room-desc" value={description} placeholder="우리 공간을 한 줄로 소개해보세요" maxLength={60} onChange={(e) => setDescription(e.target.value)} />
-        </S.Field>
+        <div className="field-wrap">
+          <div className="field-label"><label htmlFor="room-desc">소개글 (선택, 60자)</label></div>
+          <input className="text-input" id="room-desc" value={description} placeholder="우리 공간을 한 줄로 소개해보세요" maxLength={60} onChange={(e) => setDescription(e.target.value)} />
+        </div>
 
-        {message && <S.Message role="alert">{message}</S.Message>}
-        <S.CreateBtn type="button" onClick={submit} disabled={isPending}>
+        {message && <div className="err-msg" role="alert">{message}</div>}
+        <button type="button" className="btn-submit" onClick={submit} disabled={isPending}>
           {isPending ? '만드는 중…' : '우정공간 만들기'}
-        </S.CreateBtn>
-      </S.Modal>
-    </S.Overlay>
+        </button>
+      </div>
+    </div>
   )
 }

@@ -33,19 +33,7 @@
 /* ===== 페이지 컨테이너 (feed.html) ===== */
 .proto-feed .feed-page { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
 
-/* ===== 상단 바 (방 목록으로 / 로고 자리) ===== */
-.proto-feed .feed-topbar {
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 20px;
-}
-.proto-feed .feed-back-btn {
-  display: inline-flex; align-items: center; gap: 4px;
-  background: none; border: none; cursor: pointer;
-  color: var(--text-muted); font: inherit; font-size: 13px; font-weight: 600;
-  padding: 6px 10px; border-radius: 8px;
-  transition: background .15s, color .15s;
-}
-.proto-feed .feed-back-btn:hover { background: var(--nav-item-bg-active); color: var(--accent-green); }
+/* 상단 바는 공통 <Header variant="room"> 컴포넌트로 대체. */
 
 /* ===== 피드 헤더 영역 (feed.html) ===== */
 .proto-feed .feed-hero {
@@ -60,12 +48,7 @@
   background: var(--nav-item-bg-active); padding: 5px 12px; border-radius: 20px;
   white-space: nowrap;
 }
-.proto-feed .btn-action-sm {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 13px; color: var(--accent-green);
-  background: none; border: none; cursor: pointer; font-weight: 600;
-  white-space: nowrap;
-}
+/* 글쓰기 버튼은 공통 <Button variant="action">. */
 
 /* ===== 피드 컨트롤 (월 선택 + 필터 탭) ===== */
 .proto-feed .feed-controls {
@@ -396,19 +379,7 @@
   border-top: 1px solid rgba(216,235,226,.9);
 }
 .proto-feed .memory-detail-actions .spacer { flex: 1; }
-.proto-feed .btn-detail {
-  border: 1px solid rgba(82,183,136,.4); background: rgba(232,243,237,.9); color: #1b4332;
-  padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
-}
-.proto-feed .btn-detail:hover { background: #d9f4e6; }
-.proto-feed .btn-detail:disabled { opacity: .5; cursor: default; }
-.proto-feed .btn-detail.primary { background: #1b4332; color: #fff; border-color: #1b4332; }
-.proto-feed .btn-detail.primary:hover { background: #24583f; }
-.proto-feed .btn-danger {
-  background: #b23b3b; color: #fff; border: none; padding: 10px 14px; border-radius: 10px;
-  font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
-}
-.proto-feed .btn-danger:hover { background: #9a2f2f; }
+/* 상세/삭제 버튼은 공통 <Button variant="secondary|primary|danger">. */
 
 @media (max-width: 640px) {
   .proto-feed .memory-detail-columns { flex-direction: column; }
@@ -474,12 +445,7 @@
   font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
 }
 .proto-feed .wm-chip.on .wm-chip-av { background: #1b4332; color: #fff; }
-.proto-feed .wm-submit {
-  width: 100%; padding: 14px; border-radius: 12px; border: none; background: #1b4332; color: #fff;
-  font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity .15s;
-}
-.proto-feed .wm-submit:hover { opacity: .85; }
-.proto-feed .wm-submit:disabled { opacity: .5; cursor: default; }
+/* 기록 남기기 버튼은 공통 <Button variant="primary" size="lg">. */
 .proto-feed .wm-error { color: #d15b5b; font-size: 12px; font-weight: 600; }
 
 /* =====================================================================
@@ -499,7 +465,6 @@ body.light-mode .proto-feed {
   --button-text: #ffffff;
 }
 body.light-mode .proto-feed .feed-title { color: #1b4332; }
-body.light-mode .proto-feed .btn-action-sm { color: #1b4332; }
 body.light-mode .proto-feed .polaroid-card {
   background: var(--card-bg);
   box-shadow: 0 2px 4px rgba(0,0,0,.10), 0 10px 30px rgba(8,28,22,.18), 0 24px 60px rgba(8,28,22,.10);

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './feed.proto.css'
 import {
@@ -20,6 +20,8 @@ import { getRoomMembers } from '../../../api/room'
 import { uploadImage } from '../../../lib/uploadImage'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
+import Header from '../../../components/Header/Header'
+import Button from '../../../components/Button/Button'
 
 const WRITE_PHOTO_LIMIT = 6
 
@@ -62,7 +64,6 @@ const cardTags = (item, isMine) => {
 
 export default function Feed() {
   const { roomId } = useParams()
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const accessToken = useAuthStore((state) => state.accessToken)
   const currentUserId = currentUserIdFromToken(accessToken)
@@ -194,13 +195,8 @@ export default function Feed() {
 
   return (
     <div className="proto-feed">
+      <Header variant="room" roomId={roomId} activeTab="feed" />
       <div className="feed-page">
-        <div className="feed-topbar">
-          <button type="button" className="feed-back-btn" onClick={() => navigate(`/rooms/${roomId}`)}>
-            ‹ 우정공간
-          </button>
-        </div>
-
         <div className="feed-hero">
           <div>
             <div className="feed-title">월별 추억 아카이브</div>
@@ -210,9 +206,9 @@ export default function Feed() {
           </div>
           <div className="feed-hero-meta">
             <div className="feed-month-summary">{summaryText}</div>
-            <button type="button" className="btn-action-sm" onClick={() => setCreateOpen(true)}>
+            <Button variant="action" size="sm" onClick={() => setCreateOpen(true)}>
               <IconPencil /> 글쓰기
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -563,14 +559,14 @@ function CreateMemoryModal({ members, submitting, errorMessage, onCancel, onSubm
 
           {errorMessage && <div className="wm-error" role="alert">{errorMessage}</div>}
 
-          <button
-            type="button"
-            className="wm-submit"
+          <Button
+            variant="primary"
+            size="lg"
             disabled={!title.trim() || !content.trim() || submitting}
             onClick={handleSubmit}
           >
             {submitting ? '기록 남기는 중…' : '기록 남기기'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -720,10 +716,10 @@ function MemoryDetailModal({
                       onChange={(e) => setContent(e.target.value)}
                     />
                     <div className="memory-detail-edit-actions">
-                      <button type="button" className="btn-detail" onClick={() => setEditing(false)}>취소</button>
-                      <button
-                        type="button"
-                        className="btn-detail primary"
+                      <Button variant="secondary" size="sm" onClick={() => setEditing(false)}>취소</Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
                         disabled={saving}
                         onClick={() => {
                           onSave({ title: title.trim(), content: content.trim() || null })
@@ -731,7 +727,7 @@ function MemoryDetailModal({
                         }}
                       >
                         {saving ? '저장 중…' : '저장'}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -779,9 +775,9 @@ function MemoryDetailModal({
                   onChange={(e) => setCommentText(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleAddComment() }}
                 />
-                <button type="button" className="btn-detail" disabled={!commentText.trim() || addingComment} onClick={handleAddComment}>
+                <Button variant="secondary" size="sm" disabled={!commentText.trim() || addingComment} onClick={handleAddComment}>
                   {addingComment ? '등록 중…' : '등록'}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -790,21 +786,21 @@ function MemoryDetailModal({
               <div className="memory-detail-actions">
                 <span className="memory-detail-date" style={{ alignSelf: 'center' }}>이 추억을 삭제할까요?</span>
                 <span className="spacer" />
-                <button type="button" className="btn-detail" onClick={() => setConfirmDelete(false)}>취소</button>
-                <button type="button" className="btn-danger" disabled={deleting} onClick={onDelete}>
+                <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(false)}>취소</Button>
+                <Button variant="danger" size="sm" disabled={deleting} onClick={onDelete}>
                   {deleting ? '삭제 중…' : '삭제'}
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="memory-detail-actions">
                 {isWriter && !isEditing && (
                   <>
-                    <button type="button" className="btn-detail" onClick={startEdit}>수정</button>
-                    <button type="button" className="btn-detail" onClick={() => setConfirmDelete(true)}>삭제</button>
+                    <Button variant="secondary" size="sm" onClick={startEdit}>수정</Button>
+                    <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(true)}>삭제</Button>
                   </>
                 )}
                 <span className="spacer" />
-                <button type="button" className="btn-detail primary" onClick={onClose}>닫기</button>
+                <Button variant="primary" size="sm" onClick={onClose}>닫기</Button>
               </div>
             )}
           </>

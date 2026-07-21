@@ -137,6 +137,7 @@ function SettingsBody({ me, prefs, onClose }) {
               <button type="button" className={`ps-nav-item${pane === 'theme' ? ' active' : ''}`} onClick={() => setPane('theme')}>테마 설정</button>
             </div>
           </div>
+          <div className="ps-rail-footer"><i className="ti ti-clover" aria-hidden="true" /> Clov.</div>
         </nav>
 
         <section className="ps-panel">

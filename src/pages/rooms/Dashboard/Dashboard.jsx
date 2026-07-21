@@ -7,7 +7,7 @@ import { useAuthStore } from '../../../stores/authStore'
 // 대시보드에서 진입하는 도메인 화면들 — 팀원 프론트(letter/memory/plan)가 각 라우트를 채운다.
 const SECTIONS = [
   { key: 'feed', label: '추억피드', path: 'feed', ready: true },
-  { key: 'letters', label: '행운편지', path: 'letters', ready: false },
+  { key: 'letters', label: '행운편지', path: 'letters', ready: true },
   { key: 'schedule', label: '일정계획', path: 'schedule', ready: false },
 ]
 

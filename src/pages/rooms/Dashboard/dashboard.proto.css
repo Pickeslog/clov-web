@@ -33,60 +33,7 @@
 
 .proto-dashboard .dash-main { max-width: 1040px; margin: 0 auto; padding: 20px 24px 80px; }
 
-/* ===== 헤더 (clov-hdr) ===== */
-.proto-dashboard .clov-hdr {
-  position: sticky; top: 0; z-index: 200;
-  display: flex; align-items: center; justify-content: space-between;
-  height: 56px; padding: 0 8px; margin-bottom: 18px;
-  border-bottom: 1px solid var(--border-color);
-  background: transparent;
-}
-.proto-dashboard .clov-hdr-left,
-.proto-dashboard .clov-hdr-right { display: flex; align-items: center; gap: 10px; }
-.proto-dashboard .clov-hdr-logo {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 17px; font-weight: 800; color: var(--accent-green); letter-spacing: -.3px;
-  background: none; border: none; cursor: pointer; font-family: inherit;
-}
-.proto-dashboard .clov-hdr-nav { display: flex; align-items: center; gap: 2px; }
-.proto-dashboard .clov-hdr-nav-btn {
-  padding: 7px 12px; border-radius: 10px; border: none; background: none; cursor: pointer;
-  font: inherit; font-size: 13px; font-weight: 700; color: var(--nav-item-color);
-  display: inline-flex; align-items: center; gap: 5px;
-  transition: background-color .15s, color .15s;
-}
-.proto-dashboard .clov-hdr-nav-btn:hover,
-.proto-dashboard .clov-hdr-nav-btn.active {
-  background: var(--nav-item-bg-active); color: var(--nav-item-active);
-}
-.proto-dashboard .clov-hdr-icon-btn {
-  width: 36px; height: 36px; border-radius: 10px; border: none; background: none; cursor: pointer;
-  color: var(--nav-item-color); display: grid; place-items: center; position: relative;
-  transition: background-color .15s;
-}
-.proto-dashboard .clov-hdr-icon-btn:hover { background: var(--nav-item-bg-active); }
-.proto-dashboard .clov-hdr-noti-dot {
-  position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%;
-  background: #f05252; border: 1.5px solid var(--bg-light);
-}
-.proto-dashboard .clov-hdr-avatar-wrap { position: relative; }
-.proto-dashboard .clov-hdr-avatar {
-  width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
-  background: var(--nav-item-bg-active); color: var(--accent-green);
-  font-size: 13px; font-weight: 800; display: grid; place-items: center; overflow: hidden; position: relative;
-}
-.proto-dashboard .clov-hdr-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.proto-dashboard .clov-hdr-dropdown {
-  position: absolute; top: calc(100% + 8px); right: 0; min-width: 150px;
-  background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
-  box-shadow: 0 12px 30px rgba(0,0,0,.4); padding: 6px; z-index: 260; list-style: none; margin: 0;
-}
-.proto-dashboard .clov-hdr-dropdown li { padding: 0; }
-.proto-dashboard .clov-hdr-dropdown button {
-  width: 100%; text-align: left; border: none; background: none; cursor: pointer;
-  padding: 9px 12px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; color: var(--text-color);
-}
-.proto-dashboard .clov-hdr-dropdown button:hover { background: var(--nav-item-bg-active); color: var(--accent-green); }
+/* 헤더는 공통 <Header variant="room"> 컴포넌트로 대체 — clov-hdr 스타일 제거됨. */
 
 /* ===== 성장 배너 (v5-scene · LP 턴테이블) ===== */
 .proto-dashboard .v5-scene {
@@ -221,19 +168,7 @@
   font-size: 16px; font-weight: 700; color: var(--text-color); margin: 22px 0 14px;
 }
 .proto-dashboard .section-actions { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.proto-dashboard .btn-action-sm {
-  display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--accent-green);
-  background: none; border: none; cursor: pointer; font-weight: 600; white-space: nowrap; font-family: inherit;
-}
-.proto-dashboard .btn-schedule-new,
-.proto-dashboard .btn-memory-write {
-  min-height: 32px; padding: 0 12px; border-radius: 7px;
-  border: 1.5px dashed rgba(156,204,101,.5); background: rgba(156,204,101,.08); color: var(--accent-green);
-  font-family: 'Space Mono', 'Courier New', monospace; font-size: 12px; font-weight: 700; letter-spacing: .3px;
-  transition: transform .15s ease, background-color .15s ease;
-}
-.proto-dashboard .btn-schedule-new:hover,
-.proto-dashboard .btn-memory-write:hover { transform: translateY(-1px); background: rgba(156,204,101,.15); }
+/* 섹션 버튼은 공통 <Button variant="dashed|action"> 로 대체. */
 
 /* ===== D-day 3열 (schedule-banner) ===== */
 .proto-dashboard .schedule-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -333,7 +268,6 @@
   .proto-dashboard .main-photo-wrapper { flex-basis: auto; width: 100%; margin: 0 0 -18px; transform: rotate(-1.5deg); }
   .proto-dashboard .cover-summary { padding: 28px 20px 20px; }
   .proto-dashboard .schedule-grid { grid-template-columns: 1fr; }
-  .proto-dashboard .clov-hdr-nav { display: none; }
 }
 
 /* =====================================================================
@@ -353,7 +287,6 @@ body.light-mode .proto-dashboard {
   --input-bg: #ffffff;
   --button-text: #ffffff;
 }
-body.light-mode .proto-dashboard .clov-hdr-logo { color: #1b4332; }
 body.light-mode .proto-dashboard .cover-summary { background: #fff; border-color: rgba(27,67,50,.08); box-shadow: 0 6px 16px rgba(0,0,0,.06); }
 body.light-mode .proto-dashboard .title-input-box,
 body.light-mode .proto-dashboard .member-highlight-card { background: #fff; border-color: rgba(27,67,50,.12); }
@@ -363,8 +296,4 @@ body.light-mode .proto-dashboard .cover-status-save { color: #fff; }
 body.light-mode .proto-dashboard .schedule-banner { background: rgba(232,243,237,.92); border-color: rgba(255,255,255,.3); }
 body.light-mode .proto-dashboard .schedule-empty,
 body.light-mode .proto-dashboard .memory-empty { background: rgba(0,0,0,.03); border-color: var(--border-color); }
-body.light-mode .proto-dashboard .btn-schedule-new,
-body.light-mode .proto-dashboard .btn-memory-write {
-  border-color: rgba(46,82,51,.45); background: #faf6ee; color: #2e5233;
-}
 body.light-mode .proto-dashboard .mini-polaroid { box-shadow: 0 2px 4px rgba(0,0,0,.1), 0 10px 30px rgba(8,28,22,.18); }

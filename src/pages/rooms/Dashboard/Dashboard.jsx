@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './dashboard.proto.css'
@@ -7,7 +7,8 @@ import { getPlans } from '../../../api/plan'
 import { getMemories } from '../../../api/memory'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
-import Settings from '../../../components/Settings/Settings'
+import Header from '../../../components/Header/Header'
+import Button from '../../../components/Button/Button'
 
 // 우정 성장 티어(프로토타입 desktop.js 정본). 레벨은 111×7=777 → 7티어로 묶음.
 const TIERS = [
@@ -49,7 +50,6 @@ export default function Dashboard() {
   const { roomId } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const clear = useAuthStore((state) => state.clear)
   const accessToken = useAuthStore((state) => state.accessToken)
   const currentUserId = currentUserIdFromToken(accessToken)
 
@@ -61,16 +61,7 @@ export default function Dashboard() {
 
   // null = 미편집(서버값 표시). 문자열 = 사용자가 편집 중.
   const [statusDraft, setStatusDraft] = useState(null)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [membersOpen, setMembersOpen] = useState(false)
-
-  useEffect(() => {
-    if (!menuOpen) return undefined
-    const onDoc = (e) => { if (!e.target.closest('.clov-hdr-avatar-wrap')) setMenuOpen(false) }
-    document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [menuOpen])
 
   const statusMutation = useMutation({
     mutationFn: (message) => updateStatusMessage(roomId, message),
@@ -121,38 +112,8 @@ export default function Dashboard() {
 
   return (
     <div className="proto-dashboard">
+      <Header variant="room" roomId={roomId} activeTab="space" />
       <div className="dash-main">
-        {/* 헤더 */}
-        <header className="clov-hdr">
-          <div className="clov-hdr-left">
-            <button type="button" className="clov-hdr-logo" onClick={() => navigate('/')}>🍀 Clov.</button>
-            <nav className="clov-hdr-nav">
-              <button type="button" className="clov-hdr-nav-btn active">우정공간</button>
-              <button type="button" className="clov-hdr-nav-btn" onClick={() => go('feed')}>추억피드</button>
-              <button type="button" className="clov-hdr-nav-btn" onClick={() => go('letters')}>행운편지</button>
-              <button type="button" className="clov-hdr-nav-btn" onClick={() => go('schedule')}>일정계획</button>
-            </nav>
-          </div>
-          <div className="clov-hdr-right">
-            <button type="button" className="clov-hdr-icon-btn" aria-label="알림" onClick={() => go('notifications')}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
-            </button>
-            <div className="clov-hdr-avatar-wrap">
-              <button type="button" className="clov-hdr-avatar" onClick={() => setMenuOpen((v) => !v)} aria-haspopup="menu">
-                {initialOf(memberItems.find((m) => String(m.userId) === String(currentUserId))?.nickname) || '나'}
-              </button>
-              {menuOpen && (
-                <ul className="clov-hdr-dropdown" role="menu">
-                  <li><button type="button" onClick={() => { setSettingsOpen(true); setMenuOpen(false) }}>⚙️ 사용자 설정</button></li>
-                  <li><button type="button" onClick={clear}>로그아웃</button></li>
-                </ul>
-              )}
-            </div>
-          </div>
-        </header>
-
         {/* 성장 배너 */}
         <div className="v5-scene">
           <div className="scene-sky" style={{ backgroundImage: `url('/banners/lp-${sKey}.png')` }} />
@@ -236,7 +197,7 @@ export default function Dashboard() {
         <div className="section-title">
           <span>다가오는 D-day</span>
           <div className="section-actions">
-            <button type="button" className="btn-schedule-new" onClick={() => go('schedule')}>+ 새 D-day 만들기</button>
+            <Button variant="dashed" size="sm" onClick={() => go('schedule')}>+ 새 D-day 만들기</Button>
           </div>
         </div>
         {upcoming.length === 0 ? (
@@ -260,8 +221,8 @@ export default function Dashboard() {
         <div className="section-title">
           <span>참여자별 추억 증거 카드</span>
           <div className="section-actions">
-            <button type="button" className="btn-memory-write" onClick={() => go('feed')}>✎ 글쓰기</button>
-            <button type="button" className="btn-action-sm" onClick={() => go('feed')}>전체 피드 보기</button>
+            <Button variant="dashed" size="sm" onClick={() => go('feed')}>✎ 글쓰기</Button>
+            <Button variant="action" size="sm" onClick={() => go('feed')}>전체 피드 보기</Button>
           </div>
         </div>
         {memoryItems.length === 0 ? (
@@ -311,8 +272,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
-      {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
     </div>
   )
 }

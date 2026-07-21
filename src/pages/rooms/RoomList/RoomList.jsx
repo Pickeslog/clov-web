@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './roomlist.proto.css'
 import { getRooms, createRoom, toggleRoomFavorite } from '../../../api/room'
 import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/invite'
+import { getMe } from '../../../api/user'
 import { useAuthStore } from '../../../stores/authStore'
 import Settings from '../../../components/Settings/Settings'
 import RoomPreviewModal from './RoomPreviewModal'
@@ -82,6 +83,17 @@ export default function RoomList() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [previewId, setPreviewId] = useState(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  const me = useQuery({ queryKey: ['me'], queryFn: getMe })
+
+  // 아바타 드롭다운 바깥 클릭 시 닫기.
+  useEffect(() => {
+    if (!menuOpen) return undefined
+    const onDocClick = (e) => { if (!e.target.closest('.rl-avatar-wrap')) setMenuOpen(false) }
+    document.addEventListener('click', onDocClick)
+    return () => document.removeEventListener('click', onDocClick)
+  }, [menuOpen])
   const [sort, setSort] = useState('default')
   const [joinCode, setJoinCode] = useState('')
   const [joinMessage, setJoinMessage] = useState('')
@@ -154,11 +166,28 @@ export default function RoomList() {
       <header className="rl-header">
         <div className="rl-brand"><Icon name="ti-clover" /> Clov.</div>
         <div className="rl-header-right">
-          <a className="rl-join-link" href="/join" onClick={(e) => { e.preventDefault(); navigate('/join') }}>
-            <Icon name="ti-key" /> 초대 코드로 참여하기
-          </a>
-          <button type="button" className="rl-ghost" onClick={() => setSettingsOpen(true)}><Icon name="ti-settings" /></button>
-          <button type="button" className="rl-ghost" onClick={clear}>로그아웃</button>
+          <div className="rl-avatar-wrap">
+            <button type="button" className="rl-avatar" onClick={() => setMenuOpen((v) => !v)}
+              aria-haspopup="true" aria-expanded={menuOpen} aria-label="내 메뉴">
+              {me.data?.profileImageUrl
+                ? <img src={me.data.profileImageUrl} alt="" />
+                : (me.data?.nickname?.trim()?.[0] ?? '나')}
+            </button>
+            {menuOpen && (
+              <ul className="rl-dropdown" role="menu">
+                <li role="menuitem" tabIndex={0}
+                  onClick={() => { setMenuOpen(false); setSettingsOpen(true) }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMenuOpen(false); setSettingsOpen(true) } }}>
+                  <Icon name="ti-settings" /> 사용자설정
+                </li>
+                <li role="menuitem" tabIndex={0}
+                  onClick={() => { setMenuOpen(false); clear() }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMenuOpen(false); clear() } }}>
+                  로그아웃
+                </li>
+              </ul>
+            )}
+          </div>
         </div>
       </header>
 

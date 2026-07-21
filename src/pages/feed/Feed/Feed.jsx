@@ -1,0 +1,364 @@
+import { useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import * as S from './Feed.style'
+import { getMemories, getMemory, createMemory, updateMemory, deleteMemory } from '../../../api/memory'
+import { getRoomMembers } from '../../../api/room'
+import { useAuthStore } from '../../../stores/authStore'
+import { currentUserIdFromToken } from '../../../lib/jwt'
+
+// 화면 명세(screen-spec-source/03-memory-feed-screen.md)의 기본 해시태그.
+const TAGS = ['소중한순간', '우리만의장소', '웃긴날', '다시보고싶은날']
+
+export default function Feed() {
+  const { roomId } = useParams()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const currentUserId = currentUserIdFromToken(accessToken)
+
+  const [month, setMonth] = useState('')
+  const [writerFilter, setWriterFilter] = useState('all')
+  const [activeTag, setActiveTag] = useState('')
+  const [selectedMemoryId, setSelectedMemoryId] = useState(null)
+  const [isCreateOpen, setCreateOpen] = useState(false)
+
+  const feedFilters = {
+    month: month || undefined,
+    writerId: writerFilter === 'mine' ? currentUserId : undefined,
+    tag: activeTag || undefined,
+  }
+  const feed = useQuery({
+    queryKey: ['memories', roomId, feedFilters],
+    queryFn: () => getMemories(roomId, feedFilters),
+  })
+
+  const members = useQuery({
+    queryKey: ['room', roomId, 'members'],
+    queryFn: () => getRoomMembers(roomId),
+  })
+
+  const detail = useQuery({
+    queryKey: ['memory', selectedMemoryId],
+    queryFn: () => getMemory(selectedMemoryId),
+    enabled: Boolean(selectedMemoryId),
+  })
+
+  const invalidateFeed = () => queryClient.invalidateQueries({ queryKey: ['memories', roomId] })
+
+  const createMutation = useMutation({
+    mutationFn: (payload) => createMemory(roomId, payload),
+    onSuccess: () => {
+      invalidateFeed()
+      setCreateOpen(false)
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ memoryId, payload }) => updateMemory(memoryId, payload),
+    onSuccess: () => {
+      invalidateFeed()
+      queryClient.invalidateQueries({ queryKey: ['memory', selectedMemoryId] })
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (memoryId) => deleteMemory(memoryId),
+    onSuccess: () => {
+      invalidateFeed()
+      setSelectedMemoryId(null)
+    },
+  })
+
+  const items = feed.data?.items ?? []
+  const memberItems = members.data?.items ?? []
+
+  return (
+    <S.Page>
+      <S.TopBar>
+        <S.BackBtn type="button" onClick={() => navigate(`/rooms/${roomId}`)}>
+          ← 우정공간
+        </S.BackBtn>
+        <S.Title>월별 추억 아카이브</S.Title>
+        <S.WriteBtn type="button" onClick={() => setCreateOpen(true)}>
+          + 새 추억 남기기
+        </S.WriteBtn>
+      </S.TopBar>
+
+      <S.FilterBar>
+        <S.MonthInput
+          type="month"
+          value={month}
+          onChange={(event) => setMonth(event.target.value)}
+          aria-label="월 선택"
+        />
+        <S.Tabs>
+          <S.Tab type="button" $active={writerFilter === 'all'} onClick={() => setWriterFilter('all')}>
+            전체
+          </S.Tab>
+          <S.Tab type="button" $active={writerFilter === 'mine'} onClick={() => setWriterFilter('mine')}>
+            내 기록
+          </S.Tab>
+        </S.Tabs>
+        <S.TagRow>
+          <S.TagChip type="button" $active={activeTag === ''} onClick={() => setActiveTag('')}>
+            전체 태그
+          </S.TagChip>
+          {TAGS.map((tag) => (
+            <S.TagChip key={tag} type="button" $active={activeTag === tag} onClick={() => setActiveTag(tag)}>
+              #{tag}
+            </S.TagChip>
+          ))}
+        </S.TagRow>
+      </S.FilterBar>
+
+      {feed.isPending && <S.State>불러오는 중…</S.State>}
+      {feed.isError && <S.State>추억을 불러오지 못했습니다. {feed.error?.message}</S.State>}
+      {feed.isSuccess && items.length === 0 && <S.State>이 조건에 맞는 추억이 아직 없습니다.</S.State>}
+
+      <S.Grid>
+        {items.map((item) => (
+          <S.Card key={item.id} onClick={() => setSelectedMemoryId(item.id)}>
+            <S.CardThumb>{item.thumbnailUrl ? <img src={item.thumbnailUrl} alt="" /> : '🍀'}</S.CardThumb>
+            <S.CardWriter>{item.writer?.nickname}</S.CardWriter>
+            <S.CardTitle>{item.title}</S.CardTitle>
+            {item.memoryDate && <S.CardDate>{item.memoryDate}</S.CardDate>}
+            {item.tags?.length > 0 && (
+              <S.CardTags>
+                {item.tags.map((tag) => (
+                  <span key={tag}>#{tag}</span>
+                ))}
+              </S.CardTags>
+            )}
+            <S.CardMeta>댓글 {item.commentCount}</S.CardMeta>
+          </S.Card>
+        ))}
+      </S.Grid>
+
+      {isCreateOpen && (
+        <CreateMemoryModal
+          members={memberItems}
+          submitting={createMutation.isPending}
+          errorMessage={createMutation.error?.message}
+          onCancel={() => setCreateOpen(false)}
+          onSubmit={(payload) => createMutation.mutate(payload)}
+        />
+      )}
+
+      {selectedMemoryId && (
+        <MemoryDetailModal
+          memory={detail.data}
+          isLoading={detail.isPending}
+          currentUserId={currentUserId}
+          onClose={() => setSelectedMemoryId(null)}
+          onSave={(payload) => updateMutation.mutate({ memoryId: selectedMemoryId, payload })}
+          onDelete={() => {
+            if (window.confirm('이 추억을 삭제할까요?')) {
+              deleteMutation.mutate(selectedMemoryId)
+            }
+          }}
+          saving={updateMutation.isPending}
+          deleting={deleteMutation.isPending}
+        />
+      )}
+    </S.Page>
+  )
+}
+
+function CreateMemoryModal({ members, submitting, errorMessage, onCancel, onSubmit }) {
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [memoryDate, setMemoryDate] = useState('')
+  const [tags, setTags] = useState([])
+  const [participantUserIds, setParticipantUserIds] = useState([])
+
+  const toggle = (list, setList, value) =>
+    setList(list.includes(value) ? list.filter((item) => item !== value) : [...list, value])
+
+  const handleSubmit = () => {
+    if (!title.trim()) return
+    onSubmit({
+      title: title.trim(),
+      content: content.trim() || null,
+      memoryDate: memoryDate || null,
+      tags,
+      participantUserIds,
+    })
+  }
+
+  return (
+    <S.Overlay onClick={onCancel}>
+      <S.Modal onClick={(event) => event.stopPropagation()}>
+        <S.ModalTitle>새 추억 남기기</S.ModalTitle>
+
+        <S.Field>
+          <S.Label htmlFor="memory-title">제목</S.Label>
+          <S.Input
+            id="memory-title"
+            value={title}
+            maxLength={25}
+            placeholder="예: 인생 첫 한라산"
+            onChange={(event) => setTitle(event.target.value)}
+          />
+          <S.Counter>{title.length}/25</S.Counter>
+        </S.Field>
+
+        <S.Field>
+          <S.Label htmlFor="memory-content">내용</S.Label>
+          <S.Textarea
+            id="memory-content"
+            value={content}
+            maxLength={100}
+            placeholder="그날의 기록을 남겨보세요"
+            onChange={(event) => setContent(event.target.value)}
+          />
+          <S.Counter>{content.length}/100</S.Counter>
+        </S.Field>
+
+        <S.Field>
+          <S.Label htmlFor="memory-date">날짜</S.Label>
+          <S.Input
+            id="memory-date"
+            type="date"
+            value={memoryDate}
+            onChange={(event) => setMemoryDate(event.target.value)}
+          />
+        </S.Field>
+
+        <S.Field>
+          <S.Label>태그</S.Label>
+          <S.TagRow>
+            {TAGS.map((tag) => (
+              <S.TagChip
+                key={tag}
+                type="button"
+                $active={tags.includes(tag)}
+                onClick={() => toggle(tags, setTags, tag)}
+              >
+                #{tag}
+              </S.TagChip>
+            ))}
+          </S.TagRow>
+        </S.Field>
+
+        {members.length > 0 && (
+          <S.Field>
+            <S.Label>함께한 친구</S.Label>
+            <S.TagRow>
+              {members.map((member) => (
+                <S.TagChip
+                  key={member.userId}
+                  type="button"
+                  $active={participantUserIds.includes(member.userId)}
+                  onClick={() => toggle(participantUserIds, setParticipantUserIds, member.userId)}
+                >
+                  {member.nickname}
+                </S.TagChip>
+              ))}
+            </S.TagRow>
+          </S.Field>
+        )}
+
+        {errorMessage && <S.ErrorText role="alert">{errorMessage}</S.ErrorText>}
+
+        <S.ModalActions>
+          <S.SecondaryBtn type="button" onClick={onCancel}>
+            취소
+          </S.SecondaryBtn>
+          <S.PrimaryBtn type="button" disabled={!title.trim() || submitting} onClick={handleSubmit}>
+            {submitting ? '저장 중…' : '남기기'}
+          </S.PrimaryBtn>
+        </S.ModalActions>
+      </S.Modal>
+    </S.Overlay>
+  )
+}
+
+function MemoryDetailModal({ memory, isLoading, currentUserId, onClose, onSave, onDelete, saving, deleting }) {
+  const [isEditing, setEditing] = useState(false)
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+
+  const isWriter = memory && String(memory.writer?.id) === String(currentUserId)
+
+  const startEdit = () => {
+    setTitle(memory.title)
+    setContent(memory.content ?? '')
+    setEditing(true)
+  }
+
+  return (
+    <S.Overlay onClick={onClose}>
+      <S.Modal onClick={(event) => event.stopPropagation()}>
+        {isLoading && <S.State>불러오는 중…</S.State>}
+        {!isLoading && memory && !isEditing && (
+          <>
+            <S.ModalTitle>{memory.title}</S.ModalTitle>
+            <S.CardWriter>{memory.writer?.nickname}</S.CardWriter>
+            {memory.memoryDate && <S.CardDate>{memory.memoryDate}</S.CardDate>}
+            <S.DetailContent>{memory.content}</S.DetailContent>
+            {memory.tags?.length > 0 && (
+              <S.CardTags>
+                {memory.tags.map((tag) => (
+                  <span key={tag}>#{tag}</span>
+                ))}
+              </S.CardTags>
+            )}
+            {memory.participants?.length > 0 && (
+              <S.CardMeta>함께한 친구: {memory.participants.map((p) => p.nickname).join(', ')}</S.CardMeta>
+            )}
+
+            <S.ModalActions>
+              {isWriter && (
+                <>
+                  <S.SecondaryBtn type="button" onClick={startEdit}>
+                    수정
+                  </S.SecondaryBtn>
+                  <S.SecondaryBtn type="button" disabled={deleting} onClick={onDelete}>
+                    {deleting ? '삭제 중…' : '삭제'}
+                  </S.SecondaryBtn>
+                </>
+              )}
+              <S.PrimaryBtn type="button" onClick={onClose}>
+                닫기
+              </S.PrimaryBtn>
+            </S.ModalActions>
+          </>
+        )}
+
+        {!isLoading && memory && isEditing && (
+          <>
+            <S.Field>
+              <S.Label htmlFor="edit-title">제목</S.Label>
+              <S.Input id="edit-title" value={title} maxLength={25} onChange={(event) => setTitle(event.target.value)} />
+            </S.Field>
+            <S.Field>
+              <S.Label htmlFor="edit-content">내용</S.Label>
+              <S.Textarea
+                id="edit-content"
+                value={content}
+                maxLength={100}
+                onChange={(event) => setContent(event.target.value)}
+              />
+            </S.Field>
+            <S.ModalActions>
+              <S.SecondaryBtn type="button" onClick={() => setEditing(false)}>
+                취소
+              </S.SecondaryBtn>
+              <S.PrimaryBtn
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  onSave({ title: title.trim(), content: content.trim() || null })
+                  setEditing(false)
+                }}
+              >
+                {saving ? '저장 중…' : '저장'}
+              </S.PrimaryBtn>
+            </S.ModalActions>
+          </>
+        )}
+      </S.Modal>
+    </S.Overlay>
+  )
+}

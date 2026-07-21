@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as S from './RoomList.style'
-import { createRoom } from '../../../api/room'
+import { getRooms, createRoom } from '../../../api/room'
 import { useAuthStore } from '../../../stores/authStore'
 
 // 이동 수단 선택지 — 계약 §6 transportType.
@@ -13,9 +13,10 @@ const TRANSPORTS = [
   { value: 'ship', label: '배' },
 ]
 
-// 로그인 후 랜딩(우정공간 진입점). 지금은 생성 중심 — 목록(GET /rooms)은 계약 갭으로 병행 추가 예정.
+// 로그인 후 랜딩(우정공간 진입점). 내 우정공간 목록(GET /rooms) + 새 공간 생성.
 export default function RoomList() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const clear = useAuthStore((state) => state.clear)
 
   const [name, setName] = useState('')
@@ -23,9 +24,16 @@ export default function RoomList() {
   const [transportType, setTransportType] = useState('airplane')
   const [message, setMessage] = useState('')
 
+  // 목록 로딩 상태는 isPending(react-query v5)로 판별 — retry 딜레이 중 isLoading=false 크래시 회피.
+  const rooms = useQuery({ queryKey: ['rooms'], queryFn: getRooms })
+  const roomItems = rooms.data?.items ?? []
+
   const { mutate, isPending } = useMutation({
     mutationFn: createRoom,
-    onSuccess: (room) => navigate(`/rooms/${room.id}`),
+    onSuccess: (room) => {
+      queryClient.invalidateQueries({ queryKey: ['rooms'] })
+      navigate(`/rooms/${room.id}`)
+    },
     onError: (error) => setMessage(error.message ?? '우정공간을 만들지 못했습니다.'),
   })
 
@@ -57,9 +65,40 @@ export default function RoomList() {
       <S.Body>
         <S.Intro>
           <S.Title>우정공간</S.Title>
-          <S.Desc>친구와 약속·추억·편지를 한 곳에서. 새 우정공간을 만들어 시작해보세요.</S.Desc>
-          <S.Notice>내 우정공간 목록 보기는 곧 추가됩니다. (목록 API 준비 중)</S.Notice>
+          <S.Desc>친구와 약속·추억·편지를 한 곳에서. 우정공간에 들어가거나 새로 만들어 시작해보세요.</S.Desc>
         </S.Intro>
+
+        <S.Section>
+          <S.SectionTitle>내 우정공간</S.SectionTitle>
+
+          {rooms.isPending && <S.State>불러오는 중…</S.State>}
+          {rooms.isError && <S.State>목록을 불러오지 못했습니다. {rooms.error?.message}</S.State>}
+          {rooms.isSuccess && roomItems.length === 0 && (
+            <S.State>아직 우정공간이 없어요. 아래에서 첫 공간을 만들어보세요.</S.State>
+          )}
+
+          {roomItems.length > 0 && (
+            <S.RoomGrid>
+              {roomItems.map((room) => (
+                <S.RoomCard
+                  key={room.id}
+                  type="button"
+                  $accent={room.themeColor}
+                  onClick={() => navigate(`/rooms/${room.id}`)}
+                >
+                  <S.RoomTop>
+                    <S.RoomName>{room.name}</S.RoomName>
+                    {room.isFavorite && <S.Fav aria-label="즐겨찾기">★</S.Fav>}
+                  </S.RoomTop>
+                  {room.description && <S.RoomDesc>{room.description}</S.RoomDesc>}
+                  <S.RoomMeta>
+                    멤버 {room.memberCount}명 · Lv.{room.friendshipLevel}
+                  </S.RoomMeta>
+                </S.RoomCard>
+              ))}
+            </S.RoomGrid>
+          )}
+        </S.Section>
 
         <S.CreateCard>
           <S.CardTitle>새 우정공간 만들기</S.CardTitle>

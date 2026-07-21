@@ -83,9 +83,288 @@ export const NotiBtn = styled(Link)`
   }
 `
 
+const WIDTH = 'min(880px, calc(100% - 48px))'
+
+export const DdayBanner = styled.section`
+  width: ${WIDTH};
+  margin: 22px auto 0;
+  text-align: center;
+`
+
+export const DdaySmall = styled.div`
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+`
+
+export const DdayBig = styled.div`
+  margin-top: 2px;
+  color: var(--forest);
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+
+  span {
+    margin-left: 6px;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--leaf);
+  }
+`
+
+export const DdayTrack = styled.div`
+  margin-top: 4px;
+  color: var(--leaf);
+  font-size: 0.82rem;
+  font-weight: 800;
+`
+
+export const StatusCard = styled.section`
+  width: ${WIDTH};
+  margin: 16px auto 0;
+`
+
+export const StatusView = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    border-color: var(--mint);
+  }
+`
+
+export const StatusText = styled.span`
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: ${(p) => (p.$empty ? 'var(--muted)' : 'var(--text)')};
+`
+
+export const StatusEditHint = styled.span`
+  color: var(--leaf);
+  font-size: 0.78rem;
+  font-weight: 800;
+`
+
+export const StatusEdit = styled.div`
+  padding: 14px 18px;
+  border: 1px solid var(--mint);
+  border-radius: 16px;
+  background: var(--paper);
+  display: grid;
+  gap: 8px;
+`
+
+export const StatusInput = styled.input`
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--cream);
+  color: var(--text);
+  font: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: var(--mint);
+    box-shadow: 0 0 0 4px var(--glow);
+  }
+`
+
+export const StatusMeta = styled.div`
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-align: right;
+`
+
+export const StatusActions = styled.div`
+  display: flex;
+  gap: 8px;
+`
+
+export const StatusSave = styled.button`
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #093d26, #16874b 56%, #50d990);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+`
+
+export const StatusCancel = styled.button`
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 14px;
+  background: var(--paper);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+`
+
+export const Block = styled.section`
+  width: ${WIDTH};
+  margin: 22px auto 0;
+`
+
+export const BlockHead = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+`
+
+export const BlockTitle = styled.h2`
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--forest);
+`
+
+export const BlockLink = styled(Link)`
+  color: var(--leaf);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`
+
+export const Empty = styled.div`
+  padding: 18px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: var(--cream);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+`
+
+export const DdayList = styled.div`
+  display: grid;
+  gap: 10px;
+`
+
+export const DdayItem = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  color: var(--text);
+
+  &:hover {
+    border-color: var(--mint);
+  }
+`
+
+export const DdayItemTitle = styled.span`
+  flex: 1;
+  font-weight: 800;
+  font-size: 0.95rem;
+`
+
+export const DdayItemDate = styled.span`
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+`
+
+export const DdayChip = styled.span`
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #093d26, #16874b);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 900;
+`
+
+export const MemoryGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+`
+
+export const MemoryCard = styled(Link)`
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  text-decoration: none;
+  color: var(--text);
+  display: grid;
+  gap: 6px;
+
+  &:hover {
+    border-color: var(--mint);
+  }
+`
+
+export const MemoryThumb = styled.div`
+  aspect-ratio: 1;
+  border-radius: 10px;
+  background: var(--cream);
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`
+
+export const MemoryWriter = styled.span`
+  color: var(--leaf);
+  font-size: 0.74rem;
+  font-weight: 800;
+`
+
+export const MemoryTitle = styled.span`
+  font-size: 0.86rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+export const MemoryDate = styled.span`
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+`
+
 export const Hero = styled.section`
   position: relative;
-  margin: 24px auto 0;
+  margin: 16px auto 0;
   width: min(880px, calc(100% - 48px));
   min-height: 200px;
   border-radius: 24px;
@@ -162,6 +441,7 @@ export const Avatar = styled.span`
   place-items: center;
   border-radius: 50%;
   border: 2px solid var(--paper);
+  overflow: hidden;
   background: linear-gradient(135deg, #1a8e52, #5de49a);
   color: #fff;
   font-size: 0.85rem;
@@ -170,6 +450,12 @@ export const Avatar = styled.span`
 
   &:first-of-type {
     margin-left: 0;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 `
 

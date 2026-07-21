@@ -1,15 +1,15 @@
 /* =====================================================================
    앱 전역 배경 테마 — 프로토타입 "사용자설정 > 배경"(CLOV_APP_BACKGROUNDS) 이식.
    사진 배경은 번들(public/backgrounds/*.webp, sharp로 1920px·WebP 최적화).
-   기본값 = LP 우드 데스크(우드+클로버 사진). '심플'은 CSS 그라디언트(0바이트).
+   기본값 = '기본(심플)' CSS 그라디언트(0바이트). 사진 6종·물감색은 설정에서 선택.
    선택값은 프로토타입과 동일하게 기기-로컬(localStorage)에 저장한다.
    적용: :root 에 --clov-app-bg / -size / -pos 를 세팅 → body/이식 화면이 읽음.
    ===================================================================== */
 
 // 썸네일·사진 모두 번들. '심플'만 그라디언트(image 없음).
 export const APP_BACKGROUNDS = [
+  { id: 'default', name: '기본 (심플)', thumb: '/bg-thumbs/default.png', image: null },
   { id: 'lp-wood-desk', name: 'LP 우드 데스크', thumb: '/bg-thumbs/lp-wood-desk.png', image: '/backgrounds/lp-wood-desk.webp' },
-  { id: 'default', name: '심플 (그라디언트)', thumb: '/bg-thumbs/default.png', image: null },
   { id: 'clover-coast', name: '클로버 해안 엽서', thumb: '/bg-thumbs/clover-coast.png', image: '/backgrounds/clover-coast.webp' },
   { id: 'neon-city', name: '네온 클로버 시티', thumb: '/bg-thumbs/neon-city.png', image: '/backgrounds/neon-city.webp' },
   { id: 'minimal-clover', name: '미니멀 클로버', thumb: '/bg-thumbs/minimal-clover.png', image: '/backgrounds/minimal-clover.webp' },
@@ -18,7 +18,7 @@ export const APP_BACKGROUNDS = [
 
 const STORAGE_KEY = 'clov_appBgTheme'
 const COLOR_KEY = 'clov_appBgColor'
-const DEFAULT_ID = 'lp-wood-desk'
+const DEFAULT_ID = 'default'
 const DEFAULT_COLOR = '#2C5F4A'
 
 export function getCustomColor() {

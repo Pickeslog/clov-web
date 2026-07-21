@@ -86,9 +86,9 @@ export default function Notifications() {
               <S.ListItem key={noti.id} $isRead={noti.isRead}>
                 <S.ItemBody>
                   <S.ItemMessage $isRead={noti.isRead}>
-                    {noti.type === 'NOTICE' && '📢 공지사항 알림이 도착했습니다.'}
-                    {noti.type === 'FRIEND' && '👋 친구의 새로운 활동 알림이 있습니다.'}
-                    {noti.type === 'JOIN' && '💌 우정공간 가입 신청이 도착했습니다.'}
+                    {noti.type === 'NOTICE' && (noti.actor?.nickname ? `📢 ${noti.actor.nickname}님이 공지사항을 등록했어요.` : '📢 공지사항 알림이 도착했습니다.')}
+                    {noti.type === 'FRIEND' && (noti.actor?.nickname ? `👋 ${noti.actor.nickname}님이 편지를 보냈어요.` : '👋 친구의 새로운 활동 알림이 있습니다.')}
+                    {noti.type === 'JOIN' && (noti.actor?.nickname ? `💌 ${noti.actor.nickname}님이 가입을 신청했어요.` : '💌 우정공간 가입 신청이 도착했습니다.')}
                   </S.ItemMessage>
                   <S.ItemTime>{new Date(noti.createdAt).toLocaleString()}</S.ItemTime>
                 </S.ItemBody>

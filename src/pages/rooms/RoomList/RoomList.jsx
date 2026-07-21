@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './roomlist.proto.css'
-import { getRooms, createRoom, toggleRoomFavorite } from '../../../api/room'
+import { getRooms, createRoom, toggleRoomFavorite, leaveRoom } from '../../../api/room'
 import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/invite'
 import { getMe } from '../../../api/user'
 import { useAuthStore } from '../../../stores/authStore'
@@ -87,6 +87,8 @@ export default function RoomList() {
   const [createOpen, setCreateOpen] = useState(false)
   const [previewId, setPreviewId] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [dragId, setDragId] = useState(null)
+  const [overId, setOverId] = useState(null)
 
   const me = useQuery({ queryKey: ['me'], queryFn: getMe })
 
@@ -155,11 +157,26 @@ export default function RoomList() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['join-requests', 'mine'] }),
   })
 
-  const moveRoom = (index, dir) => {
-    const to = index + dir
-    if (to < 0 || to >= sortedRooms.length) return
+  const leaveMutation = useMutation({
+    mutationFn: (id) => leaveRoom(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rooms'] }),
+  })
+  const handleLeave = (room) => {
+    const msg = (room.memberCount ?? 1) <= 1
+      ? `"${room.name}"에서 나갈까요? 지금 마지막 멤버라 30일간 보관되고, 코드로 되살릴 수 있어요.`
+      : `"${room.name}"에서 나갈까요? 남은 멤버에게 나갔다고 알림이 가요.`
+    if (window.confirm(msg)) leaveMutation.mutate(room.id)
+  }
+
+  // 드래그 앤 드롭 재정렬 — 프로토타입과 동일(끈 방을 놓은 카드의 자리에 꽂음 → "내 순서" 저장).
+  const reorder = (srcId, tgtId) => {
+    if (srcId == null || srcId === tgtId) return
     const ids = sortedRooms.map((r) => r.id)
-    ;[ids[index], ids[to]] = [ids[to], ids[index]]
+    const from = ids.indexOf(srcId)
+    const to = ids.indexOf(tgtId)
+    if (from === -1 || to === -1) return
+    const [moved] = ids.splice(from, 1)
+    ids.splice(to, 0, moved)
     saveOrder(ids)
     if (sort !== 'default') setSort('default')
   }
@@ -201,7 +218,7 @@ export default function RoomList() {
 
         {editMode && (
           <div className="edit-banner show">
-            <Icon name="ti-arrows-move" /> ◀ ▶ 로 순서를 바꿔 &quot;내 순서&quot;에 저장돼요.
+            <Icon name="ti-arrows-move" /> 카드를 끌어다 원하는 자리에 놓으면 &quot;내 순서&quot;로 저장돼요. 🗑️로 방에서 나갈 수 있어요.
           </div>
         )}
 
@@ -272,21 +289,32 @@ export default function RoomList() {
 
         {sortedRooms.length > 0 && (
           <div className="room-grid">
-            {visibleRooms.map((room, i) => {
+            {visibleRooms.map((room) => {
               const tone = headTone(room)
               const hasPlan = Boolean(room.nextPlan?.planDate)
               const dday = hasPlan ? ddayLabel(ddayOf(room.nextPlan.planDate)) : null
-              const idx = editMode ? i : safePage * PAGE_SIZE + i
               const sky = skyline(room.id)
               return (
                 <div
                   key={room.id}
-                  className={`room-card ticket${editMode ? ' edit-mode' : ''}`}
+                  className={`room-card ticket${editMode ? ' edit-mode' : ''}${dragId === room.id ? ' dragging' : ''}${overId === room.id ? ' drag-over' : ''}`}
                   role={editMode ? undefined : 'button'}
                   tabIndex={editMode ? undefined : 0}
+                  draggable={editMode || undefined}
                   onClick={() => !editMode && setPreviewId(room.id)}
                   onKeyDown={(e) => { if (!editMode && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setPreviewId(room.id) } }}
+                  onDragStart={editMode ? (e) => { setDragId(room.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(room.id)) } : undefined}
+                  onDragOver={editMode ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dragId != null && room.id !== dragId) setOverId(room.id) } : undefined}
+                  onDragLeave={editMode ? () => setOverId((o) => (o === room.id ? null : o)) : undefined}
+                  onDrop={editMode ? (e) => { e.preventDefault(); reorder(dragId, room.id); setDragId(null); setOverId(null) } : undefined}
+                  onDragEnd={editMode ? () => { setDragId(null); setOverId(null) } : undefined}
                 >
+                  {editMode && (
+                    <button type="button" className="edit-del-btn" aria-label={`${room.name} 나가기`}
+                      onClick={(e) => { e.stopPropagation(); handleLeave(room) }} onDragStart={(e) => e.preventDefault()}>
+                      <Icon name="ti-trash" />
+                    </button>
+                  )}
                   <div className="tk-body">
                     <div className="tk-head" style={{ background: tone.grad }}>
                       <div className="tk-route">
@@ -343,25 +371,17 @@ export default function RoomList() {
                     )}
 
                     <div className="tk-perf" />
-                    {editMode ? (
-                      <div className="tk-editbar">
-                        <button type="button" className="tk-move" disabled={idx === 0} onClick={(e) => { e.stopPropagation(); moveRoom(idx, -1) }} aria-label="앞으로"><Icon name="ti-chevron-left" /></button>
-                        <span>순서 {idx + 1}</span>
-                        <button type="button" className="tk-move" disabled={idx === sortedRooms.length - 1} onClick={(e) => { e.stopPropagation(); moveRoom(idx, 1) }} aria-label="뒤로"><Icon name="ti-chevron-right" /></button>
-                      </div>
-                    ) : (
-                      <div
-                        className="tk-stub"
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`${room.name} 바로 입장`}
-                        onClick={(e) => { e.stopPropagation(); navigate(`/rooms/${room.id}`) }}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); navigate(`/rooms/${room.id}`) } }}
-                      >
-                        <div className="tk-barcode">{BARCODE.map((w, k) => <i key={k} style={{ width: `${w}px` }} />)}</div>
-                        <span className="tk-enter">입장 <Icon name="ti-chevron-right" /></span>
-                      </div>
-                    )}
+                    <div
+                      className="tk-stub"
+                      role={editMode ? undefined : 'button'}
+                      tabIndex={editMode ? undefined : 0}
+                      aria-label={editMode ? undefined : `${room.name} 바로 입장`}
+                      onClick={editMode ? undefined : (e) => { e.stopPropagation(); navigate(`/rooms/${room.id}`) }}
+                      onKeyDown={editMode ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); navigate(`/rooms/${room.id}`) } }}
+                    >
+                      <div className="tk-barcode">{BARCODE.map((w, k) => <i key={k} style={{ width: `${w}px` }} />)}</div>
+                      <span className="tk-enter">입장 <Icon name="ti-chevron-right" /></span>
+                    </div>
                   </div>
                 </div>
               )

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './roomlist.proto.css'
@@ -99,6 +99,27 @@ export default function RoomList() {
     document.addEventListener('click', onDocClick)
     return () => document.removeEventListener('click', onDocClick)
   }, [menuOpen])
+
+  // 모바일 터치 드래그 — document에 non-passive touchmove(React onTouchMove는 passive라 preventDefault 불가).
+  // 드래그 중이면 스크롤 차단 + 손가락 밑 카드를 대상으로 표시.
+  const touchRef = useRef({ id: null, timer: null, startY: 0 })
+  useEffect(() => {
+    const onTouchMove = (e) => {
+      const d = touchRef.current
+      const t = e.touches[0]
+      if (!t) return
+      if (d.id == null) {
+        if (d.timer != null && Math.abs(t.clientY - d.startY) > 10) { clearTimeout(d.timer); d.timer = null }
+        return
+      }
+      e.preventDefault()
+      const el = document.elementFromPoint(t.clientX, t.clientY)
+      const card = el && el.closest('.room-card[data-room-id]')
+      setOverId(card ? card.getAttribute('data-room-id') : null)
+    }
+    document.addEventListener('touchmove', onTouchMove, { passive: false })
+    return () => document.removeEventListener('touchmove', onTouchMove)
+  }, [])
   const [sort, setSort] = useState('default')
   const [joinCode, setJoinCode] = useState('')
   const [joinMessage, setJoinMessage] = useState('')
@@ -179,6 +200,35 @@ export default function RoomList() {
     ids.splice(to, 0, moved)
     saveOrder(ids)
     if (sort !== 'default') setSort('default')
+  }
+
+  // 모바일: 롱프레스(300ms)로 드래그 시작, 손 떼면 놓은 카드 자리에 재정렬.
+  const onCardTouchStart = (room) => (e) => {
+    const y = e.touches[0]?.clientY ?? 0
+    if (touchRef.current.timer != null) clearTimeout(touchRef.current.timer)
+    const timer = setTimeout(() => { touchRef.current.id = room.id; setDragId(room.id) }, 300)
+    touchRef.current = { id: null, timer, startY: y }
+  }
+  const resetTouch = () => {
+    if (touchRef.current.timer != null) clearTimeout(touchRef.current.timer)
+    touchRef.current = { id: null, timer: null, startY: 0 }
+    setDragId(null)
+    setOverId(null)
+  }
+  const onCardTouchEnd = (e) => {
+    const d = touchRef.current
+    if (d.timer != null) clearTimeout(d.timer)
+    if (d.id != null) {
+      const t = e.changedTouches[0]
+      const el = t && document.elementFromPoint(t.clientX, t.clientY)
+      const card = el && el.closest('.room-card[data-room-id]')
+      const attr = card && card.getAttribute('data-room-id')
+      const target = attr != null ? sortedRooms.find((r) => String(r.id) === attr) : null
+      if (target) reorder(d.id, target.id)
+    }
+    touchRef.current = { id: null, timer: null, startY: 0 }
+    setDragId(null)
+    setOverId(null)
   }
 
   return (
@@ -297,7 +347,8 @@ export default function RoomList() {
               return (
                 <div
                   key={room.id}
-                  className={`room-card ticket${editMode ? ' edit-mode' : ''}${dragId === room.id ? ' dragging' : ''}${overId === room.id ? ' drag-over' : ''}`}
+                  data-room-id={room.id}
+                  className={`room-card ticket${editMode ? ' edit-mode' : ''}${dragId === room.id ? ' dragging' : ''}${String(overId) === String(room.id) ? ' drag-over' : ''}`}
                   role={editMode ? undefined : 'button'}
                   tabIndex={editMode ? undefined : 0}
                   draggable={editMode || undefined}
@@ -308,10 +359,14 @@ export default function RoomList() {
                   onDragLeave={editMode ? () => setOverId((o) => (o === room.id ? null : o)) : undefined}
                   onDrop={editMode ? (e) => { e.preventDefault(); reorder(dragId, room.id); setDragId(null); setOverId(null) } : undefined}
                   onDragEnd={editMode ? () => { setDragId(null); setOverId(null) } : undefined}
+                  onTouchStart={editMode ? onCardTouchStart(room) : undefined}
+                  onTouchEnd={editMode ? onCardTouchEnd : undefined}
+                  onTouchCancel={editMode ? resetTouch : undefined}
                 >
                   {editMode && (
                     <button type="button" className="edit-del-btn" aria-label={`${room.name} 나가기`}
-                      onClick={(e) => { e.stopPropagation(); handleLeave(room) }} onDragStart={(e) => e.preventDefault()}>
+                      onClick={(e) => { e.stopPropagation(); handleLeave(room) }}
+                      onTouchStart={(e) => e.stopPropagation()} onDragStart={(e) => e.preventDefault()}>
                       <Icon name="ti-trash" />
                     </button>
                   )}

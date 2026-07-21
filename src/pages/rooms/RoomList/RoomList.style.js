@@ -634,3 +634,213 @@ export const Message = styled.div`
   font-size: 0.82rem;
   font-weight: 800;
 `
+
+/* ===== 편집·페이지네이션·요청 액션·모달 ===== */
+export const EditBtn = styled.button`
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid ${(p) => (p.$active ? C.accent : C.border)};
+  border-radius: 999px;
+  background: ${(p) => (p.$active ? C.accent : C.card)};
+  color: ${(p) => (p.$active ? '#14150e' : C.muted)};
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+`
+
+export const JoinMsg = styled.div`
+  color: ${C.accent};
+  font-size: 0.82rem;
+  font-weight: 700;
+`
+
+export const EditHint = styled.div`
+  display: inline-flex;
+  align-self: start;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 12px;
+  background: ${C.active};
+  border: 1px dashed ${C.inputBdr};
+  color: ${C.muted};
+  font-size: 0.8rem;
+  font-weight: 700;
+`
+
+export const ReqActions = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+`
+
+export const ReqBtn = styled.button`
+  border: 1px solid ${(p) => (p.$primary ? 'transparent' : C.border)};
+  border-radius: 10px;
+  padding: 7px 16px;
+  background: ${(p) => (p.$primary ? C.accent : 'transparent')};
+  color: ${(p) => (p.$primary ? '#14150e' : C.muted)};
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.78rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: ${(p) => (p.$primary ? '#14150e' : C.accent)};
+    border-color: ${(p) => (p.$primary ? 'transparent' : C.inputBdr)};
+  }
+  &:disabled { opacity: 0.55; cursor: default; }
+`
+
+export const TkEditBar = styled.div`
+  padding: 9px 15px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #1e2e26;
+  font-size: 0.8rem;
+  font-weight: 800;
+`
+
+export const MoveBtn = styled.button`
+  width: 30px;
+  height: 30px;
+  border: 1px solid #d8d2c0;
+  border-radius: 8px;
+  background: #fff;
+  color: #2f7d4f;
+  font-size: 15px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.35; cursor: default; }
+`
+
+export const Pagination = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
+`
+
+export const PageBtn = styled.button`
+  width: 34px;
+  height: 34px;
+  border: 1px solid ${C.border};
+  border-radius: 10px;
+  background: ${C.card};
+  color: ${C.muted};
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.4; cursor: default; }
+`
+
+export const PageNum = styled.button`
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid ${(p) => (p.$active ? C.accent : C.border)};
+  border-radius: 10px;
+  background: ${(p) => (p.$active ? C.accent : C.card)};
+  color: ${(p) => (p.$active ? '#14150e' : C.muted)};
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+`
+
+export const Overlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(7, 10, 6, 0.55);
+  backdrop-filter: blur(4px);
+`
+
+export const Modal = styled.div`
+  width: min(460px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 22px 24px 26px;
+  border-radius: 20px;
+  background: ${C.card};
+  border: 1px solid ${C.border};
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+  display: grid;
+  gap: 14px;
+`
+
+export const ModalHead = styled.header`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`
+
+export const ModalTitle = styled.h2`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: ${C.accent};
+`
+
+export const ModalClose = styled.button`
+  width: 32px;
+  height: 32px;
+  border: 1px solid ${C.border};
+  border-radius: 10px;
+  background: ${C.active};
+  color: ${C.muted};
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+
+  &:hover { color: ${C.accent}; }
+`
+
+export const ModalDesc = styled.p`
+  margin-top: -6px;
+  color: ${C.muted};
+  font-size: 0.85rem;
+  font-weight: 600;
+`
+
+export const LabelHint = styled.span`
+  color: ${C.muted};
+  font-size: 0.68rem;
+  font-weight: 600;
+`
+
+export const CoverPreview = styled.div`
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 1.6rem;
+`
+
+export const Swatches = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+`
+
+export const Swatch = styled.button`
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid ${(p) => (p.$active ? '#fff' : 'transparent')};
+  box-shadow: ${(p) => (p.$active ? '0 0 0 2px ' + C.accent : 'none')};
+  cursor: pointer;
+`

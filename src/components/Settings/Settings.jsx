@@ -7,6 +7,7 @@ import {
   getPreferences, updatePreferences, presignProfileImage,
 } from '../../api/user'
 import { uploadImage } from '../../lib/uploadImage'
+import { APP_BACKGROUNDS, applyAppBackground, getAppBackgroundId } from '../../lib/appBackground'
 import { useAuthStore } from '../../stores/authStore'
 
 const LETTER_THEMES = [
@@ -209,6 +210,8 @@ function SettingsBody({ me, prefs }) {
         </S.Row>
       </S.Section>
 
+      <BackgroundPicker />
+
       <S.Danger>
         <S.SectionTitle>계정 탈퇴</S.SectionTitle>
         <S.DangerText>탈퇴 시 계정은 익명화(닉네임 "언노운")되고 기록은 보존됩니다. 되돌릴 수 없습니다.</S.DangerText>
@@ -223,6 +226,43 @@ function SettingsBody({ me, prefs }) {
         </S.DangerBtn>
       </S.Danger>
     </>
+  )
+}
+
+// 앱 전역 배경 테마 피커 — 선택은 기기-로컬(localStorage) 저장, 즉시 적용.
+function BackgroundPicker() {
+  const [selected, setSelected] = useState(getAppBackgroundId)
+  const pick = (id) => setSelected(applyAppBackground(id))
+  return (
+    <S.Section>
+      <S.SectionTitle>배경</S.SectionTitle>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        {APP_BACKGROUNDS.map((bg) => (
+          <button
+            key={bg.id}
+            type="button"
+            onClick={() => pick(bg.id)}
+            aria-label={bg.name}
+            aria-pressed={selected === bg.id}
+            style={{
+              padding: 0,
+              border: selected === bg.id ? '2px solid #52b788' : '2px solid transparent',
+              borderRadius: 12,
+              overflow: 'hidden',
+              cursor: 'pointer',
+              background: 'none',
+              boxShadow: selected === bg.id ? '0 0 0 2px rgba(82,183,136,0.3)' : 'none',
+            }}
+          >
+            <img src={bg.thumb} alt="" style={{ display: 'block', width: '100%', height: 64, objectFit: 'cover' }} />
+            <span style={{ display: 'block', padding: '6px 4px', fontSize: 12, fontWeight: 700, textAlign: 'center' }}>{bg.name}</span>
+          </button>
+        ))}
+      </div>
+      <p style={{ fontSize: 12, opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
+        기본(우드 &amp; 클로버)은 바로 적용돼요. 사진 배경은 이식된 화면(방 목록 등)에 나타납니다.
+      </p>
+    </S.Section>
   )
 }
 

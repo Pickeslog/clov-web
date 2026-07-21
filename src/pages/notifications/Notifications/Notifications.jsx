@@ -34,7 +34,9 @@ export default function Notifications() {
     },
   })
 
-  const notifications = data || []
+  // 백엔드가 현재 bare array를 반환하지만 계약 §13은 { items } 봉투다. 백엔드 봉투 정합화(clov-api 후속)
+  // 전후 모두 안전하도록 두 형태를 견딘다 — 배열이면 그대로, 봉투면 items 추출.
+  const notifications = Array.isArray(data) ? data : (data?.items ?? [])
   const hasUnread = notifications.some(n => !n.isRead)
 
   return (

@@ -45,6 +45,10 @@ export const Filters = styled.div`
   margin: 20px auto 0;
   display: flex;
   gap: 8px;
+
+  @media (max-width: 480px) {
+    flex-wrap: wrap;
+  }
 `
 
 export const FilterBtn = styled.button`
@@ -169,6 +173,10 @@ export const ComposeForm = styled.section`
   box-shadow: 0 18px 44px rgba(7, 59, 36, 0.08);
   display: grid;
   gap: 16px;
+
+  @media (max-width: 480px) {
+    padding: 18px;
+  }
 `
 
 export const Field = styled.div`

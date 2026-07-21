@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as S from './RoomList.style'
 import { getRooms, createRoom } from '../../../api/room'
 import { useAuthStore } from '../../../stores/authStore'
+import Settings from '../../../components/Settings/Settings'
 
 // 이동 수단 선택지 — 계약 §6 transportType.
 const TRANSPORTS = [
@@ -23,6 +24,7 @@ export default function RoomList() {
   const [description, setDescription] = useState('')
   const [transportType, setTransportType] = useState('airplane')
   const [message, setMessage] = useState('')
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   // 목록 로딩 상태는 isPending(react-query v5)로 판별 — retry 딜레이 중 isLoading=false 크래시 회피.
   const rooms = useQuery({ queryKey: ['rooms'], queryFn: getRooms })
@@ -59,6 +61,9 @@ export default function RoomList() {
         <S.Brand>Clov.</S.Brand>
         <S.HeaderActions>
           <S.JoinLink to="/join">초대 코드로 참여하기</S.JoinLink>
+          <S.LogoutBtn type="button" onClick={() => setSettingsOpen(true)}>
+            설정
+          </S.LogoutBtn>
           <S.LogoutBtn type="button" onClick={clear}>
             로그아웃
           </S.LogoutBtn>
@@ -150,6 +155,8 @@ export default function RoomList() {
           {message && <S.Message role="alert">{message}</S.Message>}
         </S.CreateCard>
       </S.Body>
+
+      {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
     </S.Page>
   )
 }

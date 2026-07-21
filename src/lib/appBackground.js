@@ -20,12 +20,19 @@ export const APP_BACKGROUNDS = [
 ]
 
 const STORAGE_KEY = 'clov_appBgTheme'
+const COLOR_KEY = 'clov_appBgColor'
 const DEFAULT_ID = 'default'
+const DEFAULT_COLOR = '#2C5F4A'
+
+export function getCustomColor() {
+  try { return localStorage.getItem(COLOR_KEY) || DEFAULT_COLOR } catch { return DEFAULT_COLOR }
+}
 
 export function getAppBackgroundId() {
   try {
     const id = localStorage.getItem(STORAGE_KEY)
-    return APP_BACKGROUNDS.some((b) => b.id === id) ? id : DEFAULT_ID
+    if (id === 'custom' || APP_BACKGROUNDS.some((b) => b.id === id)) return id
+    return DEFAULT_ID
   } catch {
     return DEFAULT_ID
   }
@@ -33,8 +40,15 @@ export function getAppBackgroundId() {
 
 // :root 변수만 세팅/해제한다. default 는 변수 제거 → CSS의 그라디언트 기본값으로 폴백.
 export function applyAppBackground(id, { persist = true } = {}) {
-  const bg = APP_BACKGROUNDS.find((b) => b.id === id) ?? APP_BACKGROUNDS[0]
   const root = document.documentElement
+  if (id === 'custom') {
+    root.style.setProperty('--clov-app-bg', getCustomColor())
+    root.style.setProperty('--clov-app-bg-size', 'auto')
+    root.style.removeProperty('--clov-app-bg-pos')
+    if (persist) { try { localStorage.setItem(STORAGE_KEY, 'custom') } catch { /* 무시 */ } }
+    return 'custom'
+  }
+  const bg = APP_BACKGROUNDS.find((b) => b.id === id) ?? APP_BACKGROUNDS[0]
   if (bg.image) {
     root.style.setProperty('--clov-app-bg', `url("${bg.image}")`)
     root.style.setProperty('--clov-app-bg-size', 'cover')
@@ -48,6 +62,12 @@ export function applyAppBackground(id, { persist = true } = {}) {
     try { localStorage.setItem(STORAGE_KEY, bg.id) } catch { /* storage 차단 무시 */ }
   }
   return bg.id
+}
+
+// 커스텀 배경 색상(사용자설정 물감) 적용 + 저장.
+export function applyCustomColor(color) {
+  try { localStorage.setItem(COLOR_KEY, color) } catch { /* 무시 */ }
+  return applyAppBackground('custom')
 }
 
 // 앱 부팅 시 1회 호출 — 저장된 선택을 적용(없으면 기본 그라디언트).

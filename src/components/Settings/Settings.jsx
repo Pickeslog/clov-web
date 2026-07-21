@@ -7,22 +7,25 @@ import {
   getPreferences, updatePreferences, presignProfileImage,
 } from '../../api/user'
 import { uploadImage } from '../../lib/uploadImage'
-import { APP_BACKGROUNDS, applyAppBackground, getAppBackgroundId } from '../../lib/appBackground'
+import { APP_BACKGROUNDS, applyAppBackground, applyCustomColor, getAppBackgroundId, getCustomColor } from '../../lib/appBackground'
 import { useAuthStore } from '../../stores/authStore'
 
 const LETTER_THEMES = [
-  { value: 'postbox', label: '우체통' },
   { value: 'giftbox', label: '선물상자' },
+  { value: 'postbox', label: '우체통' },
 ]
 const MEMORY_THEMES = [
   { value: 'clothesline', label: '빨랫줄' },
-  { value: 'stack', label: '겹침' },
+  { value: 'stack', label: '겹침 카드' },
   { value: 'diary', label: '일기장' },
 ]
 const MASCOTS = [
   { value: 'crobi', label: '크로비' },
-  { value: 'rob', label: '롭' },
+  { value: 'rob', label: '로봇' },
 ]
+
+// 사용자 설정 물감 카드 — 프로토타입 blob 모양(색상은 currentColor).
+const BLOB_PATH = 'M20,45 C20,20 60,10 100,15 C150,20 170,5 220,10 C270,15 300,25 300,45 C300,70 260,80 220,78 C180,76 160,85 110,82 C60,79 20,70 20,45 Z'
 
 // 사용자설정 모달 — 프로토타입 2-패널(계정/화면) 레이아웃.
 export default function Settings({ onClose }) {
@@ -60,23 +63,28 @@ function SettingsBody({ me, prefs, onClose }) {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPw, setShowPw] = useState({ cur: false, next: false, conf: false })
   const [bgId, setBgId] = useState(getAppBackgroundId)
+  const colorRef = useRef(null)
+  const [customColor, setCustomColor] = useState(getCustomColor)
   const [pref, setPref] = useState({
     darkMode: Boolean(prefs.darkMode),
-    letterTheme: prefs.letterTheme ?? 'postbox',
+    letterTheme: prefs.letterTheme ?? 'giftbox',
     memoryCardTheme: prefs.memoryCardTheme ?? 'clothesline',
     mascotType: prefs.mascotType ?? 'crobi',
   })
 
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      await updateProfile({ nickname: nickname.trim(), birthdate: birthdate || null })
-      await updatePreferences(pref)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['me'] })
-      queryClient.invalidateQueries({ queryKey: ['preferences'] })
-    },
+  // 프로필(개인정보 수정) 저장 — 닉네임·생일.
+  const profileSave = useMutation({
+    mutationFn: () => updateProfile({ nickname: nickname.trim(), birthdate: birthdate || null }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['me'] }),
   })
+  // 환경설정(테마) — 프로토타입처럼 바꾸는 즉시 저장(테마 패널 푸터는 '닫기'만).
+  const prefMutation = useMutation({
+    mutationFn: updatePreferences,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['preferences'] }),
+  })
+  const setPrefAndSave = (patch) => {
+    setPref((p) => { const next = { ...p, ...patch }; prefMutation.mutate(next); return next })
+  }
   const imageMutation = useMutation({
     mutationFn: async (file) => {
       const imageUrl = await uploadImage(presignProfileImage, file)
@@ -94,6 +102,8 @@ function SettingsBody({ me, prefs, onClose }) {
   })
 
   const pickBackground = (id) => setBgId(applyAppBackground(id))
+  const pickColor = (color) => { setCustomColor(color); setBgId(applyCustomColor(color)) }
+  const resetBackground = () => setBgId(applyAppBackground('default'))
   const pwMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword
   const canChangePw = currentPassword && newPassword && newPassword === confirmPassword
 
@@ -190,8 +200,23 @@ function SettingsBody({ me, prefs, onClose }) {
               <div className="ps-section">
                 <div className="ps-section-title">테마</div>
                 <div className="ps-swatches">
-                  <button type="button" className={`ps-mode-swatch light${!pref.darkMode ? ' on' : ''}`} onClick={() => setPref((p) => ({ ...p, darkMode: false }))}>라이트</button>
-                  <button type="button" className={`ps-mode-swatch dark${pref.darkMode ? ' on' : ''}`} onClick={() => setPref((p) => ({ ...p, darkMode: true }))}>다크</button>
+                  <button type="button" className={`ps-mode-swatch light${!pref.darkMode ? ' on' : ''}`} onClick={() => setPrefAndSave({ darkMode: false })} aria-label="라이트 모드" aria-pressed={!pref.darkMode} />
+                  <button type="button" className={`ps-mode-swatch dark${pref.darkMode ? ' on' : ''}`} onClick={() => setPrefAndSave({ darkMode: true })} aria-label="다크 모드" aria-pressed={pref.darkMode} />
+                </div>
+              </div>
+
+              <div className="ps-section">
+                <div className="ps-section-header">
+                  <div className="ps-section-title">사용자 설정</div>
+                  <button type="button" className="ps-reset" onClick={resetBackground}>↺ 기본값으로</button>
+                </div>
+                <div className="ps-paint-card">
+                  <button type="button" className="ps-blob" onClick={() => colorRef.current?.click()} style={{ color: customColor }} aria-label="배경 색상 선택">
+                    <svg viewBox="0 0 320 90" aria-hidden="true"><path d={BLOB_PATH} fill="currentColor" /></svg>
+                  </button>
+                  <input ref={colorRef} type="color" value={customColor} onChange={(e) => pickColor(e.target.value)}
+                    style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }} tabIndex={-1} aria-hidden="true" />
+                  <span className="ps-paint-hint">탭해서 나만의 색상을 칠해보세요 🎨</span>
                 </div>
               </div>
 
@@ -209,40 +234,42 @@ function SettingsBody({ me, prefs, onClose }) {
               </div>
 
               <div className="ps-section">
-                <div className="ps-section-title">우정편지 테마</div>
-                <ThemeSelect value={pref.letterTheme} options={LETTER_THEMES} onChange={(v) => setPref((p) => ({ ...p, letterTheme: v }))} />
+                <div className="ps-section-title">대표 커버 장식</div>
+                <div className="ps-opts"><button type="button" className="ps-opt-btn" disabled>준비중</button></div>
               </div>
-              <div className="ps-section">
-                <div className="ps-section-title">추억 카드 테마</div>
-                <ThemeSelect value={pref.memoryCardTheme} options={MEMORY_THEMES} onChange={(v) => setPref((p) => ({ ...p, memoryCardTheme: v }))} />
-              </div>
-              <div className="ps-section">
-                <div className="ps-section-title">마스코트 캐릭터</div>
-                <ThemeSelect value={pref.mascotType} options={MASCOTS} onChange={(v) => setPref((p) => ({ ...p, mascotType: v }))} />
-              </div>
+
+              <OptionRow title="우정편지 테마" value={pref.letterTheme} options={LETTER_THEMES} onPick={(v) => setPrefAndSave({ letterTheme: v })} />
+              <OptionRow title="참여자별 추억 증거 카드" value={pref.memoryCardTheme} options={MEMORY_THEMES} onPick={(v) => setPrefAndSave({ memoryCardTheme: v })} />
+              <OptionRow title="마스코트 캐릭터" value={pref.mascotType} options={MASCOTS} onPick={(v) => setPrefAndSave({ mascotType: v })} />
             </>
           )}
         </section>
       </div>
 
       <div className="ps-actions">
-        <div className="ps-actions-row">
-          <div className="ps-action-group">
-            <button type="button" className="ps-btn danger"
-              disabled={deleteMutation.isPending}
-              onClick={() => { if (window.confirm('정말 탈퇴하시겠어요? 되돌릴 수 없습니다.')) deleteMutation.mutate() }}>
-              {deleteMutation.isPending ? '처리 중…' : '계정 탈퇴'}
-            </button>
+        {pane === 'account' ? (
+          <div className="ps-actions-row">
+            <div className="ps-action-group">
+              <button type="button" className="ps-btn danger"
+                disabled={deleteMutation.isPending}
+                onClick={() => { if (window.confirm('정말 탈퇴하시겠어요? 되돌릴 수 없습니다.')) deleteMutation.mutate() }}>
+                {deleteMutation.isPending ? '처리 중…' : '계정 탈퇴'}
+              </button>
+            </div>
+            <div className="ps-action-group" style={{ alignItems: 'center' }}>
+              {profileSave.isSuccess && <span className="ps-ok">저장됨</span>}
+              {profileSave.isError && <span className="ps-err">{profileSave.error?.message}</span>}
+              <button type="button" className="ps-btn secondary" onClick={onClose}>취소</button>
+              <button type="button" className="ps-btn primary" disabled={profileSave.isPending || !nickname.trim()} onClick={() => profileSave.mutate()}>
+                {profileSave.isPending ? '저장 중…' : '저장하기'}
+              </button>
+            </div>
           </div>
-          <div className="ps-action-group" style={{ alignItems: 'center' }}>
-            {saveMutation.isSuccess && <span className="ps-ok">저장됨</span>}
-            {saveMutation.isError && <span className="ps-err">{saveMutation.error?.message}</span>}
-            <button type="button" className="ps-btn secondary" onClick={onClose}>취소</button>
-            <button type="button" className="ps-btn primary" disabled={saveMutation.isPending || !nickname.trim()} onClick={() => saveMutation.mutate()}>
-              {saveMutation.isPending ? '저장 중…' : '저장하기'}
-            </button>
+        ) : (
+          <div className="ps-actions-row" style={{ justifyContent: 'flex-end' }}>
+            <button type="button" className="ps-btn primary" onClick={onClose}>닫기</button>
           </div>
-        </div>
+        )}
       </div>
     </>
   )
@@ -262,10 +289,17 @@ function PasswordField({ label, id, value, show, placeholder, onToggle, onChange
   )
 }
 
-function ThemeSelect({ value, options, onChange }) {
+function OptionRow({ title, value, options, onPick }) {
   return (
-    <select className="ps-select" value={value} onChange={(e) => onChange(e.target.value)}>
-      {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-    </select>
+    <div className="ps-section">
+      <div className="ps-section-title">{title}</div>
+      <div className="ps-opts">
+        {options.map((o) => (
+          <button type="button" key={o.value} className={`ps-opt-btn${value === o.value ? ' on' : ''}`} onClick={() => onPick(o.value)}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }

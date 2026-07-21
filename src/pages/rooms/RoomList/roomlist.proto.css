@@ -452,3 +452,46 @@
 .proto-roomlist .or-div::before, .proto-roomlist .or-div::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .proto-roomlist .regen { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 12px; font-size: 12px; color: var(--muted); font-weight: 600; cursor: pointer; background: none; border: none; width: 100%; font-family: inherit; }
 .proto-roomlist .regen:hover { color: var(--accent); }
+
+/* =====================================================================
+   라이트 모드 — 기본(다크)에 body.light-mode로 라이트 팔레트 덧입힘.
+   티켓(.tk-*)은 아이보리 고정이라 그대로. 프로토타입 :root(light) 값.
+   ===================================================================== */
+body.light-mode .proto-roomlist {
+  --primary: #1b4332;
+  --accent: #52b788;
+  --btn-bg: #357a58;
+  --card-bg: #ffffff;
+  --text: #1e2e26;
+  --muted: #6a7e73;
+  --border: #e4ede8;
+  --input-bg: #ffffff;
+  --input-bdr: #d0e4d8;
+  --active-bg: #e8f3ed;
+  --danger: #d95f5f;
+  --body-bg: #f4f7f5;
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.07);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.09);
+}
+/* primary/accent 버튼 텍스트 — 라이트에선 어두운 배경이라 흰색. */
+body.light-mode .proto-roomlist .filter-btn.active,
+body.light-mode .proto-roomlist .btn-enter,
+body.light-mode .proto-roomlist .btn-create,
+body.light-mode .proto-roomlist .req-btn.primary,
+body.light-mode .proto-roomlist .page-btn.active,
+body.light-mode .proto-roomlist .btn-submit,
+body.light-mode .proto-roomlist .rp-lv,
+body.light-mode .proto-roomlist .rp-enter,
+body.light-mode .proto-roomlist .ed-save,
+body.light-mode .proto-roomlist .share-btn { color: #fff; }
+/* 헤더 글래스 — 라이트 화이트. */
+body.light-mode .proto-roomlist .rl-header { background: rgba(255, 255, 255, 0.88); }
+/* 요청 상태 배지 — 라이트 톤. */
+body.light-mode .proto-roomlist .req-status.pending { background: #fbeecf; color: #b5851f; }
+body.light-mode .proto-roomlist .req-status.rejected { background: #fdeaea; color: #d95f5f; }
+body.light-mode .proto-roomlist .req-status.vanished { background: #e4edf0; color: #557a86; }
+/* 소식 아이콘 — 라이트 톤. */
+body.light-mode .proto-roomlist .rp-fi-ic.letter { background: #e2f2ea; color: #2f7d4f; }
+body.light-mode .proto-roomlist .rp-fi-ic.sched { background: #fbeecf; color: #b5851f; }
+body.light-mode .proto-roomlist .rp-fi-ic.member { background: #dfecee; color: #b45274; }
+body.light-mode .proto-roomlist .rp-fi-ic.join { background: #dfeef0; color: #2f7a86; }

@@ -165,3 +165,24 @@
   .proto-settings .ps-action-group { width: 100%; }
   .proto-settings .ps-action-group .ps-btn { flex: 1; }
 }
+
+/* =====================================================================
+   라이트 모드 — body.light-mode로 라이트 팔레트 덧입힘(프로토타입 :root light).
+   ===================================================================== */
+body.light-mode .proto-settings {
+  --primary: #1b4332;
+  --accent: #52b788;
+  --btn-bg: #357a58;
+  --card-bg: #ffffff;
+  --text: #1e2e26;
+  --muted: #6a7e73;
+  --border: #e4ede8;
+  --input-bg: #ffffff;
+  --input-bdr: #d0e4d8;
+  --active-bg: #e8f3ed;
+  --danger: #d95f5f;
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+/* primary 버튼 텍스트 — 라이트에선 어두운 배경이라 흰색. */
+body.light-mode .proto-settings .ps-opt-btn.on,
+body.light-mode .proto-settings .ps-btn.primary { color: #fff; }

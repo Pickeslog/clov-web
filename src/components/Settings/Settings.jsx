@@ -8,6 +8,7 @@ import {
 } from '../../api/user'
 import { uploadImage } from '../../lib/uploadImage'
 import { APP_BACKGROUNDS, applyAppBackground, applyCustomColor, getAppBackgroundId, getCustomColor } from '../../lib/appBackground'
+import { applyTheme, getDark } from '../../lib/theme'
 import { useAuthStore } from '../../stores/authStore'
 
 const LETTER_THEMES = [
@@ -66,7 +67,7 @@ function SettingsBody({ me, prefs, onClose }) {
   const colorRef = useRef(null)
   const [customColor, setCustomColor] = useState(getCustomColor)
   const [pref, setPref] = useState({
-    darkMode: Boolean(prefs.darkMode),
+    darkMode: getDark(),
     letterTheme: prefs.letterTheme ?? 'giftbox',
     memoryCardTheme: prefs.memoryCardTheme ?? 'clothesline',
     mascotType: prefs.mascotType ?? 'crobi',
@@ -85,6 +86,8 @@ function SettingsBody({ me, prefs, onClose }) {
   const setPrefAndSave = (patch) => {
     setPref((p) => { const next = { ...p, ...patch }; prefMutation.mutate(next); return next })
   }
+  // 라이트/다크 — 즉시 적용(body 클래스) + 저장.
+  const setTheme = (dark) => { applyTheme(dark); setPrefAndSave({ darkMode: dark }) }
   const imageMutation = useMutation({
     mutationFn: async (file) => {
       const imageUrl = await uploadImage(presignProfileImage, file)
@@ -201,8 +204,8 @@ function SettingsBody({ me, prefs, onClose }) {
               <div className="ps-section">
                 <div className="ps-section-title">테마</div>
                 <div className="ps-swatches">
-                  <button type="button" className={`ps-mode-swatch light${!pref.darkMode ? ' on' : ''}`} onClick={() => setPrefAndSave({ darkMode: false })} aria-label="라이트 모드" aria-pressed={!pref.darkMode} />
-                  <button type="button" className={`ps-mode-swatch dark${pref.darkMode ? ' on' : ''}`} onClick={() => setPrefAndSave({ darkMode: true })} aria-label="다크 모드" aria-pressed={pref.darkMode} />
+                  <button type="button" className={`ps-mode-swatch light${!pref.darkMode ? ' on' : ''}`} onClick={() => setTheme(false)} aria-label="라이트 모드" aria-pressed={!pref.darkMode} />
+                  <button type="button" className={`ps-mode-swatch dark${pref.darkMode ? ' on' : ''}`} onClick={() => setTheme(true)} aria-label="다크 모드" aria-pressed={pref.darkMode} />
                 </div>
               </div>
 

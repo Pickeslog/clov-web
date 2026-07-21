@@ -1,0 +1,144 @@
+/* =====================================================================
+   사용자설정 모달 — 프로토타입(clov-profile-modal) 2-패널 레이아웃 이식.
+   좌측 레일(계정/화면) + 우측 패널(개인정보 수정 / 테마 설정) + 하단 푸터.
+   .proto-settings 스코프, 팔레트=프로토타입 다크(현재 앱과 동일).
+   ===================================================================== */
+.proto-settings {
+  --primary: #5a7a3e;
+  --accent: #9ccc65;
+  --btn-bg: #7c9c52;
+  --card-bg: #1e2016;
+  --text: #eef0e2;
+  --muted: #b7c99a;
+  --border: #2a2c1e;
+  --input-bg: #191a12;
+  --input-bdr: #6b8f47;
+  --active-bg: #2b3020;
+  --danger: #f87171;
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.proto-settings *, .proto-settings *::before, .proto-settings *::after { box-sizing: border-box; }
+
+.proto-settings .ps-overlay {
+  position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px);
+}
+.proto-settings .ps-modal {
+  width: min(720px, 100%); max-height: calc(100vh - 56px); overflow: hidden;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-md);
+  color: var(--text); display: flex; flex-direction: column;
+}
+.proto-settings .ps-head {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+  padding: 22px 24px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.proto-settings .ps-kicker { display: block; margin-bottom: 5px; color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: 0.08em; }
+.proto-settings .ps-head h3 { margin: 0; font-size: 18px; color: var(--text); }
+.proto-settings .ps-close {
+  width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--active-bg); color: var(--accent);
+  cursor: pointer; font-size: 20px; line-height: 1; flex-shrink: 0;
+}
+
+.proto-settings .ps-body { display: grid; grid-template-columns: 200px minmax(0, 1fr); flex: 1; min-height: 0; overflow: hidden; }
+
+/* 레일 */
+.proto-settings .ps-rail { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--border); background: var(--active-bg); }
+.proto-settings .ps-rail-identity { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.proto-settings .ps-rail-avatar {
+  position: relative; width: 30px; height: 30px; flex-shrink: 0; display: grid; place-items: center;
+  border-radius: 50%; border: 0; background: linear-gradient(135deg, var(--accent), var(--primary));
+  color: #fff; overflow: hidden; font-size: 12px; font-weight: 900;
+}
+.proto-settings .ps-rail-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.proto-settings .ps-rail-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-size: 13px; font-weight: 800; }
+.proto-settings .ps-nav { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 10px; }
+.proto-settings .ps-nav-group + .ps-nav-group { margin-top: 14px; }
+.proto-settings .ps-nav-label { margin: 0 0 4px; padding: 0 10px; color: var(--muted); font-size: 11px; font-weight: 800; }
+.proto-settings .ps-nav-item { padding: 10px 12px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; text-align: left; border: none; background: none; width: 100%; font-family: inherit; }
+.proto-settings .ps-nav-item:hover { background: var(--card-bg); }
+.proto-settings .ps-nav-item.active { background: var(--card-bg); color: var(--accent); }
+
+/* 패널 */
+.proto-settings .ps-panel { min-width: 0; overflow-y: auto; padding: 20px 24px; }
+.proto-settings .ps-section { padding: 18px 0; }
+.proto-settings .ps-section:not(:last-child) { border-bottom: 1px solid var(--border); }
+.proto-settings .ps-section-title { margin-bottom: 12px; color: var(--accent); font-size: 12px; font-weight: 900; }
+.proto-settings .ps-field { margin-bottom: 14px; }
+.proto-settings .ps-field:last-child { margin-bottom: 0; }
+.proto-settings .ps-label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+.proto-settings .ps-input {
+  width: 100%; height: 44px; padding: 0 14px; border: 1.5px solid var(--input-bdr); border-radius: 12px;
+  background: var(--input-bg); color: var(--text); font: inherit; font-size: 14px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.proto-settings .ps-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.15); }
+.proto-settings .ps-input:disabled { opacity: 0.6; cursor: not-allowed; }
+.proto-settings .ps-read { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 4px 0; font-size: 13px; }
+.proto-settings .ps-read span { color: var(--muted); font-weight: 700; }
+.proto-settings .ps-read strong { color: var(--text); font-weight: 800; }
+.proto-settings .ps-pw-field { position: relative; }
+.proto-settings .ps-pw-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: none; cursor: pointer; font-size: 15px; color: var(--muted); }
+.proto-settings .ps-hint { font-size: 11px; margin-top: 5px; min-height: 14px; color: var(--muted); }
+.proto-settings .ps-hint.ok { color: var(--accent); }
+.proto-settings .ps-hint.err { color: var(--danger); }
+.proto-settings .ps-inline-btn {
+  margin-top: 10px; height: 38px; padding: 0 16px; border: 1.5px solid var(--input-bdr); border-radius: 10px;
+  background: var(--active-bg); color: var(--text); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer;
+}
+.proto-settings .ps-inline-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* 기본 정보 아바타 + 닉네임 */
+.proto-settings .ps-basic { display: flex; align-items: center; gap: 14px; }
+.proto-settings .ps-avatar-upload {
+  position: relative; width: 64px; height: 64px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%;
+  border: 0; background: linear-gradient(135deg, var(--accent), var(--primary)); color: #fff; cursor: pointer; overflow: hidden;
+  font-size: 22px; font-weight: 900; transition: transform 0.15s;
+}
+.proto-settings .ps-avatar-upload:hover { transform: scale(1.05); }
+.proto-settings .ps-avatar-upload img { width: 100%; height: 100%; object-fit: cover; }
+.proto-settings .ps-basic-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.proto-settings .ps-basic .ps-field { flex: 1; margin-bottom: 0; }
+
+/* 테마/바탕화면 스와치 */
+.proto-settings .ps-swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.proto-settings .ps-mode-swatch {
+  width: 56px; height: 40px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; padding: 0;
+  font-size: 10px; font-weight: 800; color: #fff; display: grid; place-items: center;
+}
+.proto-settings .ps-mode-swatch.light { background: linear-gradient(135deg, #fff8ec, #dce8d6); color: #1e2e26; }
+.proto-settings .ps-mode-swatch.dark { background: linear-gradient(135deg, #1e2016, #14150e); }
+.proto-settings .ps-mode-swatch.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(82, 183, 136, 0.3); }
+.proto-settings .ps-bg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.proto-settings .ps-bg-swatch { padding: 0; border: 2px solid transparent; border-radius: 12px; overflow: hidden; cursor: pointer; background: none; }
+.proto-settings .ps-bg-swatch.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(82, 183, 136, 0.3); }
+.proto-settings .ps-bg-swatch img { display: block; width: 100%; height: 56px; object-fit: cover; }
+.proto-settings .ps-bg-swatch span { display: block; padding: 5px 4px; font-size: 11px; font-weight: 700; text-align: center; color: var(--text); }
+.proto-settings .ps-note { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+.proto-settings .ps-select {
+  width: 100%; height: 44px; padding: 0 12px; border: 1.5px solid var(--input-bdr); border-radius: 12px;
+  background: var(--input-bg); color: var(--text); font: inherit; font-size: 14px; cursor: pointer;
+}
+
+/* 푸터 */
+.proto-settings .ps-actions { padding: 16px 24px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.proto-settings .ps-actions-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.proto-settings .ps-action-group { display: flex; gap: 8px; }
+.proto-settings .ps-btn { height: 42px; padding: 0 20px; border-radius: 12px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; min-width: 96px; }
+.proto-settings .ps-btn.secondary { background: none; border: 1.5px solid var(--border); color: var(--text); }
+.proto-settings .ps-btn.secondary:hover { background: var(--active-bg); }
+.proto-settings .ps-btn.primary { background: var(--btn-bg); color: #0a0f0c; border: none; }
+.proto-settings .ps-btn.primary:hover { opacity: 0.88; }
+.proto-settings .ps-btn.danger { background: none; border: 1.5px solid color-mix(in srgb, var(--danger) 55%, var(--border)); color: var(--danger); }
+.proto-settings .ps-btn.danger:hover { background: rgba(248, 113, 113, 0.1); }
+.proto-settings .ps-ok { color: var(--accent); font-size: 12px; font-weight: 700; }
+.proto-settings .ps-err { color: var(--danger); font-size: 12px; font-weight: 700; }
+.proto-settings .ps-state { padding: 40px; text-align: center; color: var(--muted); font-weight: 700; }
+
+@media (max-width: 720px) {
+  .proto-settings .ps-body { grid-template-columns: 1fr; overflow-y: auto; }
+  .proto-settings .ps-rail { border-right: none; border-bottom: 1px solid var(--border); }
+  .proto-settings .ps-nav { display: flex; gap: 8px; padding: 10px; }
+  .proto-settings .ps-nav-group + .ps-nav-group { margin-top: 0; }
+  .proto-settings .ps-actions-row { flex-direction: column-reverse; align-items: stretch; }
+  .proto-settings .ps-action-group { width: 100%; }
+  .proto-settings .ps-action-group .ps-btn { flex: 1; }
+}

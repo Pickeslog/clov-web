@@ -8,7 +8,7 @@ import { useAuthStore } from '../../../stores/authStore'
 const SECTIONS = [
   { key: 'feed', label: '추억피드', path: 'feed', ready: true },
   { key: 'letters', label: '행운편지', path: 'letters', ready: true },
-  { key: 'schedule', label: '일정계획', path: 'schedule', ready: false },
+  { key: 'schedule', label: '일정계획', path: 'schedule', ready: true },
 ]
 
 // 특정 우정공간 대시보드(홈). roomId 컨텍스트에서 상세·레벨·멤버를 보여주고 도메인 화면으로 라우팅한다.

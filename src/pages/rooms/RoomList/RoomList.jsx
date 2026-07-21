@@ -22,13 +22,16 @@ const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
 // 목적지 헤드라인 = 다음 약속 제목의 첫 단어(최대 6자), 없으면 "자유".
 const shortDest = (label) => (label || '').trim().split(/\s+/)[0].slice(0, 6)
 
+// 이동수단 = 프로토타입과 동일(비행기/시외버스/배/기차).
 const TRANSPORTS = [
   { value: 'airplane', label: '비행기', icon: 'ti-plane' },
-  { value: 'train', label: '기차', icon: 'ti-train' },
-  { value: 'car', label: '자동차', icon: 'ti-car' },
+  { value: 'bus', label: '시외버스', icon: 'ti-bus' },
   { value: 'ship', label: '배', icon: 'ti-ship' },
+  { value: 'train', label: '기차', icon: 'ti-train' },
 ]
-const transportMeta = (t) => TRANSPORTS.find((x) => x.value === t) ?? TRANSPORTS[0]
+// 렌더용 아이콘 — 레거시 값(car 등)도 안전하게 매핑.
+const VEHICLE_ICON = { airplane: 'ti-plane', plane: 'ti-plane', bus: 'ti-bus', ship: 'ti-ship', train: 'ti-train', car: 'ti-car' }
+const vehicleIcon = (v) => VEHICLE_ICON[v] ?? 'ti-plane'
 const THEME_COLORS = ['#7CC6A6', '#8e4585', '#2a6f7d', '#b5761f', '#3a7d44', '#d4537e']
 
 const SORTS = [
@@ -270,7 +273,6 @@ export default function RoomList() {
         {sortedRooms.length > 0 && (
           <div className="room-grid">
             {visibleRooms.map((room, i) => {
-              const tp = transportMeta(room.transportType)
               const tone = headTone(room)
               const hasPlan = Boolean(room.nextPlan?.planDate)
               const dday = hasPlan ? ddayLabel(ddayOf(room.nextPlan.planDate)) : null
@@ -292,7 +294,7 @@ export default function RoomList() {
                           <div className="tk-kick" style={{ color: tone.kick }}>오늘</div>
                           <div className="tk-code">CLOV</div>
                         </div>
-                        <div className="tk-mid" style={{ color: tone.kick }}>┈<Icon name={tp.icon} />┈</div>
+                        <div className="tk-mid" style={{ color: tone.kick }}>┈<Icon name={vehicleIcon(room.transportType)} />┈</div>
                         <div className="tk-dest">
                           <div className="tk-kick" style={{ color: tone.kick }}>{hasPlan ? dday : '약속 없음'}</div>
                           <div className="tk-code" style={hasPlan ? undefined : { fontSize: '13px' }}>{hasPlan ? shortDest(room.nextPlan.title) : '자유'}</div>
@@ -415,7 +417,6 @@ function CreateRoomModal({ onClose, onCreated }) {
     mutate({ name: name.trim(), description: description.trim() || null, themeColor, transportType, coverPhotoUrl: null, coverTitle: null })
   }
 
-  const tp = transportMeta(transportType)
   return (
     <div className="rl-overlay" onClick={onClose}>
       <div className="rl-modal" onClick={(e) => e.stopPropagation()}>
@@ -428,7 +429,7 @@ function CreateRoomModal({ onClose, onCreated }) {
         <div className="field-wrap">
           <div className="field-label">대표 사진 <span className="field-hint">이동수단 아이콘 + 테마 색상으로 표시돼요</span></div>
           <div className="cover-preview" style={{ background: `linear-gradient(135deg, ${themeColor}, rgba(0,0,0,0.28))` }}>
-            <Icon name={tp.icon} />
+            <Icon name={vehicleIcon(transportType)} />
           </div>
         </div>
 

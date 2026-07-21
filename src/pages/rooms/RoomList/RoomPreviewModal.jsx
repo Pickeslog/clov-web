@@ -9,13 +9,16 @@ import { getNotifications } from '../../../api/notification'
 
 const HEX6 = /^#[0-9a-fA-F]{6}$/
 const AVATAR_COLORS = ['#5a7a3e', '#357a58', '#6a7e73', '#52b788']
+// 이동수단 = 프로토타입과 동일(비행기/시외버스/배/기차).
 const VEHICLES = [
   { value: 'airplane', label: '비행기', icon: 'ti-plane' },
-  { value: 'train', label: '기차', icon: 'ti-train' },
-  { value: 'car', label: '자동차', icon: 'ti-car' },
+  { value: 'bus', label: '시외버스', icon: 'ti-bus' },
   { value: 'ship', label: '배', icon: 'ti-ship' },
+  { value: 'train', label: '기차', icon: 'ti-train' },
 ]
-const vehicleIcon = (v) => (VEHICLES.find((x) => x.value === v) ?? VEHICLES[0]).icon
+// 렌더용 아이콘 — 레거시 값(car 등)도 안전하게 매핑.
+const VEHICLE_ICON = { airplane: 'ti-plane', plane: 'ti-plane', bus: 'ti-bus', ship: 'ti-ship', train: 'ti-train', car: 'ti-car' }
+const vehicleIcon = (v) => VEHICLE_ICON[v] ?? 'ti-plane'
 // 보딩패스 톤(프로토타입 TICKET_TONES 대표색).
 const ROOM_THEME_COLORS = ['#22705a', '#1f6b6b', '#4a6b3a', '#6b8f71', '#2563a8', '#7c5cbf', '#d1603d', '#c98a2e', '#c94f7c']
 

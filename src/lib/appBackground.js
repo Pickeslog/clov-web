@@ -39,7 +39,9 @@ export function getAppBackgroundId() {
 export function applyAppBackground(id, { persist = true } = {}) {
   const root = document.documentElement
   if (id === 'custom') {
-    root.style.setProperty('--clov-app-bg', getCustomColor())
+    // solid 색은 background-image에 그대로 못 넣으므로 단색 그라디언트로 감싼다(유효한 이미지값).
+    const c = getCustomColor()
+    root.style.setProperty('--clov-app-bg', `linear-gradient(${c}, ${c})`)
     root.style.setProperty('--clov-app-bg-size', 'auto')
     root.style.removeProperty('--clov-app-bg-pos')
     if (persist) { try { localStorage.setItem(STORAGE_KEY, 'custom') } catch { /* 무시 */ } }

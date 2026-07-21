@@ -12,3 +12,6 @@ export const getRoomLevel = (roomId) => api.get(`/rooms/${roomId}/level`)
 export const leaveRoom = (roomId) => api.delete(`/rooms/${roomId}/members/me`)
 export const toggleRoomFavorite = (roomId, isFavorite) =>
   api.patch(`/rooms/${roomId}/favorite`, { isFavorite })
+// 내 상태 메시지(대시보드 표시·편집, 계약 §12). PATCH → { statusMessage } 반환.
+export const updateStatusMessage = (roomId, statusMessage) =>
+  api.patch(`/rooms/${roomId}/members/me/status-message`, { statusMessage })

@@ -10,4 +10,26 @@
   --line: rgba(22, 135, 75, 0.18);
   --glow: rgba(80, 217, 144, 0.22);
   --warn: #b45309;
+  --page-bg: linear-gradient(135deg, #fffdf3 0%, #fffaf0 48%, #fdf6e3 100%);
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --overlay-bg: rgba(7, 59, 36, 0.32);
+}
+
+/* 다크모드 — 시스템 설정 기준(OS prefers-color-scheme). 별도 토글 UI는 아직 없음. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --forest: #bdf5d8;
+    --leaf: #6fe3a3;
+    --mint: #50d990;
+    --cream: #1c231d;
+    --paper: #202b22;
+    --text: #eaf5ee;
+    --muted: #9fb3a6;
+    --line: rgba(140, 255, 190, 0.16);
+    --glow: rgba(80, 217, 144, 0.28);
+    --warn: #f2b866;
+    --page-bg: linear-gradient(160deg, #10140f 0%, #141a12 55%, #171f15 100%);
+    --card-bg: rgba(32, 43, 34, 0.85);
+    --overlay-bg: rgba(0, 0, 0, 0.5);
+  }
 }

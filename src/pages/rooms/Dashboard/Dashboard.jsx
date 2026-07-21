@@ -6,9 +6,9 @@ import { useAuthStore } from '../../../stores/authStore'
 
 // 대시보드에서 진입하는 도메인 화면들 — 팀원 프론트(letter/memory/plan)가 각 라우트를 채운다.
 const SECTIONS = [
-  { key: 'feed', label: '추억피드', path: 'feed' },
-  { key: 'letters', label: '행운편지', path: 'letters' },
-  { key: 'schedule', label: '일정계획', path: 'schedule' },
+  { key: 'feed', label: '추억피드', path: 'feed', ready: true },
+  { key: 'letters', label: '행운편지', path: 'letters', ready: false },
+  { key: 'schedule', label: '일정계획', path: 'schedule', ready: false },
 ]
 
 // 특정 우정공간 대시보드(홈). roomId 컨텍스트에서 상세·레벨·멤버를 보여주고 도메인 화면으로 라우팅한다.
@@ -95,7 +95,7 @@ export default function Dashboard() {
         {SECTIONS.map((section) => (
           <S.SectionCard key={section.key} to={`/rooms/${roomId}/${section.path}`}>
             <S.SectionLabel>{section.label}</S.SectionLabel>
-            <S.SectionHint>준비 중</S.SectionHint>
+            <S.SectionHint>{section.ready ? '바로가기' : '준비 중'}</S.SectionHint>
           </S.SectionCard>
         ))}
       </S.Sections>

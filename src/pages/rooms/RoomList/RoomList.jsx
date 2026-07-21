@@ -319,7 +319,14 @@ export default function RoomList() {
                         <button type="button" className="tk-move" disabled={idx === sortedRooms.length - 1} onClick={(e) => { e.stopPropagation(); moveRoom(idx, 1) }} aria-label="뒤로"><Icon name="ti-chevron-right" /></button>
                       </div>
                     ) : (
-                      <div className="tk-stub">
+                      <div
+                        className="tk-stub"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`${room.name} 바로 입장`}
+                        onClick={(e) => { e.stopPropagation(); navigate(`/rooms/${room.id}`) }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); navigate(`/rooms/${room.id}`) } }}
+                      >
                         <div className="tk-barcode">{BARCODE.map((w, k) => <i key={k} style={{ width: `${w}px` }} />)}</div>
                         <span className="tk-enter">입장 <Icon name="ti-chevron-right" /></span>
                       </div>

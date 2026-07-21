@@ -112,65 +112,174 @@ export const State = styled.div`
   font-weight: 700;
 `
 
-export const RoomGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 14px;
+export const SortRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 `
 
-export const RoomCard = styled.button`
+export const SortBtn = styled.button`
+  padding: 7px 14px;
+  border: 1.5px solid ${(p) => (p.$active ? 'var(--mint)' : 'var(--line)')};
+  border-radius: 999px;
+  background: ${(p) => (p.$active ? 'var(--glow)' : 'var(--paper)')};
+  color: ${(p) => (p.$active ? 'var(--leaf)' : 'var(--muted)')};
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.8rem;
+  cursor: pointer;
+`
+
+export const RoomGrid = styled.div`
   display: grid;
-  gap: 8px;
-  padding: 18px 18px 18px 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+`
+
+// 보딩패스 티켓 카드 (프로토타입 makerooms).
+export const Ticket = styled.button`
+  display: grid;
   text-align: left;
-  border: 1px solid var(--line);
-  border-left: 5px solid ${(props) => props.$accent || 'var(--mint)'};
+  border: 0;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 12px 30px rgba(7, 59, 36, 0.06);
+  overflow: hidden;
+  background: var(--paper);
+  box-shadow: 0 14px 34px rgba(7, 59, 36, 0.12);
   font: inherit;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
 
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 18px 40px rgba(7, 59, 36, 0.12);
+    box-shadow: 0 20px 44px rgba(7, 59, 36, 0.18);
   }
 `
 
-export const RoomTop = styled.div`
+export const TicketHead = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  color: #fff;
+  background: ${(p) => p.$accent
+    ? `linear-gradient(135deg, ${p.$accent}, rgba(0,0,0,0.25))`
+    : 'linear-gradient(135deg, #093d26, #16874b 60%, #1fa060)'};
+`
+
+export const TicketTag = styled.span`
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  font-size: 0.9rem;
+`
+
+export const TicketRoute = styled.span`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    margin: 0 8px;
+    border-top: 2px dashed rgba(255, 255, 255, 0.5);
+  }
+`
+
+export const TicketLv = styled.span`
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.74rem;
+  font-weight: 900;
+`
+
+export const TicketBody = styled.div`
+  padding: 16px 18px 14px;
+  border-top: 2px dashed var(--line);
+  display: grid;
+  gap: 10px;
+`
+
+export const TicketTopRow = styled.div`
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
 `
 
-export const RoomName = styled.div`
+export const TicketLabel = styled.div`
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+`
+
+export const TicketName = styled.div`
+  margin-top: 2px;
   color: var(--forest);
-  font-size: 1.02rem;
+  font-size: 1.1rem;
   font-weight: 900;
 `
 
-export const Fav = styled.span`
-  color: #f4b740;
-  font-size: 0.95rem;
+export const Star = styled.button`
+  border: 0;
+  background: none;
+  color: ${(p) => (p.$active ? '#f4b740' : 'var(--line)')};
+  font-size: 1.15rem;
   line-height: 1;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    color: #f4b740;
+  }
 `
 
-export const RoomDesc = styled.p`
+export const TicketDesc = styled.p`
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.84rem;
   font-weight: 500;
-  line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 `
 
-export const RoomMeta = styled.div`
+export const TicketFoot = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`
+
+export const TicketMeta = styled.span`
   color: var(--leaf);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 800;
+`
+
+export const TicketEnter = styled.span`
+  color: var(--forest);
+  font-size: 0.86rem;
+  font-weight: 900;
+`
+
+export const Barcode = styled.div`
+  height: 34px;
+  border-radius: 4px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--forest) 0,
+    var(--forest) 2px,
+    transparent 2px,
+    transparent 4px,
+    var(--forest) 4px,
+    var(--forest) 5px,
+    transparent 5px,
+    transparent 8px
+  );
+  opacity: 0.55;
 `
 
 export const CreateCard = styled.section`

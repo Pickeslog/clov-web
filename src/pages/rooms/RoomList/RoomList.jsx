@@ -3,8 +3,18 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as S from './RoomList.style'
 import { getRooms, createRoom, toggleRoomFavorite } from '../../../api/room'
+import { getMyJoinRequests } from '../../../api/invite'
 import { useAuthStore } from '../../../stores/authStore'
 import Settings from '../../../components/Settings/Settings'
+
+const DAY = 86400000
+// planDate(YYYY-MM-DD, 자정) 까지 남은 일수. 오늘=0.
+const ddayOf = (planDate) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.round((new Date(`${planDate}T00:00:00`).getTime() - today.getTime()) / DAY)
+}
+const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
 
 // 이동 수단 — 계약 §6 transportType. 티켓 헤더 아이콘·색.
 const TRANSPORTS = [
@@ -45,6 +55,9 @@ export default function RoomList() {
   const [sort, setSort] = useState('default')
 
   const rooms = useQuery({ queryKey: ['rooms'], queryFn: getRooms })
+  const myRequests = useQuery({ queryKey: ['join-requests', 'mine'], queryFn: getMyJoinRequests })
+  const [dismissed, setDismissed] = useState([])
+  const requestItems = (myRequests.data?.items ?? []).filter((r) => !dismissed.includes(r.id))
 
   const sortedRooms = useMemo(() => {
     const list = [...(rooms.data?.items ?? [])]
@@ -91,6 +104,31 @@ export default function RoomList() {
       <S.Body>
         <S.Intro>우리 우정공간들이에요</S.Intro>
 
+        {requestItems.length > 0 && (
+          <S.ReqSection>
+            <S.ReqHead>요청한 방</S.ReqHead>
+            <S.ReqGrid>
+              {requestItems.map((r) => {
+                const gone = r.roomStatus !== 'ACTIVE'
+                const kind = gone ? 'gone' : r.status === 'REJECTED' ? 'rejected' : 'pending'
+                const label = gone ? '사라진 방' : r.status === 'REJECTED' ? '거절됨' : '수락 대기 중'
+                return (
+                  <S.ReqCard key={r.id}>
+                    <S.ReqStatus $kind={kind}>{label}</S.ReqStatus>
+                    <S.ReqName>{r.roomName}</S.ReqName>
+                    <S.ReqMeta>
+                      {gone ? '방이 사라졌어요. 신청도 취소됐어요.'
+                        : r.status === 'REJECTED' ? '신청이 거절됐어요.'
+                          : '멤버가 수락하면 참여가 확정돼요.'}
+                    </S.ReqMeta>
+                    <S.ReqDismiss type="button" onClick={() => setDismissed((d) => [...d, r.id])}>지우기</S.ReqDismiss>
+                  </S.ReqCard>
+                )
+              })}
+            </S.ReqGrid>
+          </S.ReqSection>
+        )}
+
         <S.Toolbar>
           <S.SortRow>
             {SORTS.map((s) => (
@@ -111,6 +149,7 @@ export default function RoomList() {
           <S.Grid>
             {sortedRooms.map((room) => {
               const tp = transportMeta(room.transportType)
+              const dday = room.nextPlan?.planDate ? ddayLabel(ddayOf(room.nextPlan.planDate)) : '—'
               return (
                 <S.Ticket key={room.id} type="button" onClick={() => navigate(`/rooms/${room.id}`)}>
                   <S.TkBody>
@@ -123,7 +162,7 @@ export default function RoomList() {
                         <S.TkMid>{'┈┈'} {tp.icon} {'┈┈'}</S.TkMid>
                         <S.TkCol $right>
                           <S.TkKick>D-DAY</S.TkKick>
-                          <S.TkCode>—</S.TkCode>
+                          <S.TkCode>{dday}</S.TkCode>
                         </S.TkCol>
                       </S.TkRoute>
                       <S.TkSkyline>
@@ -157,7 +196,9 @@ export default function RoomList() {
                     <S.TkGrid>
                       <div>
                         <S.TkCellLbl>다음 약속</S.TkCellLbl>
-                        <S.TkCellEmpty>📅 약속을 정해보세요</S.TkCellEmpty>
+                        {room.nextPlan?.title
+                          ? <S.TkCellVal>{room.nextPlan.title}</S.TkCellVal>
+                          : <S.TkCellEmpty>📅 약속을 정해보세요</S.TkCellEmpty>}
                       </div>
                       <div>
                         <S.TkCellLbl>우정 레벨</S.TkCellLbl>

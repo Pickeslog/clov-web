@@ -121,6 +121,80 @@ export const Toolbar = styled.div`
   gap: 10px;
 `
 
+/* ===== 요청한 방 (가입신청 대기/거절/사라진 방) ===== */
+export const ReqSection = styled.section`
+  display: grid;
+  gap: 10px;
+`
+
+export const ReqHead = styled.h2`
+  align-self: start;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: ${C.text};
+  background: ${C.active};
+  border: 1px solid ${C.border};
+  padding: 6px 14px;
+  border-radius: 999px;
+`
+
+export const ReqGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+`
+
+export const ReqCard = styled.div`
+  padding: 16px;
+  border: 1.5px dashed ${C.border};
+  border-radius: 14px;
+  background: rgba(30, 32, 22, 0.6);
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+`
+
+const REQ_COLOR = { pending: '#9ccc65', rejected: '#f0997b', gone: '#b7c99a' }
+
+export const ReqStatus = styled.span`
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: #14150e;
+  background: ${(p) => REQ_COLOR[p.$kind] ?? '#9ccc65'};
+`
+
+export const ReqName = styled.div`
+  font-size: 1rem;
+  font-weight: 800;
+  color: ${C.text};
+`
+
+export const ReqMeta = styled.p`
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: ${C.muted};
+  line-height: 1.4;
+`
+
+export const ReqDismiss = styled.button`
+  border: 1px solid ${C.border};
+  border-radius: 10px;
+  padding: 6px 14px;
+  background: transparent;
+  color: ${C.muted};
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.78rem;
+  cursor: pointer;
+
+  &:hover {
+    color: ${C.accent};
+    border-color: ${C.inputBdr};
+  }
+`
+
 export const SortRow = styled.div`
   display: flex;
   flex-wrap: wrap;

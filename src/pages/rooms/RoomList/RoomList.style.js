@@ -344,7 +344,7 @@ export const TkBody = styled.div`
 `
 
 export const TkHead = styled.div`
-  padding: 14px 15px 12px;
+  padding: 14px 15px 0;
   background: ${(p) => `linear-gradient(135deg, ${p.$color}, rgba(0,0,0,0.28))`};
 `
 
@@ -368,7 +368,7 @@ export const TkKick = styled.span`
 `
 
 export const TkCode = styled.span`
-  font-size: 15px;
+  font-size: ${(p) => (p.$small ? '13px' : '15px')};
   font-weight: 800;
 `
 
@@ -377,14 +377,13 @@ export const TkMid = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.95);
+  gap: 4px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.9);
 
-  .dash {
-    flex: 1;
-    max-width: 26px;
-    border-top: 1.5px dashed rgba(255, 255, 255, 0.55);
+  i.ti {
+    font-size: 13px;
+    color: #fff;
   }
 `
 
@@ -473,7 +472,7 @@ export const TkStar = styled.button`
 
 export const TkGrid = styled.div`
   padding: 4px 15px 12px;
-  display: grid;
+  display: ${(p) => (p.$single ? 'block' : 'grid')};
   grid-template-columns: 1fr 1fr;
   gap: 7px 10px;
 `
@@ -487,7 +486,7 @@ export const TkCellLbl = styled.div`
 export const TkCellVal = styled.div`
   font-size: 12px;
   font-weight: 800;
-  color: #1e2e26;
+  color: ${(p) => (p.$accent ? '#1b4332' : '#1e2e26')};
 `
 
 export const TkCellEmpty = styled.div`

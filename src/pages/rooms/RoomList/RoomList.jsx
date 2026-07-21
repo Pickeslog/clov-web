@@ -17,6 +17,8 @@ const ddayOf = (planDate) => {
   return Math.round((new Date(`${planDate}T00:00:00`).getTime() - today.getTime()) / DAY)
 }
 const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
+// 목적지 헤드라인 = 다음 약속 제목의 첫 단어(최대 6자), 없으면 "자유".
+const shortDest = (label) => (label || '').trim().split(/\s+/)[0].slice(0, 6)
 
 const TRANSPORTS = [
   { value: 'airplane', label: '비행기', icon: 'ti-plane', color: '#8e4585' },
@@ -34,14 +36,14 @@ const SORTS = [
   { key: 'favorite', label: '즐겨찾기', icon: 'ti-star' },
 ]
 
+// 방 id 기반 결정적 스카이라인 — 프로토타입 buildSkyline과 동일(6~7개 넓은 막대 + 오른쪽 여백).
 const skyline = (seed) => {
-  let s = Number(seed) || 1
-  return Array.from({ length: 16 }, () => {
-    s = (s * 9301 + 49297) % 233280
-    return 6 + (s % 20)
-  })
+  let s = (Number(seed) || 1) * 9301 + 49297
+  const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280 }
+  const n = 6 + (seed % 2)
+  return Array.from({ length: n }, () => ({ w: 7 + Math.floor(rnd() * 5), h: 12 + Math.floor(rnd() * 15) }))
 }
-const BARCODE = [2, 1, 3, 1, 2, 2, 1, 3, 2, 1, 1, 2, 3, 1, 2, 1, 3, 2, 1, 2, 2, 1, 3, 1, 2, 1, 2, 3]
+const BARCODE = [2, 1, 3, 1, 2, 1, 3, 1, 2]
 
 const Icon = ({ name }) => <i className={`ti ${name}`} aria-hidden="true" />
 
@@ -211,7 +213,8 @@ export default function RoomList() {
           <S.Grid>
             {visibleRooms.map((room, i) => {
               const tp = transportMeta(room.transportType)
-              const dday = room.nextPlan?.planDate ? ddayLabel(ddayOf(room.nextPlan.planDate)) : '—'
+              const hasPlan = Boolean(room.nextPlan?.planDate)
+              const dday = hasPlan ? ddayLabel(ddayOf(room.nextPlan.planDate)) : null
               const idx = editMode ? i : safePage * PAGE_SIZE + i
               return (
                 <S.Ticket key={room.id} type="button" onClick={() => !editMode && navigate(`/rooms/${room.id}`)} $edit={editMode}>
@@ -222,14 +225,15 @@ export default function RoomList() {
                           <S.TkKick>오늘</S.TkKick>
                           <S.TkCode>CLOV</S.TkCode>
                         </S.TkCol>
-                        <S.TkMid><span className="dash" /><Icon name={tp.icon} /><span className="dash" /></S.TkMid>
+                        <S.TkMid>┈<Icon name={tp.icon} />┈</S.TkMid>
                         <S.TkCol $right>
-                          <S.TkKick>D-DAY</S.TkKick>
-                          <S.TkCode>{dday}</S.TkCode>
+                          <S.TkKick>{hasPlan ? dday : '약속 없음'}</S.TkKick>
+                          <S.TkCode $small={!hasPlan}>{hasPlan ? shortDest(room.nextPlan.title) : '자유'}</S.TkCode>
                         </S.TkCol>
                       </S.TkRoute>
                       <S.TkSkyline>
-                        {skyline(room.id).map((h, k) => (<i key={k} style={{ height: `${h}px`, width: '5px' }} />))}
+                        {skyline(room.id).map((b, k) => (<i key={k} style={{ width: `${b.w}px`, height: `${b.h}px` }} />))}
+                        <i style={{ flex: 1, background: 'none' }} />
                       </S.TkSkyline>
                     </S.TkHead>
 
@@ -246,23 +250,28 @@ export default function RoomList() {
                         <S.TkStar type="button" $active={room.isFavorite}
                           aria-label={room.isFavorite ? '즐겨찾기 해제' : '즐겨찾기'}
                           onClick={(e) => { e.stopPropagation(); favoriteMutation.mutate({ roomId: room.id, isFavorite: !room.isFavorite }) }}>
-                          <Icon name="ti-star" />
+                          <Icon name={room.isFavorite ? 'ti-star-filled' : 'ti-star'} />
                         </S.TkStar>
                       </S.TkCorner>
                     </S.TkPax>
 
-                    <S.TkGrid>
-                      <div>
+                    {hasPlan ? (
+                      <S.TkGrid>
+                        <div>
+                          <S.TkCellLbl>다음 약속</S.TkCellLbl>
+                          <S.TkCellVal>{room.nextPlan.title}</S.TkCellVal>
+                        </div>
+                        <div>
+                          <S.TkCellLbl>D-DAY</S.TkCellLbl>
+                          <S.TkCellVal $accent>{dday}</S.TkCellVal>
+                        </div>
+                      </S.TkGrid>
+                    ) : (
+                      <S.TkGrid $single>
                         <S.TkCellLbl>다음 약속</S.TkCellLbl>
-                        {room.nextPlan?.title
-                          ? <S.TkCellVal>{room.nextPlan.title}</S.TkCellVal>
-                          : <S.TkCellEmpty><Icon name="ti-calendar-plus" /> 약속을 정해보세요</S.TkCellEmpty>}
-                      </div>
-                      <div>
-                        <S.TkCellLbl>우정 레벨</S.TkCellLbl>
-                        <S.TkCellVal>Lv.{room.friendshipLevel ?? 1}</S.TkCellVal>
-                      </div>
-                    </S.TkGrid>
+                        <S.TkCellEmpty><Icon name="ti-plus" /> 약속을 정해보세요</S.TkCellEmpty>
+                      </S.TkGrid>
+                    )}
 
                     <S.TkPerf />
                     {editMode ? (

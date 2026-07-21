@@ -6,6 +6,7 @@ import { getRooms, createRoom, toggleRoomFavorite } from '../../../api/room'
 import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/invite'
 import { useAuthStore } from '../../../stores/authStore'
 import Settings from '../../../components/Settings/Settings'
+import RoomPreviewModal from './RoomPreviewModal'
 
 const DAY = 86400000
 const PAGE_SIZE = 9
@@ -80,6 +81,7 @@ export default function RoomList() {
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
+  const [previewId, setPreviewId] = useState(null)
   const [sort, setSort] = useState('default')
   const [joinCode, setJoinCode] = useState('')
   const [joinMessage, setJoinMessage] = useState('')
@@ -251,8 +253,8 @@ export default function RoomList() {
                   className={`room-card ticket${editMode ? ' edit-mode' : ''}`}
                   role={editMode ? undefined : 'button'}
                   tabIndex={editMode ? undefined : 0}
-                  onClick={() => !editMode && navigate(`/rooms/${room.id}`)}
-                  onKeyDown={(e) => { if (!editMode && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); navigate(`/rooms/${room.id}`) } }}
+                  onClick={() => !editMode && setPreviewId(room.id)}
+                  onKeyDown={(e) => { if (!editMode && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setPreviewId(room.id) } }}
                 >
                   <div className="tk-body">
                     <div className="tk-head" style={{ background: tone.grad }}>
@@ -347,6 +349,14 @@ export default function RoomList() {
         />
       )}
       {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
+      {previewId != null && (
+        <RoomPreviewModal
+          roomId={previewId}
+          onClose={() => setPreviewId(null)}
+          onEnter={() => navigate(`/rooms/${previewId}`)}
+          onInvite={() => navigate(`/rooms/${previewId}/invite`)}
+        />
+      )}
     </div>
   )
 }

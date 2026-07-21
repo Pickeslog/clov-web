@@ -57,9 +57,12 @@ export default function RoomList() {
     <S.Page>
       <S.Header>
         <S.Brand>Clov.</S.Brand>
-        <S.LogoutBtn type="button" onClick={clear}>
-          로그아웃
-        </S.LogoutBtn>
+        <S.HeaderActions>
+          <S.JoinLink to="/join">초대 코드로 참여하기</S.JoinLink>
+          <S.LogoutBtn type="button" onClick={clear}>
+            로그아웃
+          </S.LogoutBtn>
+        </S.HeaderActions>
       </S.Header>
 
       <S.Body>

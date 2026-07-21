@@ -293,12 +293,13 @@
 /* 아바타 + 드롭다운 (프로토타입 clov-hdr-avatar/dropdown 이식) */
 .proto-roomlist .rl-avatar-wrap { position: relative; }
 .proto-roomlist .rl-avatar {
+  position: relative;
   width: 34px; height: 34px; border-radius: 50%; border: none; overflow: hidden;
   background: var(--active-bg); color: var(--accent);
   font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
   display: flex; align-items: center; justify-content: center; transition: background 0.15s;
 }
-.proto-roomlist .rl-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.proto-roomlist .rl-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .proto-roomlist .rl-avatar:hover { background: var(--input-bdr); }
 .proto-roomlist .rl-dropdown {
   position: absolute; top: 42px; right: 0; width: 188px; margin: 0; padding: 0;
@@ -342,8 +343,8 @@
 .proto-roomlist .rp-body { padding: 14px 20px 20px; overflow-y: auto; max-height: calc(min(760px, calc(100vh - 40px)) - 64px); }
 
 .proto-roomlist .rp-inforow { display: flex; gap: 14px; align-items: center; padding: 13px; background: var(--active-bg); border-radius: 16px; margin-bottom: 16px; }
-.proto-roomlist .rp-ico { width: 52px; height: 52px; border-radius: 15px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; flex: none; overflow: hidden; }
-.proto-roomlist .rp-ico img { width: 100%; height: 100%; object-fit: cover; }
+.proto-roomlist .rp-ico { position: relative; width: 52px; height: 52px; border-radius: 15px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; flex: none; overflow: hidden; }
+.proto-roomlist .rp-ico img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .proto-roomlist .rp-intro { font-size: 14px; font-weight: 800; color: var(--text); }
 .proto-roomlist .rp-lvrow { display: flex; gap: 8px; align-items: center; margin-top: 5px; }
 .proto-roomlist .rp-lv { font-size: 11px; font-weight: 800; color: #0a0f0c; background: var(--primary); padding: 2px 8px; border-radius: 8px; }

@@ -435,6 +435,7 @@ export const Members = styled.section`
 `
 
 export const Avatar = styled.span`
+  position: relative;
   width: 34px;
   height: 34px;
   display: grid;
@@ -453,6 +454,8 @@ export const Avatar = styled.span`
   }
 
   img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;

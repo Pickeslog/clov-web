@@ -10,6 +10,25 @@ const TABS = [
   { id: 'JOIN', label: '가입 신청' },
 ]
 
+// 백엔드는 오프셋 없는 UTC(LocalDateTime)를 반환한다. Z 없이 new Date로 파싱하면
+// 로컬시간으로 오해해 KST 기준 9시간 밀린다 — invite 슬라이스의 parseUtc가 정석.
+const parseUtc = (value) => new Date(value.endsWith('Z') ? value : `${value}Z`)
+
+// 알림 메시지 개인화. actor(UserSummary)가 있으면 닉네임으로, 없으면(시스템 공지 등) 제네릭 문구로.
+const messageFor = (noti) => {
+  const name = noti.actor?.nickname
+  switch (noti.type) {
+    case 'JOIN':
+      return name ? `💌 ${name}님이 가입을 신청했어요.` : '💌 우정공간 가입 신청이 도착했습니다.'
+    case 'FRIEND':
+      return name ? `👋 ${name}님이 편지를 보냈어요.` : '👋 친구의 새로운 활동 알림이 있습니다.'
+    case 'NOTICE':
+      return '📢 공지사항 알림이 도착했습니다.'
+    default:
+      return '새로운 알림이 있습니다.'
+  }
+}
+
 export default function Notifications() {
   const { roomId } = useParams()
   const queryClient = useQueryClient()
@@ -86,11 +105,9 @@ export default function Notifications() {
               <S.ListItem key={noti.id} $isRead={noti.isRead}>
                 <S.ItemBody>
                   <S.ItemMessage $isRead={noti.isRead}>
-                    {noti.type === 'NOTICE' && '📢 공지사항 알림이 도착했습니다.'}
-                    {noti.type === 'FRIEND' && '👋 친구의 새로운 활동 알림이 있습니다.'}
-                    {noti.type === 'JOIN' && '💌 우정공간 가입 신청이 도착했습니다.'}
+                    {messageFor(noti)}
                   </S.ItemMessage>
-                  <S.ItemTime>{new Date(noti.createdAt).toLocaleString()}</S.ItemTime>
+                  <S.ItemTime>{parseUtc(noti.createdAt).toLocaleString()}</S.ItemTime>
                 </S.ItemBody>
                 {!noti.isRead && (
                   <S.ReadBtn 

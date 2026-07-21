@@ -435,7 +435,10 @@ function CreateMemoryModal({ members, submitting, errorMessage, onCancel, onSubm
       return prev.filter((_, i) => i !== index)
     })
 
-  useEffect(() => () => photos.forEach((p) => URL.revokeObjectURL(p.url)), [photos])
+  // 언마운트 시에만 남은 미리보기 URL을 정리한다(사진 추가마다 폐기하면 표시 중 이미지가 깨짐).
+  const photosRef = useRef(photos)
+  useEffect(() => { photosRef.current = photos }, [photos])
+  useEffect(() => () => photosRef.current.forEach((p) => URL.revokeObjectURL(p.url)), [])
 
   const parseTags = () =>
     tagsInput.trim()

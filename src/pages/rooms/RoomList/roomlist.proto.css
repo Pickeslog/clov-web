@@ -1,0 +1,497 @@
+/* =====================================================================
+   RoomList — 프로토타입(03-rooms/makerooms) CSS 그대로 이식.
+   드리프트를 막기 위해 styled-components 재번역 대신 프로토타입의 실제 규칙을
+   .proto-roomlist 스코프 아래로 복사한다. 값(px·색)은 원본과 동일.
+   팔레트 = 프로토타입 다크 모드(body.dark-mode) 계열 — 현재 앱 화면과 동일.
+   배경은 선택형 배경 테마(:root --clov-app-bg)로 덮이며 기본값은 우드&클로버 그라디언트.
+   ===================================================================== */
+.proto-roomlist {
+  --primary: #5a7a3e;
+  --accent: #9ccc65;
+  --btn-bg: #7c9c52;
+  --card-bg: #1e2016;
+  --text: #eef0e2;
+  --muted: #b7c99a;
+  --border: #2a2c1e;
+  --input-bg: #191a12;
+  --input-bdr: #6b8f47;
+  --active-bg: #2b3020;
+  --danger: #f87171;
+  --body-bg: #14150e;
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+  min-height: 100vh;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  text-align: left;
+  /* 배경은 index.css의 body(글로벌 --clov-app-bg)가 담당 — 페이지는 투명. */
+  background: transparent;
+}
+.proto-roomlist *,
+.proto-roomlist *::before,
+.proto-roomlist *::after { box-sizing: border-box; }
+
+.proto-roomlist .main { max-width: 860px; margin: 0 auto; padding: 32px 24px 60px; }
+
+/* 툴바 인사 */
+.proto-roomlist .toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; gap: 12px; flex-wrap: wrap;
+}
+.proto-roomlist .greeting {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--active-bg); border: 1px solid var(--border);
+  padding: 7px 14px; border-radius: 20px;
+}
+
+/* 편집 모드 안내 배너 */
+.proto-roomlist .edit-banner {
+  display: none;
+  background: var(--active-bg); border: 1.5px solid var(--accent);
+  border-radius: 12px; padding: 10px 16px;
+  font-size: 12px; color: var(--accent); font-weight: 600;
+  margin-bottom: 16px; align-items: center; gap: 8px;
+}
+.proto-roomlist .edit-banner.show { display: flex; }
+
+/* 필터 탭 + 우측 컨트롤 */
+.proto-roomlist .filter-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+}
+.proto-roomlist .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.proto-roomlist .filter-btn {
+  height: 34px; padding: 0 14px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: var(--card-bg); color: var(--muted);
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 5px; transition: all 0.15s;
+}
+.proto-roomlist .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+.proto-roomlist .filter-btn.active { background: var(--primary); border-color: var(--primary); color: #0a0f0c; }
+
+.proto-roomlist .toolbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.proto-roomlist .code-input {
+  height: 36px; padding: 0 12px;
+  border: 1.5px solid var(--input-bdr); border-radius: 10px;
+  background: var(--input-bg); color: var(--text); font: inherit; font-size: 13px;
+  width: 130px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.proto-roomlist .code-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.15); }
+.proto-roomlist .code-input::placeholder { color: var(--muted); }
+.proto-roomlist .btn-enter {
+  height: 36px; padding: 0 16px; background: var(--primary); color: #0a0f0c;
+  border: none; border-radius: 10px; font: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.proto-roomlist .btn-enter:hover { opacity: 0.85; }
+.proto-roomlist .btn-enter:disabled { opacity: 0.5; cursor: default; }
+.proto-roomlist .btn-create {
+  height: 36px; padding: 0 14px; background: var(--accent); color: #0a0f0c;
+  border: none; border-radius: 10px; font: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; gap: 4px; transition: opacity 0.15s;
+}
+.proto-roomlist .btn-create:hover { opacity: 0.85; }
+.proto-roomlist .btn-edit {
+  height: 36px; padding: 0 12px; background: var(--card-bg); border: 1.5px solid var(--input-bdr);
+  border-radius: 10px; color: var(--text); font: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; box-shadow: var(--shadow-sm); transition: background 0.15s, border-color 0.15s;
+}
+.proto-roomlist .btn-edit:hover { background: var(--active-bg); border-color: var(--accent); }
+.proto-roomlist .btn-edit.active { border-color: var(--accent); color: var(--accent); background: var(--active-bg); }
+
+/* 방 그리드 */
+.proto-roomlist .room-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+@media (max-width: 760px) { .proto-roomlist .room-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .proto-roomlist .room-grid { grid-template-columns: 1fr; } }
+
+.proto-roomlist .room-card {
+  background: var(--card-bg); border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 18px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.18s, transform 0.18s, border-color 0.15s, opacity 0.18s;
+  position: relative; user-select: none;
+}
+
+/* 보딩패스 티켓 = [그림자 래퍼 .room-card.ticket] > [마스크 본체 .tk-body] */
+.proto-roomlist .room-card.ticket {
+  position: relative;
+  padding: 0; border: none; gap: 0; background: transparent; border-radius: 16px; overflow: visible;
+  box-shadow: 0 12px 22px rgba(20, 40, 30, 0.22);
+}
+.proto-roomlist .room-card.ticket:hover { box-shadow: 0 16px 28px rgba(20, 40, 30, 0.3); transform: translateY(-2px); }
+/* 편집(드래그) 모드 — 애플 스타일 끌어놓기 재정렬 */
+.proto-roomlist .room-card.ticket.edit-mode { cursor: grab; }
+.proto-roomlist .room-card.ticket.edit-mode:active { cursor: grabbing; }
+.proto-roomlist .room-card.ticket.edit-mode:hover { transform: none; box-shadow: 0 12px 22px rgba(20, 40, 30, 0.22); }
+.proto-roomlist .room-card.ticket.dragging { opacity: 0.4; touch-action: none; }
+.proto-roomlist .room-card.ticket.dragging .tk-body { outline: 2px dashed var(--accent); outline-offset: -2px; }
+.proto-roomlist .room-card.ticket.drag-over { transform: translateY(-2px); }
+.proto-roomlist .room-card.ticket.drag-over .tk-body { outline: 2.5px solid var(--accent); outline-offset: -2px; }
+.proto-roomlist .edit-del-btn {
+  position: absolute; top: 10px; right: 10px; z-index: 5;
+  width: 28px; height: 28px; border-radius: 8px; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; background: #d95f5f; color: #fff; font-size: 14px;
+}
+.proto-roomlist .edit-del-btn:hover { background: #c74a4a; }
+
+.proto-roomlist .tk-body {
+  background: #fffdf7; border-radius: 16px; overflow: hidden; text-align: left;
+  -webkit-mask:
+    radial-gradient(circle 9px at left calc(100% - 40px), transparent 96%, #000 100%) left / 50.2% 100% no-repeat,
+    radial-gradient(circle 9px at right calc(100% - 40px), transparent 96%, #000 100%) right / 50.2% 100% no-repeat;
+  mask:
+    radial-gradient(circle 9px at left calc(100% - 40px), transparent 96%, #000 100%) left / 50.2% 100% no-repeat,
+    radial-gradient(circle 9px at right calc(100% - 40px), transparent 96%, #000 100%) right / 50.2% 100% no-repeat;
+}
+.proto-roomlist .tk-head { padding: 14px 15px 0; position: relative; }
+.proto-roomlist .tk-route { display: flex; align-items: center; justify-content: space-between; color: #fff; }
+.proto-roomlist .tk-kick { font-size: 9px; letter-spacing: 1px; font-weight: 700; }
+.proto-roomlist .tk-code { font-size: 15px; font-weight: 800; }
+.proto-roomlist .tk-mid { flex: 1; text-align: center; font-size: 11px; }
+.proto-roomlist .tk-mid i.ti { font-size: 13px; color: #fff; vertical-align: -0.12em; }
+.proto-roomlist .tk-dest { text-align: right; }
+.proto-roomlist .tk-skyline { display: flex; align-items: flex-end; gap: 2.5px; height: 26px; margin-top: 8px; opacity: 0.9; }
+.proto-roomlist .tk-skyline i { display: block; background: #fffdf7; border-radius: 1px 1px 0 0; }
+.proto-roomlist .tk-pax { padding: 12px 15px 4px; display: flex; align-items: flex-start; justify-content: space-between; }
+.proto-roomlist .tk-pax-kick { font-size: 9px; color: #9aa89f; font-weight: 700; }
+.proto-roomlist .tk-name { font-size: 15px; font-weight: 800; color: #1e2e26; word-break: keep-all; }
+.proto-roomlist .tk-avs { display: flex; margin-top: 6px; }
+.proto-roomlist .tk-av {
+  width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 9px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; border: 1.5px solid #fff; flex: none;
+}
+.proto-roomlist .tk-av + .tk-av { margin-left: -7px; }
+.proto-roomlist .tk-corner { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.proto-roomlist .tk-badge { background: #d95f5f; color: #fff; font-size: 10px; font-weight: 800; border-radius: 9px; padding: 1px 7px; }
+.proto-roomlist .tk-star { font-size: 17px; cursor: pointer; background: none; border: none; padding: 0; line-height: 1; }
+.proto-roomlist .tk-star:hover { transform: scale(1.15); }
+.proto-roomlist .tk-grid { padding: 4px 15px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px 10px; }
+.proto-roomlist .tk-grid.single { display: block; }
+.proto-roomlist .tk-cell-lbl { font-size: 9px; color: #9aa89f; font-weight: 700; }
+.proto-roomlist .tk-cell-val { font-size: 12px; font-weight: 800; color: #1e2e26; }
+.proto-roomlist .tk-cell-val.accent { color: #1b4332; }
+.proto-roomlist .tk-cell-val.empty { display: flex; align-items: center; gap: 5px; font-weight: 700; color: #8a9a5a; margin-top: 1px; }
+.proto-roomlist .tk-perf { position: relative; border-top: 2px dashed #e6dfcf; margin: 0 12px; }
+.proto-roomlist .tk-stub { padding: 9px 15px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.proto-roomlist .tk-stub:hover .tk-enter { text-decoration: underline; }
+.proto-roomlist .tk-barcode { display: flex; align-items: flex-end; gap: 1.5px; height: 20px; }
+.proto-roomlist .tk-barcode i { display: block; width: 2px; height: 20px; background: #2a3a32; }
+.proto-roomlist .tk-enter { font-size: 11px; font-weight: 800; color: #357a58; cursor: pointer; }
+
+/* 편집 모드 순서 바 (◀▶ — 프로토타입 드래그 대체, "내 순서" localStorage) */
+.proto-roomlist .tk-editbar {
+  padding: 9px 15px 12px; display: flex; align-items: center; justify-content: space-between;
+  color: #1e2e26; font-size: 12px; font-weight: 800;
+}
+.proto-roomlist .tk-move {
+  width: 30px; height: 30px; border: 1px solid #d8d2c0; border-radius: 8px;
+  background: #fff; color: #2f7d4f; font-size: 15px; display: grid; place-items: center; cursor: pointer;
+}
+.proto-roomlist .tk-move:disabled { opacity: 0.35; cursor: default; }
+
+/* 요청한 방 (A-1) */
+.proto-roomlist .req-section { margin-bottom: 26px; }
+.proto-roomlist .req-head {
+  font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 10px;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--active-bg); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px;
+}
+.proto-roomlist .req-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 760px) { .proto-roomlist .req-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .proto-roomlist .req-grid { grid-template-columns: 1fr; } }
+.proto-roomlist .req-card {
+  background: var(--card-bg); border: 1.5px dashed var(--border); border-radius: 16px;
+  padding: 15px; display: flex; flex-direction: column; gap: 8px;
+}
+.proto-roomlist .req-card.rejected { border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+.proto-roomlist .req-card.vanished { opacity: 0.92; }
+.proto-roomlist .req-status { font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 9px; width: fit-content; display: flex; align-items: center; gap: 4px; }
+.proto-roomlist .req-status.pending { background: #3a331e; color: #e0c169; }
+.proto-roomlist .req-status.rejected { background: #3a2222; color: #f59a9a; }
+.proto-roomlist .req-status.vanished { background: #213338; color: #9cc4cf; }
+.proto-roomlist .req-note { font-size: 11.5px; color: var(--muted); margin-top: -2px; line-height: 1.45; }
+.proto-roomlist .req-name { font-size: 15px; font-weight: 800; color: var(--text); word-break: keep-all; }
+.proto-roomlist .req-meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.proto-roomlist .req-actions { display: flex; gap: 8px; margin-top: 4px; }
+.proto-roomlist .req-btn {
+  flex: 1; height: 36px; border-radius: 10px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+  border: 1.5px solid var(--border); background: var(--card-bg); color: var(--text); transition: background 0.15s, border-color 0.15s;
+}
+.proto-roomlist .req-btn:hover { background: var(--active-bg); border-color: var(--accent); }
+.proto-roomlist .req-btn.primary { background: var(--primary); color: #0a0f0c; border: none; }
+.proto-roomlist .req-btn.primary:hover { opacity: 0.88; }
+.proto-roomlist .req-btn:disabled { opacity: 0.55; cursor: default; }
+
+/* 페이지네이션 */
+.proto-roomlist .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.proto-roomlist .page-btn {
+  min-width: 36px; height: 36px; padding: 0 8px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--card-bg); color: var(--text);
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+}
+.proto-roomlist .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+.proto-roomlist .page-btn.active { background: var(--primary); border-color: var(--primary); color: #0a0f0c; }
+.proto-roomlist .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* 빈/로딩 상태 */
+.proto-roomlist .rl-state {
+  padding: 30px 16px; text-align: center; border: 1px dashed var(--border);
+  border-radius: 16px; background: var(--card-bg); color: var(--muted); font-size: 14px; font-weight: 700;
+}
+
+/* 방 만들기 모달 */
+.proto-roomlist .rl-overlay {
+  position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(6px);
+}
+.proto-roomlist .rl-modal {
+  width: min(460px, 100%); max-height: 90vh; overflow-y: auto;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px;
+  padding: 22px 24px 26px; box-shadow: var(--shadow-md); color: var(--text);
+}
+.proto-roomlist .rl-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.proto-roomlist .rl-modal-title { font-size: 18px; font-weight: 800; color: var(--accent); display: inline-flex; align-items: center; gap: 6px; }
+.proto-roomlist .rl-modal-close { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 10px; background: var(--active-bg); color: var(--muted); display: grid; place-items: center; cursor: pointer; }
+.proto-roomlist .rl-modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+.proto-roomlist .field-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; display: flex; align-items: baseline; gap: 6px; }
+.proto-roomlist .field-hint { font-size: 10.5px; font-weight: 600; color: var(--muted); }
+.proto-roomlist .field-wrap { margin-bottom: 18px; }
+.proto-roomlist .text-input {
+  width: 100%; height: 44px; padding: 0 14px; border: 1.5px solid var(--input-bdr); border-radius: 12px;
+  background: var(--input-bg); color: var(--text); font: inherit; font-size: 14px; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.proto-roomlist .text-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.15); }
+.proto-roomlist .cover-preview { width: 88px; height: 88px; border-radius: 18px; display: grid; place-items: center; color: #fff; font-size: 30px; }
+.proto-roomlist .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.proto-roomlist .chip {
+  font-size: 12px; font-weight: 600; color: var(--text); background: var(--active-bg); border: 1px solid var(--border);
+  border-radius: 9px; padding: 7px 11px; display: flex; gap: 5px; align-items: center; cursor: pointer;
+}
+.proto-roomlist .chip.on { background: var(--active-bg); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.proto-roomlist .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.proto-roomlist .swatch { width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; padding: 0; position: relative; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1); transition: transform 0.12s; }
+.proto-roomlist .swatch:hover { transform: scale(1.08); }
+.proto-roomlist .swatch.on { box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 4px var(--accent); }
+.proto-roomlist .btn-submit {
+  width: 100%; height: 46px; background: var(--btn-bg); color: #0a0f0c; border: none; border-radius: 14px;
+  font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; margin-top: 8px;
+}
+.proto-roomlist .btn-submit:hover { opacity: 0.88; }
+.proto-roomlist .btn-submit:disabled { opacity: 0.7; cursor: default; }
+.proto-roomlist .err-msg { font-size: 12px; color: var(--danger); font-weight: 700; margin-top: 4px; }
+.proto-roomlist .rl-msg { font-size: 12.5px; color: var(--accent); font-weight: 700; }
+
+/* 헤더 (기존 앱 헤더 유지 — 프로토타입 로그아웃/설정 링크) */
+.proto-roomlist .rl-header {
+  position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; height: 56px; background: rgba(20, 21, 14, 0.88);
+  backdrop-filter: blur(18px) saturate(1.4); border-bottom: 1px solid var(--border);
+}
+.proto-roomlist .rl-brand { display: inline-flex; align-items: center; gap: 5px; font-weight: 900; font-size: 18px; letter-spacing: -0.4px; color: var(--accent); }
+.proto-roomlist .rl-header-right { display: flex; align-items: center; gap: 8px; }
+
+/* 아바타 + 드롭다운 (프로토타입 clov-hdr-avatar/dropdown 이식) */
+.proto-roomlist .rl-avatar-wrap { position: relative; }
+.proto-roomlist .rl-avatar {
+  position: relative;
+  width: 34px; height: 34px; border-radius: 50%; border: none; overflow: hidden;
+  background: var(--active-bg); color: var(--accent);
+  font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+}
+.proto-roomlist .rl-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.proto-roomlist .rl-avatar:hover { background: var(--input-bdr); }
+.proto-roomlist .rl-dropdown {
+  position: absolute; top: 42px; right: 0; width: 188px; margin: 0; padding: 0;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); list-style: none; overflow: hidden; z-index: 200;
+}
+.proto-roomlist .rl-dropdown li {
+  display: flex; align-items: center; gap: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600;
+  color: var(--text); cursor: pointer; transition: background 0.15s;
+}
+.proto-roomlist .rl-dropdown li:hover { background: var(--active-bg); }
+
+.proto-roomlist i.ti { vertical-align: -0.12em; }
+
+/* =====================================================================
+   방 미리보기 모달 (#room-preview-modal .rp-*) — 프로토타입 이식.
+   카드 클릭 시 소식 피드/멤버/입장 요약. 팔레트=다크(부모 .proto-roomlist).
+   ===================================================================== */
+.proto-roomlist .rp-backdrop {
+  position: fixed; inset: 0; z-index: 260; display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(7, 12, 8, 0.55); backdrop-filter: blur(8px);
+}
+@keyframes rpPop { 0% { opacity: 0; transform: scale(0.96) translateY(8px); } 100% { opacity: 1; transform: none; } }
+.proto-roomlist .rp-modal {
+  width: min(430px, calc(100vw - 32px)); max-height: min(760px, calc(100vh - 40px)); overflow: hidden;
+  border-radius: 22px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);
+  box-shadow: var(--shadow-md); animation: rpPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.proto-roomlist .rp-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
+}
+.proto-roomlist .rp-title { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 850; color: var(--text); }
+.proto-roomlist .rp-title i.ti { color: var(--accent); }
+.proto-roomlist .rp-head-actions { display: flex; gap: 6px; align-items: center; }
+.proto-roomlist .rp-close {
+  width: 32px; height: 32px; border: none; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  background: var(--active-bg); color: var(--text); cursor: pointer; font-size: 16px;
+}
+.proto-roomlist .rp-close:hover { background: var(--border); }
+.proto-roomlist .rp-body { padding: 14px 20px 20px; overflow-y: auto; max-height: calc(min(760px, calc(100vh - 40px)) - 64px); }
+
+.proto-roomlist .rp-inforow { display: flex; gap: 14px; align-items: center; padding: 13px; background: var(--active-bg); border-radius: 16px; margin-bottom: 16px; }
+.proto-roomlist .rp-ico { position: relative; width: 52px; height: 52px; border-radius: 15px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; flex: none; overflow: hidden; }
+.proto-roomlist .rp-ico img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.proto-roomlist .rp-intro { font-size: 14px; font-weight: 800; color: var(--text); }
+.proto-roomlist .rp-lvrow { display: flex; gap: 8px; align-items: center; margin-top: 5px; }
+.proto-roomlist .rp-lv { font-size: 11px; font-weight: 800; color: #0a0f0c; background: var(--primary); padding: 2px 8px; border-radius: 8px; }
+.proto-roomlist .rp-lvsub { font-size: 12px; color: var(--muted); }
+
+.proto-roomlist .rp-mrow { display: flex; align-items: center; gap: 6px; margin: -2px 2px 16px; flex-wrap: wrap; }
+.proto-roomlist .rp-av { width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; }
+.proto-roomlist .rp-mrow-n { font-size: 12px; color: var(--muted); font-weight: 600; margin-left: 3px; }
+
+.proto-roomlist .rp-sechd { display: flex; align-items: center; justify-content: space-between; margin: 2px 2px 10px; }
+.proto-roomlist .rp-sechd .l { font-size: 13px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 6px; }
+.proto-roomlist .rp-sechd .r { font-size: 12px; color: var(--accent); font-weight: 800; }
+
+.proto-roomlist .rp-feed { display: flex; flex-direction: column; gap: 7px; }
+.proto-roomlist .rp-fi { display: flex; gap: 11px; align-items: flex-start; padding: 11px 12px; border-radius: 13px; border: 1px solid var(--border); background: var(--card-bg); }
+.proto-roomlist .rp-fi.unread { background: var(--active-bg); border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.proto-roomlist .rp-fi-ic { width: 34px; height: 34px; border-radius: 10px; flex: none; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.proto-roomlist .rp-fi-ic.letter { background: #243a2e; color: #9ccc65; }
+.proto-roomlist .rp-fi-ic.sched { background: #3a331e; color: #e0c169; }
+.proto-roomlist .rp-fi-ic.member { background: #3a2630; color: #e79bb5; }
+.proto-roomlist .rp-fi-ic.join { background: #213338; color: #7fc4cf; }
+.proto-roomlist .rp-fi-tx { flex: 1; min-width: 0; }
+.proto-roomlist .rp-fi-t { font-size: 13.5px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.proto-roomlist .rp-fi-t .who { color: var(--accent); }
+.proto-roomlist .rp-fi-d { font-size: 12.5px; color: var(--muted); line-height: 1.4; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proto-roomlist .rp-fi-time { font-size: 11px; color: var(--muted); font-weight: 600; flex: none; margin-top: 2px; }
+.proto-roomlist .rp-more { font-size: 12.5px; color: var(--accent); font-weight: 700; text-align: center; padding: 9px; border-radius: 10px; background: var(--active-bg); margin-top: 2px; cursor: pointer; border: none; width: 100%; font-family: inherit; }
+.proto-roomlist .preview-empty { text-align: center; padding: 32px 0; color: var(--muted); font-size: 13px; }
+
+.proto-roomlist .rp-invite-btn {
+  display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 11px;
+  border: 1px dashed var(--accent); background: var(--active-bg); border-radius: 13px;
+  color: var(--accent); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 16px;
+}
+.proto-roomlist .rp-enter {
+  display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 50px; margin-top: 12px;
+  background: var(--primary); color: #0a0f0c; border: none; border-radius: 14px; font: inherit; font-size: 15.5px; font-weight: 800; cursor: pointer;
+}
+.proto-roomlist .rp-enter:hover { opacity: 0.9; }
+.proto-roomlist .rp-state { padding: 40px 0; text-align: center; color: var(--muted); font-size: 13px; font-weight: 600; }
+
+/* 헤더 기어/뒤로 버튼 */
+.proto-roomlist .rp-gear {
+  width: auto; height: auto; background: none; border: none; color: var(--accent); font-size: 20px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 5px;
+}
+
+/* ===== 서브뷰: 방 프로필 편집(⚙️) ===== */
+.proto-roomlist .ed-lbl { font-size: 12px; font-weight: 800; color: var(--text); margin: 15px 2px 6px; display: flex; gap: 7px; align-items: baseline; }
+.proto-roomlist .ed-lbl:first-child { margin-top: 2px; }
+.proto-roomlist .ed-lbl .h { font-size: 10.5px; font-weight: 600; color: #e0c169; }
+.proto-roomlist .ed-lbl .h.mute { color: var(--muted); }
+.proto-roomlist .ed-in {
+  width: 100%; border: 1.5px solid var(--input-bdr); border-radius: 11px; padding: 10px 12px;
+  font: inherit; font-size: 14px; color: var(--text); background: var(--input-bg); outline: none;
+}
+.proto-roomlist .ed-in:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.15); }
+.proto-roomlist textarea.ed-in { min-height: 56px; resize: none; }
+.proto-roomlist .ed-photo {
+  position: relative; border-radius: 14px; overflow: hidden; height: 118px;
+  display: flex; align-items: center; justify-content: center; color: #fff; font-size: 30px;
+}
+.proto-roomlist .ed-photo i.ti { filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.35)); }
+.proto-roomlist .ed-swatches { display: flex; gap: 10px; margin-top: 9px; flex-wrap: wrap; }
+.proto-roomlist .ed-swatch {
+  width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; padding: 0; position: relative;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25); transition: transform 0.12s;
+}
+.proto-roomlist .ed-swatch:hover { transform: scale(1.08); }
+.proto-roomlist .ed-swatch.on { box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 4px var(--accent); }
+.proto-roomlist .ed-swatch.on::after {
+  content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.proto-roomlist .ed-chips { display: flex; gap: 7px; margin-top: 9px; flex-wrap: wrap; }
+.proto-roomlist .ed-chip {
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--text); background: var(--active-bg);
+  border: 1px solid var(--border); border-radius: 9px; padding: 7px 11px; display: flex; gap: 5px; align-items: center; cursor: pointer;
+}
+.proto-roomlist .ed-chip.on { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.proto-roomlist .cnt { text-align: right; font-size: 11px; color: var(--muted); margin-top: 5px; }
+.proto-roomlist .notify-b {
+  display: flex; gap: 8px; align-items: flex-start; background: var(--active-bg); border: 1px solid var(--border);
+  border-radius: 11px; padding: 10px 12px; margin-top: 16px; font-size: 12px; line-height: 1.45; color: var(--accent);
+}
+.proto-roomlist .notify-b b { color: var(--text); }
+.proto-roomlist .ed-actions { display: flex; gap: 9px; margin-top: 18px; }
+.proto-roomlist .ed-cancel { flex: 1; height: 48px; border: 1px solid var(--border); background: var(--card-bg); border-radius: 13px; font: inherit; font-size: 14.5px; font-weight: 700; color: var(--muted); cursor: pointer; }
+.proto-roomlist .ed-save { flex: 1.6; height: 48px; border: none; background: var(--primary); color: #0a0f0c; border-radius: 13px; font: inherit; font-size: 14.5px; font-weight: 800; cursor: pointer; }
+.proto-roomlist .ed-save:disabled { opacity: 0.6; cursor: default; }
+
+/* ===== 서브뷰: 친구 초대하기 ===== */
+.proto-roomlist .rp-invite-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0 2px 14px; }
+.proto-roomlist .rp-invite-desc b { color: var(--accent); }
+.proto-roomlist .link-box { display: flex; align-items: center; gap: 8px; background: var(--active-bg); border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; }
+.proto-roomlist .link-url { flex: 1; min-width: 0; font-size: 13px; color: var(--accent); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proto-roomlist .code-big { font-size: 19px; font-weight: 850; color: var(--accent); letter-spacing: 2px; }
+.proto-roomlist .mini-copy { flex: none; font: inherit; font-size: 12px; font-weight: 700; color: var(--text); background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.proto-roomlist .share-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 48px; margin-top: 12px; background: var(--primary); color: #0a0f0c; border: none; border-radius: 13px; font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
+.proto-roomlist .or-div { display: flex; align-items: center; gap: 10px; margin: 18px 0 12px; color: var(--muted); font-size: 11.5px; font-weight: 700; }
+.proto-roomlist .or-div::before, .proto-roomlist .or-div::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.proto-roomlist .regen { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 12px; font-size: 12px; color: var(--muted); font-weight: 600; cursor: pointer; background: none; border: none; width: 100%; font-family: inherit; }
+.proto-roomlist .regen:hover { color: var(--accent); }
+
+/* =====================================================================
+   라이트 모드 — 기본(다크)에 body.light-mode로 라이트 팔레트 덧입힘.
+   티켓(.tk-*)은 아이보리 고정이라 그대로. 프로토타입 :root(light) 값.
+   ===================================================================== */
+body.light-mode .proto-roomlist {
+  --primary: #1b4332;
+  --accent: #52b788;
+  --btn-bg: #357a58;
+  --card-bg: #ffffff;
+  --text: #1e2e26;
+  --muted: #6a7e73;
+  --border: #e4ede8;
+  --input-bg: #ffffff;
+  --input-bdr: #d0e4d8;
+  --active-bg: #e8f3ed;
+  --danger: #d95f5f;
+  --body-bg: #f4f7f5;
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.07);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.09);
+}
+/* primary/accent 버튼 텍스트 — 라이트에선 어두운 배경이라 흰색. */
+body.light-mode .proto-roomlist .filter-btn.active,
+body.light-mode .proto-roomlist .btn-enter,
+body.light-mode .proto-roomlist .btn-create,
+body.light-mode .proto-roomlist .req-btn.primary,
+body.light-mode .proto-roomlist .page-btn.active,
+body.light-mode .proto-roomlist .btn-submit,
+body.light-mode .proto-roomlist .rp-lv,
+body.light-mode .proto-roomlist .rp-enter,
+body.light-mode .proto-roomlist .ed-save,
+body.light-mode .proto-roomlist .share-btn { color: #fff; }
+/* 헤더 글래스 — 라이트 화이트. */
+body.light-mode .proto-roomlist .rl-header { background: rgba(255, 255, 255, 0.88); }
+/* 요청 상태 배지 — 라이트 톤. */
+body.light-mode .proto-roomlist .req-status.pending { background: #fbeecf; color: #b5851f; }
+body.light-mode .proto-roomlist .req-status.rejected { background: #fdeaea; color: #d95f5f; }
+body.light-mode .proto-roomlist .req-status.vanished { background: #e4edf0; color: #557a86; }
+/* 소식 아이콘 — 라이트 톤. */
+body.light-mode .proto-roomlist .rp-fi-ic.letter { background: #e2f2ea; color: #2f7d4f; }
+body.light-mode .proto-roomlist .rp-fi-ic.sched { background: #fbeecf; color: #b5851f; }
+body.light-mode .proto-roomlist .rp-fi-ic.member { background: #dfecee; color: #b45274; }
+body.light-mode .proto-roomlist .rp-fi-ic.join { background: #dfeef0; color: #2f7a86; }

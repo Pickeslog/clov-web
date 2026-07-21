@@ -52,14 +52,25 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
+  /* 앱 전역 배경(우드&클로버 기본). 선택형 배경 테마(--clov-app-bg)가 있으면 그걸로. */
+  background-color: #f4ead8;
+  background-image: var(--clov-app-bg,
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.74), transparent 23rem),
+    radial-gradient(circle at 88% 18%, rgba(83, 116, 59, 0.18), transparent 24rem),
+    radial-gradient(circle at 52% 100%, rgba(25, 45, 30, 0.08), transparent 32rem),
+    repeating-linear-gradient(7deg, rgba(145, 94, 45, 0.13) 0 1px, transparent 1px 18px),
+    linear-gradient(145deg, #fff8ec 0%, #f1ead8 46%, #dce8d6 100%));
+  background-size: var(--clov-app-bg-size, auto);
+  background-position: var(--clov-app-bg-pos, center);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
   text-align: center;
-  border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
   flex-direction: column;

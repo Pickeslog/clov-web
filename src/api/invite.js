@@ -9,6 +9,8 @@ export const requestJoin = (payload) => api.post('/invites/accept', payload)
 export const getJoinRequests = (roomId) => api.get(`/rooms/${roomId}/join-requests`)
 // 내가 보낸 가입신청(요청한 방) — PENDING·REJECTED + roomName·roomStatus.
 export const getMyJoinRequests = () => api.get('/join-requests/mine')
+// 내 PENDING 신청 취소(요청 취소).
+export const cancelJoinRequest = (joinRequestId) => api.delete(`/join-requests/${joinRequestId}`)
 export const acceptJoinRequest = (joinRequestId) => api.post(`/join-requests/${joinRequestId}/accept`)
 export const rejectJoinRequest = (joinRequestId) => api.post(`/join-requests/${joinRequestId}/reject`)
 export const undoJoinRequest = (joinRequestId) => api.post(`/join-requests/${joinRequestId}/undo`)

@@ -150,9 +150,15 @@ function SettingsBody({ me, prefs, onClose }) {
 
               <div className="ps-section">
                 <div className="ps-section-title">연락처</div>
-                <div className="ps-read"><span>이메일</span><strong>{me.email}</strong></div>
-                <div className="ps-read"><span>내 초대코드</span><strong>{me.personalInviteCode}</strong></div>
-                <div className="ps-field" style={{ marginTop: 12 }}>
+                <div className="ps-field">
+                  <label className="ps-label" htmlFor="set-email">이메일</label>
+                  <input className="ps-input" id="set-email" type="email" value={me.email ?? ''} readOnly />
+                </div>
+                <div className="ps-field">
+                  <label className="ps-label" htmlFor="set-code">내 초대코드</label>
+                  <input className="ps-input" id="set-code" value={me.personalInviteCode ?? ''} readOnly />
+                </div>
+                <div className="ps-field">
                   <label className="ps-label" htmlFor="set-birth">생년월일</label>
                   <input className="ps-input" id="set-birth" type="date" value={birthdate ?? ''} onChange={(e) => setBirthdate(e.target.value)} />
                 </div>

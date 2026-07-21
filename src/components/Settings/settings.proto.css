@@ -72,9 +72,8 @@
 }
 .proto-settings .ps-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.15); }
 .proto-settings .ps-input:disabled { opacity: 0.6; cursor: not-allowed; }
-.proto-settings .ps-read { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 4px 0; font-size: 13px; }
-.proto-settings .ps-read span { color: var(--muted); font-weight: 700; }
-.proto-settings .ps-read strong { color: var(--text); font-weight: 800; }
+.proto-settings .ps-input[readonly] { color: var(--muted); cursor: default; }
+.proto-settings .ps-input[readonly]:focus { border-color: var(--input-bdr); box-shadow: none; }
 .proto-settings .ps-pw-field { position: relative; }
 .proto-settings .ps-pw-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: none; cursor: pointer; font-size: 15px; color: var(--muted); }
 .proto-settings .ps-hint { font-size: 11px; margin-top: 5px; min-height: 14px; color: var(--muted); }

@@ -24,18 +24,9 @@
   min-height: 100vh;
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  /* 기본 배경 = 프로토타입 global-theme.css body(우드&클로버 그라디언트). 선택형 테마가 덮음. */
-  background-color: #f4ead8;
-  background-image: var(--clov-app-bg,
-    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.74), transparent 23rem),
-    radial-gradient(circle at 88% 18%, rgba(83, 116, 59, 0.18), transparent 24rem),
-    radial-gradient(circle at 52% 100%, rgba(25, 45, 30, 0.08), transparent 32rem),
-    repeating-linear-gradient(7deg, rgba(145, 94, 45, 0.13) 0 1px, transparent 1px 18px),
-    linear-gradient(145deg, #fff8ec 0%, #f1ead8 46%, #dce8d6 100%));
-  background-size: var(--clov-app-bg-size, auto);
-  background-position: var(--clov-app-bg-pos, center);
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  text-align: left;
+  /* 배경은 index.css의 body(글로벌 --clov-app-bg)가 담당 — 페이지는 투명. */
+  background: transparent;
 }
 .proto-roomlist *,
 .proto-roomlist *::before,

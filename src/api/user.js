@@ -8,3 +8,5 @@ export const changePassword = (payload) => api.patch('/users/me/password', paylo
 export const deleteAccount = () => api.delete('/users/me')
 export const getPreferences = () => api.get('/users/me/preferences')
 export const updatePreferences = (payload) => api.patch('/users/me/preferences', payload)
+// 프로필 이미지 업로드용 presign(계약 §5). 발급 후 R2로 PUT → PATCH /me profileImageUrl로 커밋.
+export const presignProfileImage = (payload) => api.post('/users/me/profile-image/presign', payload)

@@ -254,15 +254,62 @@ export const CheckAdd = styled.div`
   margin-top: 8px;
 `
 
-export const PhotoNote = styled.div`
-  margin-top: 18px;
-  padding: 12px 14px;
-  border: 1px dashed var(--line);
+export const StageGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+`
+
+export const StageCell = styled.div`
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  padding: 8px 4px;
+  border: 1px solid var(--line);
   border-radius: 12px;
-  background: var(--cream);
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 600;
+  background: ${({ $state }) => ($state === 'DONE' ? 'var(--paper)' : 'var(--cream)')};
+`
+
+export const StageName = styled.span`
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--forest);
+`
+
+export const StageImg = styled.img`
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+`
+
+export const StageUpload = styled.label`
+  width: 100%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1.5px dashed var(--mint);
+  color: var(--leaf);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+  cursor: ${({ $busy }) => ($busy ? 'default' : 'pointer')};
+  opacity: ${({ $busy }) => ($busy ? 0.6 : 1)};
+
+  &:hover {
+    background: var(--glow);
+  }
+`
+
+export const StageLocked = styled.div`
+  width: 100%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--line);
+  opacity: 0.5;
 `
 
 export const ModalActions = styled.div`

@@ -10,3 +10,8 @@ export const deleteMemory = (memoryId) => api.delete(`/memories/${memoryId}`)
 export const getComments = (memoryId) => api.get(`/memories/${memoryId}/comments`)
 export const createComment = (memoryId, payload) => api.post(`/memories/${memoryId}/comments`, payload)
 export const deleteComment = (commentId) => api.delete(`/comments/${commentId}`)
+// 이미지(계약 §10 R2): presign → R2 PUT → commit. 삭제·순서 재정렬.
+export const presignMemoryImage = (memoryId, payload) => api.post(`/memories/${memoryId}/images/presign`, payload)
+export const commitMemoryImage = (memoryId, payload) => api.post(`/memories/${memoryId}/images`, payload)
+export const deleteMemoryImage = (imageId) => api.delete(`/memory-images/${imageId}`)
+export const reorderMemoryImages = (memoryId, payload) => api.patch(`/memories/${memoryId}/images/order`, payload)

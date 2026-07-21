@@ -88,6 +88,53 @@ export const ReadRow = styled.div`
   }
 `
 
+export const AvatarRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+`
+
+export const Avatar = styled.div`
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid var(--line);
+  background: var(--cream);
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-weight: 900;
+  font-size: 1.5rem;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`
+
+export const UploadBtn = styled.button`
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: var(--paper);
+  color: var(--leaf);
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--mint);
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+`
+
 export const Field = styled.div`
   display: grid;
   gap: 6px;

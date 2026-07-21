@@ -6,13 +6,17 @@ import {
   getPlans, getPlan, createPlan, deletePlan,
   completePlan, cancelPlan, skipPlanMemory,
   addChecklist, updateChecklist, deleteChecklist,
+  getStagePhotos, presignStagePhoto, commitStagePhoto,
 } from '../../../api/plan'
+import { uploadImage } from '../../../lib/uploadImage'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 
 // 계약 §8 status/memoryStatus 라벨.
 const STATUS_LABEL = { SCHEDULED: '예정', COMPLETED: '완료', CANCELED: '취소' }
 const MEMORY_LABEL = { NONE: '', CANDIDATE: '추억 후보', WRITTEN: '추억 작성됨', SKIPPED: '추억 스킵' }
+// 인생4컷 단계(계약 §9, 서버가 순서·잠김 계산).
+const STAGE_LABEL = { PROPOSAL: '제안', SCHEDULING: '조율', CONFIRMED: '확정', MEETING: '만남' }
 const FILTERS = [
   { key: '', label: '전체' },
   { key: 'SCHEDULED', label: '예정' },
@@ -44,7 +48,14 @@ export default function Schedule() {
     enabled: Boolean(selectedPlanId),
   })
 
+  const stages = useQuery({
+    queryKey: ['plan', selectedPlanId, 'stages'],
+    queryFn: () => getStagePhotos(selectedPlanId),
+    enabled: Boolean(selectedPlanId),
+  })
+
   const invalidateList = () => queryClient.invalidateQueries({ queryKey: ['plans', roomId] })
+  // ['plan', selectedPlanId] 부분일치로 상세·단계사진을 함께 무효화.
   const invalidateDetail = () => queryClient.invalidateQueries({ queryKey: ['plan', selectedPlanId] })
 
   const createMutation = useMutation({
@@ -74,6 +85,21 @@ export default function Schedule() {
     onSuccess: () => {
       invalidateList()
       setSelectedPlanId(null)
+    },
+  })
+
+  // 인생4컷: presign(stage) → R2 PUT → commit(stage). 단계사진·상세 무효화.
+  const uploadStageMutation = useMutation({
+    mutationFn: async ({ stage, file }) => {
+      const imageUrl = await uploadImage(
+        (base) => presignStagePhoto(selectedPlanId, { stage, contentType: base.contentType }),
+        file,
+      )
+      return commitStagePhoto(selectedPlanId, { stage, imageUrl })
+    },
+    onSuccess: () => {
+      invalidateDetail()
+      invalidateList()
     },
   })
 
@@ -143,6 +169,11 @@ export default function Schedule() {
           onAddChecklist={(content) => addChecklistMutation.mutate(content)}
           onToggleChecklist={(id, checked) => toggleChecklistMutation.mutate({ id, checked })}
           onDeleteChecklist={(id) => deleteChecklistMutation.mutate(id)}
+          stages={stages.data?.items ?? []}
+          stagesLoading={stages.isPending}
+          onUploadStage={(stage, file) => uploadStageMutation.mutate({ stage, file })}
+          uploadingStage={uploadStageMutation.isPending ? uploadStageMutation.variables?.stage : null}
+          stageError={uploadStageMutation.error}
           busy={
             completeMutation.isPending || cancelMutation.isPending || skipMutation.isPending ||
             deleteMutation.isPending || addChecklistMutation.isPending ||
@@ -202,6 +233,7 @@ function PlanDetailModal({
   plan, isLoading, currentUserId, onClose,
   onComplete, onCancel, onSkip, onDelete,
   onAddChecklist, onToggleChecklist, onDeleteChecklist, busy,
+  stages, stagesLoading, onUploadStage, uploadingStage, stageError,
 }) {
   const [checkItem, setCheckItem] = useState('')
   const isWriter = plan && String(plan.writer?.id) === String(currentUserId)
@@ -249,7 +281,47 @@ function PlanDetailModal({
               </S.CheckAdd>
             )}
 
-            <S.PhotoNote>📸 인생4컷 인증은 사진 업로드(스토리지) 준비 후 추가됩니다.</S.PhotoNote>
+            <S.SubHead>인생4컷</S.SubHead>
+            {stagesLoading ? (
+              <S.MutedLine>불러오는 중…</S.MutedLine>
+            ) : (
+              <S.StageGrid>
+                {stages.map((s) => (
+                  <S.StageCell key={s.stage} $state={s.state}>
+                    <S.StageName>{STAGE_LABEL[s.stage] ?? s.stage}</S.StageName>
+                    {s.state === 'DONE' && s.imageUrl ? (
+                      <S.StageImg src={s.imageUrl} alt={`${STAGE_LABEL[s.stage] ?? s.stage} 사진`} />
+                    ) : s.state === 'ACTIVE' ? (
+                      <S.StageUpload $busy={uploadingStage === s.stage}>
+                        {uploadingStage === s.stage ? '업로드 중…' : '＋ 사진'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          hidden
+                          disabled={Boolean(uploadingStage)}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) onUploadStage(s.stage, file)
+                            e.target.value = ''
+                          }}
+                        />
+                      </S.StageUpload>
+                    ) : (
+                      <S.StageLocked>🔒</S.StageLocked>
+                    )}
+                  </S.StageCell>
+                ))}
+              </S.StageGrid>
+            )}
+            {stageError && (
+              <S.ErrorText role="alert">
+                {stageError.code === 'STAGE_LOCKED'
+                  ? '이전 단계 사진을 먼저 올려주세요.'
+                  : stageError.code === 'STAGE_ALREADY_UPLOADED'
+                    ? '이미 올린 단계예요.'
+                    : stageError.message}
+              </S.ErrorText>
+            )}
 
             <S.ModalActions>
               {plan.status === 'SCHEDULED' && (

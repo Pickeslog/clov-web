@@ -390,7 +390,6 @@ export default function RoomList() {
           roomId={previewId}
           onClose={() => setPreviewId(null)}
           onEnter={() => navigate(`/rooms/${previewId}`)}
-          onInvite={() => navigate(`/rooms/${previewId}/invite`)}
         />
       )}
     </div>

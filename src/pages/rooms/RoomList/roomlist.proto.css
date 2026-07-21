@@ -384,3 +384,66 @@
 }
 .proto-roomlist .rp-enter:hover { opacity: 0.9; }
 .proto-roomlist .rp-state { padding: 40px 0; text-align: center; color: var(--muted); font-size: 13px; font-weight: 600; }
+
+/* 헤더 기어/뒤로 버튼 */
+.proto-roomlist .rp-gear {
+  width: auto; height: auto; background: none; border: none; color: var(--accent); font-size: 20px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 5px;
+}
+
+/* ===== 서브뷰: 방 프로필 편집(⚙️) ===== */
+.proto-roomlist .ed-lbl { font-size: 12px; font-weight: 800; color: var(--text); margin: 15px 2px 6px; display: flex; gap: 7px; align-items: baseline; }
+.proto-roomlist .ed-lbl:first-child { margin-top: 2px; }
+.proto-roomlist .ed-lbl .h { font-size: 10.5px; font-weight: 600; color: #e0c169; }
+.proto-roomlist .ed-lbl .h.mute { color: var(--muted); }
+.proto-roomlist .ed-in {
+  width: 100%; border: 1.5px solid var(--input-bdr); border-radius: 11px; padding: 10px 12px;
+  font: inherit; font-size: 14px; color: var(--text); background: var(--input-bg); outline: none;
+}
+.proto-roomlist .ed-in:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.15); }
+.proto-roomlist textarea.ed-in { min-height: 56px; resize: none; }
+.proto-roomlist .ed-photo {
+  position: relative; border-radius: 14px; overflow: hidden; height: 118px;
+  display: flex; align-items: center; justify-content: center; color: #fff; font-size: 30px;
+}
+.proto-roomlist .ed-photo i.ti { filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.35)); }
+.proto-roomlist .ed-swatches { display: flex; gap: 10px; margin-top: 9px; flex-wrap: wrap; }
+.proto-roomlist .ed-swatch {
+  width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; padding: 0; position: relative;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25); transition: transform 0.12s;
+}
+.proto-roomlist .ed-swatch:hover { transform: scale(1.08); }
+.proto-roomlist .ed-swatch.on { box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 4px var(--accent); }
+.proto-roomlist .ed-swatch.on::after {
+  content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.proto-roomlist .ed-chips { display: flex; gap: 7px; margin-top: 9px; flex-wrap: wrap; }
+.proto-roomlist .ed-chip {
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--text); background: var(--active-bg);
+  border: 1px solid var(--border); border-radius: 9px; padding: 7px 11px; display: flex; gap: 5px; align-items: center; cursor: pointer;
+}
+.proto-roomlist .ed-chip.on { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.proto-roomlist .cnt { text-align: right; font-size: 11px; color: var(--muted); margin-top: 5px; }
+.proto-roomlist .notify-b {
+  display: flex; gap: 8px; align-items: flex-start; background: var(--active-bg); border: 1px solid var(--border);
+  border-radius: 11px; padding: 10px 12px; margin-top: 16px; font-size: 12px; line-height: 1.45; color: var(--accent);
+}
+.proto-roomlist .notify-b b { color: var(--text); }
+.proto-roomlist .ed-actions { display: flex; gap: 9px; margin-top: 18px; }
+.proto-roomlist .ed-cancel { flex: 1; height: 48px; border: 1px solid var(--border); background: var(--card-bg); border-radius: 13px; font: inherit; font-size: 14.5px; font-weight: 700; color: var(--muted); cursor: pointer; }
+.proto-roomlist .ed-save { flex: 1.6; height: 48px; border: none; background: var(--primary); color: #0a0f0c; border-radius: 13px; font: inherit; font-size: 14.5px; font-weight: 800; cursor: pointer; }
+.proto-roomlist .ed-save:disabled { opacity: 0.6; cursor: default; }
+
+/* ===== 서브뷰: 친구 초대하기 ===== */
+.proto-roomlist .rp-invite-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0 2px 14px; }
+.proto-roomlist .rp-invite-desc b { color: var(--accent); }
+.proto-roomlist .link-box { display: flex; align-items: center; gap: 8px; background: var(--active-bg); border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; }
+.proto-roomlist .link-url { flex: 1; min-width: 0; font-size: 13px; color: var(--accent); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proto-roomlist .code-big { font-size: 19px; font-weight: 850; color: var(--accent); letter-spacing: 2px; }
+.proto-roomlist .mini-copy { flex: none; font: inherit; font-size: 12px; font-weight: 700; color: var(--text); background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.proto-roomlist .share-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 48px; margin-top: 12px; background: var(--primary); color: #0a0f0c; border: none; border-radius: 13px; font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
+.proto-roomlist .or-div { display: flex; align-items: center; gap: 10px; margin: 18px 0 12px; color: var(--muted); font-size: 11.5px; font-weight: 700; }
+.proto-roomlist .or-div::before, .proto-roomlist .or-div::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.proto-roomlist .regen { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 12px; font-size: 12px; color: var(--muted); font-weight: 600; cursor: pointer; background: none; border: none; width: 100%; font-family: inherit; }
+.proto-roomlist .regen:hover { color: var(--accent); }

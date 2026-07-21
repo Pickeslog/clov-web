@@ -7,6 +7,8 @@ import { api } from './client'
 export const getRooms = () => api.get('/rooms')
 export const createRoom = (payload) => api.post('/rooms', payload)
 export const getRoom = (roomId) => api.get(`/rooms/${roomId}`)
+// 방 프로필 수정(부분) — name·description·themeColor·transportType 등(계약 §6·PATCH /rooms/{id}).
+export const updateRoom = (roomId, payload) => api.patch(`/rooms/${roomId}`, payload)
 export const getRoomMembers = (roomId) => api.get(`/rooms/${roomId}/members`)
 export const getRoomLevel = (roomId) => api.get(`/rooms/${roomId}/level`)
 export const leaveRoom = (roomId) => api.delete(`/rooms/${roomId}/members/me`)

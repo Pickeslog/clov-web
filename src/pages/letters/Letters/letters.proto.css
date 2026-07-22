@@ -317,19 +317,9 @@
             overflow: visible;
         }
 
-        /* 다크모드: 편지함 무대 배경을 어둡게 (밝은 배경에 흰 글자가 묻히던 문제 해결 · kimgyubi 이식) */
-        body.dark-mode .letter-stage {
-            background:
-                radial-gradient(circle at 50% 28%, rgba(214, 139, 68, 0.12), transparent 34%),
-                linear-gradient(180deg, rgba(25, 28, 26, 0.9), rgba(20, 23, 21, 0.82));
-            border-color: rgba(255, 255, 255, 0.08);
-        }
-        /* 어두운 무대 위 텍스트를 밝게 (본선은 이 영역 글자색을 어딘가에서 강제 고정해 다크에서도
-           어둡게 남아 대비가 나쁨 → !important로 확실히 밝게) */
-        body.dark-mode .letter-stage-kicker { color: #9ccc65 !important; }
-        body.dark-mode .letter-stage-copy h2 { color: #eef0e2 !important; }
-        body.dark-mode .letter-stage-copy p { color: #b7c99a !important; }
-        body.dark-mode .letter-box-summary { color: #eef0e2 !important; }
+        /* (편지 화면은 항상 라이트 종이 미감 — 앱은 body.dark-mode 클래스를 쓰지 않으므로
+           과거의 body.dark-mode .letter-* 오버라이드는 죽은 코드였고 제거함. 기본 팔레트가 라이트라
+           다크 모드에서도 스테이지·카드가 크림/흰색으로 프로토타입과 동일하게 렌더된다.) */
 
         .letter-stage-kicker {
             display: block;

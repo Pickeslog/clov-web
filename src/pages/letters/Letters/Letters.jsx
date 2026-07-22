@@ -7,6 +7,24 @@ import { getRoomMembers } from '../../../api/room'
 import Header from '../../../components/Header/Header'
 
 const AVATAR_COLORS = ['#40916c', '#52b788', '#74c69d', '#95d5b2', '#2d6a4f']
+// 편지 화면 라이트 팔레트(인라인 CSS 변수) — <main>에 부여해 모든 하위가 상속.
+// letters.proto.css의 @scope 팔레트가 사용자 환경에서 반영 안 되는 이슈를 우회하는 확정 처리.
+const LETTERS_LIGHT_PALETTE = {
+  colorScheme: 'light',
+  '--primary-green': '#1b4332',
+  '--accent-green': '#52b788',
+  '--title-color': '#1b4332',
+  '--card-bg': '#ffffff',
+  '--bg-light': '#f7f8f5',
+  '--text-color': '#2c3e35',
+  '--text-muted': '#61766a',
+  '--border-color': '#eadfd0',
+  '--input-border': '#e2e8e4',
+  '--nav-item-bg-active': '#edf4ec',
+  '--btn-primary-bg': '#1b4332',
+  '--button-text': '#ffffff',
+  '--shadow-color': 'rgba(8, 28, 22, 0.12)',
+}
 const LETTERS_PER_PAGE = 3
 const EMPTY_MESSAGES = [
   <>마음은 먼저 건네는 사람에게 가장 크게 남는대요.<br />오늘, 그 마음을 편지에 담아볼까요?</>,
@@ -91,7 +109,9 @@ export default function Letters() {
   const hasMail = items.length > 0
 
   return (
-    <main className="proto-letters">
+    // 편지 = 항상 크림/라이트 종이 미감. 팔레트 변수를 인라인으로 못박아(모든 하위가 상속)
+    // @scope CSS가 사용자 환경에서 반영 안 되는 문제와 무관하게 다크 모드에서도 라이트로 렌더.
+    <main className="proto-letters" style={LETTERS_LIGHT_PALETTE}>
       <Header variant="room" roomId={roomId} activeTab="letter" />
       <div className="letter-tab-container">
         <section className="letter-stage">

@@ -5,7 +5,6 @@ import Signup from './pages/auth/Signup/Signup'
 import OAuthRedirect from './pages/auth/OAuthRedirect/OAuthRedirect'
 import RoomList from './pages/rooms/RoomList/RoomList'
 import Dashboard from './pages/rooms/Dashboard/Dashboard'
-import Invite from './pages/rooms/Invite/Invite'
 import JoinRoom from './pages/rooms/JoinRoom/JoinRoom'
 import Feed from './pages/feed/Feed/Feed'
 import Letters from './pages/letters/Letters/Letters'
@@ -23,7 +22,6 @@ export const router = createBrowserRouter([
       { path: '/', element: <RoomList /> },
       { path: '/join', element: <JoinRoom /> },
       { path: '/rooms/:roomId', element: <Dashboard /> },
-      { path: '/rooms/:roomId/invite', element: <Invite /> },
       { path: '/rooms/:roomId/feed', element: <Feed /> },
       { path: '/rooms/:roomId/letters', element: <Letters /> },
       { path: '/rooms/:roomId/schedule', element: <Schedule /> },

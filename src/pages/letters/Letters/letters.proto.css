@@ -1,0 +1,886 @@
+@scope (.proto-letters) {
+        /* 행운편지 작성 모달 전용 스타일 */
+        .letter-emoji-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .letter-emoji-chip {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            border: 1.5px solid var(--input-border);
+            background: var(--bg-light);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .letter-emoji-chip:hover {
+            border-color: var(--accent-green);
+            background: var(--nav-item-bg-active);
+            transform: scale(1.12);
+        }
+
+        .letter-emoji-chip.active {
+            border-color: var(--primary-green);
+            background: var(--nav-item-bg-active);
+            box-shadow: 0 0 0 2px rgba(82, 183, 136, 0.22);
+            transform: scale(1.08);
+        }
+
+        .letter-preview {
+            margin-top: 14px;
+            padding: 16px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(82, 183, 136, 0.08), rgba(52, 211, 153, 0.05));
+            border: 1px dashed var(--accent-green);
+            animation: previewFadeIn 0.3s ease both;
+        }
+
+        @keyframes previewFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .letter-preview-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--primary-green);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .letter-preview-content {
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--text-color);
+        }
+
+        .letter-preview-content strong {
+            color: var(--primary-green);
+        }
+
+        .letter-send-success {
+            animation: letterSendPop 0.5s cubic-bezier(0.2, 0.9, 0.2, 1.08) both;
+        }
+
+        @keyframes letterSendPop {
+            0% {
+                transform: scale(1);
+            }
+
+            40% {
+                transform: scale(1.06);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+        }
+
+        /* ==========================================
+           11. 행운 편지 즐겨찾기 및 필터 스타일
+           ========================================== */
+        .letter-filter-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .letter-filter-btn {
+            background-color: var(--btn-primary-bg);
+            border: 1px solid var(--btn-primary-bg);
+            color: var(--button-text);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .letter-filter-btn:hover {
+            border-color: var(--accent-green);
+            background-color: var(--bg-light);
+        }
+
+        .letter-filter-btn.active {
+            background-color: var(--card-bg);
+            color: var(--btn-primary-bg);
+            border-color: var(--btn-primary-bg);
+        }
+
+        .letter-item {
+            position: relative;
+        }
+
+        .letter-favorite-btn {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            outline: none;
+            transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+            user-select: none;
+            filter: grayscale(0);
+            opacity: 1;
+        }
+
+        .letter-favorite-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .letter-favorite-btn.inactive {
+            filter: grayscale(1) brightness(0.8);
+            opacity: 0.3;
+        }
+
+        /* 행운편지 탭 전체 폭 통일 — 위 카드/아래 작성 카드를 같은 중앙 정렬 컨테이너로 묶음 */
+        .letter-tab-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .letter-write-card {
+            max-width: 100%;
+            margin: 20px 0 0;
+            padding: 28px 32px;
+            background: var(--card-bg, #fff);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(20, 40, 30, 0.1);
+        }
+
+        .letter-write-textarea {
+            height: 140px;
+            resize: vertical;
+            line-height: 1.7;
+            padding: 14px 16px !important;
+        }
+
+        .letter-write-buttons {
+            justify-content: flex-end;
+        }
+
+        .letter-write-buttons .btn-sub,
+        .letter-write-buttons .btn-main {
+            flex: 0 0 auto;
+            width: 200px;
+        }
+
+        /* 행운편지 작성 모달 전용 스타일 */
+        #dt-letter-to-all-btn:hover {
+            transform: scale(1.07);
+        }
+
+        .letter-recipient-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .letter-recipient-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px 5px 5px;
+            border-radius: 20px;
+            border: 1.5px solid var(--input-border);
+            background: var(--bg-light);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .letter-recipient-chip:hover {
+            border-color: var(--accent-green);
+            background: var(--nav-item-bg-active);
+            transform: scale(1.07);
+        }
+
+        .letter-recipient-chip.active {
+            border-color: var(--primary-green);
+            background: var(--nav-item-bg-active);
+            box-shadow: 0 0 0 2px rgba(82, 183, 136, 0.22);
+        }
+
+        .letter-recipient-chip.muted {
+            background: #eef1f4;
+            border-color: #e4e8ec;
+            color: #8c93a3;
+        }
+
+        .letter-recipient-chip.muted:hover {
+            border-color: #c9d0da;
+            background: #e6eaef;
+        }
+
+        .letter-recipient-chip.muted .letter-recipient-avatar {
+            filter: grayscale(0.4);
+            opacity: 0.85;
+        }
+
+        .letter-recipient-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .letter-stage {
+            position: relative;
+            min-height: 360px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            text-align: center;
+            padding: 44px 20px 36px;
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at 50% 28%, rgba(214, 139, 68, 0.18), transparent 34%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 247, 0.82));
+            border: 1px solid rgba(45, 140, 97, 0.14);
+            overflow: visible;
+        }
+
+        /* 다크모드: 편지함 무대 배경을 어둡게 (밝은 배경에 흰 글자가 묻히던 문제 해결 · kimgyubi 이식) */
+        body.dark-mode .letter-stage {
+            background:
+                radial-gradient(circle at 50% 28%, rgba(214, 139, 68, 0.12), transparent 34%),
+                linear-gradient(180deg, rgba(25, 28, 26, 0.9), rgba(20, 23, 21, 0.82));
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+        /* 어두운 무대 위 텍스트를 밝게 (본선은 이 영역 글자색을 어딘가에서 강제 고정해 다크에서도
+           어둡게 남아 대비가 나쁨 → !important로 확실히 밝게) */
+        body.dark-mode .letter-stage-kicker { color: #9ccc65 !important; }
+        body.dark-mode .letter-stage-copy h2 { color: #eef0e2 !important; }
+        body.dark-mode .letter-stage-copy p { color: #b7c99a !important; }
+        body.dark-mode .letter-box-summary { color: #eef0e2 !important; }
+
+        .letter-stage-kicker {
+            display: block;
+            color: var(--primary-green);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .letter-stage-copy h2 {
+            color: var(--title-color);
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .letter-stage-copy p {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .letter-box-trigger {
+            position: relative;
+            width: 250px;
+            height: 230px;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            transform: translateY(0);
+            transition: transform 0.28s ease;
+            animation: letterBoxFloat 4.5s ease-in-out infinite;
+        }
+
+        .letter-box-trigger:hover {
+            transform: translateY(-8px);
+        }
+
+        .letter-box-ground-shadow {
+            position: absolute;
+            left: 50%;
+            bottom: -18px;
+            transform: translateX(-50%);
+            width: 210px;
+            height: 30px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, rgba(60, 55, 80, 0.22), rgba(60, 55, 80, 0) 70%);
+            z-index: 1;
+        }
+
+        /* 우정편지 테마 — 선물상자 / 우체통 전환 (사용자설정 > 화면 > 우정편지 테마) */
+        .letter-box-visual {
+            position: absolute;
+            inset: 0;
+        }
+
+        .letter-box-visual-mailbox {
+            display: none;
+        }
+
+        .letter-box-trigger.theme-mailbox .letter-box-visual-giftbox {
+            display: none;
+        }
+
+        .letter-box-trigger.theme-mailbox .letter-box-visual-mailbox {
+            display: block;
+        }
+
+        .letter-box-trigger.theme-mailbox {
+            perspective: 800px;
+        }
+
+        /* ── 우체통 (Mailbox) 전용 스타일 및 3D 개폐 애니메이션 ── */
+        .mailbox-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .mailbox-door-group {
+            transform-origin: 125px 142px;
+            transform: rotateX(0deg);
+            transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .letter-box-trigger:hover .mailbox-door-group {
+            transform: rotateX(-32deg);
+        }
+
+        .letter-box-trigger.is-opening .mailbox-door-group {
+            transform: rotateX(-75deg);
+        }
+
+        /* 편지가 없을 때 (기본 상태) - 깃발 내려감 & 내부 편지 없음 */
+        .mailbox-flag-group {
+            transform-origin: 199px 115px;
+            transform: rotate(85deg);
+            transition: transform 0.52s cubic-bezier(0.34, 1.6, 0.64, 1);
+        }
+
+        .letter-box-trigger:hover .mailbox-flag-group {
+            transform: rotate(72deg);
+        }
+
+        .letter-box-trigger.is-opening .mailbox-flag-group {
+            transform: rotate(60deg);
+        }
+
+        .mailbox-letter-item {
+            transform-origin: 125px 95px;
+            transform: translateY(24px) scale(0.85);
+            opacity: 0;
+            display: none;
+            transition: transform 0.45s cubic-bezier(0.34, 1.5, 0.64, 1), opacity 0.3s ease;
+        }
+
+        /* ── 편지가 도착해 있을 때 (.has-mail) — 깃발 솟구침 & 편지 노출 ── */
+        .letter-box-trigger.has-mail .mailbox-flag-group {
+            transform: rotate(0deg);
+        }
+
+        .letter-box-trigger.has-mail:hover .mailbox-flag-group {
+            transform: rotate(-10deg) scale(1.06);
+        }
+
+        .letter-box-trigger.has-mail.is-opening .mailbox-flag-group {
+            transform: rotate(-16deg) scale(1.12);
+        }
+
+        .letter-box-trigger.has-mail .mailbox-letter-item {
+            display: block;
+        }
+
+        .letter-box-trigger.has-mail:hover .mailbox-letter-item {
+            transform: translateY(-2px) scale(0.98);
+            opacity: 1;
+        }
+
+        .letter-box-trigger.has-mail.is-opening .mailbox-letter-item {
+            transform: translateY(-38px) scale(1.15);
+            opacity: 1;
+        }
+
+        .letter-box-lid {
+            position: absolute;
+            left: 8px;
+            top: 52px;
+            width: 234px;
+            height: 52px;
+            border-radius: 8px;
+            background: linear-gradient(100deg, #f7f2ea 0%, #eae2d5 60%, #ddd4c5 100%);
+            box-shadow:
+                inset -14px 0 22px rgba(150, 138, 120, 0.3),
+                0 8px 14px rgba(120, 105, 88, 0.22);
+            transform-origin: 50% 100%;
+            transform: translateY(0) rotateX(0deg);
+            transition: transform 0.38s cubic-bezier(0.2, 0.9, 0.2, 1.08), box-shadow 0.3s ease;
+            z-index: 5;
+        }
+
+        .letter-box-trigger:hover .letter-box-lid {
+            transform: translateY(-18px) rotate(-3deg);
+            box-shadow:
+                inset 0 -10px 16px rgba(18, 44, 34, 0.06),
+                0 20px 28px rgba(8, 28, 22, 0.18);
+        }
+
+        .letter-box-trigger.is-opening .letter-box-lid {
+            transform: translateY(-64px) rotate(-10deg);
+        }
+
+        .letter-box-body {
+            position: absolute;
+            left: 20px;
+            top: 78px;
+            width: 210px;
+            height: 150px;
+            border-radius: 6px 6px 8px 8px;
+            background: linear-gradient(105deg, #f2ede4 0%, #e4dccf 55%, #d8cfc0 100%);
+            box-shadow: inset -18px 0 26px rgba(150, 138, 120, 0.35);
+            z-index: 3;
+        }
+
+        .letter-box-count {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 56px;
+            height: 56px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #1b2b4b;
+            font-size: 22px;
+            font-weight: 700;
+            box-shadow: 0 8px 20px rgba(40, 50, 90, 0.16);
+            z-index: 5;
+        }
+
+        .gift-bow {
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 250px;
+            height: 120px;
+            z-index: 8;
+            pointer-events: none;
+            filter: drop-shadow(0 6px 8px rgba(30, 40, 90, 0.18));
+            transition: transform 0.38s cubic-bezier(0.2, 0.9, 0.2, 1.08);
+        }
+
+        .gift-bow-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .letter-box-trigger:hover .gift-bow {
+            transform: translateY(-14px) rotate(-2deg);
+        }
+
+        .letter-box-trigger.is-opening .gift-bow {
+            transform: translateY(-58px) rotate(-8deg);
+        }
+
+        @keyframes letterBoxFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-7px); }
+        }
+
+        .letter-write-btn:hover {
+            color: #1b2b1f;
+        }
+
+        .letter-write-btn {
+            margin-top: 20px;
+            margin-bottom: 8px;
+            padding: 12px 32px;
+            font-size: 15px;
+            background: var(--btn-primary-bg);
+            color: var(--button-text);
+            border-color: var(--btn-primary-bg);
+        }
+
+        .letter-box-summary {
+            min-height: 0;
+            text-align: center;
+            color: var(--text-color);
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.55;
+            margin-top: -4px;
+        }
+
+        .letter-inbox-modal {
+            max-width: 560px;
+            padding: 24px;
+        }
+
+        .letter-inbox-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .letter-inbox-head h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .letter-modal-close {
+            width: 34px;
+            height: 34px;
+            border: 0;
+            border-radius: 50%;
+            background: var(--nav-item-bg-active);
+            color: var(--primary-green);
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .letter-inbox-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .letter-inbox-list {
+            display: grid;
+            gap: 10px;
+            min-height: 278px;
+            /* 편지 개수가 적어도 카드가 세로로 늘어나지 않고 위에서부터 슬림하게 쌓임 */
+            grid-auto-rows: max-content;
+            align-content: start;
+        }
+
+        .letter-inbox-card {
+            position: relative;
+            width: 100%;
+            /* 편지 본문 길이와 무관하게 항상 균일한 컴팩트 박스 유지 */
+            height: 76px;
+            box-sizing: border-box;
+            border: 1px solid rgba(255, 143, 179, 0.32);
+            border-radius: 14px;
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 240, 247, 0.92));
+            color: var(--text-color);
+            padding: 16px 48px 16px 56px;
+            text-align: left;
+            cursor: pointer;
+            box-shadow: 0 12px 24px rgba(224, 86, 127, 0.1);
+            animation: letterCardIn 0.28s ease both;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+        }
+
+        .letter-inbox-card::before {
+            content: "💌";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffe3ec, #ffb6d0);
+            box-shadow: 0 4px 10px rgba(224, 86, 127, 0.28);
+        }
+
+        .letter-inbox-card::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #ffd6e4, #ff8fb3);
+        }
+
+        .letter-inbox-card:hover {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 18px 34px rgba(224, 86, 127, 0.18);
+            border-color: rgba(255, 143, 179, 0.55);
+        }
+
+        .letter-inbox-card strong {
+            display: block;
+            color: #e0567f;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .letter-inbox-card p {
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.55;
+            margin: 0;
+            /* 아무리 긴 편지도 1줄 말줄임 처리 → 카드 높이 균일 유지 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .letter-inbox-card .letter-favorite-btn {
+            top: 14px;
+            right: 14px;
+        }
+
+        .letter-inbox-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 220px;
+            color: var(--text-muted);
+            font-size: 14px;
+            border: 1px dashed var(--border-color);
+            border-radius: 16px;
+            background: var(--bg-light);
+        }
+
+        .letter-inbox-pager {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .letter-inbox-pager button {
+            min-width: 64px;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            background: var(--card-bg);
+            color: var(--primary-green);
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .letter-inbox-pager button:disabled {
+            opacity: 0.38;
+            cursor: default;
+        }
+
+        .letter-inbox-pager span {
+            min-width: 52px;
+            color: var(--text-muted);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .letter-detail-modal {
+            max-width: 420px;
+            background: none;
+            border: none;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .letter-detail-paper {
+            position: relative;
+            margin-top: 0;
+            text-align: left;
+            padding: 52px 26px 30px 40px;
+            border: none;
+            border-radius: 10px;
+            background:
+                repeating-linear-gradient(180deg, transparent 0 30px, rgba(224, 86, 127, 0.08) 30px 31px),
+                linear-gradient(175deg, #fffaf2, #fff3e4);
+            box-shadow:
+                0 24px 48px rgba(224, 86, 127, 0.22),
+                inset 0 0 0 1px rgba(224, 86, 127, 0.14);
+            transform: rotate(-0.5deg);
+            overflow: hidden;
+            animation: letterPaperIn 0.32s ease both;
+        }
+
+        .letter-detail-heading {
+            margin: 0 0 18px;
+            padding-bottom: 12px;
+            font-size: 16px;
+            text-align: center;
+            color: #b83f66;
+            border-bottom: 1px dashed rgba(224, 86, 127, 0.3);
+        }
+
+        .letter-paper-btn {
+            position: absolute;
+            top: 12px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid rgba(224, 86, 127, 0.3);
+            background: rgba(255, 255, 255, 0.75);
+            color: #b83f66;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2;
+            transition: background 0.15s ease, transform 0.15s ease;
+        }
+
+        .letter-paper-btn:hover {
+            background: #ffe3ec;
+            transform: scale(1.08);
+        }
+
+        .letter-paper-back { left: 12px; }
+        .letter-paper-close { right: 12px; font-size: 16px; }
+
+        @keyframes letterPaperIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) rotate(-0.5deg);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(-0.5deg);
+            }
+        }
+
+        .letter-detail-paper::before {
+            content: "";
+            position: absolute;
+            left: 26px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(224, 86, 127, 0.22);
+        }
+
+        .letter-detail-paper::after {
+            content: "🍀";
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            font-size: 20px;
+            opacity: 0.32;
+            transform: rotate(8deg);
+        }
+
+        .letter-detail-to,
+        .letter-detail-from {
+            font-weight: 800;
+            font-size: 15px;
+            position: relative;
+        }
+
+        .letter-detail-to {
+            color: var(--text-color);
+            margin-bottom: 18px;
+        }
+
+        .letter-detail-from {
+            color: #e0567f;
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .letter-detail-content {
+            position: relative;
+            color: var(--text-color);
+            font-size: 15px;
+            font-family: Georgia, 'Nanum Myeongjo', serif;
+            font-style: italic;
+            line-height: 1.9;
+            white-space: pre-wrap;
+        }
+
+        @keyframes letterCardIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+/* 편지 작성 대상 선택 칩 스타일 */
+.recipient-chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.recipient-chip:hover {
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(82, 183, 136, 0.15);
+}
+
+.recipient-chip.active {
+    background: var(--primary-green);
+    color: white;
+    border-color: var(--primary-green);
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(82, 183, 136, 0.3);
+}
+
+/* 앱 기본 다크/사용자설정 라이트에 맞춰 프로토타입 토큰을 연결한다. */
+.proto-letters { --primary-green: #5a7a3e; --accent-green: #9ccc65; --card-bg: #1e2016; --bg-light: #191a12; --text-color: #eef0e2; --text-muted: #b7c99a; --border-color: #2a2c1e; --nav-item-bg-active: #2b3020; min-height: calc(100vh - 74px); padding: 26px 24px 72px; color: var(--text-color); }
+.proto-letters .letter-stage { margin: 0 auto; }
+.proto-letters .letter-write-card { width: min(680px, 100%); margin: 24px auto; display: block; }
+.proto-letters .letter-recipient-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.proto-letters .letter-emoji-picker button.active { outline: 2px solid var(--accent-green); }
+.proto-letters .letter-error { color: #ef7777; font-size: 12px; font-weight: 700; }
+.proto-letters .letter-read-btn { margin-top: 8px; border: 0; background: var(--primary-green); color: #fff; border-radius: 7px; padding: 6px 9px; font: inherit; font-size: 11px; cursor: pointer; }
+body.light-mode .proto-letters { --primary-green: #1b4332; --accent-green: #52b788; --card-bg: #ffffff; --bg-light: #f7f8f5; --text-color: #2c3e35; --text-muted: #61766a; --border-color: #eadfd0; --nav-item-bg-active: #edf4ec; }
+@media (max-width: 640px) { .proto-letters { padding: 18px 14px 52px; } .proto-letters .letter-stage { padding: 30px 18px; } }
+}

@@ -25,6 +25,24 @@ const LETTERS_LIGHT_PALETTE = {
   '--button-text': '#ffffff',
   '--shadow-color': 'rgba(8, 28, 22, 0.12)',
 }
+// 편지 내용 텍스트영역 — 프로토타입(.modal-form-group textarea + .letter-write-textarea) 값 그대로.
+// 프로덕션에 프로토타입 전역 입력 스타일이 미이식이라 인라인으로 정확히 맞춘다.
+const LETTER_TEXTAREA_STYLE = {
+  colorScheme: 'light',
+  width: '100%',
+  height: '140px',
+  padding: '14px 16px',
+  background: '#ffffff',
+  color: '#2c3e35',
+  border: '1px solid #e2e8e4',
+  borderRadius: '8px',
+  fontSize: '13px',
+  lineHeight: 1.7,
+  fontFamily: 'inherit',
+  resize: 'vertical',
+  outline: 'none',
+  boxSizing: 'border-box',
+}
 const LETTERS_PER_PAGE = 3
 const EMPTY_MESSAGES = [
   <>마음은 먼저 건네는 사람에게 가장 크게 남는대요.<br />오늘, 그 마음을 편지에 담아볼까요?</>,
@@ -328,7 +346,7 @@ function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, se
           value={content}
           placeholder="응원, 감사, 행운의 메시지를 자유롭게 작성해주세요."
           onChange={(event) => setContent(event.target.value)}
-          style={{ colorScheme: 'light', background: '#ffffff', color: '#2c3e35', width: '100%' }}
+          style={LETTER_TEXTAREA_STYLE}
         />
         <div className="letter-content-count" style={{ textAlign: 'right', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{content.length} / 1000 (한글 500자 / 영어 1000자)</div>
       </div>

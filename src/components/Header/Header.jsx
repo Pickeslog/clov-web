@@ -46,6 +46,7 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
   const goTab = (tab) => navigate(`/rooms/${roomId}${tab.path ? `/${tab.path}` : ''}`)
 
   return (
+    <>
     <header className="clov-hdr">
       <div className="clov-hdr-left">
         {variant === 'room' && (
@@ -107,7 +108,10 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
         </div>
       </div>
 
-      {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
     </header>
+    {/* Settings 오버레이는 header 밖에 둔다 — header의 backdrop-filter가 fixed 오버레이의
+        컨테이닝 블록이 되어 모달이 56px 헤더 안에 갇히는 오버플로우를 방지. */}
+    {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
+    </>
   )
 }

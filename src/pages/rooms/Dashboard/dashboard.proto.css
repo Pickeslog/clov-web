@@ -82,6 +82,36 @@
   8% { opacity: 1; } 92% { opacity: .82; }
   100% { transform: translateY(225px) translateX(var(--dx, 12px)); opacity: 0; }
 }
+/* 생일 이벤트 — 색종이 + 풍선(프로토타입 이식) */
+.proto-dashboard .v5-scene .ptcl.confetti { border-radius: 2px; z-index: 101; animation: dashFallConfetti var(--d, 5s) linear var(--dl, 0s) infinite; }
+@keyframes dashFallConfetti {
+  0% { transform: translate(0, -20px) rotate(0deg) rotateX(0deg) rotateY(0deg); opacity: 1; }
+  100% { transform: translate(var(--dx, 30px), 250px) rotate(var(--dr, 360deg)) rotateX(var(--drx, 180deg)) rotateY(var(--dry, 180deg)); opacity: 0; }
+}
+.proto-dashboard .v5-scene .scene-balloons { position: absolute; inset: 0; pointer-events: none; z-index: 280; }
+.proto-dashboard .v5-scene .balloon {
+  position: absolute; width: 32px; height: 42px; bottom: -60px; background: var(--bc);
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+  box-shadow: inset -4px -4px 10px rgba(0,0,0,.15), inset 4px 4px 10px rgba(255,255,255,.4);
+  animation: dashFloatBalloon var(--bd, 8s) linear var(--bdl, 0s) infinite;
+}
+.proto-dashboard .v5-scene .balloon::after {
+  content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+  border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 6px solid var(--bc); filter: brightness(.85);
+}
+.proto-dashboard .v5-scene .balloon::before {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  width: 1px; height: 45px; background: rgba(255,255,255,.4);
+}
+@keyframes dashFloatBalloon {
+  0% { transform: translateY(0) translateX(0) rotate(-4deg); opacity: 0; }
+  5% { opacity: 1; } 90% { opacity: 1; }
+  100% { transform: translateY(-320px) translateX(var(--bx, 20px)) rotate(4deg); opacity: 0; }
+}
+.proto-dashboard .v5-scene .hud-eyebrow.is-birthday { color: #ffeba0; font-size: 13px; text-shadow: 0 1px 6px rgba(255,200,0,.6); }
+@media (prefers-reduced-motion: reduce) {
+  .proto-dashboard .v5-scene .balloon { animation: none; opacity: .9; bottom: auto; top: 40%; }
+}
 
 /* LP 레코드판 위 회전 하이라이트(샤인) — 위치는 JS가 원본 970x215 좌표를 스케일해 계산 */
 .proto-dashboard .v5-scene .v5-photo-rec { position: absolute; border-radius: 50%; z-index: 210; overflow: hidden; pointer-events: none; }

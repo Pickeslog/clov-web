@@ -46,6 +46,56 @@
   background-size: cover; background-position: center; background-repeat: no-repeat;
   background-color: #2a4a2f;
 }
+
+/* 계절 파티클 — desktop.css v5-scene 파티클 그대로 이식 */
+.proto-dashboard .v5-scene .season-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 100; }
+.proto-dashboard .v5-scene .ptcl { position: absolute; opacity: 0; }
+.proto-dashboard .v5-scene .ptcl.blossom { border-radius: 50% 0 50% 0; animation: dashFallBlossom var(--d, 6s) linear var(--dl, 0s) infinite; }
+@keyframes dashFallBlossom {
+  0% { transform: translate(0, -12px) rotate(0deg); opacity: 0; }
+  8% { opacity: .88; } 92% { opacity: .65; }
+  100% { transform: translate(var(--dx, 22px), 225px) rotate(360deg); opacity: 0; }
+}
+.proto-dashboard .v5-scene .ptcl.firefly {
+  width: 4px; height: 4px; border-radius: 50%; background: #d8ff58;
+  box-shadow: 0 0 5px #c0ee00, 0 0 10px #a0cc00;
+  animation: dashFloatFF var(--d, 5s) ease-in-out var(--dl, 0s) infinite, dashTwinkFF 2s ease-in-out var(--dl2, 0s) infinite alternate;
+}
+@keyframes dashFloatFF {
+  0%, 100% { transform: translate(0, 0); opacity: 0; }
+  12%, 88% { opacity: .95; }
+  50% { transform: translate(var(--dx, 18px), var(--dy, -15px)); }
+}
+@keyframes dashTwinkFF { from { box-shadow: 0 0 4px #c0ee00; } to { box-shadow: 0 0 10px #c0ee00, 0 0 22px #a0cc00; } }
+.proto-dashboard .v5-scene .ptcl.leaf { border-radius: 10px 0 10px 0; animation: dashFallLeaf var(--d, 7s) linear var(--dl, 0s) infinite; }
+@keyframes dashFallLeaf {
+  0% { transform: translate(0, -10px) rotate(0deg); opacity: 0; }
+  8% { opacity: .92; } 92% { opacity: .65; }
+  100% { transform: translate(var(--dx, -38px), 225px) rotate(var(--dr, 180deg)); opacity: 0; }
+}
+.proto-dashboard .v5-scene .ptcl.snow {
+  border-radius: 50%; background: rgba(255, 255, 255, .92); box-shadow: 0 0 3px rgba(255, 255, 255, .6);
+  animation: dashFallSnow var(--d, 8s) linear var(--dl, 0s) infinite;
+}
+@keyframes dashFallSnow {
+  0% { transform: translateY(-10px) translateX(0); opacity: 0; }
+  8% { opacity: 1; } 92% { opacity: .82; }
+  100% { transform: translateY(225px) translateX(var(--dx, 12px)); opacity: 0; }
+}
+
+/* LP 레코드판 위 회전 하이라이트(샤인) — 위치는 JS가 원본 970x215 좌표를 스케일해 계산 */
+.proto-dashboard .v5-scene .v5-photo-rec { position: absolute; border-radius: 50%; z-index: 210; overflow: hidden; pointer-events: none; }
+.proto-dashboard .v5-scene .v5-photo-rec-shine {
+  position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from 0deg, rgba(255,255,255,0) 0deg, rgba(255,255,255,.30) 40deg, rgba(255,255,255,0) 120deg, rgba(255,255,255,0) 360deg);
+  mix-blend-mode: screen; animation: dashRecSpin 4.5s linear infinite;
+}
+@keyframes dashRecSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .proto-dashboard .v5-scene .v5-photo-rec-shine { animation: none; }
+  .proto-dashboard .v5-scene .ptcl { animation: none !important; opacity: 0; }
+}
+
 .proto-dashboard .v5-scene .banner-hud {
   position: absolute; inset: 0; z-index: 300;
   display: flex; flex-direction: column; justify-content: space-between;

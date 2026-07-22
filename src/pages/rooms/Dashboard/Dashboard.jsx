@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './dashboard.proto.css'
@@ -31,6 +31,38 @@ const parseUtc = (value) => new Date(value.endsWith('Z') ? value : `${value}Z`)
 // 계절: 이미지 키 + 한글 라벨.
 const seasonKey = (month) => (month >= 3 && month <= 5 ? 'spring' : month >= 6 && month <= 8 ? 'summer' : month >= 9 && month <= 11 ? 'fall' : 'winter')
 const SEASON_LABEL = { spring: '봄', summer: '여름', fall: '가을', winter: '겨울' }
+
+// 계절 파티클 스펙(프로토타입 v5buildParticles 이식) — 장식, 위치·타이밍 랜덤.
+const PARTICLE_CFG = {
+  spring: { type: 'blossom', count: 18, colors: ['#ffb7d5', '#ffc8e0', '#ffd2e8', '#ffdff0'] },
+  summer: { type: 'firefly', count: 15 },
+  fall: { type: 'leaf', count: 15, colors: ['#e67e22', '#c0392b', '#d35400', '#e8a030'] },
+  winter: { type: 'snow', count: 30, sizes: [3, 4, 4, 5, 5, 6, 7] },
+}
+function buildParticles(season) {
+  const cfg = PARTICLE_CFG[season]
+  if (!cfg) return []
+  return Array.from({ length: cfg.count }, (_, i) => {
+    const dur = 4.5 + Math.random() * 6
+    const style = { '--d': `${dur}s`, '--dl': `${-Math.random() * dur}s`, '--dx': `${(Math.random() - 0.5) * 65}px` }
+    if (cfg.type === 'blossom') {
+      const sz = 6 + Math.random() * 5
+      Object.assign(style, { left: `${Math.random() * 100}%`, top: '-12px', width: `${sz}px`, height: `${sz}px`, background: cfg.colors[i % cfg.colors.length] })
+    } else if (cfg.type === 'firefly') {
+      Object.assign(style, { left: `${Math.random() * 88}%`, top: `${18 + Math.random() * 62}%`, '--dy': `${-8 - Math.random() * 18}px`, '--dl2': `${-Math.random() * 3}s` })
+    } else if (cfg.type === 'leaf') {
+      const sz = 8 + Math.random() * 6
+      Object.assign(style, { left: `${Math.random() * 100}%`, top: '-12px', width: `${sz}px`, height: `${sz}px`, background: cfg.colors[i % cfg.colors.length], '--dr': `${80 + Math.random() * 260}deg` })
+    } else if (cfg.type === 'snow') {
+      const sz = cfg.sizes[i % cfg.sizes.length]
+      Object.assign(style, { left: `${Math.random() * 100}%`, top: '-10px', width: `${sz}px`, height: `${sz}px` })
+    }
+    return { type: cfg.type, style }
+  })
+}
+// LP 레코드판 원본 좌표(970x215 기준) → 렌더 크기에 스케일해 샤인을 겹친다(프로토타입 v5PositionPhotoRec).
+const REC_SRC = { w: 970, h: 215 }
+const REC_POS = { x: 619, y: -14, size: 279 }
 
 const daysTogether = (createdAt) => {
   if (!createdAt) return 1
@@ -65,6 +97,32 @@ export default function Dashboard() {
   const [membersOpen, setMembersOpen] = useState(false)
   const [coverViewOpen, setCoverViewOpen] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
+
+  // 배너 데코 — 계절 파티클 + 레코드판 샤인(원본 좌표를 렌더 크기에 스케일).
+  const sKey = seasonKey(new Date().getMonth() + 1)
+  const particles = useMemo(() => buildParticles(sKey), [sKey])
+  const [recStyle, setRecStyle] = useState(null)
+  const sceneRef = useCallback((node) => {
+    if (!node) return undefined
+    const compute = () => {
+      const w = node.clientWidth
+      const h = node.clientHeight || REC_SRC.h
+      if (!w) return
+      const scale = Math.max(w / REC_SRC.w, h / REC_SRC.h)
+      const offsetX = (w - REC_SRC.w * scale) / 2
+      const offsetY = (h - REC_SRC.h * scale) / 2
+      setRecStyle({
+        left: `${offsetX + REC_POS.x * scale}px`,
+        top: `${offsetY + REC_POS.y * scale}px`,
+        width: `${REC_POS.size * scale}px`,
+        height: `${REC_POS.size * scale}px`,
+      })
+    }
+    compute()
+    const ro = new ResizeObserver(compute)
+    ro.observe(node)
+    return () => ro.disconnect()
+  }, [])
 
   const statusMutation = useMutation({
     mutationFn: (message) => updateStatusMessage(roomId, message),
@@ -109,7 +167,6 @@ export default function Dashboard() {
   const progress = lv?.expForNextLevel ? Math.min(100, Math.round((lv.expPoint / lv.expForNextLevel) * 100)) : 0
   const memberItems = members.data?.items ?? []
   const days = daysTogether(data.createdAt)
-  const sKey = seasonKey(new Date().getMonth() + 1)
   const track = (memories.data?.items ?? []).length || 1
 
   const upcoming = (plans.data?.items ?? [])
@@ -130,8 +187,18 @@ export default function Dashboard() {
       <Header variant="room" roomId={roomId} activeTab="space" />
       <div className="dash-main">
         {/* 성장 배너 */}
-        <div className="v5-scene">
+        <div className="v5-scene" ref={sceneRef} data-season={sKey} data-level={levelNum}>
           <div className="scene-sky" style={{ backgroundImage: `url('/banners/lp-${sKey}.png')` }} />
+          <div className="season-particles" aria-hidden="true">
+            {particles.map((p, i) => (
+              <span key={i} className={`ptcl ${p.type}`} style={p.style} />
+            ))}
+          </div>
+          {recStyle && (
+            <div className="v5-photo-rec" style={recStyle} aria-hidden="true">
+              <div className="v5-photo-rec-shine" />
+            </div>
+          )}
           <div className="banner-hud">
             <div>
               <p className="hud-eyebrow">우리 함께한 지</p>

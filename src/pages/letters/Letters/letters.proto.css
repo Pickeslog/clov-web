@@ -926,6 +926,15 @@ body.light-mode .proto-letters { --primary-green: #1b4332; --accent-green: #52b7
 @media (max-width: 640px) { .proto-letters { padding: 18px 14px 52px; } .proto-letters .letter-stage { padding: 30px 18px; } }
 }
 
+/* 공통 <Button>을 편지 작성에 쓰되, 편지 카드는 항상 라이트 종이라 다크 앱 모드에서도
+   secondary가 흐려지지 않게 라이트 색으로 고정(primary는 두 모드 공통 초록이라 그대로 OK). */
+.proto-letters .letter-write-buttons .clov-btn--secondary {
+  background: rgba(27, 67, 50, 0.06);
+  color: #1b4332;
+  border-color: rgba(27, 67, 50, 0.18);
+}
+.proto-letters .letter-write-buttons .clov-btn--secondary:not(:disabled):hover { background: rgba(27, 67, 50, 0.1); }
+
 /* 모달 등장 애니메이션(@scope 밖 — keyframes는 전역) */
 @keyframes letterModalOverlayIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes letterModalBoxIn {

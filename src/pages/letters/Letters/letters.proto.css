@@ -936,7 +936,16 @@
 /* 앱 기본 다크/사용자설정 라이트에 맞춰 프로토타입 토큰을 연결한다. */
 .proto-letters { --primary-green: #5a7a3e; --accent-green: #9ccc65; --card-bg: #1e2016; --bg-light: #191a12; --text-color: #eef0e2; --text-muted: #b7c99a; --border-color: #2a2c1e; --nav-item-bg-active: #2b3020; min-height: calc(100vh - 74px); padding: 26px 24px 72px; color: var(--text-color); }
 .proto-letters .letter-stage { margin: 0 auto; }
-.proto-letters .letter-write-card { width: min(680px, 100%); margin: 24px auto; display: block; }
+.proto-letters .letter-write-card { width: min(680px, 100%); margin: 24px auto; display: block; text-align: left; }
+.proto-letters .letter-write-card h3, .proto-letters .letter-write-card > p { text-align: left; }
+/* 텍스트영역: 전역 다크 input 스타일을 받아 검게 나오던 문제 → 크림 종이 카드에 맞춰 흰 배경 고정 */
+.proto-letters .letter-write-textarea {
+  width: 100%; background: #ffffff; color: var(--text-color);
+  border: 1.5px solid var(--input-border); border-radius: 12px;
+  font-family: inherit; font-size: 14px;
+}
+.proto-letters .letter-write-textarea::placeholder { color: #9aa7a0; }
+.proto-letters .letter-write-textarea:focus { outline: none; border-color: var(--accent-green); box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.16); }
 .proto-letters .letter-recipient-picker { display: flex; flex-wrap: wrap; gap: 8px; }
 .proto-letters .letter-emoji-picker button.active { outline: 2px solid var(--accent-green); }
 .proto-letters .letter-error { color: #ef7777; font-size: 12px; font-weight: 700; }

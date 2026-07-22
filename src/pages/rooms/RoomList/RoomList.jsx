@@ -125,11 +125,23 @@ export default function RoomList() {
   const myRequests = useQuery({
     queryKey: ['join-requests', 'mine'],
     queryFn: getMyJoinRequests,
-    refetchInterval: (query) => ((query.state.data?.items ?? []).some(isPendingReq) ? 10000 : false),
+    refetchInterval: (query) => ((query.state.data?.items ?? []).some(isPendingReq) ? 6000 : false),
   })
   const requestItems = (myRequests.data?.items ?? []).filter((r) => !dismissed.includes(r.id))
   const awaitingAcceptance = requestItems.some(isPendingReq)
-  const rooms = useQuery({ queryKey: ['rooms'], queryFn: getRooms, refetchInterval: awaitingAcceptance ? 10000 : false })
+  const rooms = useQuery({ queryKey: ['rooms'], queryFn: getRooms, refetchInterval: awaitingAcceptance ? 6000 : false })
+
+  // 대기 신청이 하나 줄면(=다른 멤버가 수락/거절) 방 목록을 즉시 강제 갱신한다.
+  // 폴링만으론 "수락되는 순간 신청이 사라지며 rooms 폴링이 멈추는" 레이스로 새 방을 놓칠 수 있어,
+  // 이 효과가 그 순간을 잡아 수락된 방을 새로고침 없이 바로 띄운다.
+  const pendingCount = requestItems.filter(isPendingReq).length
+  const prevPendingRef = useRef(pendingCount)
+  useEffect(() => {
+    if (pendingCount < prevPendingRef.current) {
+      queryClient.invalidateQueries({ queryKey: ['rooms'] })
+    }
+    prevPendingRef.current = pendingCount
+  }, [pendingCount, queryClient])
 
   const sortedRooms = useMemo(() => {
     const list = [...(rooms.data?.items ?? [])]

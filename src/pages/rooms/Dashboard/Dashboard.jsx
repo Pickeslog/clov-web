@@ -10,6 +10,7 @@ import {
   deleteMemoryImage, reorderMemoryImages,
 } from '../../../api/memory'
 import { getMe } from '../../../api/user'
+import { createInvite, getInvites, cancelInvite } from '../../../api/invite'
 import { uploadImage } from '../../../lib/uploadImage'
 import { useCreateMemory } from '../../../hooks/useCreateMemory'
 import { useAuthStore } from '../../../stores/authStore'
@@ -151,6 +152,8 @@ export default function Dashboard() {
   const [composeMemory, setComposeMemory] = useState(false)
   // 증거 카드에서 바로 여는 추억 상세(피드와 동일한 여권 모달).
   const [selectedMemoryId, setSelectedMemoryId] = useState(null)
+  // 친구 초대(초대코드 생성/복사·공유) 모달.
+  const [inviteOpen, setInviteOpen] = useState(false)
 
   const createPlanMutation = useMutation({
     mutationFn: (payload) => createPlan(roomId, payload),
@@ -402,6 +405,9 @@ export default function Dashboard() {
               <span className="member-modal-title">참여 멤버 · {data.memberCount}명</span>
               <button type="button" className="member-modal-close" onClick={() => setMembersOpen(false)} aria-label="닫기">✕</button>
             </div>
+            <button type="button" className="member-invite-btn" onClick={() => { setMembersOpen(false); setInviteOpen(true) }}>
+              ＋ 친구 초대 (초대코드 보내기)
+            </button>
             {memberItems.map((m, i) => (
               <div className="member-row" key={m.membershipId ?? m.userId}>
                 <span className="member-row-av" style={{ background: MINI_AV_COLORS[i % MINI_AV_COLORS.length] }}>
@@ -415,6 +421,10 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+      )}
+
+      {inviteOpen && (
+        <InviteModal roomId={roomId} roomName={data.name} onClose={() => setInviteOpen(false)} />
       )}
 
       {coverViewOpen && data.coverPhotoUrl && (
@@ -521,6 +531,85 @@ function DashboardMemoryDetail({ memoryId, roomId, currentUserId, onClose }) {
       onDeleteImage={(imageId) => deleteImageMutation.mutate(imageId)}
       onReorderImages={(imageIds) => reorderImageMutation.mutate(imageIds)}
     />
+  )
+}
+
+// 친구 초대 모달 — 방의 활성 초대코드를 만들어/보여주고 복사·공유(계약 §7).
+// 코드로 입장 신청은 상대가 방 목록(RoomList)에서, 수락은 멤버가 알림에서 처리한다.
+function InviteModal({ roomId, roomName, onClose }) {
+  const queryClient = useQueryClient()
+  const [copied, setCopied] = useState('')
+
+  const invites = useQuery({ queryKey: ['invites', roomId], queryFn: () => getInvites(roomId) })
+  const activeInvites = (invites.data?.items ?? []).filter((iv) => iv.status === 'ACTIVE')
+  const active = activeInvites[0] ?? null
+  const code = active?.inviteCode ?? null
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['invites', roomId] })
+  const createMutation = useMutation({ mutationFn: () => createInvite(roomId, {}), onSuccess: invalidate })
+  const cancelMutation = useMutation({ mutationFn: (inviteId) => cancelInvite(inviteId), onSuccess: invalidate })
+
+  const shareText = code
+    ? `우리 우정공간 "${roomName ?? 'Clov'}"에 초대해요! 🍀\nClov 앱에서 아래 코드로 입장을 신청하세요.\n초대코드: ${code}`
+    : ''
+  const copy = async (text, key) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(key)
+      setTimeout(() => setCopied(''), 1500)
+    } catch {
+      /* 클립보드 미지원/거부 — 사용자가 직접 선택 복사 */
+    }
+  }
+
+  return (
+    <div className="invite-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="invite-modal" role="dialog" aria-modal="true" aria-label="친구 초대">
+        <div className="invite-modal-head">
+          <span className="invite-modal-title">🤝 친구 초대하기</span>
+          <button type="button" className="invite-modal-close" onClick={onClose} aria-label="닫기">✕</button>
+        </div>
+        <div className="invite-icon">📨</div>
+        <p className="invite-desc">
+          아래 초대 코드를 복사해 친구에게 보내세요.<br />
+          친구가 코드로 입장을 신청하면, 멤버 누구나 수락할 수 있어요.
+        </p>
+
+        {invites.isPending ? (
+          <div className="invite-state">불러오는 중…</div>
+        ) : code ? (
+          <>
+            <div className="invite-code-box">
+              <span className="invite-code">{code}</span>
+              <button type="button" className="invite-copy-btn" onClick={() => copy(code, 'code')}>
+                {copied === 'code' ? '복사됨 ✓' : '복사'}
+              </button>
+            </div>
+            <button type="button" className="invite-share-btn" onClick={() => copy(shareText, 'msg')}>
+              {copied === 'msg' ? '초대 메시지 복사됨 ✓' : '초대 메시지 복사'}
+            </button>
+            <button
+              type="button"
+              className="invite-sub-btn"
+              disabled={cancelMutation.isPending}
+              onClick={() => { if (window.confirm('이 초대 코드를 만료할까요? 기존 코드로는 더 입장 신청을 못 해요.')) cancelMutation.mutate(active.id) }}
+            >
+              이 코드 만료하기
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="invite-empty">아직 만든 초대 코드가 없어요.</div>
+            <button type="button" className="invite-create-btn" disabled={createMutation.isPending} onClick={() => createMutation.mutate()}>
+              {createMutation.isPending ? '만드는 중…' : '초대 코드 만들기'}
+            </button>
+          </>
+        )}
+        {(createMutation.isError || cancelMutation.isError) && (
+          <div className="invite-state" role="alert">잠시 후 다시 시도해 주세요.</div>
+        )}
+      </div>
+    </div>
   )
 }
 

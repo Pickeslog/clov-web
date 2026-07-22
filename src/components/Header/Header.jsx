@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import './Header.css'
 import { getMe } from '../../api/user'
 import { useAuthStore } from '../../stores/authStore'
+import clovLogo from '../../assets/clov_logo.png'
 import Settings from '../Settings/Settings'
 import Notifications from '../../pages/notifications/Notifications/Notifications'
 
@@ -56,7 +57,8 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
           className="clov-hdr-logo"
           onClick={() => navigate(variant === 'room' && roomId ? `/rooms/${roomId}` : '/')}
         >
-          🍀 Clov.
+          <img className="clov-hdr-logo-mark" src={clovLogo} alt="Clov 로고" />
+          Clov.
         </button>
       </div>
 

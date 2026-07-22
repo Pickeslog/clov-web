@@ -53,6 +53,17 @@ const monthLabelOf = (key) => {
   return `${y}.${m}`
 }
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
+// 카드 본문 미리보기(프로토타입 getRecordPreviewText, 48자).
+const previewText = (value, max = 48) => {
+  const clean = String(value || '').replace(/\s+/g, ' ').trim()
+  return clean.length <= max ? clean : `${clean.slice(0, max - 1)}…`
+}
+// 카드 아바타 = 작성자(대표) + 나머지 참여자(중복 제외).
+const cardAvatars = (item) => {
+  const author = item.writer
+  const others = (item.participants ?? []).filter((p) => String(p.id) !== String(author?.id))
+  return [author, ...others].filter(Boolean)
+}
 
 // 카드 해시태그: 있으면 그대로, 없으면 프로토타입 fallback(#소중한순간 · #내기록/#친구기록 · #YYYY년MM월).
 const cardTags = (item, isMine) => {
@@ -240,13 +251,20 @@ export default function Feed() {
                 const isMine = String(item.writer?.id) === String(currentUserId)
                 const authorLabel = isMine ? '내 기록' : `${item.writer?.nickname}의 기록`
                 const tags = cardTags(item, isMine)
+                const avatars = cardAvatars(item)
+                const visibleAv = avatars.slice(0, 4)
+                const restAv = avatars.length - visibleAv.length
+                const preview = previewText(item.content)
                 return (
                   <div className="memory-card" key={item.id}>
                     <div className={`polaroid-card ${isMine ? 'mine' : 'friend'}`}>
                       <div className="polaroid-presence-row">
-                        <span className="presence-tile is-author">
-                          <span className="presence-dot">{initialOf(item.writer?.nickname)}</span>
-                        </span>
+                        {visibleAv.map((p, idx) => (
+                          <span key={p.id ?? idx} className={`presence-tile ${idx === 0 ? 'is-author' : 'friend'}`} title={p.nickname}>
+                            <span className="presence-dot">{initialOf(p.nickname)}</span>
+                          </span>
+                        ))}
+                        {restAv > 0 && <span className="presence-more">+{restAv}</span>}
                       </div>
                       <div
                         className={`polaroid-photo ${item.thumbnailUrl ? '' : 'is-empty'}`}
@@ -254,6 +272,12 @@ export default function Feed() {
                         onClick={() => setSelectedMemoryId(item.id)}
                       >
                         <span className="author-badge">{authorLabel}</span>
+                        {item.imageCount > 1 && (
+                          <span className="polaroid-photo-count">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-1px', marginRight: '2px' }}><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z" /><circle cx="12" cy="13" r="3.5" /></svg>
+                            {item.imageCount}
+                          </span>
+                        )}
                         {!item.thumbnailUrl && (
                           <>
                             <span className="memory-clover-placeholder">🍀</span>
@@ -271,6 +295,7 @@ export default function Feed() {
                             </button>
                           </div>
                           <div className="memory-title">{item.title}</div>
+                          {preview && <div className="my-record-text">{preview}</div>}
                         </div>
                         <div className="memory-footer-tags">
                           {tags.map((tag, index) => (

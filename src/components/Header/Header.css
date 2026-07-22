@@ -1,0 +1,89 @@
+/* =====================================================================
+   공통 앱 헤더 — 프로토타입 clov-header(main/home)를 React로 이식.
+   자체완결 팔레트(기본 다크 + body.light-mode 오버라이드) — 어떤 화면 위에
+   올려도 색이 깨지지 않도록 스크린 스코프(--var)에 의존하지 않는다.
+   ===================================================================== */
+.clov-hdr {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 12px 20px; margin-bottom: 18px;
+  background: rgba(20, 21, 14, 0.82);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid #2a2c1e;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.clov-hdr *, .clov-hdr *::before, .clov-hdr *::after { box-sizing: border-box; }
+.clov-hdr-left, .clov-hdr-right { display: flex; align-items: center; gap: 8px; }
+
+.clov-hdr-back {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px; border: none; background: none; cursor: pointer;
+  color: #b7c99a; font-size: 20px; line-height: 1; transition: background .15s, color .15s;
+}
+.clov-hdr-back:hover { background: #2b3020; color: #9ccc65; }
+
+.clov-hdr-logo {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 18px; font-weight: 800; letter-spacing: -.3px; color: #9ccc65;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+}
+
+.clov-hdr-nav { display: flex; align-items: center; gap: 2px; }
+.clov-hdr-nav-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 11px; border-radius: 10px; border: none; background: none; cursor: pointer;
+  font: inherit; font-size: 13px; font-weight: 700; color: #79ad90;
+  transition: background .15s, color .15s;
+}
+.clov-hdr-nav-btn:hover, .clov-hdr-nav-btn.active { background: #2b3020; color: #9ccc65; }
+.clov-hdr-nav-icon-btn { padding: 7px 9px; }
+.clov-hdr-nav-btn svg { display: block; }
+
+.clov-hdr-icon-btn {
+  width: 36px; height: 36px; border-radius: 10px; border: none; background: none; cursor: pointer;
+  color: #b7c99a; display: grid; place-items: center; transition: background .15s;
+}
+.clov-hdr-icon-btn:hover { background: #2b3020; }
+.clov-hdr-icon-btn svg { display: block; }
+
+.clov-hdr-avatar-wrap { position: relative; }
+.clov-hdr-avatar {
+  width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+  background: #2b3020; color: #9ccc65; font-size: 13px; font-weight: 800;
+  display: grid; place-items: center; overflow: hidden; position: relative;
+}
+.clov-hdr-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.clov-hdr-avatar:hover { filter: brightness(1.1); }
+
+.clov-hdr-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0; min-width: 168px;
+  background: #1e2016; border: 1px solid #2a2c1e; border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); padding: 6px; z-index: 200; list-style: none; margin: 0;
+}
+.clov-hdr-dropdown li { padding: 0; }
+.clov-hdr-dropdown button {
+  width: 100%; text-align: left; border: none; background: none; cursor: pointer;
+  padding: 9px 12px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; color: #eef0e2;
+  display: flex; align-items: center; gap: 8px;
+}
+.clov-hdr-dropdown button:hover { background: #2b3020; color: #9ccc65; }
+
+@media (max-width: 640px) {
+  .clov-hdr-nav .clov-hdr-nav-btn span:last-child { display: none; }
+  .clov-hdr-nav-btn { padding: 7px 9px; }
+}
+
+/* ── 라이트 모드 ── */
+body.light-mode .clov-hdr { background: rgba(255, 255, 255, 0.88); border-color: #eadfd0; }
+body.light-mode .clov-hdr-back { color: #61766a; }
+body.light-mode .clov-hdr-back:hover { background: #edf4ec; color: #1b4332; }
+body.light-mode .clov-hdr-logo { color: #1b4332; }
+body.light-mode .clov-hdr-nav-btn { color: #79ad90; }
+body.light-mode .clov-hdr-nav-btn:hover, body.light-mode .clov-hdr-nav-btn.active { background: #edf4ec; color: #1b4332; }
+body.light-mode .clov-hdr-icon-btn { color: #61766a; }
+body.light-mode .clov-hdr-icon-btn:hover { background: #edf4ec; }
+body.light-mode .clov-hdr-avatar { background: #edf4ec; color: #1b4332; }
+body.light-mode .clov-hdr-dropdown { background: #fff; border-color: #eadfd0; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12); }
+body.light-mode .clov-hdr-dropdown button { color: #2c3e35; }
+body.light-mode .clov-hdr-dropdown button:hover { background: #edf4ec; color: #1b4332; }

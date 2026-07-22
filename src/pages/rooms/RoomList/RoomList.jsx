@@ -4,9 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './roomlist.proto.css'
 import { getRooms, createRoom, toggleRoomFavorite, leaveRoom } from '../../../api/room'
 import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/invite'
-import { getMe } from '../../../api/user'
-import { useAuthStore } from '../../../stores/authStore'
-import Settings from '../../../components/Settings/Settings'
+import Header from '../../../components/Header/Header'
 import RoomPreviewModal from './RoomPreviewModal'
 
 const DAY = 86400000
@@ -81,24 +79,11 @@ const Icon = ({ name, style }) => <i className={`ti ${name}`} style={style} aria
 export default function RoomList() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const clear = useAuthStore((state) => state.clear)
 
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [previewId, setPreviewId] = useState(null)
-  const [menuOpen, setMenuOpen] = useState(false)
   const [dragId, setDragId] = useState(null)
   const [overId, setOverId] = useState(null)
-
-  const me = useQuery({ queryKey: ['me'], queryFn: getMe })
-
-  // 아바타 드롭다운 바깥 클릭 시 닫기.
-  useEffect(() => {
-    if (!menuOpen) return undefined
-    const onDocClick = (e) => { if (!e.target.closest('.rl-avatar-wrap')) setMenuOpen(false) }
-    document.addEventListener('click', onDocClick)
-    return () => document.removeEventListener('click', onDocClick)
-  }, [menuOpen])
 
   // 모바일 터치 드래그 — document에 non-passive touchmove(React onTouchMove는 passive라 preventDefault 불가).
   // 드래그 중이면 스크롤 차단 + 손가락 밑 카드를 대상으로 표시.
@@ -233,33 +218,7 @@ export default function RoomList() {
 
   return (
     <div className="proto-roomlist">
-      <header className="rl-header">
-        <div className="rl-brand"><Icon name="ti-clover" /> Clov.</div>
-        <div className="rl-header-right">
-          <div className="rl-avatar-wrap">
-            <button type="button" className="rl-avatar" onClick={() => setMenuOpen((v) => !v)}
-              aria-haspopup="true" aria-expanded={menuOpen} aria-label="내 메뉴">
-              {me.data?.profileImageUrl
-                ? <img src={me.data.profileImageUrl} alt="" />
-                : (me.data?.nickname?.trim()?.[0] ?? '나')}
-            </button>
-            {menuOpen && (
-              <ul className="rl-dropdown" role="menu">
-                <li role="menuitem" tabIndex={0}
-                  onClick={() => { setMenuOpen(false); setSettingsOpen(true) }}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMenuOpen(false); setSettingsOpen(true) } }}>
-                  <Icon name="ti-settings" /> 사용자설정
-                </li>
-                <li role="menuitem" tabIndex={0}
-                  onClick={() => { setMenuOpen(false); clear() }}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMenuOpen(false); clear() } }}>
-                  로그아웃
-                </li>
-              </ul>
-            )}
-          </div>
-        </div>
-      </header>
+      <Header variant="home" />
 
       <main className="main">
         <div className="toolbar">
@@ -461,7 +420,6 @@ export default function RoomList() {
           onCreated={(room) => { queryClient.invalidateQueries({ queryKey: ['rooms'] }); navigate(`/rooms/${room.id}`) }}
         />
       )}
-      {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
       {previewId != null && (
         <RoomPreviewModal
           roomId={previewId}

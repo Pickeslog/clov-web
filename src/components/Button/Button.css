@@ -1,0 +1,49 @@
+/* =====================================================================
+   공통 버튼 — 화면 전반에서 재사용하는 버튼 변형.
+   자체완결 팔레트(기본 다크 + body.light-mode). variant × size 조합.
+   variant: primary(솔리드 초록 주버튼) · secondary(연초록 고스트) · danger ·
+            action(텍스트 링크) · dashed(점선 "새 만들기").
+   ===================================================================== */
+.clov-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  border: 1px solid transparent; border-radius: 10px; cursor: pointer;
+  font-family: inherit; font-weight: 700; line-height: 1; white-space: nowrap;
+  transition: background-color .15s, color .15s, border-color .15s, transform .15s, opacity .15s;
+}
+.clov-btn:disabled { opacity: .5; cursor: default; }
+.clov-btn svg { display: block; }
+
+/* 크기 */
+.clov-btn--sm { font-size: 12px; padding: 8px 12px; border-radius: 9px; }
+.clov-btn--md { font-size: 14px; padding: 11px 16px; }
+.clov-btn--lg { font-size: 15px; padding: 14px 20px; border-radius: 12px; width: 100%; }
+
+/* primary — 솔리드 초록 주버튼(라이트/다크 공통 토큰) */
+.clov-btn--primary { background: #1b4332; color: #fff; border-color: #1b4332; }
+.clov-btn--primary:not(:disabled):hover { background: #24583f; border-color: #24583f; }
+
+/* secondary — 연초록 고스트 */
+.clov-btn--secondary { background: rgba(156, 204, 101, 0.12); color: #9ccc65; border-color: rgba(156, 204, 101, 0.32); }
+.clov-btn--secondary:not(:disabled):hover { background: rgba(156, 204, 101, 0.2); }
+body.light-mode .clov-btn--secondary { background: rgba(27, 67, 50, 0.06); color: #1b4332; border-color: rgba(27, 67, 50, 0.18); }
+body.light-mode .clov-btn--secondary:not(:disabled):hover { background: rgba(27, 67, 50, 0.1); }
+
+/* danger */
+.clov-btn--danger { background: #b23b3b; color: #fff; border-color: #b23b3b; }
+.clov-btn--danger:not(:disabled):hover { background: #9a2f2f; border-color: #9a2f2f; }
+
+/* action — 배경 없는 텍스트 링크 */
+.clov-btn--action { background: none; border-color: transparent; color: #9ccc65; padding-left: 6px; padding-right: 6px; }
+.clov-btn--action:not(:disabled):hover { color: #b6e08a; }
+body.light-mode .clov-btn--action { color: #1b4332; }
+body.light-mode .clov-btn--action:not(:disabled):hover { color: #2e5233; }
+
+/* dashed — 점선 "새 만들기" */
+.clov-btn--dashed {
+  background: rgba(156, 204, 101, 0.08); color: #9ccc65;
+  border: 1.5px dashed rgba(156, 204, 101, 0.5);
+  font-family: 'Space Mono', 'Courier New', monospace; letter-spacing: .3px;
+}
+.clov-btn--dashed:not(:disabled):hover { transform: translateY(-1px); background: rgba(156, 204, 101, 0.15); }
+body.light-mode .clov-btn--dashed { background: #faf6ee; color: #2e5233; border-color: rgba(46, 82, 51, 0.45); }
+body.light-mode .clov-btn--dashed:not(:disabled):hover { background: #f3efe1; }

@@ -285,36 +285,7 @@
 .proto-roomlist .err-msg { font-size: 12px; color: var(--danger); font-weight: 700; margin-top: 4px; }
 .proto-roomlist .rl-msg { font-size: 12.5px; color: var(--accent); font-weight: 700; }
 
-/* 헤더 (기존 앱 헤더 유지 — 프로토타입 로그아웃/설정 링크) */
-.proto-roomlist .rl-header {
-  position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between;
-  padding: 0 28px; height: 56px; background: rgba(20, 21, 14, 0.88);
-  backdrop-filter: blur(18px) saturate(1.4); border-bottom: 1px solid var(--border);
-}
-.proto-roomlist .rl-brand { display: inline-flex; align-items: center; gap: 5px; font-weight: 900; font-size: 18px; letter-spacing: -0.4px; color: var(--accent); }
-.proto-roomlist .rl-header-right { display: flex; align-items: center; gap: 8px; }
-
-/* 아바타 + 드롭다운 (프로토타입 clov-hdr-avatar/dropdown 이식) */
-.proto-roomlist .rl-avatar-wrap { position: relative; }
-.proto-roomlist .rl-avatar {
-  position: relative;
-  width: 34px; height: 34px; border-radius: 50%; border: none; overflow: hidden;
-  background: var(--active-bg); color: var(--accent);
-  font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; transition: background 0.15s;
-}
-.proto-roomlist .rl-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.proto-roomlist .rl-avatar:hover { background: var(--input-bdr); }
-.proto-roomlist .rl-dropdown {
-  position: absolute; top: 42px; right: 0; width: 188px; margin: 0; padding: 0;
-  background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); list-style: none; overflow: hidden; z-index: 200;
-}
-.proto-roomlist .rl-dropdown li {
-  display: flex; align-items: center; gap: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600;
-  color: var(--text); cursor: pointer; transition: background 0.15s;
-}
-.proto-roomlist .rl-dropdown li:hover { background: var(--active-bg); }
+/* 헤더는 공통 <Header variant="home"> 컴포넌트로 대체 — rl-header 스타일 제거됨. */
 
 .proto-roomlist i.ti { vertical-align: -0.12em; }
 
@@ -484,8 +455,6 @@ body.light-mode .proto-roomlist .rp-lv,
 body.light-mode .proto-roomlist .rp-enter,
 body.light-mode .proto-roomlist .ed-save,
 body.light-mode .proto-roomlist .share-btn { color: #fff; }
-/* 헤더 글래스 — 라이트 화이트. */
-body.light-mode .proto-roomlist .rl-header { background: rgba(255, 255, 255, 0.88); }
 /* 요청 상태 배지 — 라이트 톤. */
 body.light-mode .proto-roomlist .req-status.pending { background: #fbeecf; color: #b5851f; }
 body.light-mode .proto-roomlist .req-status.rejected { background: #fdeaea; color: #d95f5f; }

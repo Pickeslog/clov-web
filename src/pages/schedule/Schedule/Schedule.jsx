@@ -86,7 +86,6 @@ export default function Schedule() {
   const [density, setDensity] = useState('all')
   const [editing, setEditing] = useState(null) // null | 'new' | plan(수정 대상)
   const railRef = useRef(null)
-  const allRef = useRef(null)
 
   const plans = useQuery({
     queryKey: ['plans', roomId],
@@ -271,7 +270,7 @@ export default function Schedule() {
                 <button
                   type="button"
                   className="fourcut-gallery-btn"
-                  onClick={() => allRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  onClick={() => window.alert('인생4컷 극장은 곧 열려요! (다음 업데이트 예정)')}
                 >
                   🎬 입장하기
                 </button>
@@ -291,18 +290,6 @@ export default function Schedule() {
               </div>
               <button type="button" className="carousel-btn" aria-label="다음 약속 보기" onClick={() => scrollRail(1)}>›</button>
             </div>
-
-            <section className="schedule-all" ref={allRef}>
-              <div className="schedule-all-head">
-                <span className="schedule-all-title">전체 약속 보기</span>
-                <span className="schedule-all-count">{visible.length}</span>
-              </div>
-              <div className="schedule-all-grid">
-                {visible.length === 0
-                  ? <div className="growth-filter-empty">이 필터에 맞는 약속이 아직 없어요.</div>
-                  : visible.map(renderCard)}
-              </div>
-            </section>
           </section>
         )}
       </div>

@@ -784,31 +784,6 @@
     50% { opacity: 0.25; }
   }
 
-  /* ══════════ 전체 약속 보기(하단 그리드) ══════════ */
-  .schedule-all { display: grid; gap: 12px; scroll-margin-top: 76px; }
-  .schedule-all-head {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding-top: 4px;
-  }
-  .schedule-all-title { font-size: 16px; font-weight: 900; color: var(--text-color); }
-  .schedule-all-count {
-    font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--primary-green);
-  }
-  .schedule-all-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 14px;
-    align-items: start;
-  }
-  /* 그리드에선 카드가 셀을 꽉 채우도록(레일의 고정폭 해제) */
-  .schedule-all-grid .growth-card.four-cut { width: 100%; flex: none; }
-  .schedule-all-grid .growth-filter-empty { grid-column: 1 / -1; }
-
   /* ══════════ 새/수정 영수증 모달 ══════════ */
   .modal-overlay {
     position: fixed;

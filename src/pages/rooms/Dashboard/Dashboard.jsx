@@ -4,15 +4,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './dashboard.proto.css'
 import { getRoom, getRoomLevel, getRoomMembers, updateStatusMessage, updateRoom, presignRoomCover } from '../../../api/room'
 import { createPlan, getPlans } from '../../../api/plan'
-import {
-  getMemories, getMemory, getComments, updateMemory, deleteMemory,
-  createComment, deleteComment, presignMemoryImage, commitMemoryImage,
-  deleteMemoryImage, reorderMemoryImages,
-} from '../../../api/memory'
+import { getMemories } from '../../../api/memory'
 import { getMe } from '../../../api/user'
 import { createInvite, getInvites, cancelInvite } from '../../../api/invite'
 import { uploadImage } from '../../../lib/uploadImage'
 import { useCreateMemory } from '../../../hooks/useCreateMemory'
+import { useMemoryDetail } from '../../../hooks/useMemoryDetail'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import Header from '../../../components/Header/Header'
@@ -485,53 +482,11 @@ export default function Dashboard() {
   )
 }
 
-// 우정공간 증거 카드에서 여는 추억 상세 — 피드의 여권 상세 모달(MemoryDetailModal)을
-// 그대로 재사용하고, 데이터/뮤테이션만 여기서 공급한다(피드 상세 로직의 대시보드용 컨테이너).
+// 우정공간 증거 카드에서 여는 추억 상세 — 피드와 동일한 여권 상세 모달(MemoryDetailModal)을
+// 공용 훅(useMemoryDetail)으로 그대로 재사용한다.
 function DashboardMemoryDetail({ memoryId, roomId, currentUserId, onClose }) {
-  const queryClient = useQueryClient()
-  const detail = useQuery({ queryKey: ['memory', memoryId], queryFn: () => getMemory(memoryId), enabled: Boolean(memoryId) })
-  const comments = useQuery({ queryKey: ['memory', memoryId, 'comments'], queryFn: () => getComments(memoryId), enabled: Boolean(memoryId) })
-
-  const invalidateFeed = () => queryClient.invalidateQueries({ queryKey: ['memories', roomId] })
-  const invalidateMemory = () => queryClient.invalidateQueries({ queryKey: ['memory', memoryId] })
-  const invalidateBoth = () => { invalidateMemory(); invalidateFeed() }
-
-  const updateMutation = useMutation({ mutationFn: (payload) => updateMemory(memoryId, payload), onSuccess: invalidateBoth })
-  const deleteMutation = useMutation({ mutationFn: () => deleteMemory(memoryId), onSuccess: () => { invalidateFeed(); onClose() } })
-  const addCommentMutation = useMutation({ mutationFn: (content) => createComment(memoryId, { content }), onSuccess: invalidateBoth })
-  const deleteCommentMutation = useMutation({ mutationFn: (commentId) => deleteComment(commentId), onSuccess: invalidateBoth })
-  const uploadImageMutation = useMutation({
-    mutationFn: async (file) => {
-      const imageUrl = await uploadImage((base) => presignMemoryImage(memoryId, base), file)
-      return commitMemoryImage(memoryId, { imageUrl })
-    },
-    onSuccess: invalidateBoth,
-  })
-  const deleteImageMutation = useMutation({ mutationFn: (imageId) => deleteMemoryImage(imageId), onSuccess: invalidateBoth })
-  const reorderImageMutation = useMutation({ mutationFn: (imageIds) => reorderMemoryImages(memoryId, { imageIds }), onSuccess: invalidateMemory })
-
-  return (
-    <MemoryDetailModal
-      memory={detail.data}
-      isLoading={detail.isPending}
-      currentUserId={currentUserId}
-      onClose={onClose}
-      onSave={(payload) => updateMutation.mutate(payload)}
-      onDelete={() => deleteMutation.mutate()}
-      saving={updateMutation.isPending}
-      deleting={deleteMutation.isPending}
-      comments={comments.data?.items ?? []}
-      commentsLoading={comments.isPending}
-      onAddComment={(content) => addCommentMutation.mutate(content)}
-      addingComment={addCommentMutation.isPending}
-      onDeleteComment={(commentId) => deleteCommentMutation.mutate(commentId)}
-      onUploadImage={(file) => uploadImageMutation.mutate(file)}
-      uploadingImage={uploadImageMutation.isPending}
-      uploadImageError={uploadImageMutation.error?.message}
-      onDeleteImage={(imageId) => deleteImageMutation.mutate(imageId)}
-      onReorderImages={(imageIds) => reorderImageMutation.mutate(imageIds)}
-    />
-  )
+  const memoryDetail = useMemoryDetail(memoryId, roomId, { onDeleted: onClose })
+  return <MemoryDetailModal {...memoryDetail} currentUserId={currentUserId} onClose={onClose} />
 }
 
 // 친구 초대 모달 — 방의 활성 초대코드를 만들어/보여주고 복사·공유(계약 §7).

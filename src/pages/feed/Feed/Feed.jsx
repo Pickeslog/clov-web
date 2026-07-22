@@ -1,24 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import './feed.proto.css'
-import {
-  getMemories,
-  getMemory,
-  updateMemory,
-  deleteMemory,
-  getComments,
-  createComment,
-  deleteComment,
-  presignMemoryImage,
-  commitMemoryImage,
-  deleteMemoryImage,
-  reorderMemoryImages,
-} from '../../../api/memory'
+import { getMemories, getMemory } from '../../../api/memory'
 import { getRoomMembers } from '../../../api/room'
 import { getPlan, getPlans } from '../../../api/plan'
-import { uploadImage } from '../../../lib/uploadImage'
 import { useCreateMemory } from '../../../hooks/useCreateMemory'
+import { useMemoryDetail } from '../../../hooks/useMemoryDetail'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import Header from '../../../components/Header/Header'
@@ -158,7 +146,6 @@ const todayStr = () => {
 
 export default function Feed() {
   const { roomId } = useParams()
-  const queryClient = useQueryClient()
   const accessToken = useAuthStore((state) => state.accessToken)
   const currentUserId = currentUserIdFromToken(accessToken)
 
@@ -181,77 +168,10 @@ export default function Feed() {
     queryFn: () => getRoomMembers(roomId),
   })
 
-  const detail = useQuery({
-    queryKey: ['memory', selectedMemoryId],
-    queryFn: () => getMemory(selectedMemoryId),
-    enabled: Boolean(selectedMemoryId),
-  })
-
-  const comments = useQuery({
-    queryKey: ['memory', selectedMemoryId, 'comments'],
-    queryFn: () => getComments(selectedMemoryId),
-    enabled: Boolean(selectedMemoryId),
-  })
-
-  const invalidateFeed = () => queryClient.invalidateQueries({ queryKey: ['memories', roomId] })
-  const invalidateMemory = () => queryClient.invalidateQueries({ queryKey: ['memory', selectedMemoryId] })
-
   // 추억 생성(본문+사진 순차 업로드)은 우정공간과 공유하는 공용 훅으로 처리.
   const createMutation = useCreateMemory(roomId, { onSuccess: () => setCreateOpen(false) })
-
-  const updateMutation = useMutation({
-    mutationFn: ({ memoryId, payload }) => updateMemory(memoryId, payload),
-    onSuccess: () => {
-      invalidateFeed()
-      invalidateMemory()
-    },
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: (memoryId) => deleteMemory(memoryId),
-    onSuccess: () => {
-      invalidateFeed()
-      setSelectedMemoryId(null)
-    },
-  })
-
-  const addCommentMutation = useMutation({
-    mutationFn: (content) => createComment(selectedMemoryId, { content }),
-    onSuccess: () => {
-      invalidateFeed()
-      invalidateMemory()
-    },
-  })
-
-  const deleteCommentMutation = useMutation({
-    mutationFn: (commentId) => deleteComment(commentId),
-    onSuccess: () => {
-      invalidateFeed()
-      invalidateMemory()
-    },
-  })
-
-  const uploadImageMutation = useMutation({
-    mutationFn: async (file) => {
-      const imageUrl = await uploadImage((base) => presignMemoryImage(selectedMemoryId, base), file)
-      return commitMemoryImage(selectedMemoryId, { imageUrl })
-    },
-    onSuccess: () => {
-      invalidateMemory()
-      invalidateFeed()
-    },
-  })
-  const deleteImageMutation = useMutation({
-    mutationFn: (imageId) => deleteMemoryImage(imageId),
-    onSuccess: () => {
-      invalidateMemory()
-      invalidateFeed()
-    },
-  })
-  const reorderImageMutation = useMutation({
-    mutationFn: (imageIds) => reorderMemoryImages(selectedMemoryId, { imageIds }),
-    onSuccess: invalidateMemory,
-  })
+  // 추억 상세(여권) 모달의 데이터·뮤테이션도 우정공간과 공유하는 공용 훅으로 처리.
+  const memoryDetail = useMemoryDetail(selectedMemoryId, roomId, { onDeleted: () => setSelectedMemoryId(null) })
 
   const allItems = feed.data?.items ?? []
   const memberItems = members.data?.items ?? []
@@ -434,24 +354,9 @@ export default function Feed() {
 
       {selectedMemoryId && (
         <MemoryDetailModal
-          memory={detail.data}
-          isLoading={detail.isPending}
+          {...memoryDetail}
           currentUserId={currentUserId}
           onClose={() => setSelectedMemoryId(null)}
-          onSave={(payload) => updateMutation.mutate({ memoryId: selectedMemoryId, payload })}
-          onDelete={() => deleteMutation.mutate(selectedMemoryId)}
-          saving={updateMutation.isPending}
-          deleting={deleteMutation.isPending}
-          comments={comments.data?.items ?? []}
-          commentsLoading={comments.isPending}
-          onAddComment={(content) => addCommentMutation.mutate(content)}
-          addingComment={addCommentMutation.isPending}
-          onDeleteComment={(commentId) => deleteCommentMutation.mutate(commentId)}
-          onUploadImage={(file) => uploadImageMutation.mutate(file)}
-          uploadingImage={uploadImageMutation.isPending}
-          uploadImageError={uploadImageMutation.error?.message}
-          onDeleteImage={(imageId) => deleteImageMutation.mutate(imageId)}
-          onReorderImages={(imageIds) => reorderImageMutation.mutate(imageIds)}
         />
       )}
     </div>

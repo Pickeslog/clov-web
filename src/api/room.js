@@ -17,3 +17,5 @@ export const toggleRoomFavorite = (roomId, isFavorite) =>
 // 내 상태 메시지(대시보드 표시·편집, 계약 §12). PATCH → { statusMessage } 반환.
 export const updateStatusMessage = (roomId, statusMessage) =>
   api.patch(`/rooms/${roomId}/members/me/status-message`, { statusMessage })
+// 대표 커버 이미지 presign(계약 §6). 발급 후 R2로 PUT → PATCH /rooms/{id} coverPhotoUrl로 커밋.
+export const presignRoomCover = (roomId, payload) => api.post(`/rooms/${roomId}/cover-image/presign`, payload)

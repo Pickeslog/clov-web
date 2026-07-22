@@ -1,0 +1,299 @@
+/* =====================================================================
+   Dashboard(우정공간) — 프로토타입(02-main index.html + pages/space-page.js +
+   desktop.css) 그대로 이식. styled-components 재번역 대신 프로토타입 실제 규칙을
+   .proto-dashboard 스코프로 복사, 데이터만 바인딩. 값(px·색)은 원본과 동일.
+   앱 기본 = 다크 → 베이스에 다크 팔레트, body.light-mode 로 라이트 오버라이드.
+   페이지는 투명 — 배경은 index.css body(글로벌 --clov-app-bg 우드&클로버)가 담당.
+   배너 우드+바이닐은 단일 이미지 에셋(public/banners/lp-<season>.png, 970x215).
+   ===================================================================== */
+.proto-dashboard {
+  /* 다크 팔레트(앱 기본) — desktop.css body.dark-mode 값 */
+  --primary-green: #5a7a3e;
+  --accent-green: #9ccc65;
+  --card-bg: #1e2016;
+  --bg-light: #191a12;
+  --text-color: #eef0e2;
+  --text-muted: #b7c99a;
+  --border-color: #2a2c1e;
+  --nav-item-bg-active: #2b3020;
+  --nav-item-color: #79ad90;
+  --nav-item-active: #9ccc65;
+  --input-bg: #191a12;
+  --button-text: #12150a;
+
+  min-height: 100vh;
+  color: var(--text-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  text-align: left;
+  background: transparent;
+}
+.proto-dashboard *,
+.proto-dashboard *::before,
+.proto-dashboard *::after { box-sizing: border-box; }
+
+.proto-dashboard .dash-main { max-width: 1040px; margin: 0 auto; padding: 20px 24px 80px; }
+
+/* 헤더는 공통 <Header variant="room"> 컴포넌트로 대체 — clov-hdr 스타일 제거됨. */
+
+/* ===== 성장 배너 (v5-scene · LP 턴테이블) ===== */
+.proto-dashboard .v5-scene {
+  position: relative; width: 100%; height: 215px; overflow: hidden;
+  border-radius: 18px; margin-bottom: 20px;
+  box-shadow: 0 18px 42px rgba(8,28,22,.28);
+}
+.proto-dashboard .v5-scene .scene-sky {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  background-color: #2a4a2f;
+}
+.proto-dashboard .v5-scene .banner-hud {
+  position: absolute; inset: 0; z-index: 300;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 16px 22px 15px; pointer-events: none;
+}
+.proto-dashboard .hud-eyebrow {
+  font-size: 11px; font-weight: 700; color: rgba(255,255,255,.82);
+  text-shadow: 0 1px 5px rgba(0,0,0,.45); letter-spacing: .3px;
+}
+.proto-dashboard .hud-dday {
+  font-size: clamp(28px, 5vw, 50px); font-weight: 900; color: #fff;
+  letter-spacing: -1.5px; line-height: 1; text-shadow: 0 2px 16px rgba(0,0,0,.28); margin-top: 2px;
+}
+.proto-dashboard .hud-dday span { font-size: .5em; font-weight: 800; margin-left: 4px; }
+.proto-dashboard .hud-bottom { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.proto-dashboard .v5-photo-chip {
+  display: flex; align-items: center; gap: 9px; padding: 6px 13px 6px 11px; border-radius: 20px;
+  backdrop-filter: blur(3px); box-shadow: 0 4px 12px rgba(20,30,20,.28); pointer-events: all;
+  background: rgba(46,106,79,.82);
+}
+.proto-dashboard .v5-photo-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: #a8e6b0; }
+.proto-dashboard .v5-photo-chip-text { font-size: 12.5px; font-weight: 800; letter-spacing: -.2px; white-space: nowrap; color: #f2fbf4; }
+.proto-dashboard .lv-pill {
+  position: relative; width: 190px; height: 32px;
+  background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.25); border-radius: 16px;
+  overflow: hidden; backdrop-filter: blur(8px); box-shadow: 0 4px 12px rgba(0,0,0,.15); pointer-events: all;
+}
+.proto-dashboard .lv-pill-bg {
+  position: absolute; top: 0; left: 0; bottom: 0;
+  background: linear-gradient(90deg, rgba(26,136,72,.65) 0%, rgba(40,176,96,.85) 100%);
+  transition: width .9s cubic-bezier(.34,1.56,.64,1); z-index: 1;
+}
+.proto-dashboard .lv-pill-bg::after {
+  content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 26px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.95)); filter: blur(1.5px);
+}
+.proto-dashboard .lv-pill-content { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 12px; z-index: 2; }
+.proto-dashboard .lv-badge-icon {
+  font-size: 11px; font-weight: 800; color: rgba(255,255,255,.95); background: rgba(0,0,0,.15);
+  padding: 4px 7px; border-radius: 10px; margin-right: 8px; line-height: 1;
+}
+.proto-dashboard .lv-badge-name { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.95); text-shadow: 0 1px 3px rgba(0,0,0,.3); flex: 1; }
+.proto-dashboard .lv-pct { font-size: 12px; font-weight: 800; color: rgba(255,255,255,.95); text-shadow: 0 1px 3px rgba(0,0,0,.3); }
+
+/* ===== 대표 커버 카드 (main-photo-card / 보딩패스) ===== */
+.proto-dashboard .main-photo-card {
+  display: flex; align-items: center; overflow: visible; margin-bottom: 20px;
+}
+.proto-dashboard .main-photo-wrapper {
+  flex: 0 0 420px; height: 150px; background: #fff; padding: 6px; border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12); transform: rotate(-2.5deg);
+  position: relative; z-index: 10; margin-right: -24px; margin-left: 8px; overflow: hidden;
+}
+.proto-dashboard .main-photo-wrapper img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 2px; }
+.proto-dashboard .main-photo-empty {
+  width: 100%; height: 100%; border-radius: 2px; display: grid; place-items: center;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(82,183,136,.22), transparent 58%),
+    repeating-linear-gradient(135deg, rgba(82,183,136,.1) 0px, rgba(82,183,136,.1) 2px, transparent 2px, transparent 14px);
+  font-size: 40px;
+}
+.proto-dashboard .cover-summary {
+  flex: 1; min-width: 0; background: var(--card-bg); border-radius: 14px;
+  padding: 24px 24px 24px 44px; box-shadow: 0 6px 16px rgba(0,0,0,.06);
+  border: 1px solid var(--border-color); position: relative; z-index: 5;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.proto-dashboard .cover-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.proto-dashboard .title-input-box {
+  flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 14px;
+  padding: 14px 18px; cursor: text; transition: border-color .2s ease, background-color .2s ease;
+}
+.proto-dashboard .title-input-box:hover,
+.proto-dashboard .title-input-box:focus-within { border-color: var(--accent-green); }
+.proto-dashboard .cover-status-input {
+  flex: 1; min-width: 0; border: none; background: transparent; outline: none;
+  font: inherit; font-size: 16px; font-weight: 800; color: var(--text-color); padding: 0;
+}
+.proto-dashboard .cover-status-input::placeholder { color: var(--text-muted); font-weight: 600; }
+.proto-dashboard .cover-status-count {
+  flex-shrink: 0; font-size: 12px; color: var(--accent-green); font-weight: 700;
+  background: rgba(156,204,101,.16); padding: 4px 10px; border-radius: 12px; white-space: nowrap;
+}
+.proto-dashboard .cover-status-hint { flex-shrink: 0; font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+.proto-dashboard .cover-status-save {
+  flex-shrink: 0; border: none; border-radius: 10px; background: var(--accent-green); color: #12150a;
+  font: inherit; font-size: 12px; font-weight: 800; padding: 7px 12px; cursor: pointer;
+}
+.proto-dashboard .cover-status-save:disabled { opacity: .5; cursor: default; }
+
+.proto-dashboard .cover-meta-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.proto-dashboard .member-highlight-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 14px;
+  padding: 14px 18px; cursor: pointer; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.proto-dashboard .member-highlight-card:hover {
+  transform: translateY(-2px); border-color: var(--accent-green);
+  box-shadow: 0 10px 24px rgba(27,67,50,.22);
+}
+.proto-dashboard .member-mini-avatars { display: flex; align-items: center; }
+.proto-dashboard .member-mini-avatars .mini-av {
+  width: 30px; height: 30px; border-radius: 50%; color: #fff; display: grid; place-items: center;
+  font-size: 11px; font-weight: 800; border: 1.5px solid var(--card-bg); margin-left: -8px; overflow: hidden; position: relative;
+}
+.proto-dashboard .member-mini-avatars .mini-av:first-child { margin-left: 0; }
+.proto-dashboard .member-mini-avatars .mini-av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.proto-dashboard .member-meta-label { font-size: 11px; color: var(--text-muted); font-weight: 700; letter-spacing: -.2px; }
+.proto-dashboard .member-meta-value { font-size: 14px; font-weight: 800; color: var(--text-color); }
+.proto-dashboard .member-see {
+  display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+  background: rgba(156,204,101,.16); color: var(--accent-green); font-size: 11px; font-weight: 700;
+  padding: 6px 12px; border-radius: 16px; border: 1px solid rgba(156,204,101,.25);
+}
+
+/* ===== 섹션 헤더 + 버튼 ===== */
+.proto-dashboard .section-title {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-size: 16px; font-weight: 700; color: var(--text-color); margin: 22px 0 14px;
+}
+.proto-dashboard .section-actions { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
+/* 섹션 버튼은 공통 <Button variant="dashed|action"> 로 대체. */
+
+/* ===== D-day 3열 (schedule-banner) ===== */
+.proto-dashboard .schedule-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.proto-dashboard .schedule-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: rgba(255,255,255,.05); border: 1px solid var(--border-color); border-radius: 14px;
+  padding: 12px 16px; cursor: pointer; box-shadow: 0 12px 28px rgba(8,28,22,.18);
+  transition: background-color .25s ease, transform .25s ease, border-color .25s ease;
+}
+.proto-dashboard .schedule-banner:hover { transform: translateY(-2px); border-color: var(--accent-green); }
+.proto-dashboard .schedule-info { display: flex; align-items: center; gap: 8px; color: var(--text-color); overflow: hidden; }
+.proto-dashboard .schedule-icon { font-size: 16px; flex-shrink: 0; }
+.proto-dashboard .schedule-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.proto-dashboard .schedule-date { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+.proto-dashboard .schedule-dday-badge {
+  position: relative; background: var(--primary-green); color: var(--button-text);
+  padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; letter-spacing: -.5px; flex-shrink: 0;
+}
+.proto-dashboard .schedule-empty {
+  grid-column: 1 / -1; padding: 22px 16px; border-radius: 14px; text-align: center;
+  color: var(--text-muted); font-size: 13px; font-weight: 600;
+  background: rgba(255,255,255,.04); border: 1px dashed var(--border-color);
+}
+
+/* ===== 참여자별 추억 증거 카드 (폴라로이드 프리뷰 행) ===== */
+.proto-dashboard .space-memory-grid {
+  display: flex; gap: 20px; overflow-x: auto; padding: 8px 2px 14px; scroll-snap-type: x proximity;
+}
+.proto-dashboard .memory-empty {
+  width: 100%; padding: 28px 16px; border-radius: 14px; text-align: center;
+  color: var(--text-muted); font-size: 13px; font-weight: 600;
+  background: rgba(255,255,255,.04); border: 1px dashed var(--border-color);
+}
+.proto-dashboard .mini-polaroid {
+  flex: 0 0 200px; scroll-snap-align: start;
+  background: #f7f9f7; padding: 8px 8px 34px; border-radius: 3px; color: #24382f; cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,.22), 0 12px 34px rgba(0,0,0,.30);
+  transform: rotate(-1.5deg); transition: transform .3s ease, box-shadow .3s ease;
+}
+.proto-dashboard .space-memory-grid > .mini-polaroid:nth-child(even) { transform: rotate(1.2deg); }
+.proto-dashboard .mini-polaroid:hover { transform: rotate(0deg) scale(1.03); }
+.proto-dashboard .mini-polaroid-photo {
+  position: relative; width: 100%; height: 128px; overflow: hidden; border-radius: 2px;
+  background-color: #eef4f0; background-size: cover; background-position: center;
+  display: grid; place-items: center;
+}
+.proto-dashboard .mini-polaroid-photo.is-empty {
+  background-image:
+    radial-gradient(circle at 50% 38%, rgba(82,183,136,.22), transparent 58%),
+    repeating-linear-gradient(135deg, rgba(82,183,136,.08) 0px, rgba(82,183,136,.08) 2px, transparent 2px, transparent 14px);
+  font-size: 30px;
+}
+.proto-dashboard .mini-polaroid-badge {
+  position: absolute; top: 8px; left: 8px; padding: 4px 9px; border-radius: 999px;
+  background: rgba(255,255,255,.92); color: #1b4332; font-size: 10px; font-weight: 800;
+}
+.proto-dashboard .mini-polaroid-cap { padding: 10px 4px 0; }
+.proto-dashboard .mini-polaroid-title {
+  font-size: 13px; font-weight: 700; color: #24382f; margin-bottom: 4px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all;
+}
+.proto-dashboard .mini-polaroid-date { font-size: 11px; color: #61766a; }
+
+/* ===== 멤버 목록 모달 ===== */
+.proto-dashboard .member-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(8,28,22,.5); backdrop-filter: blur(6px);
+  z-index: 400; display: flex; align-items: center; justify-content: center;
+}
+.proto-dashboard .member-modal {
+  width: min(420px, calc(100vw - 32px)); max-height: 80vh; overflow-y: auto;
+  background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px;
+  box-shadow: 0 30px 70px rgba(0,0,0,.5); padding: 20px 22px;
+}
+.proto-dashboard .member-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.proto-dashboard .member-modal-title { font-size: 16px; font-weight: 800; color: var(--text-color); }
+.proto-dashboard .member-modal-close {
+  width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--nav-item-bg-active);
+  color: var(--text-muted); font-size: 15px; cursor: pointer;
+}
+.proto-dashboard .member-row { display: flex; align-items: center; gap: 12px; padding: 9px 4px; }
+.proto-dashboard .member-row-av {
+  width: 38px; height: 38px; border-radius: 50%; background: var(--primary-green); color: #fff;
+  display: grid; place-items: center; font-size: 14px; font-weight: 800; overflow: hidden; position: relative; flex-shrink: 0;
+}
+.proto-dashboard .member-row-av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.proto-dashboard .member-row-name { font-size: 14px; font-weight: 700; color: var(--text-color); }
+.proto-dashboard .member-row-status { font-size: 12px; color: var(--text-muted); }
+
+.proto-dashboard .dash-state { padding: 60px 20px; text-align: center; color: var(--text-muted); font-size: 14px; }
+.proto-dashboard .dash-state button {
+  margin-left: 8px; border: none; background: var(--accent-green); color: #12150a;
+  padding: 6px 12px; border-radius: 8px; font-weight: 700; cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .proto-dashboard .main-photo-card { flex-direction: column; align-items: stretch; }
+  .proto-dashboard .main-photo-wrapper { flex-basis: auto; width: 100%; margin: 0 0 -18px; transform: rotate(-1.5deg); }
+  .proto-dashboard .cover-summary { padding: 28px 20px 20px; }
+  .proto-dashboard .schedule-grid { grid-template-columns: 1fr; }
+}
+
+/* =====================================================================
+   라이트 모드 — body.light-mode 로 라이트 팔레트 + 보딩패스 흰 카드 복원.
+   ===================================================================== */
+body.light-mode .proto-dashboard {
+  --primary-green: #1b4332;
+  --accent-green: #52b788;
+  --card-bg: #ffffff;
+  --bg-light: #fbf7ef;
+  --text-color: #2c3e35;
+  --text-muted: #61766a;
+  --border-color: #eadfd0;
+  --nav-item-bg-active: #edf4ec;
+  --nav-item-color: #79ad90;
+  --nav-item-active: #1b4332;
+  --input-bg: #ffffff;
+  --button-text: #ffffff;
+}
+body.light-mode .proto-dashboard .cover-summary { background: #fff; border-color: rgba(27,67,50,.08); box-shadow: 0 6px 16px rgba(0,0,0,.06); }
+body.light-mode .proto-dashboard .title-input-box,
+body.light-mode .proto-dashboard .member-highlight-card { background: #fff; border-color: rgba(27,67,50,.12); }
+body.light-mode .proto-dashboard .cover-status-count { background: rgba(27,67,50,.12); color: #1b4332; }
+body.light-mode .proto-dashboard .member-see { background: rgba(27,67,50,.08); color: #1b4332; border-color: rgba(27,67,50,.12); }
+body.light-mode .proto-dashboard .cover-status-save { color: #fff; }
+body.light-mode .proto-dashboard .schedule-banner { background: rgba(232,243,237,.92); border-color: rgba(255,255,255,.3); }
+body.light-mode .proto-dashboard .schedule-empty,
+body.light-mode .proto-dashboard .memory-empty { background: rgba(0,0,0,.03); border-color: var(--border-color); }
+body.light-mode .proto-dashboard .mini-polaroid { box-shadow: 0 2px 4px rgba(0,0,0,.1), 0 10px 30px rgba(8,28,22,.18); }

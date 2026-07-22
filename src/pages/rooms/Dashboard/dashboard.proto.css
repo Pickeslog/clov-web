@@ -446,6 +446,14 @@
   width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--nav-item-bg-active);
   color: var(--text-muted); font-size: 15px; cursor: pointer;
 }
+.proto-dashboard .member-invite-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: rgba(156,204,101,.14); color: var(--accent-green);
+  border: 1px dashed rgba(156,204,101,.42); border-radius: 12px;
+  padding: 11px; font-size: 13px; font-weight: 800; cursor: pointer; margin-bottom: 14px;
+  transition: background-color .18s ease;
+}
+.proto-dashboard .member-invite-btn:hover { background: rgba(156,204,101,.22); }
 .proto-dashboard .member-row { display: flex; align-items: center; gap: 12px; padding: 9px 4px; }
 .proto-dashboard .member-row-av {
   width: 38px; height: 38px; border-radius: 50%; background: var(--primary-green); color: #fff;
@@ -494,3 +502,54 @@ body.light-mode .proto-dashboard .cover-status-save { color: #fff; }
 body.light-mode .proto-dashboard .schedule-banner { background: rgba(232,243,237,.92); border-color: rgba(255,255,255,.3); }
 body.light-mode .proto-dashboard .schedule-empty,
 body.light-mode .proto-dashboard .memory-empty { background: rgba(0,0,0,.03); border-color: var(--border-color); }
+
+/* ===== 친구 초대 모달 (§7 초대코드 생성/복사·공유) — 팔레트 토큰이 라이트/다크 자동 대응 ===== */
+.proto-dashboard .invite-modal-backdrop {
+  position: fixed; inset: 0; z-index: 400; display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(8,28,22,.5); backdrop-filter: blur(6px);
+}
+.proto-dashboard .invite-modal {
+  width: min(440px, calc(100vw - 32px)); background: var(--card-bg);
+  border: 1px solid var(--border-color); border-radius: 22px;
+  box-shadow: 0 30px 70px rgba(0,0,0,.5); padding: 24px 26px 26px; text-align: center;
+}
+.proto-dashboard .invite-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color);
+}
+.proto-dashboard .invite-modal-title { font-size: 17px; font-weight: 800; color: var(--accent-green); }
+.proto-dashboard .invite-modal-close {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: var(--nav-item-bg-active); color: var(--text-muted); font-size: 14px; cursor: pointer;
+}
+.proto-dashboard .invite-icon { font-size: 42px; margin-bottom: 10px; }
+.proto-dashboard .invite-desc { color: var(--text-muted); font-size: 13px; line-height: 1.6; margin-bottom: 20px; }
+.proto-dashboard .invite-code-box {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  background: var(--input-bg); border: 2px solid var(--border-color); border-radius: 14px; padding: 10px 10px 10px 18px;
+}
+.proto-dashboard .invite-code {
+  flex: 1; min-width: 0; text-align: left; font-family: 'Space Mono', 'Courier New', monospace;
+  font-size: 21px; font-weight: 800; letter-spacing: 2px; color: var(--text-color);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.proto-dashboard .invite-copy-btn {
+  flex-shrink: 0; background: var(--primary-green); color: #fff; border: none; border-radius: 10px;
+  padding: 10px 16px; font-size: 13px; font-weight: 800; cursor: pointer;
+}
+.proto-dashboard .invite-share-btn {
+  width: 100%; margin-bottom: 12px; cursor: pointer;
+  background: rgba(156,204,101,.16); color: var(--accent-green);
+  border: 1px solid rgba(156,204,101,.32); border-radius: 12px; padding: 12px; font-size: 13px; font-weight: 800;
+}
+.proto-dashboard .invite-sub-btn {
+  background: none; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; text-decoration: underline;
+}
+.proto-dashboard .invite-sub-btn:disabled { opacity: .5; cursor: default; }
+.proto-dashboard .invite-create-btn {
+  width: 100%; background: var(--primary-green); color: #fff; border: none; border-radius: 14px;
+  padding: 15px; font-size: 15px; font-weight: 800; cursor: pointer;
+}
+.proto-dashboard .invite-create-btn:disabled { opacity: .6; cursor: default; }
+.proto-dashboard .invite-empty,
+.proto-dashboard .invite-state { color: var(--text-muted); font-size: 13px; margin: 8px 0 14px; }

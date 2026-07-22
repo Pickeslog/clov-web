@@ -3,14 +3,23 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './dashboard.proto.css'
 import { getRoom, getRoomLevel, getRoomMembers, updateStatusMessage, updateRoom, presignRoomCover } from '../../../api/room'
-import { getPlans } from '../../../api/plan'
-import { getMemories } from '../../../api/memory'
+import { createPlan, getPlans } from '../../../api/plan'
+import {
+  getMemories, getMemory, getComments, updateMemory, deleteMemory,
+  createComment, deleteComment, presignMemoryImage, commitMemoryImage,
+  deleteMemoryImage, reorderMemoryImages,
+} from '../../../api/memory'
 import { getMe } from '../../../api/user'
 import { uploadImage } from '../../../lib/uploadImage'
+import { useCreateMemory } from '../../../hooks/useCreateMemory'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
+// 우정공간에서 작성 모달을 인라인으로 띄우기 위해 각 화면의 모달을 재사용.
+import { ScheduleEditorModal } from '../../schedule/Schedule/Schedule'
+import { SCHEDULE_LIGHT_PALETTE } from '../../schedule/Schedule/palette'
+import { CreateMemoryModal, MemoryDetailModal } from '../../feed/Feed/Feed'
 
 // 우정 성장 티어(프로토타입 desktop.js 정본). 레벨은 111×7=777 → 7티어로 묶음.
 const TIERS = [
@@ -137,6 +146,17 @@ export default function Dashboard() {
   const [membersOpen, setMembersOpen] = useState(false)
   const [coverViewOpen, setCoverViewOpen] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
+  // 우정공간에서 바로 여는 작성 모달(일정계획 새 D-day / 추억 글쓰기).
+  const [composeSchedule, setComposeSchedule] = useState(false)
+  const [composeMemory, setComposeMemory] = useState(false)
+  // 증거 카드에서 바로 여는 추억 상세(피드와 동일한 여권 모달).
+  const [selectedMemoryId, setSelectedMemoryId] = useState(null)
+
+  const createPlanMutation = useMutation({
+    mutationFn: (payload) => createPlan(roomId, payload),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['plans', roomId] }); setComposeSchedule(false) },
+  })
+  const createMemoryMutation = useCreateMemory(roomId, { onSuccess: () => setComposeMemory(false) })
 
   // 배너 데코 — 생일이면 색종이+풍선, 아니면 계절 파티클. + 레코드판 샤인.
   const sKey = seasonKey(new Date().getMonth() + 1)
@@ -225,6 +245,7 @@ export default function Dashboard() {
   const go = (path) => navigate(`/rooms/${roomId}/${path}`)
 
   return (
+    <>
     <div className="proto-dashboard">
       <Header variant="room" roomId={roomId} activeTab="space" />
       <div className="dash-main">
@@ -339,7 +360,7 @@ export default function Dashboard() {
         <div className="section-title">
           <span>다가오는 D-day</span>
           <div className="section-actions">
-            <Button variant="dashed" size="sm" onClick={() => go('schedule')}>+ 새 D-day 만들기</Button>
+            <Button variant="dashed" size="sm" onClick={() => setComposeSchedule(true)}>+ 새 D-day 만들기</Button>
           </div>
         </div>
         {upcoming.length === 0 ? (
@@ -363,14 +384,14 @@ export default function Dashboard() {
         <div className="section-title">
           <span>참여자별 추억 증거 카드</span>
           <div className="section-actions">
-            <Button variant="dashed" size="sm" onClick={() => go('feed')}>✎ 글쓰기</Button>
+            <Button variant="dashed" size="sm" onClick={() => setComposeMemory(true)}>✎ 글쓰기</Button>
             <Button variant="action" size="sm" onClick={() => go('feed')}>전체 피드 보기</Button>
           </div>
         </div>
         {memoryItems.length === 0 ? (
           <div className="memory-empty">아직 추억이 없어요. 피드에서 첫 추억을 남겨보세요.</div>
         ) : (
-          <EvidenceViewer memories={memoryItems} onOpen={() => go('feed')} />
+          <EvidenceViewer memories={memoryItems} onOpen={(id) => setSelectedMemoryId(id)} />
         )}
       </div>
 
@@ -414,6 +435,92 @@ export default function Dashboard() {
         />
       )}
     </div>
+
+    {/* 우정공간에 머문 채 작성 모달을 인라인으로. 각 화면의 스코프·팔레트를 래퍼로 공급.
+        .proto-dashboard 밖 형제로 둬 대시보드 CSS와 격리(min-height는 0으로 눌러 빈 공간 방지). */}
+    {composeSchedule && (
+      <div className="proto-schedule" style={{ ...SCHEDULE_LIGHT_PALETTE, minHeight: 0 }}>
+        <ScheduleEditorModal
+          plan={null}
+          submitting={createPlanMutation.isPending}
+          errorMessage={createPlanMutation.error?.message}
+          onClose={() => setComposeSchedule(false)}
+          onSubmit={(payload) => createPlanMutation.mutate(payload)}
+        />
+      </div>
+    )}
+    {composeMemory && (
+      <div className="proto-feed" style={{ minHeight: 0 }}>
+        <CreateMemoryModal
+          roomId={roomId}
+          members={memberItems.filter((m) => String(m.userId) !== String(currentUserId))}
+          submitting={createMemoryMutation.isPending}
+          errorMessage={createMemoryMutation.error?.message}
+          onCancel={() => setComposeMemory(false)}
+          onSubmit={(planId, payload, files) => createMemoryMutation.mutate({ planId, payload, files })}
+        />
+      </div>
+    )}
+    {selectedMemoryId && (
+      <div className="proto-feed" style={{ minHeight: 0 }}>
+        <DashboardMemoryDetail
+          memoryId={selectedMemoryId}
+          roomId={roomId}
+          currentUserId={currentUserId}
+          onClose={() => setSelectedMemoryId(null)}
+        />
+      </div>
+    )}
+    </>
+  )
+}
+
+// 우정공간 증거 카드에서 여는 추억 상세 — 피드의 여권 상세 모달(MemoryDetailModal)을
+// 그대로 재사용하고, 데이터/뮤테이션만 여기서 공급한다(피드 상세 로직의 대시보드용 컨테이너).
+function DashboardMemoryDetail({ memoryId, roomId, currentUserId, onClose }) {
+  const queryClient = useQueryClient()
+  const detail = useQuery({ queryKey: ['memory', memoryId], queryFn: () => getMemory(memoryId), enabled: Boolean(memoryId) })
+  const comments = useQuery({ queryKey: ['memory', memoryId, 'comments'], queryFn: () => getComments(memoryId), enabled: Boolean(memoryId) })
+
+  const invalidateFeed = () => queryClient.invalidateQueries({ queryKey: ['memories', roomId] })
+  const invalidateMemory = () => queryClient.invalidateQueries({ queryKey: ['memory', memoryId] })
+  const invalidateBoth = () => { invalidateMemory(); invalidateFeed() }
+
+  const updateMutation = useMutation({ mutationFn: (payload) => updateMemory(memoryId, payload), onSuccess: invalidateBoth })
+  const deleteMutation = useMutation({ mutationFn: () => deleteMemory(memoryId), onSuccess: () => { invalidateFeed(); onClose() } })
+  const addCommentMutation = useMutation({ mutationFn: (content) => createComment(memoryId, { content }), onSuccess: invalidateBoth })
+  const deleteCommentMutation = useMutation({ mutationFn: (commentId) => deleteComment(commentId), onSuccess: invalidateBoth })
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file) => {
+      const imageUrl = await uploadImage((base) => presignMemoryImage(memoryId, base), file)
+      return commitMemoryImage(memoryId, { imageUrl })
+    },
+    onSuccess: invalidateBoth,
+  })
+  const deleteImageMutation = useMutation({ mutationFn: (imageId) => deleteMemoryImage(imageId), onSuccess: invalidateBoth })
+  const reorderImageMutation = useMutation({ mutationFn: (imageIds) => reorderMemoryImages(memoryId, { imageIds }), onSuccess: invalidateMemory })
+
+  return (
+    <MemoryDetailModal
+      memory={detail.data}
+      isLoading={detail.isPending}
+      currentUserId={currentUserId}
+      onClose={onClose}
+      onSave={(payload) => updateMutation.mutate(payload)}
+      onDelete={() => deleteMutation.mutate()}
+      saving={updateMutation.isPending}
+      deleting={deleteMutation.isPending}
+      comments={comments.data?.items ?? []}
+      commentsLoading={comments.isPending}
+      onAddComment={(content) => addCommentMutation.mutate(content)}
+      addingComment={addCommentMutation.isPending}
+      onDeleteComment={(commentId) => deleteCommentMutation.mutate(commentId)}
+      onUploadImage={(file) => uploadImageMutation.mutate(file)}
+      uploadingImage={uploadImageMutation.isPending}
+      uploadImageError={uploadImageMutation.error?.message}
+      onDeleteImage={(imageId) => deleteImageMutation.mutate(imageId)}
+      onReorderImages={(imageIds) => reorderImageMutation.mutate(imageIds)}
+    />
   )
 }
 
@@ -586,7 +693,7 @@ function EvidenceViewer({ memories, onOpen }) {
                   onClick={isActive ? undefined : () => setIndex(clamp(i))}
                 >
                   <Clothespin />
-                  <ClinePolaroid memory={memories[i]} isActive={isActive} onOpen={isActive ? () => onOpen(i) : undefined} />
+                  <ClinePolaroid memory={memories[i]} isActive={isActive} onOpen={isActive ? () => onOpen(memories[i]?.id) : undefined} />
                 </div>
               )
             })}

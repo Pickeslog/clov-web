@@ -5,8 +5,6 @@ import './feed.proto.css'
 import {
   getMemories,
   getMemory,
-  createMemory,
-  createPlanMemory,
   updateMemory,
   deleteMemory,
   getComments,
@@ -20,6 +18,7 @@ import {
 import { getRoomMembers } from '../../../api/room'
 import { getPlan, getPlans } from '../../../api/plan'
 import { uploadImage } from '../../../lib/uploadImage'
+import { useCreateMemory } from '../../../hooks/useCreateMemory'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import Header from '../../../components/Header/Header'
@@ -197,33 +196,8 @@ export default function Feed() {
   const invalidateFeed = () => queryClient.invalidateQueries({ queryKey: ['memories', roomId] })
   const invalidateMemory = () => queryClient.invalidateQueries({ queryKey: ['memory', selectedMemoryId] })
 
-  // 추억 생성: 본문 저장 → 고른 사진들을 순차 업로드(presign→PUT→commit).
-  // 본문 생성은 항상 1회만 일어나도록, 개별 사진 업로드 실패는 삼켜서 중복 생성을 막는다
-  // (실패한 사진은 상세에서 다시 추가할 수 있다).
-  const createMutation = useMutation({
-    // planId가 있으면 약속 연결 추억(POST /plans/{id}/memories), 없으면 FREE MEMORY(POST /rooms/{id}/memories).
-    mutationFn: async ({ planId, payload, files }) => {
-      const created = planId ? await createPlanMemory(planId, payload) : await createMemory(roomId, payload)
-      const memoryId = created?.id
-      if (memoryId && files?.length) {
-        for (const file of files) {
-          try {
-            const imageUrl = await uploadImage((base) => presignMemoryImage(memoryId, base), file)
-            await commitMemoryImage(memoryId, { imageUrl })
-          } catch {
-            /* 사진 한 장 실패는 무시 — 본문은 이미 저장됨 */
-          }
-        }
-      }
-      return created
-    },
-    onSuccess: () => {
-      invalidateFeed()
-      // 약속 연결 시 plan memory_status가 WRITTEN으로 바뀌므로 일정계획 목록도 갱신.
-      queryClient.invalidateQueries({ queryKey: ['plans', roomId] })
-      setCreateOpen(false)
-    },
-  })
+  // 추억 생성(본문+사진 순차 업로드)은 우정공간과 공유하는 공용 훅으로 처리.
+  const createMutation = useCreateMemory(roomId, { onSuccess: () => setCreateOpen(false) })
 
   const updateMutation = useMutation({
     mutationFn: ({ memoryId, payload }) => updateMemory(memoryId, payload),
@@ -735,7 +709,9 @@ function SpacePhotoGallery({ memories, onClose, onOpenMemory }) {
 }
 
 // ── 글쓰기 모달(프로토타입 wm-*) ──
-function CreateMemoryModal({ roomId, members, submitting, errorMessage, onCancel, onSubmit }) {
+// 우정공간(대시보드)에서도 재사용 → export. 대시보드는 <div className="proto-feed">로 감싸
+// 스코프·팔레트를 공급한다(약속 목록은 이 모달이 roomId로 자체 조회).
+export function CreateMemoryModal({ roomId, members, submitting, errorMessage, onCancel, onSubmit }) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [tagsInput, setTagsInput] = useState('')
@@ -1016,7 +992,8 @@ function MemoryReceipt({ planId, plan }) {
 }
 
 // ── 추억 상세 시트 — 보기=여권(CLOV MEMORY PASSPORT), 수정=컬럼 폼(프로토타입 renderMemoryDetailModal) ──
-function MemoryDetailModal({
+// 우정공간(대시보드) 증거 카드에서도 재사용 → export(presentational). 데이터/뮤테이션은 호출 측이 공급.
+export function MemoryDetailModal({
   memory,
   isLoading,
   currentUserId,

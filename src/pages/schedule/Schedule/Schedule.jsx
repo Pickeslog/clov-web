@@ -12,20 +12,7 @@ import { uploadImage } from '../../../lib/uploadImage'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import Header from '../../../components/Header/Header'
-
-// 일정계획 = 항상 크림 종이/세이지 앨범 미감. 팔레트를 <main>에 인라인으로 못박아
-// (모든 하위 상속) @scope 루트 미적용 이슈와 무관하게 다크에서도 라이트로 렌더한다.
-const SCHEDULE_LIGHT_PALETTE = {
-  colorScheme: 'light',
-  '--primary-green': '#1b4332',
-  '--accent-green': '#52b788',
-  '--text-color': '#2c3e35',
-  '--text-muted': '#61766a',
-  '--border-color': '#eadfd0',
-  '--bg-light': '#f4f0e6',
-  background: 'linear-gradient(180deg, #eef1e7 0%, #e7ece1 100%)',
-  minHeight: '100vh',
-}
+import { SCHEDULE_LIGHT_PALETTE } from './palette'
 
 // 계약 §8: status/memoryStatus.
 const MEMORY_LABEL = { NONE: '', CANDIDATE: '추억 후보', WRITTEN: '추억 작성됨', SKIPPED: '추억 스킵' }
@@ -505,7 +492,9 @@ function FilmStripCard({ plan, stages, doneCount, selected, uploadingKey, onSele
 }
 
 // ── 새/수정 영수증 모달 ─────────────────────────────────────────────
-function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, onSubmit }) {
+// 우정공간(대시보드)에서도 재사용 → export. 대시보드는 <div className="proto-schedule"
+// style={SCHEDULE_LIGHT_PALETTE}>로 감싸 스코프·팔레트를 공급한다.
+export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, onSubmit }) {
   const [title, setTitle] = useState(plan?.title ?? '')
   const [planDate, setPlanDate] = useState(plan?.planDate ?? '')
   const [description, setDescription] = useState(plan?.description ?? '')

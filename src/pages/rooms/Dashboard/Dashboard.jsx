@@ -173,7 +173,7 @@ export default function Dashboard() {
     .filter((p) => p.planDate && ddayOf(p.planDate) >= 0)
     .sort((a, b) => a.planDate.localeCompare(b.planDate))
     .slice(0, 3)
-  const memoryItems = (memories.data?.items ?? []).slice(0, 6)
+  const memoryItems = (memories.data?.items ?? []).slice(0, 24)
 
   const savedStatus = data.myStatusMessage ?? ''
   const statusValue = statusDraft ?? savedStatus
@@ -319,26 +319,7 @@ export default function Dashboard() {
         {memoryItems.length === 0 ? (
           <div className="memory-empty">아직 추억이 없어요. 피드에서 첫 추억을 남겨보세요.</div>
         ) : (
-          <div className="space-memory-grid">
-            {memoryItems.map((m) => {
-              const isMine = String(m.writer?.id) === String(currentUserId)
-              return (
-                <div key={m.id} className="mini-polaroid" onClick={() => go('feed')}>
-                  <div
-                    className={`mini-polaroid-photo ${m.thumbnailUrl ? '' : 'is-empty'}`}
-                    style={m.thumbnailUrl ? { backgroundImage: `url('${m.thumbnailUrl}')` } : undefined}
-                  >
-                    <span className="mini-polaroid-badge">{isMine ? '내 기록' : `${m.writer?.nickname}의 기록`}</span>
-                    {!m.thumbnailUrl && '🍀'}
-                  </div>
-                  <div className="mini-polaroid-cap">
-                    <div className="mini-polaroid-title">{m.title}</div>
-                    {m.memoryDate && <div className="mini-polaroid-date">{m.memoryDate}</div>}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <EvidenceViewer memories={memoryItems} onOpen={() => go('feed')} />
         )}
       </div>
 
@@ -430,6 +411,166 @@ function CoverUploadModal({ uploading, errorMessage, onCancel, onSubmit }) {
             {uploading ? '업로드 중…' : '확인'}
           </Button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// 빨래집게 SVG(프로토타입 clothespinSvg 이식).
+function Clothespin() {
+  return (
+    <svg className="cline-clip-svg" viewBox="0 0 28 48" aria-hidden="true">
+      <defs>
+        <linearGradient id="clipBody" x1="5" y1="0" x2="23" y2="48" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#f2f5f7" /><stop offset="0.18" stopColor="#b8c0c8" />
+          <stop offset="0.55" stopColor="#d8dde2" /><stop offset="1" stopColor="#8d969e" />
+        </linearGradient>
+        <linearGradient id="clipDark" x1="0" y1="0" x2="0" y2="48" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#aeb6bd" /><stop offset="1" stopColor="#6f7982" />
+        </linearGradient>
+      </defs>
+      <rect x="8" y="1" width="12" height="11" rx="2" fill="url(#clipBody)" stroke="#7e8790" strokeWidth="1" />
+      <circle cx="14" cy="6.5" r="3.1" fill="#1a1f24" stroke="#dfe4e8" strokeWidth="1.1" />
+      <circle cx="14" cy="6.5" r="1.25" fill="#8e98a2" />
+      <rect x="6" y="12" width="16" height="7" rx="1.5" fill="#a0a8b0" stroke="#7c858d" strokeWidth="1" />
+      <circle cx="10" cy="15.5" r="1.4" fill="#707981" /><circle cx="18" cy="15.5" r="1.4" fill="#707981" />
+      <rect x="5" y="19" width="18" height="19" rx="2.5" fill="url(#clipBody)" stroke="#7b858e" strokeWidth="1" />
+      <circle cx="10.5" cy="27" r="2.2" fill="#87919a" stroke="#eef2f5" strokeWidth=".8" />
+      <circle cx="17.5" cy="27" r="2.2" fill="#87919a" stroke="#eef2f5" strokeWidth=".8" />
+      <line x1="9.2" y1="27" x2="11.8" y2="27" stroke="#5f6870" strokeWidth=".8" />
+      <line x1="16.2" y1="27" x2="18.8" y2="27" stroke="#5f6870" strokeWidth=".8" />
+      <rect x="7" y="37" width="14" height="8" rx="1.3" fill="url(#clipDark)" stroke="#6f7880" strokeWidth="1" />
+      <path d="M8 45h2l1-2 1 2h2l1-2 1 2h2l1-2 1 2" fill="none" stroke="#d6dce1" strokeWidth=".9" strokeLinecap="round" />
+      <line x1="8.5" y1="21" x2="8.5" y2="36" stroke="rgba(255,255,255,.58)" strokeWidth="1" />
+      <line x1="19.5" y1="21" x2="19.5" y2="36" stroke="rgba(255,255,255,.26)" strokeWidth="1" />
+    </svg>
+  )
+}
+
+// cline 폴라로이드(빨랫줄 카드).
+function ClinePolaroid({ memory, isActive, onOpen }) {
+  const dateText = (memory.memoryDate || '').slice(5) // MM-DD
+  const tags = (memory.tags ?? []).slice(0, 3)
+  return (
+    <article
+      className={`cline-polaroid ${isActive ? 'is-active' : ''}`}
+      onClick={onOpen ? (e) => { e.stopPropagation(); onOpen() } : undefined}
+    >
+      <div className="cline-card-header">
+        <div className="cline-avatars">
+          <span className="cline-avatar" style={{ background: '#52b788' }}>{initialOf(memory.writer?.nickname)}</span>
+        </div>
+        <span className="cline-header-date">{dateText}</span>
+      </div>
+      <div className="cline-photo">
+        {memory.thumbnailUrl ? (
+          <img src={memory.thumbnailUrl} alt={memory.title} draggable={false} />
+        ) : (
+          <div className="cline-no-photo"><span>🍀</span><span className="cline-no-photo-text">사진 없음</span></div>
+        )}
+      </div>
+      <div className="cline-caption">
+        <div className="cline-caption-title">{memory.title}</div>
+        <div className="cline-tags">{tags.map((t) => <span key={t} className="cline-tag">#{t}</span>)}</div>
+      </div>
+    </article>
+  )
+}
+
+// 참여자별 추억 증거 카드 — 빨랫줄+집게 캐러셀 + 필름스트립(프로토타입 cline 뷰어 기본 테마 이식).
+// 최신순 memories에서 index=현재("현재"), +delta=과거·-delta=최신 카드를 좌우로 건다.
+function EvidenceViewer({ memories, onOpen }) {
+  const [index, setIndex] = useState(0)
+  const framesRef = useRef(null)
+  const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: false })
+  const total = memories.length
+  const clamp = (i) => Math.min(Math.max(i, 0), total - 1)
+
+  // index가 바뀌면 현재 프레임을 필름 중앙으로 스크롤.
+  useEffect(() => {
+    const cur = framesRef.current?.querySelector('.cline-film-frame.is-current')
+    cur?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }, [index])
+
+  const SLOTS = [
+    { delta: 2, cls: 'far-past' },
+    { delta: 1, cls: 'past' },
+    { delta: 0, cls: 'current' },
+    { delta: -1, cls: 'newer' },
+    { delta: -2, cls: 'far-newer' },
+  ]
+
+  const onPointerDown = (e) => {
+    const el = framesRef.current
+    if (!el) return
+    drag.current = { active: true, startX: e.clientX, startLeft: el.scrollLeft, moved: false }
+  }
+  const onPointerMove = (e) => {
+    const d = drag.current
+    if (!d.active || !framesRef.current) return
+    const dx = e.clientX - d.startX
+    if (Math.abs(dx) > 4) d.moved = true
+    framesRef.current.scrollLeft = d.startLeft - dx
+  }
+  const onPointerUp = () => { drag.current.active = false }
+  const onWheel = (e) => {
+    const el = framesRef.current
+    if (el && Math.abs(e.deltaY) >= Math.abs(e.deltaX) && e.deltaY) { el.scrollLeft += e.deltaY; e.preventDefault() }
+  }
+
+  return (
+    <div className="memory-evidence-viewer cline-viewer">
+      <div className="cline-stage">
+        <div className="cline-wire-area">
+          <div className="cline-wire" />
+          <div className="cline-cards">
+            {SLOTS.map(({ delta, cls }) => {
+              const i = index + delta
+              if (i < 0 || i >= total) return <div key={cls} className="cline-card-slot cline-slot--empty" />
+              const isActive = delta === 0
+              return (
+                <div
+                  key={cls}
+                  className={`cline-card-slot cline-slot--${cls} ${isActive ? 'is-active' : ''}`}
+                  onClick={isActive ? undefined : () => setIndex(clamp(i))}
+                >
+                  <Clothespin />
+                  <ClinePolaroid memory={memories[i]} isActive={isActive} onOpen={isActive ? () => onOpen(i) : undefined} />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+      <div className="cline-film-strip">
+        <span className="cline-film-label">과거</span>
+        <div
+          className="cline-film-frames"
+          ref={framesRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          onWheel={onWheel}
+        >
+          <div className="cline-film-track">
+            {memories.slice().reverse().map((m, revI) => {
+              const orig = total - 1 - revI
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={`cline-film-frame ${orig === index ? 'is-current' : ''}`}
+                  onClick={() => { if (!drag.current.moved) setIndex(orig) }}
+                  aria-label={`${m.title} 보기`}
+                >
+                  {m.thumbnailUrl && <img src={m.thumbnailUrl} alt="" draggable={false} />}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+        <span className="cline-film-label">현재</span>
       </div>
     </div>
   )

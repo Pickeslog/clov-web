@@ -6,7 +6,6 @@ import { getLetters, markRead, sendLetter, toggleFavorite } from '../../../api/l
 import { getRoomMembers } from '../../../api/room'
 import Header from '../../../components/Header/Header'
 
-const EMOJIS = ['💌', '🍀', '💚', '✨', '🎉', '😊']
 const AVATAR_COLORS = ['#40916c', '#52b788', '#74c69d', '#95d5b2', '#2d6a4f']
 const LETTERS_PER_PAGE = 3
 const EMPTY_MESSAGES = [
@@ -131,8 +130,6 @@ export default function Letters() {
             setBroadcast={setBroadcast}
             content={content}
             setContent={setContent}
-            emoji={emoji}
-            setEmoji={setEmoji}
             message={message}
             sending={sendMutation.isPending}
             onCancel={() => setComposing(false)}
@@ -261,7 +258,7 @@ function LetterDetailModal({ letter, box, onBack, onClose }) {
 }
 
 // ── 편지 작성(인라인) — 수신자 아바타 칩 + 모두에게 pill + 이모지 ──
-function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, setBroadcast, content, setContent, emoji, setEmoji, message, sending, onCancel, onSend }) {
+function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, setBroadcast, content, setContent, message, sending, onCancel, onSend }) {
   const allBtnStyle = {
     padding: '5px 12px', fontSize: '11px', fontWeight: 600, borderRadius: '20px', border: 'none', cursor: 'pointer',
     display: 'inline-flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s ease',
@@ -312,15 +309,7 @@ function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, se
           placeholder="응원, 감사, 행운의 메시지를 자유롭게 작성해주세요."
           onChange={(event) => setContent(event.target.value)}
         />
-        <div className="letter-content-count" style={{ textAlign: 'right', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{content.length} / 1000</div>
-      </div>
-      <div className="modal-form-group">
-        <label>이모지</label>
-        <div className="letter-emoji-picker">
-          {EMOJIS.map((item) => (
-            <button key={item} type="button" className={`letter-emoji-chip${emoji === item ? ' active' : ''}`} onClick={() => setEmoji(item)}>{item}</button>
-          ))}
-        </div>
+        <div className="letter-content-count" style={{ textAlign: 'right', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{content.length} / 1000 (한글 500자 / 영어 1000자)</div>
       </div>
       {message && <p className="letter-error" role="alert" style={{ color: '#d90429', fontSize: '12px', marginTop: '8px' }}>{message}</p>}
       <div className="modal-buttons letter-write-buttons">

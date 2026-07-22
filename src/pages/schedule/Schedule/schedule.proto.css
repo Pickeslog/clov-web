@@ -1,0 +1,940 @@
+@scope (.proto-schedule) {
+  /* ─────────────────────────────────────────────────────────────
+     일정계획(약속 여정) — 프로토타입 룩 이식.
+     원본: test-web-design/02-main (schedule.css · desktop.css · space.css).
+     이 화면은 "크림 종이/세이지 앨범" 미감이라 라이트로 고정한다(팔레트는 <main> 인라인).
+     .mobile-window 규칙은 실제 뷰포트 미디어쿼리로 전환, body.dark-mode 규칙은 제거.
+     ───────────────────────────────────────────────────────────── */
+
+  /* 프로토타입은 전역 border-box 리셋 위에서 동작한다. 프로덕션 index.css엔 #root에만
+     border-box라, width:100%+padding 요소(receipt-paper/입력/메모)가 content-box로
+     삐져나가 모달 overflow:hidden에 잘렸다 → 스코프 안에서 border-box로 고정. */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  .schedule-wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 26px 20px 72px;
+  }
+
+  /* 상태/에러/빈 안내 */
+  .schedule-state {
+    max-width: 660px;
+    margin: 0 auto 16px;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 700;
+    background: var(--bg-light);
+    border-radius: 20px;
+    border: 1px dashed var(--border-color);
+  }
+
+  /* ── 약속 여정 탭 타이틀 ── */
+  .section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .journey-section-title {
+    max-width: 660px;
+    margin: 0 auto 14px;
+    align-items: flex-end;
+  }
+  .journey-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .journey-page-kicker {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #2e5233;
+  }
+  .journey-page-title {
+    font-size: 19px;
+    font-weight: 900;
+    line-height: 1.25;
+    color: var(--text-color);
+  }
+
+  .btn-schedule-new {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 16px;
+    border-radius: 7px;
+    border: 1.5px dashed rgba(46, 82, 51, 0.45);
+    background: #faf6ee;
+    color: #2e5233;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .btn-schedule-new:hover {
+    background: #f3efe1;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(46, 82, 51, 0.18);
+  }
+
+  /* ── 여정 셸 ── */
+  .growth-shell {
+    display: grid;
+    gap: 16px;
+    position: relative;
+  }
+
+  /* ══════════ 약속 상세 영수증 (세이지 앨범 마운트 + 크림 영수증) ══════════ */
+  .growth-detail {
+    position: relative;
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 34px 22px 30px;
+    border-radius: 18px;
+    color: #1c1a17;
+    background:
+      radial-gradient(circle at 88% 12%, rgba(244, 241, 232, 0.14), transparent 34%),
+      repeating-linear-gradient(135deg, rgba(28, 26, 23, 0.03) 0 3px, transparent 3px 7px),
+      #8a9a82;
+    border: none;
+    box-shadow: 0 18px 40px rgba(46, 82, 51, 0.26);
+    overflow: hidden;
+  }
+
+  .receipt-paper {
+    position: relative;
+    width: 600px;
+    max-width: 100%;
+    margin: 0 auto;
+    background: #faf6ee;
+    padding: 28px 40px 36px;
+    box-shadow: 0 10px 24px rgba(28, 26, 23, 0.2);
+    font-family: 'Space Mono', 'Courier New', monospace;
+    color: #1c1a17;
+  }
+  .receipt-paper::before,
+  .receipt-paper::after {
+    content: "";
+    position: absolute;
+    top: -14px;
+    width: 110px;
+    height: 26px;
+    background: rgba(244, 241, 232, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  }
+  .receipt-paper::before { left: -16px; transform: rotate(-6deg); }
+  .receipt-paper::after { right: -16px; transform: rotate(5deg); }
+
+  .receipt-zigzag {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: -8px;
+    height: 9px;
+    background-image:
+      linear-gradient(135deg, #faf6ee 50%, transparent 50%),
+      linear-gradient(-135deg, #faf6ee 50%, transparent 50%);
+    background-size: 14px 9px;
+    background-repeat: repeat-x;
+  }
+
+  .receipt-head {
+    text-align: center;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed rgba(28, 26, 23, 0.3);
+  }
+  .receipt-brand { font-size: 16px; font-weight: 700; letter-spacing: 3.5px; }
+  .receipt-sub { font-size: 9.5px; color: rgba(28, 26, 23, 0.5); margin-top: 4px; letter-spacing: 1px; }
+
+  .receipt-stamp-wrap { display: flex; justify-content: center; padding: 18px 0 12px; }
+  .receipt-stamp {
+    transform: rotate(-4deg);
+    border: 3px solid var(--stamp, #c0392b);
+    color: var(--stamp, #c0392b);
+    padding: 7px 24px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 0 0 3px #faf6ee, 0 0 0 4px color-mix(in srgb, var(--stamp, #c0392b) 25%, transparent);
+  }
+  .receipt-stamp-label { display: block; font-size: 9px; letter-spacing: 1.5px; font-weight: 700; }
+  .receipt-stamp-dday { display: block; font-size: 42px; font-weight: 700; line-height: 1; letter-spacing: -1px; }
+
+  .receipt-title {
+    font-family: 'Gothic A1', sans-serif;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1.3;
+    margin-bottom: 16px;
+    color: #1c1a17;
+  }
+
+  .receipt-meta {
+    font-size: 12.5px;
+    line-height: 2.3;
+    border-top: 1px dashed rgba(28, 26, 23, 0.3);
+    border-bottom: 1px dashed rgba(28, 26, 23, 0.3);
+    padding: 9px 0;
+  }
+  .receipt-meta > div { display: flex; justify-content: space-between; gap: 10px; }
+  .receipt-meta > div > span:first-child { color: rgba(28, 26, 23, 0.5); }
+  .receipt-meta > div > span:last-child { letter-spacing: .5px; text-align: right; }
+
+  .receipt-memo-label {
+    font-size: 9px;
+    color: rgba(28, 26, 23, 0.45);
+    letter-spacing: 1.5px;
+    margin: 14px 0 8px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .receipt-memo {
+    font-family: 'Gothic A1', sans-serif;
+    font-size: 14px;
+    line-height: 1.9;
+    color: #1c1a17;
+  }
+  .receipt-memo-desc { margin: 0 0 6px; white-space: pre-wrap; }
+  .receipt-memo-empty {
+    text-align: center;
+    font-style: italic;
+    color: rgba(28, 26, 23, 0.4);
+    padding: 4px 0;
+  }
+
+  /* 체크리스트 = 영수증 메모의 항목들 */
+  .receipt-check-list { list-style: none; margin: 8px 0 0; padding: 0; }
+  .receipt-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .receipt-check input[type="checkbox"] {
+    margin-top: 4px;
+    width: 15px;
+    height: 15px;
+    accent-color: #2e5233;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .receipt-check-text { flex: 1; }
+  .receipt-check-text.is-done { text-decoration: line-through; color: rgba(28, 26, 23, 0.45); }
+  .receipt-check-remove {
+    border: none;
+    background: none;
+    color: rgba(28, 26, 23, 0.4);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 4px;
+  }
+  .receipt-check-remove:hover { color: #c0392b; }
+  .receipt-check-remove:disabled { opacity: 0.4; cursor: default; }
+
+  .receipt-check-add {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(28, 26, 23, 0.18);
+  }
+  .receipt-check-add input {
+    flex: 1;
+    min-width: 0;
+    border: 1px dashed rgba(28, 26, 23, 0.28);
+    border-radius: 7px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.5);
+    font-family: 'Gothic A1', sans-serif;
+    font-size: 13px;
+    color: #1c1a17;
+    outline: none;
+  }
+  .receipt-check-add input:focus { border-color: rgba(46, 82, 51, 0.55); }
+  .receipt-check-add button {
+    flex-shrink: 0;
+    border: none;
+    border-radius: 7px;
+    padding: 0 14px;
+    background: #2e5233;
+    color: #f4f1e8;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .receipt-check-add button:disabled { opacity: 0.5; cursor: default; }
+
+  .receipt-barcode {
+    height: 24px;
+    margin: 16px 0 14px;
+    background-image: repeating-linear-gradient(90deg, #1c1a17 0 2px, transparent 2px 4px, #1c1a17 4px 5px, transparent 5px 9px);
+  }
+
+  /* 상태 전환 라인(완료/취소/추억 스킵 + memoryStatus 배지) — 영수증 톤 텍스트 버튼 */
+  .receipt-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px;
+    font-family: 'Space Mono', 'Courier New', monospace;
+  }
+  .receipt-status-btn {
+    border: 1px dashed rgba(46, 82, 51, 0.5);
+    background: transparent;
+    color: #2e5233;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    transition: background 0.18s ease;
+  }
+  .receipt-status-btn:hover:not(:disabled) { background: rgba(46, 82, 51, 0.08); }
+  .receipt-status-btn.is-primary { background: #2e5233; color: #f4f1e8; border-style: solid; }
+  .receipt-status-btn.is-danger { color: #c0392b; border-color: rgba(192, 57, 43, 0.5); }
+  .receipt-status-btn:disabled { opacity: 0.5; cursor: default; }
+  .receipt-memory-tag {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #2e5233;
+    background: rgba(46, 82, 51, 0.1);
+    border-radius: 999px;
+    padding: 4px 10px;
+  }
+
+  .receipt-actions { display: flex; gap: 10px; }
+  .receipt-actions button {
+    flex: 1;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 11px 0;
+    border-radius: 5px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: #2e5233;
+    color: #f4f1e8;
+    transition: filter 0.2s ease;
+  }
+  .receipt-actions button:hover { filter: brightness(1.08); }
+  .receipt-actions button.danger {
+    background: transparent;
+    color: #c0392b;
+    border-color: #c0392b;
+  }
+  .receipt-actions button.danger:hover { background: rgba(192, 57, 43, 0.1); }
+
+  /* ══════════ LIFE FOUR CUT 히어로 + 필터 ══════════ */
+  .growth-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    padding: 18px 0 14px;
+    background: transparent;
+    border-bottom: 1px solid rgba(82, 183, 136, 0.2);
+  }
+  .growth-hero > div:first-child {
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 14px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(82, 183, 136, 0.25);
+    width: fit-content;
+    max-width: 100%;
+    margin-bottom: 4px;
+  }
+  .growth-kicker {
+    display: inline-flex;
+    width: fit-content;
+    min-height: 24px;
+    align-items: center;
+    background: transparent;
+    color: var(--primary-green);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 9px;
+  }
+  .growth-title {
+    display: block;
+    color: var(--text-color);
+    font-size: 19px;
+    font-weight: 900;
+    line-height: 1.25;
+    margin-bottom: 5px;
+  }
+  .growth-subtitle {
+    display: block;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .growth-density {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: fit-content;
+    max-width: 100%;
+    padding: 5px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.86);
+  }
+  .growth-density button {
+    min-height: 34px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--primary-green);
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  }
+  .growth-density button:hover { transform: translateY(-1px); }
+  .growth-density button.active { background: var(--primary-green); color: #ffffff; }
+  .growth-density button span {
+    min-width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: rgba(27, 67, 50, 0.1);
+    color: inherit;
+    font-size: 10px;
+    line-height: 1;
+  }
+  .growth-density button.active span { background: rgba(255, 255, 255, 0.22); }
+
+  /* ══════════ 인생4컷 필름스트립 카드 레일 ══════════ */
+  .growth-card-rail {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    width: 100%;
+    position: relative;
+  }
+  .carousel-btn {
+    flex-shrink: 0;
+    width: 28px;
+    height: 60px;
+    border-radius: 8px;
+    background: rgba(82, 183, 136, 0.10);
+    border: 1px solid rgba(82, 183, 136, 0.22);
+    color: var(--primary-green, #52b788);
+    font-size: 22px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.18s, transform 0.15s;
+    line-height: 1;
+    user-select: none;
+    z-index: 4;
+    position: relative;
+  }
+  .carousel-btn:hover { background: rgba(82, 183, 136, 0.22); transform: scale(1.06); }
+  .carousel-btn:active { transform: scale(0.94); }
+
+  .growth-card-viewport {
+    flex: 0 1 936px;
+    min-width: 0;
+    max-width: 936px;
+    overflow-x: auto;
+    overflow-y: visible;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+  }
+  .growth-card-viewport::-webkit-scrollbar { display: none; }
+
+  .growth-card-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 14px;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-top: 6px;
+    padding-bottom: 8px;
+    min-width: max-content;
+  }
+
+  .growth-filter-empty {
+    min-width: 240px;
+    min-height: 180px;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    border: 1px dashed rgba(82, 183, 136, 0.38);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.45);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .growth-card {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .growth-card.four-cut {
+    flex: 0 0 var(--dt-carousel-card-w, 176px);
+    width: var(--dt-carousel-card-w, 176px);
+    scroll-snap-align: start;
+    padding: 12px 11px 13px;
+    background: #8a9a82;
+    border-radius: 14px;
+    overflow: hidden;
+    color: #f4f1e8;
+    border: none;
+    box-shadow: none;
+    font-family: 'Gothic A1', -apple-system, BlinkMacSystemFont, sans-serif;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+  }
+  .growth-card.four-cut:hover { transform: translateY(-3px); }
+  .growth-card.four-cut.is-selected {
+    outline: none;
+    box-shadow: 0 0 0 2px #4a7c52, 0 10px 22px rgba(46, 82, 51, 0.28);
+    transform: translateY(-3px);
+  }
+
+  .strip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 1px 2px 9px;
+  }
+  .strip-title-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .strip-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: rgba(244, 241, 232, 0.72);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .strip-kicker.is-shooting { color: #ffb3a3; }
+  .strip-kicker-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #c0392b;
+    animation: stripRecBlink 1.2s ease-in-out infinite;
+  }
+  .strip-title {
+    font-size: 12px;
+    font-weight: 850;
+    color: #f4f1e8;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .growth-dday-pill {
+    min-width: 40px;
+    min-height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 7px;
+    border-radius: 999px;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 9px;
+    font-weight: 900;
+    flex-shrink: 0;
+    background: #2e5233;
+    color: #f4f1e8;
+  }
+
+  .strip-body {
+    position: relative;
+    padding: 12px 8px 8px;
+    background: #f4f1e8;
+    border: none;
+    border-radius: 3px;
+    overflow: visible;
+  }
+  .strip-body::before,
+  .strip-body::after {
+    content: '';
+    position: absolute;
+    left: -1px; right: -1px;
+    height: 7px;
+    background-image: radial-gradient(circle at 7px 7px, #8a9a82 7px, transparent 7.5px);
+    background-size: 14px 14px;
+    background-repeat: repeat-x;
+  }
+  .strip-body::before { top: -7px; background-position: 0 0; }
+  .strip-body::after { bottom: -7px; transform: scaleY(-1); }
+
+  .strip-perforation {
+    position: relative;
+    height: 0;
+    margin: 7px -8px;
+    border-top: 2px dashed rgba(46, 82, 51, 0.32);
+  }
+  .strip-perforation::before,
+  .strip-perforation::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #8a9a82;
+  }
+  .strip-perforation::before { left: -6px; }
+  .strip-perforation::after { right: -6px; }
+
+  .strip-frames {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+    overflow: visible;
+    background: transparent;
+    z-index: 1;
+  }
+  .strip-frame {
+    position: relative;
+    height: 106px;
+    background:
+      linear-gradient(135deg, rgba(232,225,211,0.5) 0 25%, transparent 25% 50%, rgba(232,225,211,0.5) 50% 75%, transparent 75%),
+      #faf6ee;
+    background-size: 18px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    gap: 4px;
+    border: 1px solid #eee1cf;
+    border-radius: 5px;
+  }
+  .strip-frame-number {
+    position: absolute;
+    top: 8px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 26px;
+    font-weight: 850;
+    color: rgba(28,26,23,0.12);
+    line-height: 1;
+    z-index: 0;
+  }
+  .strip-frame-photo {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+  }
+  .strip-frame-label {
+    font-size: 9.5px;
+    font-weight: 850;
+    color: #1c1a17;
+    text-align: center;
+    line-height: 1.2;
+    z-index: 1;
+    padding: 0 4px;
+  }
+  .strip-frame--done .strip-frame-label {
+    position: absolute;
+    bottom: 6px;
+    left: 7px;
+    right: auto;
+    z-index: 1;
+    background: rgba(255,255,255,0.88);
+    color: #2f7d5f;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* ACTIVE — 업로드 가능 단계 */
+  .strip-frame--active {
+    background:
+      linear-gradient(135deg, rgba(204,230,216,0.88) 0 25%, transparent 25% 50%, rgba(204,230,216,0.88) 50% 75%, transparent 75%),
+      #edf8f2;
+    background-size: 18px 18px;
+    border-color: rgba(47,125,95,0.38);
+    box-shadow: inset 0 0 0 1px rgba(47,125,95,0.22);
+    cursor: pointer;
+  }
+  .strip-frame--active:hover {
+    background:
+      linear-gradient(135deg, rgba(207,230,218,0.86) 0 25%, transparent 25% 50%, rgba(207,230,218,0.86) 50% 75%, transparent 75%),
+      #e3f4ea;
+    background-size: 18px 18px;
+  }
+  .strip-frame--active .strip-upload-icon { animation: stripGrow 2s ease-in-out infinite; }
+
+  .strip-rec-badge {
+    position: absolute;
+    top: 6px; right: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 8px;
+    font-weight: 850;
+    letter-spacing: 0.4px;
+    color: #c0392b;
+    z-index: 1;
+  }
+  .strip-rec-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #c0392b;
+    animation: stripRecBlink 1.2s ease-in-out infinite;
+  }
+
+  /* LOCKED — 미개방 단계 */
+  .strip-frame--locked { filter: grayscale(0.9) blur(0.2px); opacity: 0.55; cursor: not-allowed; }
+  .strip-lock-icon { font-size: 20px; z-index: 1; opacity: 0.75; }
+
+  .strip-frame--uploading { cursor: progress; }
+  .strip-frame--uploading .strip-upload-hint { color: #c0392b; }
+
+  .strip-upload-icon {
+    width: 22px; height: 22px;
+    display: grid;
+    place-items: center;
+    color: #2f7d5f;
+    z-index: 1;
+  }
+  .strip-upload-svg { width: 22px; height: 22px; display: block; }
+  .strip-upload-hint { font-size: 9px; font-weight: 800; color: #2f7d5f; }
+  .strip-frame-file { display: none; }
+
+  .strip-footer {
+    min-height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 9px 2px 0;
+    text-align: center;
+  }
+  .strip-footer-brand {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: rgba(244, 241, 232, 0.6);
+  }
+  .strip-footer-count {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #f4f1e8;
+  }
+  .growth-card.four-cut.is-complete .strip-footer-count { color: #b9ffb0; }
+
+  @keyframes stripGrow {
+    0%, 100% { transform: scale(1);   filter: drop-shadow(0 0 3px rgba(82,183,136,0.5)); }
+    50%      { transform: scale(1.18); filter: drop-shadow(0 0 10px rgba(82,183,136,1)); }
+  }
+  @keyframes stripRecBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+  }
+
+  /* ══════════ 새/수정 영수증 모달 ══════════ */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow-y: auto;
+    background: rgba(8, 28, 22, 0.46);
+    backdrop-filter: blur(10px) saturate(1.08);
+    -webkit-backdrop-filter: blur(10px) saturate(1.08);
+    animation: scheduleOverlayIn 0.24s ease both;
+  }
+  .modal-overlay > .modal-box { margin: auto; }
+  .modal-box {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 680px;
+    background: #faf6ee;
+    padding: 0;
+    overflow: hidden;
+    color: #1c1a17;
+    border: 1px solid rgba(28, 26, 23, 0.14);
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(8, 28, 22, 0.28);
+    animation: scheduleBoxIn 0.32s cubic-bezier(0.2, 0.9, 0.2, 1.06) both;
+  }
+  @keyframes scheduleOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes scheduleBoxIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+  /* 모달 안의 영수증(약속 여정 영수증 재사용, 초록 액자 제거) */
+  .schedule-editor .growth-detail {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    overflow: visible;
+  }
+  .schedule-editor .receipt-paper {
+    width: 100%;
+    padding: 14px 30px 22px;
+    box-shadow: none;
+  }
+  .schedule-editor .receipt-paper::before,
+  .schedule-editor .receipt-paper::after { display: none; }
+  .schedule-editor .receipt-brand { font-size: 15px; letter-spacing: 3px; }
+  .schedule-editor .receipt-stamp-wrap { padding: 14px 0 10px; }
+  .schedule-editor .receipt-stamp-dday { font-size: 36px; }
+  .schedule-editor .receipt-barcode { margin: 14px 0 2px; }
+
+  .receipt-title-input {
+    display: block;
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-family: 'Gothic A1', sans-serif;
+    font-size: 21px;
+    font-weight: 900;
+    line-height: 1.3;
+    color: #1c1a17;
+    margin-bottom: 14px;
+    padding: 2px 4px;
+    outline: none;
+    border-bottom: 1px dashed transparent;
+    transition: border-color .15s;
+  }
+  .receipt-title-input::placeholder { color: rgba(28, 26, 23, 0.42); font-weight: 700; }
+  .receipt-title-input:focus { border-bottom-color: rgba(28, 26, 23, 0.28); }
+
+  .receipt-date-cell {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-bottom: 1px dashed rgba(28, 26, 23, 0.4);
+    cursor: pointer;
+    padding: 0 2px 1px;
+  }
+  .receipt-date-cell .is-empty { color: rgba(28, 26, 23, 0.5); }
+  .receipt-date-cell::after { content: "📅"; font-size: 11px; opacity: .6; line-height: 1; }
+  .receipt-date-input {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    margin: 0; padding: 0;
+    border: none;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .schedule-editor .receipt-memo-label { display: block; color: rgba(28, 26, 23, 0.55); }
+  .receipt-memo-input {
+    min-height: 96px;
+    border: 1px dashed rgba(28, 26, 23, 0.28);
+    border-radius: 8px;
+    padding: 11px 13px;
+    background: rgba(255, 255, 255, 0.4);
+    font-family: 'Gothic A1', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #1c1a17;
+    width: 100%;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color .15s;
+  }
+  .receipt-memo-input:focus { border-color: rgba(46, 82, 51, 0.55); }
+  .receipt-memo-input::placeholder { color: rgba(28, 26, 23, 0.4); }
+
+  .schedule-modal-buttons {
+    display: flex;
+    gap: 10px;
+    padding: 6px 30px 22px;
+  }
+  .schedule-modal-buttons button {
+    flex: 1;
+    border-radius: 8px;
+    padding: 12px 0;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .schedule-modal-buttons .btn-main { background: #357a58; color: #ffffff; }
+  .schedule-modal-buttons .btn-main:disabled { opacity: 0.55; cursor: default; }
+  .schedule-modal-buttons .btn-sub { background: #e7f0ea; color: #2e5233; }
+  .schedule-modal-error {
+    padding: 0 30px 4px;
+    color: #c0392b;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* ══════════ 반응형 (프로토타입 .mobile-window 대응) ══════════ */
+  @media (max-width: 720px) {
+    .schedule-wrap { padding: 18px 12px 56px; }
+    .journey-section-title { align-items: center; }
+    .growth-hero { padding: 14px 0; }
+    .growth-density { width: 100%; }
+    .growth-density button { flex: 1; padding: 0 8px; }
+    .growth-card-rail { max-width: 100%; padding: 0; }
+    .carousel-btn { display: none; }
+    .growth-card-viewport { flex: 1; max-width: 100%; }
+    .growth-card.four-cut {
+      flex: 0 0 var(--mb-carousel-card-w, 150px);
+      width: var(--mb-carousel-card-w, 150px);
+      padding: 10px 10px 12px;
+    }
+    .growth-detail { padding: 24px 14px 22px; border-radius: 16px; }
+    .receipt-paper { width: 100%; padding: 22px 20px 30px; }
+    .receipt-title { font-size: 19px; }
+    .receipt-stamp-dday { font-size: 34px; }
+  }
+}

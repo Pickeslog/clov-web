@@ -4,7 +4,10 @@ import { api } from './client'
 // 응답은 client.js 인터셉터가 언래핑한 data가 그대로 반환된다(계약 §10 — R1 FREE MEMORY·피드·상세·작성 + R2 댓글).
 export const getMemories = (roomId, params = {}) => api.get(`/rooms/${roomId}/memories`, { params })
 export const getMemory = (memoryId) => api.get(`/memories/${memoryId}`)
+// FREE MEMORY(약속 없이 방 단위) 작성.
 export const createMemory = (roomId, payload) => api.post(`/rooms/${roomId}/memories`, payload)
+// 약속 연결 추억 작성(계약 §10 — plan memory_status=CANDIDATE/WRITTEN만, NONE→409 PLAN_NOT_COMPLETED, 중복→409 MEMORY_ALREADY_WRITTEN).
+export const createPlanMemory = (planId, payload) => api.post(`/plans/${planId}/memories`, payload)
 export const updateMemory = (memoryId, payload) => api.patch(`/memories/${memoryId}`, payload)
 export const deleteMemory = (memoryId) => api.delete(`/memories/${memoryId}`)
 export const getComments = (memoryId) => api.get(`/memories/${memoryId}/comments`)

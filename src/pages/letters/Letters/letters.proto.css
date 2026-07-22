@@ -1,4 +1,64 @@
+/* 기본 팔레트 — 편지 화면은 항상 크림/라이트 종이 미감(스테이지 배경도 크림 고정).
+   Codex는 body.light-mode에만 팔레트를 정의해, 앱 기본(다크)에선 크림 배경 위 밝은 전역 텍스트가
+   묻히고(흐림) 작성 카드가 --card-bg=다크로 새어 깨졌음 → 라이트 값으로 고정 정의. */
+.proto-letters {
+  --primary-green: #1b4332;
+  --accent-green: #52b788;
+  --title-color: #1b4332;
+  --text-color: #2c3e35;
+  --text-muted: #61766a;
+  --card-bg: #ffffff;
+  --bg-light: #f7f8f5;
+  --border-color: #eadfd0;
+  --input-border: #e2e8e4;
+  --nav-item-bg-active: #edf4ec;
+  --btn-primary-bg: #1b4332;
+  --button-text: #ffffff;
+  --shadow-color: rgba(8, 28, 22, 0.12);
+  padding-top: 18px;
+}
+
 @scope (.proto-letters) {
+        /* 프로토타입 전역 모달 시스템(프로덕션 미이식분 보강) — 이 스코프 내에서만 정의.
+           modal-box 기본은 각 모달(letter-inbox-modal/detail/write-card)이 뒤에서 덮어쓴다(소스 순서). */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(8, 28, 22, 0.46);
+            backdrop-filter: blur(10px) saturate(1.08);
+            -webkit-backdrop-filter: blur(10px) saturate(1.08);
+            animation: letterModalOverlayIn 0.24s ease both;
+        }
+        .modal-overlay > .modal-box { margin: auto; }
+        .modal-box {
+            position: relative;
+            z-index: 1;
+            background:
+                radial-gradient(circle at 92% 8%, rgba(82, 183, 136, 0.16), transparent 30%),
+                var(--card-bg);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 340px;
+            padding: 24px;
+            border: 1px solid rgba(82, 183, 136, 0.18);
+            box-shadow:
+                0 24px 60px rgba(8, 28, 22, 0.28),
+                inset 0 1px 0 rgba(255, 255, 255, 0.72);
+            color: var(--text-color);
+            transform-origin: 50% 46%;
+            animation: letterModalBoxIn 0.34s cubic-bezier(0.2, 0.9, 0.2, 1.08) both;
+        }
+        .modal-box h3 { color: var(--primary-green); font-size: 16px; margin-bottom: 14px; }
+        .modal-form-group { margin-bottom: 12px; }
+        .modal-form-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+        .modal-buttons { display: flex; gap: 8px; margin-top: 18px; }
+
         /* 행운편지 작성 모달 전용 스타일 */
         .letter-emoji-picker {
             display: flex;
@@ -883,4 +943,12 @@
 .proto-letters .letter-read-btn { margin-top: 8px; border: 0; background: var(--primary-green); color: #fff; border-radius: 7px; padding: 6px 9px; font: inherit; font-size: 11px; cursor: pointer; }
 body.light-mode .proto-letters { --primary-green: #1b4332; --accent-green: #52b788; --card-bg: #ffffff; --bg-light: #f7f8f5; --text-color: #2c3e35; --text-muted: #61766a; --border-color: #eadfd0; --nav-item-bg-active: #edf4ec; }
 @media (max-width: 640px) { .proto-letters { padding: 18px 14px 52px; } .proto-letters .letter-stage { padding: 30px 18px; } }
+}
+
+/* 모달 등장 애니메이션(@scope 밖 — keyframes는 전역) */
+@keyframes letterModalOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes letterModalBoxIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.965); }
+  68% { opacity: 1; transform: translateY(-2px) scale(1.006); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }

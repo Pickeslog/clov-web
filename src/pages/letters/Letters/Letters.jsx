@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './letters.proto.css'
 import { getLetters, markRead, sendLetter, toggleFavorite } from '../../../api/letter'
 import { getRoomMembers } from '../../../api/room'
+import Header from '../../../components/Header/Header'
 
 const EMOJIS = ['💌', '🍀', '💚', '✨', '🎉', '😊']
 const AVATAR_COLORS = ['#40916c', '#52b788', '#74c69d', '#95d5b2', '#2d6a4f']
@@ -59,12 +60,11 @@ export default function Letters() {
   const favoriteMutation = useMutation({ mutationFn: toggleFavorite, onSuccess: invalidateLetters })
 
   const openInbox = () => {
+    // 모달은 즉시 띄우고(클릭 반응 확실), 우편함 문 열림 애니메이션은 뒤에서 재생.
+    setPage(0)
+    setInboxOpen(true)
     setOpening(true)
-    setTimeout(() => {
-      setPage(0)
-      setInboxOpen(true)
-      setOpening(false)
-    }, 520)
+    setTimeout(() => setOpening(false), 520)
   }
 
   const changeTab = (next) => {
@@ -93,6 +93,7 @@ export default function Letters() {
 
   return (
     <main className="proto-letters">
+      <Header variant="room" roomId={roomId} activeTab="letter" />
       <div className="letter-tab-container">
         <section className="letter-stage">
           <div className="letter-stage-copy">

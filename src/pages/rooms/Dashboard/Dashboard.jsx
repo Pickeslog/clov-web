@@ -3,14 +3,19 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './dashboard.proto.css'
 import { getRoom, getRoomLevel, getRoomMembers, updateStatusMessage, updateRoom, presignRoomCover } from '../../../api/room'
-import { getPlans } from '../../../api/plan'
+import { createPlan, getPlans } from '../../../api/plan'
 import { getMemories } from '../../../api/memory'
 import { getMe } from '../../../api/user'
 import { uploadImage } from '../../../lib/uploadImage'
+import { useCreateMemory } from '../../../hooks/useCreateMemory'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
+// 우정공간에서 작성 모달을 인라인으로 띄우기 위해 각 화면의 모달을 재사용.
+import { ScheduleEditorModal } from '../../schedule/Schedule/Schedule'
+import { SCHEDULE_LIGHT_PALETTE } from '../../schedule/Schedule/palette'
+import { CreateMemoryModal } from '../../feed/Feed/Feed'
 
 // 우정 성장 티어(프로토타입 desktop.js 정본). 레벨은 111×7=777 → 7티어로 묶음.
 const TIERS = [
@@ -137,6 +142,15 @@ export default function Dashboard() {
   const [membersOpen, setMembersOpen] = useState(false)
   const [coverViewOpen, setCoverViewOpen] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
+  // 우정공간에서 바로 여는 작성 모달(일정계획 새 D-day / 추억 글쓰기).
+  const [composeSchedule, setComposeSchedule] = useState(false)
+  const [composeMemory, setComposeMemory] = useState(false)
+
+  const createPlanMutation = useMutation({
+    mutationFn: (payload) => createPlan(roomId, payload),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['plans', roomId] }); setComposeSchedule(false) },
+  })
+  const createMemoryMutation = useCreateMemory(roomId, { onSuccess: () => setComposeMemory(false) })
 
   // 배너 데코 — 생일이면 색종이+풍선, 아니면 계절 파티클. + 레코드판 샤인.
   const sKey = seasonKey(new Date().getMonth() + 1)
@@ -225,6 +239,7 @@ export default function Dashboard() {
   const go = (path) => navigate(`/rooms/${roomId}/${path}`)
 
   return (
+    <>
     <div className="proto-dashboard">
       <Header variant="room" roomId={roomId} activeTab="space" />
       <div className="dash-main">
@@ -339,7 +354,7 @@ export default function Dashboard() {
         <div className="section-title">
           <span>다가오는 D-day</span>
           <div className="section-actions">
-            <Button variant="dashed" size="sm" onClick={() => go('schedule')}>+ 새 D-day 만들기</Button>
+            <Button variant="dashed" size="sm" onClick={() => setComposeSchedule(true)}>+ 새 D-day 만들기</Button>
           </div>
         </div>
         {upcoming.length === 0 ? (
@@ -363,7 +378,7 @@ export default function Dashboard() {
         <div className="section-title">
           <span>참여자별 추억 증거 카드</span>
           <div className="section-actions">
-            <Button variant="dashed" size="sm" onClick={() => go('feed')}>✎ 글쓰기</Button>
+            <Button variant="dashed" size="sm" onClick={() => setComposeMemory(true)}>✎ 글쓰기</Button>
             <Button variant="action" size="sm" onClick={() => go('feed')}>전체 피드 보기</Button>
           </div>
         </div>
@@ -414,6 +429,33 @@ export default function Dashboard() {
         />
       )}
     </div>
+
+    {/* 우정공간에 머문 채 작성 모달을 인라인으로. 각 화면의 스코프·팔레트를 래퍼로 공급.
+        .proto-dashboard 밖 형제로 둬 대시보드 CSS와 격리(min-height는 0으로 눌러 빈 공간 방지). */}
+    {composeSchedule && (
+      <div className="proto-schedule" style={{ ...SCHEDULE_LIGHT_PALETTE, minHeight: 0 }}>
+        <ScheduleEditorModal
+          plan={null}
+          submitting={createPlanMutation.isPending}
+          errorMessage={createPlanMutation.error?.message}
+          onClose={() => setComposeSchedule(false)}
+          onSubmit={(payload) => createPlanMutation.mutate(payload)}
+        />
+      </div>
+    )}
+    {composeMemory && (
+      <div className="proto-feed" style={{ minHeight: 0 }}>
+        <CreateMemoryModal
+          roomId={roomId}
+          members={memberItems.filter((m) => String(m.userId) !== String(currentUserId))}
+          submitting={createMemoryMutation.isPending}
+          errorMessage={createMemoryMutation.error?.message}
+          onCancel={() => setComposeMemory(false)}
+          onSubmit={(planId, payload, files) => createMemoryMutation.mutate({ planId, payload, files })}
+        />
+      </div>
+    )}
+    </>
   )
 }
 

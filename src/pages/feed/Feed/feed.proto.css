@@ -334,12 +334,17 @@
 }
 .proto-feed .memory-detail-sheet {
   position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  width: min(720px, calc(100% - 32px)); max-height: min(86vh, 720px);
+  /* 프로토타입과 동일: 세로 720px 하드캡을 없애고 94vh까지 키워 여권이 스크롤 없이 들어오게 한다
+     (폭은 프로토타입과 같은 720px 유지 — 넓히면 4:3 사진이 더 커져 세로가 오히려 늘어난다) */
+  width: min(720px, calc(100% - 32px)); max-height: 94vh;
   background: linear-gradient(180deg, #ffffff 0%, #f4faf7 100%);
   border: 1px solid rgba(198,224,211,.95); border-radius: 20px;
   box-shadow: 0 30px 70px rgba(8,28,22,.32); padding: 20px 24px 24px;
   z-index: 241; overflow-y: auto;
+  /* 스크롤이 남더라도 스크롤바는 숨긴다(프로토타입 동일) */
+  scrollbar-width: none;
 }
+.proto-feed .memory-detail-sheet::-webkit-scrollbar { display: none; }
 .proto-feed .memory-detail-head {
   display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
   padding-bottom: 12px; border-bottom: 1px solid rgba(216,235,226,.9);

@@ -266,7 +266,7 @@ function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, se
     color: broadcast ? '#fff' : (receiverUserId ? '#8c93a3' : 'var(--primary-green)'),
   }
   return (
-    <section className="modal-box letter-write-card">
+    <section className="modal-box letter-write-card" style={{ textAlign: 'left', colorScheme: 'light' }}>
       <h3>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-3px', marginRight: '5px' }}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
         행운 편지 작성
@@ -308,6 +308,7 @@ function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, se
           value={content}
           placeholder="응원, 감사, 행운의 메시지를 자유롭게 작성해주세요."
           onChange={(event) => setContent(event.target.value)}
+          style={{ colorScheme: 'light', background: '#ffffff', color: '#2c3e35', width: '100%' }}
         />
         <div className="letter-content-count" style={{ textAlign: 'right', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{content.length} / 1000 (한글 500자 / 영어 1000자)</div>
       </div>

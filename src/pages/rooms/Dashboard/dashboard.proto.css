@@ -100,13 +100,70 @@
   position: relative; z-index: 10; margin-right: -24px; margin-left: 8px; overflow: hidden;
 }
 .proto-dashboard .main-photo-wrapper img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 2px; }
+.proto-dashboard .cover-photo-img { cursor: zoom-in; transition: transform .3s ease; }
+.proto-dashboard .main-photo-wrapper:hover .cover-photo-img { transform: scale(1.03); }
 .proto-dashboard .main-photo-empty {
-  width: 100%; height: 100%; border-radius: 2px; display: grid; place-items: center;
+  width: 100%; height: 100%; border-radius: 2px; display: grid; place-items: center; cursor: pointer;
   background:
     radial-gradient(circle at 50% 38%, rgba(82,183,136,.22), transparent 58%),
     repeating-linear-gradient(135deg, rgba(82,183,136,.1) 0px, rgba(82,183,136,.1) 2px, transparent 2px, transparent 14px);
   font-size: 40px;
 }
+
+/* 대표 사진 변경(카메라) 버튼 */
+.proto-dashboard .cover-camera-btn {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center;
+  background: rgba(156,204,101,.14); border: 1px solid rgba(156,204,101,.28); color: var(--accent-green);
+  transition: background-color .2s ease, transform .2s ease;
+}
+.proto-dashboard .cover-camera-btn:hover { background: rgba(156,204,101,.24); transform: translateY(-1px); }
+
+/* 대표 사진 전체 보기(플립) */
+.proto-dashboard .cover-view-backdrop {
+  position: fixed; inset: 0; z-index: 420; display: flex; align-items: center; justify-content: center;
+  background: rgba(8,28,22,.72); backdrop-filter: blur(8px); padding: 32px;
+}
+.proto-dashboard .cover-view-flip {
+  position: relative; max-width: min(880px, 92vw); max-height: 86vh;
+  perspective: 1400px; transform-style: preserve-3d;
+  animation: coverFlipIn .5s cubic-bezier(.2,.8,.25,1) both;
+}
+.proto-dashboard .cover-view-flip img {
+  display: block; max-width: 100%; max-height: 86vh; object-fit: contain;
+  border-radius: 10px; box-shadow: 0 30px 80px rgba(0,0,0,.5);
+}
+@keyframes coverFlipIn {
+  from { transform: rotateY(-92deg) scale(.9); opacity: 0; }
+  to   { transform: rotateY(0deg) scale(1); opacity: 1; }
+}
+.proto-dashboard .cover-view-close {
+  position: absolute; top: -14px; right: -14px; width: 34px; height: 34px; border-radius: 50%; border: none;
+  background: #fff; color: #1b4332; font-size: 16px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.3);
+}
+
+/* 대표 사진 변경 모달 */
+.proto-dashboard .cover-upload-backdrop {
+  position: fixed; inset: 0; z-index: 430; display: flex; align-items: center; justify-content: center;
+  background: rgba(8,28,22,.5); backdrop-filter: blur(6px); padding: 24px;
+}
+.proto-dashboard .cover-upload-modal {
+  width: min(420px, calc(100vw - 32px)); background: var(--card-bg);
+  border: 1px solid var(--border-color); border-radius: 16px; box-shadow: 0 30px 70px rgba(0,0,0,.5); padding: 22px;
+}
+.proto-dashboard .cover-upload-title { font-size: 16px; font-weight: 800; color: var(--text-color); margin-bottom: 14px; }
+.proto-dashboard .cover-upload-drop {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  min-height: 168px; padding: 18px; text-align: center; cursor: pointer;
+  border: 2px dashed rgba(156,204,101,.4); border-radius: 12px; background: rgba(156,204,101,.05);
+  color: var(--text-muted); font-size: 13px; line-height: 1.5; transition: border-color .2s, background-color .2s;
+}
+.proto-dashboard .cover-upload-drop.over { border-color: var(--accent-green); background: rgba(156,204,101,.12); }
+.proto-dashboard .cover-upload-drop strong { color: var(--accent-green); }
+.proto-dashboard .cover-upload-icon { color: var(--accent-green); }
+.proto-dashboard .cover-upload-preview { max-width: 100%; max-height: 200px; border-radius: 10px; object-fit: contain; }
+.proto-dashboard .cover-upload-error { margin-top: 10px; color: #d15b5b; font-size: 12px; font-weight: 600; }
+.proto-dashboard .cover-upload-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .proto-dashboard .cover-summary {
   flex: 1; min-width: 0; background: var(--card-bg); border-radius: 14px;
   padding: 24px 24px 24px 44px; box-shadow: 0 6px 16px rgba(0,0,0,.06);

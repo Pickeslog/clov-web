@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './dashboard.proto.css'
-import { getRoom, getRoomLevel, getRoomMembers, updateStatusMessage } from '../../../api/room'
+import { getRoom, getRoomLevel, getRoomMembers, updateStatusMessage, updateRoom, presignRoomCover } from '../../../api/room'
 import { getPlans } from '../../../api/plan'
 import { getMemories } from '../../../api/memory'
+import { uploadImage } from '../../../lib/uploadImage'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import Header from '../../../components/Header/Header'
@@ -62,12 +63,26 @@ export default function Dashboard() {
   // null = 미편집(서버값 표시). 문자열 = 사용자가 편집 중.
   const [statusDraft, setStatusDraft] = useState(null)
   const [membersOpen, setMembersOpen] = useState(false)
+  const [coverViewOpen, setCoverViewOpen] = useState(false)
+  const [uploadOpen, setUploadOpen] = useState(false)
 
   const statusMutation = useMutation({
     mutationFn: (message) => updateStatusMessage(roomId, message),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['room', roomId] })
       setStatusDraft(null) // 서버값으로 재동기화
+    },
+  })
+
+  // 대표 커버 이미지: presign → R2 PUT → PATCH coverPhotoUrl 로 커밋.
+  const coverMutation = useMutation({
+    mutationFn: async (file) => {
+      const imageUrl = await uploadImage((base) => presignRoomCover(roomId, base), file)
+      return updateRoom(roomId, { coverPhotoUrl: imageUrl })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['room', roomId] })
+      setUploadOpen(false)
     },
   })
 
@@ -143,9 +158,15 @@ export default function Dashboard() {
         <div className="main-photo-card">
           <div className="main-photo-wrapper">
             {data.coverPhotoUrl ? (
-              <img src={data.coverPhotoUrl} alt="대표 사진" />
+              <img
+                src={data.coverPhotoUrl}
+                alt="대표 사진"
+                className="cover-photo-img"
+                title="클릭하면 전체 보기"
+                onClick={() => setCoverViewOpen(true)}
+              />
             ) : (
-              <div className="main-photo-empty">🍀</div>
+              <div className="main-photo-empty" title="대표 사진 추가" onClick={() => setUploadOpen(true)}>🍀</div>
             )}
           </div>
           <div className="cover-summary">
@@ -171,6 +192,9 @@ export default function Dashboard() {
                   </button>
                 )}
               </div>
+              <button type="button" className="cover-camera-btn" title="대표 사진 변경" aria-label="대표 사진 변경" onClick={() => setUploadOpen(true)}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z" /><circle cx="12" cy="13" r="3.5" /></svg>
+              </button>
             </div>
             <div className="cover-meta-grid">
               <div className="member-highlight-card" onClick={() => setMembersOpen(true)} title="참여 멤버 보기">
@@ -272,6 +296,74 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {coverViewOpen && data.coverPhotoUrl && (
+        <div className="cover-view-backdrop" onClick={() => setCoverViewOpen(false)}>
+          <div className="cover-view-flip" onClick={(e) => e.stopPropagation()}>
+            <img src={data.coverPhotoUrl} alt="대표 사진 전체 보기" />
+            <button type="button" className="cover-view-close" onClick={() => setCoverViewOpen(false)} aria-label="닫기">✕</button>
+          </div>
+        </div>
+      )}
+
+      {uploadOpen && (
+        <CoverUploadModal
+          uploading={coverMutation.isPending}
+          errorMessage={coverMutation.error?.message}
+          onCancel={() => setUploadOpen(false)}
+          onSubmit={(file) => coverMutation.mutate(file)}
+        />
+      )}
+    </div>
+  )
+}
+
+// 대표 사진 변경 모달 — 드래그&드롭 또는 클릭 파일 선택 → 미리보기 → 확인 시 업로드.
+function CoverUploadModal({ uploading, errorMessage, onCancel, onSubmit }) {
+  const [file, setFile] = useState(null)
+  const [preview, setPreview] = useState('')
+  const [dragOver, setDragOver] = useState(false)
+  const inputRef = useRef(null)
+
+  const pick = (f) => {
+    if (!f || !f.type.startsWith('image/')) return
+    if (preview) URL.revokeObjectURL(preview)
+    setFile(f)
+    setPreview(URL.createObjectURL(f))
+  }
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview) }, [preview])
+
+  return (
+    <div className="cover-upload-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}>
+      <div className="cover-upload-modal" role="dialog" aria-modal="true" aria-label="대표 사진 변경">
+        <div className="cover-upload-title">대표 사진 변경</div>
+        <div
+          className={`cover-upload-drop ${dragOver ? 'over' : ''}`}
+          onClick={() => inputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); pick(e.dataTransfer.files?.[0]) }}
+        >
+          {preview ? (
+            <img src={preview} alt="미리보기" className="cover-upload-preview" />
+          ) : (
+            <>
+              <span className="cover-upload-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z" /><circle cx="12" cy="13" r="3.5" /></svg>
+              </span>
+              <span>새 이미지를 이 곳으로 드래그하거나<br /><strong>클릭하여 파일 선택</strong></span>
+            </>
+          )}
+        </div>
+        <input ref={inputRef} type="file" accept="image/*" hidden onChange={(e) => { pick(e.target.files?.[0]); e.target.value = '' }} />
+        {errorMessage && <div className="cover-upload-error" role="alert">{errorMessage}</div>}
+        <div className="cover-upload-actions">
+          <Button variant="secondary" size="sm" onClick={onCancel}>취소</Button>
+          <Button variant="primary" size="sm" disabled={!file || uploading} onClick={() => onSubmit(file)}>
+            {uploading ? '업로드 중…' : '확인'}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

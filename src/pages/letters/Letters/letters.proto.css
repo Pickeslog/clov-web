@@ -1,23 +1,3 @@
-/* 기본 팔레트 — 편지 화면은 항상 크림/라이트 종이 미감(스테이지 배경도 크림 고정).
-   Codex는 body.light-mode에만 팔레트를 정의해, 앱 기본(다크)에선 크림 배경 위 밝은 전역 텍스트가
-   묻히고(흐림) 작성 카드가 --card-bg=다크로 새어 깨졌음 → 라이트 값으로 고정 정의. */
-.proto-letters {
-  --primary-green: #1b4332;
-  --accent-green: #52b788;
-  --title-color: #1b4332;
-  --text-color: #2c3e35;
-  --text-muted: #61766a;
-  --card-bg: #ffffff;
-  --bg-light: #f7f8f5;
-  --border-color: #eadfd0;
-  --input-border: #e2e8e4;
-  --nav-item-bg-active: #edf4ec;
-  --btn-primary-bg: #1b4332;
-  --button-text: #ffffff;
-  --shadow-color: rgba(8, 28, 22, 0.12);
-  padding-top: 18px;
-}
-
 @scope (.proto-letters) {
         /* 프로토타입 전역 모달 시스템(프로덕션 미이식분 보강) — 이 스코프 내에서만 정의.
            modal-box 기본은 각 모달(letter-inbox-modal/detail/write-card)이 뒤에서 덮어쓴다(소스 순서). */
@@ -337,19 +317,9 @@
             overflow: visible;
         }
 
-        /* 다크모드: 편지함 무대 배경을 어둡게 (밝은 배경에 흰 글자가 묻히던 문제 해결 · kimgyubi 이식) */
-        body.dark-mode .letter-stage {
-            background:
-                radial-gradient(circle at 50% 28%, rgba(214, 139, 68, 0.12), transparent 34%),
-                linear-gradient(180deg, rgba(25, 28, 26, 0.9), rgba(20, 23, 21, 0.82));
-            border-color: rgba(255, 255, 255, 0.08);
-        }
-        /* 어두운 무대 위 텍스트를 밝게 (본선은 이 영역 글자색을 어딘가에서 강제 고정해 다크에서도
-           어둡게 남아 대비가 나쁨 → !important로 확실히 밝게) */
-        body.dark-mode .letter-stage-kicker { color: #9ccc65 !important; }
-        body.dark-mode .letter-stage-copy h2 { color: #eef0e2 !important; }
-        body.dark-mode .letter-stage-copy p { color: #b7c99a !important; }
-        body.dark-mode .letter-box-summary { color: #eef0e2 !important; }
+        /* (편지 화면은 항상 라이트 종이 미감 — 앱은 body.dark-mode 클래스를 쓰지 않으므로
+           과거의 body.dark-mode .letter-* 오버라이드는 죽은 코드였고 제거함. 기본 팔레트가 라이트라
+           다크 모드에서도 스테이지·카드가 크림/흰색으로 프로토타입과 동일하게 렌더된다.) */
 
         .letter-stage-kicker {
             display: block;
@@ -933,8 +903,10 @@
     box-shadow: 0 4px 10px rgba(82, 183, 136, 0.3);
 }
 
-/* 앱 기본 다크/사용자설정 라이트에 맞춰 프로토타입 토큰을 연결한다. */
-.proto-letters { --primary-green: #5a7a3e; --accent-green: #9ccc65; --card-bg: #1e2016; --bg-light: #191a12; --text-color: #eef0e2; --text-muted: #b7c99a; --border-color: #2a2c1e; --nav-item-bg-active: #2b3020; min-height: calc(100vh - 74px); padding: 26px 24px 72px; color: var(--text-color); }
+/* 편지는 항상 크림/라이트 종이 미감이라 기본 팔레트를 라이트로 고정한다(이전엔 다크 기본이라 앱 기본
+   다크에서 깨졌음). color-scheme: light → color-scheme:light dark로 인해 다크 브라우저에서 native
+   텍스트영역이 검게 나오던 문제까지 근본 해결(caret·스크롤바 포함 라이트 렌더). */
+.proto-letters { --primary-green: #1b4332; --accent-green: #52b788; --title-color: #1b4332; --card-bg: #ffffff; --bg-light: #f7f8f5; --text-color: #2c3e35; --text-muted: #61766a; --border-color: #eadfd0; --input-border: #e2e8e4; --nav-item-bg-active: #edf4ec; --btn-primary-bg: #1b4332; --button-text: #ffffff; --shadow-color: rgba(8, 28, 22, 0.12); color-scheme: light; min-height: calc(100vh - 74px); padding: 26px 24px 72px; color: var(--text-color); }
 .proto-letters .letter-stage { margin: 0 auto; }
 .proto-letters .letter-write-card { width: min(680px, 100%); margin: 24px auto; display: block; text-align: left; }
 .proto-letters .letter-write-card h3, .proto-letters .letter-write-card > p { text-align: left; }

@@ -6,6 +6,7 @@ import { getMe } from '../../api/user'
 import { useAuthStore } from '../../stores/authStore'
 import { getDark, applyTheme } from '../../lib/theme'
 import Settings from '../Settings/Settings'
+import Notifications from '../../pages/notifications/Notifications/Notifications'
 
 // 방 내부 네비 탭 — 프로토타입 clov-header main 타입.
 const TABS = [
@@ -33,6 +34,7 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [dark, setDark] = useState(getDark)
 
   useEffect(() => {
@@ -78,7 +80,7 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
             <button
               type="button"
               className="clov-hdr-nav-btn clov-hdr-nav-icon-btn"
-              onClick={() => navigate(`/rooms/${roomId}/notifications`)}
+              onClick={() => setNotificationsOpen(true)}
               title="알림"
               aria-label="알림"
             >
@@ -112,6 +114,7 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
     {/* Settings 오버레이는 header 밖에 둔다 — header의 backdrop-filter가 fixed 오버레이의
         컨테이닝 블록이 되어 모달이 56px 헤더 안에 갇히는 오버플로우를 방지. */}
     {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
+    {notificationsOpen && <Notifications onClose={() => setNotificationsOpen(false)} />}
     </>
   )
 }

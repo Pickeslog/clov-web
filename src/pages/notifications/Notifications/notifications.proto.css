@@ -1,0 +1,80 @@
+/* 02-main/index.html의 알림 팝오버를 .proto-notifications 범위로 이식한다. */
+.proto-notifications {
+  --primary-green: #5a7a3e;
+  --accent-green: #9ccc65;
+  --card-bg: #1e2016;
+  --bg-light: #191a12;
+  --text-color: #eef0e2;
+  --text-muted: #b7c99a;
+  --border-color: #2a2c1e;
+  --nav-item-bg-active: #2b3020;
+  color: var(--text-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.proto-notifications *, .proto-notifications *::before, .proto-notifications *::after { box-sizing: border-box; }
+.proto-notifications .noti-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 350;
+  display: flex; align-items: flex-start; justify-content: flex-end; padding: 68px 16px 0;
+  opacity: 1; pointer-events: all;
+}
+.proto-notifications .noti-modal {
+  background: var(--card-bg); border-radius: 20px; width: 360px; max-height: 540px;
+  display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.25);
+  animation: notification-open .22s ease-out;
+}
+@keyframes notification-open { from { opacity: 0; transform: translateY(-8px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.proto-notifications .noti-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 14px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+.proto-notifications .noti-head h1 { font-size: 15px; font-weight: 700; color: var(--accent-green); display: flex; align-items: center; gap: 6px; margin: 0; }
+.proto-notifications .noti-close { background: none; border: none; font: inherit; font-size: 14px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.proto-notifications .noti-close:hover { background: var(--nav-item-bg-active); }
+.proto-notifications .noti-tabs { display: flex; gap: 8px; padding: 12px 16px; flex-shrink: 0; }
+.proto-notifications .noti-tab { flex: 1; padding: 8px 6px; border-radius: 8px; border: 1.5px solid var(--border-color); background: transparent; color: var(--text-muted); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.proto-notifications .noti-tab.on { background: var(--primary-green); color: #fff; border-color: var(--primary-green); }
+.proto-notifications .noti-count { display: inline-block; background: #e55; color: #fff; border-radius: 10px; padding: 1px 6px; font-size: 10px; margin-left: 4px; }
+.proto-notifications .noti-body { overflow-y: auto; padding: 0 16px 16px; flex: 1; }
+.proto-notifications .noti-card { width: 100%; text-align: left; background: rgba(82,183,136,.08); border: 0; border-left: 3px solid var(--primary-green); padding: 12px 14px; border-radius: 8px; margin-bottom: 10px; color: inherit; font: inherit; cursor: pointer; }
+.proto-notifications .noti-card.unread, .proto-notifications .noti-friend-card.unread { border-color: var(--primary-green); }
+.proto-notifications .noti-card-title { font-size: 13px; font-weight: 700; color: var(--primary-green); margin-bottom: 5px; }
+.proto-notifications .noti-card-body { font-size: 12px; color: var(--text-color); line-height: 1.6; }
+.proto-notifications .noti-card-date { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+.proto-notifications .noti-friend-card { padding: 12px 14px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border-color); color: var(--text-color); }
+.proto-notifications .noti-friend-card.unread { background: rgba(82,183,136,.08); cursor: pointer; }
+.proto-notifications .noti-friend-title { font-size: 13px; font-weight: 700; color: var(--text-color); }
+.proto-notifications .noti-new { font-size: 10px; color: #e55; font-weight: 700; vertical-align: top; margin-left: 4px; }
+.proto-notifications .noti-message { font-size: 12px; color: var(--text-muted); margin: 4px 0 6px; line-height: 1.5; }
+.proto-notifications .noti-join-banner { border: 1.5px solid #e55; background: rgba(238,85,85,.08); cursor: pointer; }
+.proto-notifications .noti-join-banner .noti-friend-title { color: #e55; display: flex; justify-content: space-between; gap: 6px; }
+.proto-notifications .noti-join-banner .noti-new { background: #e55; color: #fff; padding: 2px 6px; border-radius: 10px; margin: 0; white-space: nowrap; }
+.proto-notifications .join-card { border: 1.5px solid var(--primary-green); background: rgba(82,183,136,.08); padding: 14px 16px; }
+.proto-notifications .join-card-head { font-size: 14px; font-weight: 800; color: var(--primary-green); display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.proto-notifications .join-card-time { font-size: 11px; color: var(--text-muted); font-weight: 400; white-space: nowrap; }
+.proto-notifications .join-card-body { font-size: 13px; color: var(--text-color); margin: 8px 0 12px; line-height: 1.5; }
+.proto-notifications .join-card-body strong { font-size: 15px; }
+.proto-notifications .join-path { display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; font-size: 12px; color: var(--text-muted); }
+.proto-notifications .join-policy { margin-top: 6px; padding: 8px 12px; background: rgba(27,67,50,.12); border-radius: 8px; font-size: 11px; color: var(--text-muted); }
+.proto-notifications .join-actions { display: flex; gap: 8px; }
+.proto-notifications .join-actions button { flex: 1; padding: 9px; border-radius: 10px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.proto-notifications .join-accept { background: var(--primary-green); color: #fff; border: 1px solid var(--primary-green); }
+.proto-notifications .join-reject, .proto-notifications .join-undo { background: var(--bg-light); color: var(--text-color); border: 1px solid var(--border-color); }
+.proto-notifications button:disabled { opacity: .55; cursor: default; }
+.proto-notifications .undo-card { border: 1.5px solid var(--primary-green); background: rgba(82,183,136,.07); }
+.proto-notifications .undo-card .join-card-head { font-size: 13px; }
+.proto-notifications .noti-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+.proto-notifications .noti-empty-icon { font-size: 2rem; margin-bottom: 10px; }
+.proto-notifications .noti-error { color: #e55; }
+
+body.light-mode .proto-notifications {
+  --primary-green: #1b4332;
+  --accent-green: #52b788;
+  --card-bg: #ffffff;
+  --bg-light: #f7f8f5;
+  --text-color: #2c3e35;
+  --text-muted: #61766a;
+  --border-color: #eef2f0;
+  --nav-item-bg-active: #edf4ec;
+}
+@media (max-width: 480px) {
+  .proto-notifications .noti-backdrop { padding: 16px 10px; align-items: flex-start; }
+  .proto-notifications .noti-modal { width: 100%; max-height: calc(100vh - 32px); }
+}

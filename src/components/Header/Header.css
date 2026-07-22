@@ -41,13 +41,6 @@
 .clov-hdr-nav-icon-btn { padding: 7px 9px; }
 .clov-hdr-nav-btn svg { display: block; }
 
-.clov-hdr-icon-btn {
-  width: 36px; height: 36px; border-radius: 10px; border: none; background: none; cursor: pointer;
-  color: #b7c99a; display: grid; place-items: center; transition: background .15s;
-}
-.clov-hdr-icon-btn:hover { background: #2b3020; }
-.clov-hdr-icon-btn svg { display: block; }
-
 .clov-hdr-avatar-wrap { position: relative; }
 .clov-hdr-avatar {
   width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
@@ -82,8 +75,6 @@ body.light-mode .clov-hdr-back:hover { background: #edf4ec; color: #1b4332; }
 body.light-mode .clov-hdr-logo { color: #1b4332; }
 body.light-mode .clov-hdr-nav-btn { color: #79ad90; }
 body.light-mode .clov-hdr-nav-btn:hover, body.light-mode .clov-hdr-nav-btn.active { background: #edf4ec; color: #1b4332; }
-body.light-mode .clov-hdr-icon-btn { color: #61766a; }
-body.light-mode .clov-hdr-icon-btn:hover { background: #edf4ec; }
 body.light-mode .clov-hdr-avatar { background: #edf4ec; color: #1b4332; }
 body.light-mode .clov-hdr-dropdown { background: #fff; border-color: #eadfd0; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12); }
 body.light-mode .clov-hdr-dropdown button { color: #2c3e35; }

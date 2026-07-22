@@ -433,15 +433,6 @@
   }
   .growth-density button.active span { background: rgba(255, 255, 255, 0.22); }
 
-  .fourcut-gallery-btn { position: relative; }
-  .fourcut-gallery-btn::before {
-    content: "";
-    width: 1px;
-    height: 16px;
-    background: rgba(27, 67, 50, 0.16);
-    margin-right: 6px;
-  }
-
   /* ══════════ 인생4컷 필름스트립 카드 레일 ══════════ */
   .growth-card-rail {
     display: flex;

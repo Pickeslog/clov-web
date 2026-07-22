@@ -267,13 +267,6 @@ export default function Schedule() {
                     {d.label} <span>{counts[d.key]}</span>
                   </button>
                 ))}
-                <button
-                  type="button"
-                  className="fourcut-gallery-btn"
-                  onClick={() => window.alert('인생4컷 극장은 곧 열려요! (다음 업데이트 예정)')}
-                >
-                  🎬 입장하기
-                </button>
               </div>
             </div>
 
@@ -553,7 +546,7 @@ function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, onSubmit
               className="receipt-title-input"
               value={title}
               maxLength={100}
-              placeholder="약속 제목 (예: 여름 바다 당일치기)"
+              placeholder="약속 제목"
               onChange={(e) => setTitle(e.target.value)}
             />
             <div className="receipt-meta">

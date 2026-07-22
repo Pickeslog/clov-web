@@ -119,9 +119,17 @@ export default function RoomList() {
     try { localStorage.setItem(ORDER_KEY, JSON.stringify(ids)) } catch { /* storage 차단 무시 */ }
   }
 
-  const rooms = useQuery({ queryKey: ['rooms'], queryFn: getRooms })
-  const myRequests = useQuery({ queryKey: ['join-requests', 'mine'], queryFn: getMyJoinRequests })
+  // 수락 대기 중인 가입 신청(방이 살아있고 아직 거절 안 됨)이 있으면 목록을 주기적으로
+  // 갱신한다 → 다른 멤버가 수락하면 몇 초 내 새 방이 자동으로 나타난다(수동 새로고침 불필요).
+  const isPendingReq = (r) => r.roomStatus === 'ACTIVE' && r.status !== 'REJECTED'
+  const myRequests = useQuery({
+    queryKey: ['join-requests', 'mine'],
+    queryFn: getMyJoinRequests,
+    refetchInterval: (query) => ((query.state.data?.items ?? []).some(isPendingReq) ? 10000 : false),
+  })
   const requestItems = (myRequests.data?.items ?? []).filter((r) => !dismissed.includes(r.id))
+  const awaitingAcceptance = requestItems.some(isPendingReq)
+  const rooms = useQuery({ queryKey: ['rooms'], queryFn: getRooms, refetchInterval: awaitingAcceptance ? 10000 : false })
 
   const sortedRooms = useMemo(() => {
     const list = [...(rooms.data?.items ?? [])]

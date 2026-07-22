@@ -23,9 +23,17 @@ const PROTOTYPE_NOTICES = [
   { id: 'prototype-open', prototype: true, type: 'NOTICE', isRead: true, createdAt: '2026-06-29T00:00:00Z', payload: { title: '[공지] Clov v2.0 정식 오픈 안내 🎉', content: '일대일 단짝 연동 기능과 다크 모드 동기화 기능이 대폭 개선되었습니다. 더욱 안정적인 환경에서 소중한 추억을 기록해 보세요.' } },
 ]
 
-const parseUtc = (value) => new Date(value.endsWith('Z') ? value : `${value}Z`)
-const formatDate = (value) => parseUtc(value).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '. ').replace(/\.$/, '')
-const formatTime = (value) => parseUtc(value).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
+// 백엔드는 오프셋 없는 UTC(LocalDateTime)를 반환 → Z 붙여 파싱. 값이 없으면 null(크래시 방지).
+const parseUtc = (value) => (value ? new Date(String(value).endsWith('Z') ? value : `${value}Z`) : null)
+const isValid = (d) => d && !Number.isNaN(d.getTime())
+const formatDate = (value) => {
+  const d = parseUtc(value)
+  return isValid(d) ? d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '. ').replace(/\.$/, '') : ''
+}
+const formatTime = (value) => {
+  const d = parseUtc(value)
+  return isValid(d) ? d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ''
+}
 
 const describeError = (error) => {
   switch (error.code) {
@@ -210,7 +218,7 @@ function JoinRequestCard({ request, busy, onAccept, onReject }) {
   const name = request.applicant?.nickname ?? request.applicantName ?? '알 수 없음'
   const invitePath = request.invitePath === 'INVITED' ? '초대로 신청' : '코드로 직접 신청'
   return <article className="noti-friend-card join-card">
-    <div className="join-card-head"><span>♧ 우정공간 가입 신청 <span className="noti-count">NEW</span></span><span className="join-card-time">{formatTime(request.createdAt)}</span></div>
+    <div className="join-card-head"><span>♧ 우정공간 가입 신청 <span className="noti-count">NEW</span></span><span className="join-card-time">{formatTime(request.requestedAt)}</span></div>
     <div className="join-card-body"><strong>{name}</strong>님이 우정공간 입장을 신청했습니다.<br /><span className="join-path">⌁ {invitePath}</span><div className="join-policy"><b>방장 권한 없음:</b> 참여 멤버 중 1명만 수락해도 즉시 방에 입장할 수 있습니다.</div></div>
     <div className="join-actions"><button className="join-accept" type="button" disabled={busy} onClick={() => onAccept(request.id)}>✓ 수락하고 입장시키기</button><button className="join-reject" type="button" disabled={busy} onClick={() => onReject(request.id)}>거절</button></div>
   </article>

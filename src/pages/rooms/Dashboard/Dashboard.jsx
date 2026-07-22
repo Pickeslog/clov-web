@@ -5,6 +5,7 @@ import './dashboard.proto.css'
 import { getRoom, getRoomLevel, getRoomMembers, updateStatusMessage, updateRoom, presignRoomCover } from '../../../api/room'
 import { getPlans } from '../../../api/plan'
 import { getMemories } from '../../../api/memory'
+import { getMe } from '../../../api/user'
 import { uploadImage } from '../../../lib/uploadImage'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
@@ -64,6 +65,44 @@ function buildParticles(season) {
 const REC_SRC = { w: 970, h: 215 }
 const REC_POS = { x: 619, y: -14, size: 279 }
 
+// 오늘이 내 생일인가(getMe.birthdate의 월·일 일치). 멤버 목록엔 생일이 없어 본인 기준.
+function isTodayBirthday(birthdate) {
+  const m = String(birthdate || '').match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!m) return false
+  const now = new Date()
+  return Number(m[2]) === now.getMonth() + 1 && Number(m[3]) === now.getDate()
+}
+// 생일 색종이(프로토타입 confetti 분기 이식).
+function buildConfetti() {
+  const colors = ['#ff7675', '#74b9ff', '#55efc4', '#ffeaa7', '#a29bfe', '#fd79a8', '#ff9ff3']
+  return Array.from({ length: 45 }, (_, i) => {
+    const dur = 3.5 + Math.random() * 5
+    const w = 4 + Math.random() * 5
+    const style = {
+      '--d': `${dur}s`, '--dl': `${-Math.random() * dur}s`, '--dx': `${(Math.random() - 0.5) * 150}px`,
+      '--dr': `${Math.random() * 720}deg`, '--drx': `${Math.random() * 720}deg`, '--dry': `${Math.random() * 720}deg`,
+      left: `${Math.random() * 100}%`, top: '-20px', width: `${w}px`,
+      height: `${Math.random() > 0.4 ? w : 7 + Math.random() * 7}px`, background: colors[i % colors.length],
+    }
+    if (Math.random() > 0.6) style.borderRadius = '50%'
+    return { type: 'confetti', style }
+  })
+}
+// 생일 풍선(프로토타입 v5buildBalloons 이식).
+function buildBalloons() {
+  const colors = ['#ff7675', '#74b9ff', '#ffeaa7', '#a29bfe', '#55efc4', '#fd79a8']
+  return Array.from({ length: 7 }, (_, i) => {
+    const dur = 10 + Math.random() * 10
+    return {
+      style: {
+        '--bc': colors[i % colors.length], left: `${5 + Math.random() * 90}%`,
+        '--bd': `${dur}s`, '--bdl': `${-Math.random() * dur}s`, '--bx': `${(Math.random() - 0.5) * 60}px`,
+        transform: `scale(${0.75 + Math.random() * 0.5})`,
+      },
+    }
+  })
+}
+
 const daysTogether = (createdAt) => {
   if (!createdAt) return 1
   return Math.floor((Date.now() - parseUtc(createdAt).getTime()) / DAY) + 1
@@ -91,6 +130,7 @@ export default function Dashboard() {
   const members = useQuery({ queryKey: ['room', roomId, 'members'], queryFn: () => getRoomMembers(roomId) })
   const plans = useQuery({ queryKey: ['plans', roomId, { status: 'SCHEDULED' }], queryFn: () => getPlans(roomId, { status: 'SCHEDULED' }) })
   const memories = useQuery({ queryKey: ['memories', roomId], queryFn: () => getMemories(roomId) })
+  const me = useQuery({ queryKey: ['me'], queryFn: getMe })
 
   // null = 미편집(서버값 표시). 문자열 = 사용자가 편집 중.
   const [statusDraft, setStatusDraft] = useState(null)
@@ -98,9 +138,11 @@ export default function Dashboard() {
   const [coverViewOpen, setCoverViewOpen] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
 
-  // 배너 데코 — 계절 파티클 + 레코드판 샤인(원본 좌표를 렌더 크기에 스케일).
+  // 배너 데코 — 생일이면 색종이+풍선, 아니면 계절 파티클. + 레코드판 샤인.
   const sKey = seasonKey(new Date().getMonth() + 1)
-  const particles = useMemo(() => buildParticles(sKey), [sKey])
+  const isBirthday = isTodayBirthday(me.data?.birthdate)
+  const particles = useMemo(() => (isBirthday ? buildConfetti() : buildParticles(sKey)), [isBirthday, sKey])
+  const balloons = useMemo(() => (isBirthday ? buildBalloons() : []), [isBirthday])
   const [recStyle, setRecStyle] = useState(null)
   const sceneRef = useCallback((node) => {
     if (!node) return undefined
@@ -187,13 +229,20 @@ export default function Dashboard() {
       <Header variant="room" roomId={roomId} activeTab="space" />
       <div className="dash-main">
         {/* 성장 배너 */}
-        <div className="v5-scene" ref={sceneRef} data-season={sKey} data-level={levelNum}>
+        <div className="v5-scene" ref={sceneRef} data-season={sKey} data-level={levelNum} data-event={isBirthday ? 'my_birthday' : 'none'}>
           <div className="scene-sky" style={{ backgroundImage: `url('/banners/lp-${sKey}.png')` }} />
           <div className="season-particles" aria-hidden="true">
             {particles.map((p, i) => (
               <span key={i} className={`ptcl ${p.type}`} style={p.style} />
             ))}
           </div>
+          {balloons.length > 0 && (
+            <div className="scene-balloons" aria-hidden="true">
+              {balloons.map((b, i) => (
+                <div key={i} className="balloon" style={b.style} />
+              ))}
+            </div>
+          )}
           {recStyle && (
             <div className="v5-photo-rec" style={recStyle} aria-hidden="true">
               <div className="v5-photo-rec-shine" />
@@ -201,7 +250,9 @@ export default function Dashboard() {
           )}
           <div className="banner-hud">
             <div>
-              <p className="hud-eyebrow">우리 함께한 지</p>
+              <p className={`hud-eyebrow ${isBirthday ? 'is-birthday' : ''}`}>
+                {isBirthday ? '🎂 생일 축하해요!' : '우리 함께한 지'}
+              </p>
               <p className="hud-dday">D+{days}<span>일째</span></p>
             </div>
             <div className="hud-bottom">

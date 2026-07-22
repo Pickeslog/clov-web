@@ -992,7 +992,8 @@ function MemoryReceipt({ planId, plan }) {
 }
 
 // ── 추억 상세 시트 — 보기=여권(CLOV MEMORY PASSPORT), 수정=컬럼 폼(프로토타입 renderMemoryDetailModal) ──
-function MemoryDetailModal({
+// 우정공간(대시보드) 증거 카드에서도 재사용 → export(presentational). 데이터/뮤테이션은 호출 측이 공급.
+export function MemoryDetailModal({
   memory,
   isLoading,
   currentUserId,

@@ -4,7 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './dashboard.proto.css'
 import { getRoom, getRoomLevel, getRoomMembers, updateStatusMessage, updateRoom, presignRoomCover } from '../../../api/room'
 import { createPlan, getPlans } from '../../../api/plan'
-import { getMemories } from '../../../api/memory'
+import {
+  getMemories, getMemory, getComments, updateMemory, deleteMemory,
+  createComment, deleteComment, presignMemoryImage, commitMemoryImage,
+  deleteMemoryImage, reorderMemoryImages,
+} from '../../../api/memory'
 import { getMe } from '../../../api/user'
 import { uploadImage } from '../../../lib/uploadImage'
 import { useCreateMemory } from '../../../hooks/useCreateMemory'
@@ -15,7 +19,7 @@ import Button from '../../../components/Button/Button'
 // 우정공간에서 작성 모달을 인라인으로 띄우기 위해 각 화면의 모달을 재사용.
 import { ScheduleEditorModal } from '../../schedule/Schedule/Schedule'
 import { SCHEDULE_LIGHT_PALETTE } from '../../schedule/Schedule/palette'
-import { CreateMemoryModal } from '../../feed/Feed/Feed'
+import { CreateMemoryModal, MemoryDetailModal } from '../../feed/Feed/Feed'
 
 // 우정 성장 티어(프로토타입 desktop.js 정본). 레벨은 111×7=777 → 7티어로 묶음.
 const TIERS = [
@@ -145,6 +149,8 @@ export default function Dashboard() {
   // 우정공간에서 바로 여는 작성 모달(일정계획 새 D-day / 추억 글쓰기).
   const [composeSchedule, setComposeSchedule] = useState(false)
   const [composeMemory, setComposeMemory] = useState(false)
+  // 증거 카드에서 바로 여는 추억 상세(피드와 동일한 여권 모달).
+  const [selectedMemoryId, setSelectedMemoryId] = useState(null)
 
   const createPlanMutation = useMutation({
     mutationFn: (payload) => createPlan(roomId, payload),
@@ -385,7 +391,7 @@ export default function Dashboard() {
         {memoryItems.length === 0 ? (
           <div className="memory-empty">아직 추억이 없어요. 피드에서 첫 추억을 남겨보세요.</div>
         ) : (
-          <EvidenceViewer memories={memoryItems} onOpen={() => go('feed')} />
+          <EvidenceViewer memories={memoryItems} onOpen={(id) => setSelectedMemoryId(id)} />
         )}
       </div>
 
@@ -455,7 +461,66 @@ export default function Dashboard() {
         />
       </div>
     )}
+    {selectedMemoryId && (
+      <div className="proto-feed" style={{ minHeight: 0 }}>
+        <DashboardMemoryDetail
+          memoryId={selectedMemoryId}
+          roomId={roomId}
+          currentUserId={currentUserId}
+          onClose={() => setSelectedMemoryId(null)}
+        />
+      </div>
+    )}
     </>
+  )
+}
+
+// 우정공간 증거 카드에서 여는 추억 상세 — 피드의 여권 상세 모달(MemoryDetailModal)을
+// 그대로 재사용하고, 데이터/뮤테이션만 여기서 공급한다(피드 상세 로직의 대시보드용 컨테이너).
+function DashboardMemoryDetail({ memoryId, roomId, currentUserId, onClose }) {
+  const queryClient = useQueryClient()
+  const detail = useQuery({ queryKey: ['memory', memoryId], queryFn: () => getMemory(memoryId), enabled: Boolean(memoryId) })
+  const comments = useQuery({ queryKey: ['memory', memoryId, 'comments'], queryFn: () => getComments(memoryId), enabled: Boolean(memoryId) })
+
+  const invalidateFeed = () => queryClient.invalidateQueries({ queryKey: ['memories', roomId] })
+  const invalidateMemory = () => queryClient.invalidateQueries({ queryKey: ['memory', memoryId] })
+  const invalidateBoth = () => { invalidateMemory(); invalidateFeed() }
+
+  const updateMutation = useMutation({ mutationFn: (payload) => updateMemory(memoryId, payload), onSuccess: invalidateBoth })
+  const deleteMutation = useMutation({ mutationFn: () => deleteMemory(memoryId), onSuccess: () => { invalidateFeed(); onClose() } })
+  const addCommentMutation = useMutation({ mutationFn: (content) => createComment(memoryId, { content }), onSuccess: invalidateBoth })
+  const deleteCommentMutation = useMutation({ mutationFn: (commentId) => deleteComment(commentId), onSuccess: invalidateBoth })
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file) => {
+      const imageUrl = await uploadImage((base) => presignMemoryImage(memoryId, base), file)
+      return commitMemoryImage(memoryId, { imageUrl })
+    },
+    onSuccess: invalidateBoth,
+  })
+  const deleteImageMutation = useMutation({ mutationFn: (imageId) => deleteMemoryImage(imageId), onSuccess: invalidateBoth })
+  const reorderImageMutation = useMutation({ mutationFn: (imageIds) => reorderMemoryImages(memoryId, { imageIds }), onSuccess: invalidateMemory })
+
+  return (
+    <MemoryDetailModal
+      memory={detail.data}
+      isLoading={detail.isPending}
+      currentUserId={currentUserId}
+      onClose={onClose}
+      onSave={(payload) => updateMutation.mutate(payload)}
+      onDelete={() => deleteMutation.mutate()}
+      saving={updateMutation.isPending}
+      deleting={deleteMutation.isPending}
+      comments={comments.data?.items ?? []}
+      commentsLoading={comments.isPending}
+      onAddComment={(content) => addCommentMutation.mutate(content)}
+      addingComment={addCommentMutation.isPending}
+      onDeleteComment={(commentId) => deleteCommentMutation.mutate(commentId)}
+      onUploadImage={(file) => uploadImageMutation.mutate(file)}
+      uploadingImage={uploadImageMutation.isPending}
+      uploadImageError={uploadImageMutation.error?.message}
+      onDeleteImage={(imageId) => deleteImageMutation.mutate(imageId)}
+      onReorderImages={(imageIds) => reorderImageMutation.mutate(imageIds)}
+    />
   )
 }
 
@@ -628,7 +693,7 @@ function EvidenceViewer({ memories, onOpen }) {
                   onClick={isActive ? undefined : () => setIndex(clamp(i))}
                 >
                   <Clothespin />
-                  <ClinePolaroid memory={memories[i]} isActive={isActive} onOpen={isActive ? () => onOpen(i) : undefined} />
+                  <ClinePolaroid memory={memories[i]} isActive={isActive} onOpen={isActive ? () => onOpen(memories[i]?.id) : undefined} />
                 </div>
               )
             })}

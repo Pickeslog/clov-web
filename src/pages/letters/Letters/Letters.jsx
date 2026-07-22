@@ -5,6 +5,7 @@ import './letters.proto.css'
 import { getLetters, markRead, sendLetter, toggleFavorite } from '../../../api/letter'
 import { getRoomMembers } from '../../../api/room'
 import Header from '../../../components/Header/Header'
+import Button from '../../../components/Button/Button'
 
 const AVATAR_COLORS = ['#40916c', '#52b788', '#74c69d', '#95d5b2', '#2d6a4f']
 // 편지 화면 라이트 팔레트(인라인 CSS 변수) — <main>에 부여해 모든 하위가 상속.
@@ -34,7 +35,7 @@ const LETTER_TEXTAREA_STYLE = {
   padding: '14px 16px',
   background: '#ffffff',
   color: '#2c3e35',
-  border: '1px solid #e2e8e4',
+  border: '1px solid #d8ebd2',
   borderRadius: '8px',
   fontSize: '13px',
   lineHeight: 1.7,
@@ -352,8 +353,8 @@ function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, se
       </div>
       {message && <p className="letter-error" role="alert" style={{ color: '#d90429', fontSize: '12px', marginTop: '8px' }}>{message}</p>}
       <div className="modal-buttons letter-write-buttons">
-        <button className="btn-sub" type="button" onClick={onCancel}>취소</button>
-        <button className="btn-main" type="button" disabled={sending} onClick={onSend}>{sending ? '발송 중…' : '편지 발송!'}</button>
+        <Button variant="secondary" size="md" onClick={onCancel}>취소</Button>
+        <Button variant="primary" size="md" disabled={sending} onClick={onSend}>{sending ? '발송 중…' : '편지 발송!'}</Button>
       </div>
     </section>
   )

@@ -580,6 +580,9 @@ function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, onSubmit
                     value={planDate}
                     min={today}
                     onChange={(e) => setPlanDate(e.target.value)}
+                    // 투명 date 입력은 텍스트 클릭만으론 피커가 안 열림(달력 아이콘만) →
+                    // 클릭 시 showPicker()로 강제로 연다(미지원/비제스처 시 무시).
+                    onClick={(e) => { try { e.currentTarget.showPicker?.() } catch { /* 미지원/비제스처 */ } }}
                     aria-label="약속 날짜"
                   />
                 </span>

@@ -1,0 +1,472 @@
+/* =====================================================================
+   Feed — 프로토타입(04-feed/feed.html + 02-main/css/desktop.css) 그대로 이식.
+   styled-components 재번역 대신 프로토타입의 실제 규칙을 .proto-feed 스코프
+   아래로 복사한다. 값(px·색)은 원본과 동일.
+   앱 기본 = 다크 → 베이스에 다크 팔레트 + 프로토타입 다크 처리(폴라로이드=크림 종이)를
+   직접 적용. 라이트는 body.light-mode .proto-feed 로 덧입힌다.
+   폴라로이드 카드 내부 텍스트는 두 테마 모두 어두운 잉크(크림 종이 위) — 의도된 디자인.
+   페이지는 투명 — 배경은 index.css의 body(글로벌 --clov-app-bg 우드&클로버)가 담당.
+   ===================================================================== */
+.proto-feed {
+  /* 다크 팔레트(앱 기본) — desktop.css body.dark-mode 값 */
+  --primary-green: #5a7a3e;
+  --accent-green: #9ccc65;
+  --card-bg: #1e2016;
+  --bg-light: #191a12;
+  --text-color: #eef0e2;
+  --text-muted: #b7c99a;
+  --border-color: #2a2c1e;
+  --nav-item-bg-active: #2b3020;
+  --input-bg: #191a12;
+  --button-text: #12150a;
+
+  min-height: 100vh;
+  color: var(--text-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  text-align: left;
+  background: transparent;
+}
+.proto-feed *,
+.proto-feed *::before,
+.proto-feed *::after { box-sizing: border-box; }
+
+/* ===== 페이지 컨테이너 (feed.html) ===== */
+.proto-feed .feed-page { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* 상단 바는 공통 <Header variant="room"> 컴포넌트로 대체. */
+
+/* ===== 피드 헤더 영역 (feed.html) ===== */
+.proto-feed .feed-hero {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+}
+.proto-feed .feed-title { font-size: 20px; font-weight: 800; color: var(--accent-green); }
+.proto-feed .feed-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+.proto-feed .feed-hero-meta { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.proto-feed .feed-month-summary {
+  font-size: 13px; color: var(--text-muted); font-weight: 600;
+  background: var(--nav-item-bg-active); padding: 5px 12px; border-radius: 20px;
+  white-space: nowrap;
+}
+/* 글쓰기 버튼은 공통 <Button variant="action">. */
+
+/* ===== 피드 컨트롤 (월 선택 + 필터 탭) ===== */
+.proto-feed .feed-controls {
+  display: flex; justify-content: flex-end; align-items: center;
+  gap: 12px; margin-bottom: 16px;
+}
+/* 월 선택 팝오버는 트리거 기준으로 붙인다(프로토타입은 JS fixed 좌표, 여기선 absolute) */
+.proto-feed .month-picker-wrap { position: relative; }
+.proto-feed .month-picker-trigger {
+  width: 40px; height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 16px;
+  background: rgba(255, 255, 255, 0.86); color: #1b4332;
+  font-size: 17px; cursor: pointer; display: grid; place-items: center;
+  box-shadow: 0 10px 22px rgba(8, 28, 22, 0.14);
+  backdrop-filter: blur(12px);
+  transition: transform .2s ease, background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.proto-feed .month-picker-trigger:hover,
+.proto-feed .month-picker-trigger.active {
+  transform: translateY(-1px);
+  background: #e8f3ed; color: #1b4332;
+  border-color: rgba(82, 183, 136, 0.7);
+  box-shadow: 0 14px 28px rgba(8, 28, 22, 0.2);
+}
+
+.proto-feed .month-picker-popover {
+  position: absolute; top: calc(100% + 10px); right: 0;
+  width: min(320px, calc(100vw - 32px));
+  padding: 14px; border-radius: 26px;
+  background: rgba(247, 252, 249, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(22px) saturate(1.18);
+  z-index: 260;
+}
+.proto-feed .month-picker-header {
+  display: grid; grid-template-columns: 38px 1fr 38px;
+  align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.proto-feed .month-picker-year { color: #173f2e; font-size: 16px; font-weight: 900; text-align: center; }
+.proto-feed .month-picker-nav {
+  width: 38px; height: 34px; border: 0; border-radius: 14px;
+  background: rgba(232, 243, 237, 0.9); color: #1b4332;
+  font-size: 18px; font-weight: 900; cursor: pointer;
+  transition: transform .18s ease, background-color .18s ease;
+}
+.proto-feed .month-picker-nav:hover { transform: scale(1.04); background: rgba(210, 239, 224, 0.96); }
+.proto-feed .month-picker-all-btn {
+  width: 100%; min-height: 40px; margin-bottom: 10px;
+  border: 1px solid rgba(82, 183, 136, 0.18); border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72); color: #24473a;
+  cursor: pointer; font-weight: 900; font-size: 13px;
+  transition: transform .18s ease, background-color .18s ease, border-color .18s ease, color .18s ease;
+}
+.proto-feed .month-picker-all-btn:hover {
+  transform: translateY(-1px); border-color: rgba(82, 183, 136, 0.44); background: rgba(232, 243, 237, 0.92);
+}
+.proto-feed .month-picker-all-btn.active {
+  background: #1b4332; color: #fff; border-color: #52b788;
+  box-shadow: 0 10px 22px rgba(27, 67, 50, 0.22);
+}
+.proto-feed .month-picker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.proto-feed .month-picker-month {
+  min-height: 58px; border: 1px solid rgba(82, 183, 136, 0.18); border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72); color: #24473a; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; font-weight: 900; font-family: inherit;
+  transition: transform .18s ease, background-color .18s ease, border-color .18s ease, color .18s ease;
+}
+.proto-feed .month-picker-month span { font-size: 10px; color: #6c8175; font-weight: 800; }
+.proto-feed .month-picker-month:hover {
+  transform: translateY(-1px); border-color: rgba(82, 183, 136, 0.44); background: rgba(232, 243, 237, 0.92);
+}
+.proto-feed .month-picker-month.active {
+  background: #1b4332; color: #fff; border-color: #52b788;
+  box-shadow: 0 10px 22px rgba(27, 67, 50, 0.22);
+}
+.proto-feed .month-picker-month.active span { color: rgba(255, 255, 255, 0.78); }
+.proto-feed .month-picker-month.empty { opacity: 0.62; }
+
+/* 필터 탭 (전체/내 기록/친구 기록) */
+.proto-feed .feed-filter-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.proto-feed .feed-tab {
+  font-size: 12px; font-weight: 800; padding: 8px 14px; border-radius: 20px;
+  border: 1px solid rgba(82, 183, 136, 0.28); background: rgba(255, 255, 255, 0.9);
+  color: #1b4332; cursor: pointer; white-space: nowrap; font-family: inherit;
+  transition: background-color .3s ease, color .3s ease, border-color .3s ease, transform .2s ease;
+}
+.proto-feed .feed-tab:hover { transform: translateY(-1px); }
+.proto-feed .feed-tab.active { background: #1b4332; color: #fff; border-color: #1b4332; }
+
+/* ===== 피드 그리드 ===== */
+.proto-feed .feed-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px 28px; max-width: 980px; margin: 0 auto;
+}
+.proto-feed .feed-grid > .memory-card:nth-child(even) .polaroid-card { transform: rotate(1.2deg); }
+.proto-feed .feed-grid > .memory-card:nth-child(even) .polaroid-card:hover { transform: rotate(0deg) scale(1.015); }
+
+.proto-feed .feed-empty-state {
+  grid-column: 1 / -1; padding: 44px 18px; border-radius: 24px; text-align: center;
+  color: var(--text-muted); background: rgba(255, 255, 255, 0.06);
+  border: 1px dashed var(--border-color); font-size: 13px; font-weight: 700; line-height: 1.6;
+}
+.proto-feed .feed-state { padding: 28px 8px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+/* ===== 폴라로이드 추억 카드 (크림 종이 — 두 테마 공통) ===== */
+.proto-feed .memory-card { margin-bottom: 24px; transition: transform .3s ease, box-shadow .3s ease; }
+.proto-feed .polaroid-card {
+  background: #f7f9f7; padding: 10px 10px 52px; border-radius: 3px; color: #24382f;
+  box-shadow: 0 2px 4px rgba(0,0,0,.22), 0 12px 34px rgba(0,0,0,.36), 0 26px 64px rgba(0,0,0,.20);
+  transform: rotate(-1.5deg); transform-origin: center bottom;
+}
+.proto-feed .polaroid-card:hover {
+  transform: rotate(0deg) scale(1.015);
+  box-shadow: 0 4px 8px rgba(0,0,0,.24), 0 16px 44px rgba(8,28,22,.28), 0 30px 70px rgba(8,28,22,.16);
+}
+.proto-feed .polaroid-photo {
+  position: relative; width: 100%; height: 172px; overflow: hidden;
+  background-color: #eef4f0; background-size: cover; background-position: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; color: #61766a; font-size: 13px; text-align: center; cursor: pointer;
+}
+.proto-feed .polaroid-photo.is-empty {
+  background-image:
+    radial-gradient(circle at 50% 38%, rgba(82,183,136,.22), transparent 58%),
+    repeating-linear-gradient(135deg, rgba(82,183,136,.08) 0px, rgba(82,183,136,.08) 2px, transparent 2px, transparent 14px);
+  box-shadow: inset 0 0 0 1.5px rgba(82,183,136,.28);
+}
+.proto-feed .polaroid-zoom-hint {
+  position: absolute; right: 10px; bottom: 10px; padding: 4px 9px; border-radius: 999px;
+  background: rgba(0,0,0,.55); color: #fff; font-size: 10px; font-weight: 700; pointer-events: none;
+}
+.proto-feed .polaroid-photo-count {
+  position: absolute; right: 10px; top: 10px; padding: 4px 9px; border-radius: 999px;
+  background: rgba(0,0,0,.55); color: #fff; font-size: 10px; font-weight: 700; pointer-events: none;
+  display: inline-flex; align-items: center;
+}
+.proto-feed .author-badge {
+  position: absolute; top: 10px; left: 10px; padding: 5px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.92); color: #1b4332; font-size: 11px; font-weight: 800;
+  box-shadow: 0 3px 10px rgba(27,67,50,.14); backdrop-filter: blur(6px);
+}
+.proto-feed .polaroid-card.friend .author-badge { color: #9b3f28; }
+
+.proto-feed .memory-clover-placeholder {
+  width: 58px; height: 58px; display: grid; place-items: center; border-radius: 22px;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.95), transparent 34%),
+    linear-gradient(145deg, rgba(82,183,136,.95), rgba(27,67,50,.96));
+  color: #fff; font-size: 34px;
+  box-shadow: 0 14px 28px rgba(27,67,50,.18), inset 0 1px 0 rgba(255,255,255,.5);
+}
+.proto-feed .memory-image-text { font-size: 12.5px; font-weight: 600; color: #61766a; max-width: 220px; line-height: 1.4; }
+
+/* 참여자 칩 행 */
+.proto-feed .polaroid-presence-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.proto-feed .polaroid-presence-row .presence-tile {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1.5px solid rgba(82,183,136,.35); background: transparent; color: #24382f;
+}
+.proto-feed .polaroid-presence-row .presence-dot {
+  width: 100%; height: 100%; display: grid; place-items: center; border-radius: 50%;
+  background: #52b788; color: #fff; font-size: 11px; font-weight: 800; flex-shrink: 0;
+}
+.proto-feed .polaroid-presence-row .presence-tile.friend .presence-dot { background: #ff9f7f; }
+.proto-feed .polaroid-presence-row .presence-tile.is-author .presence-dot { box-shadow: 0 0 0 2px #52b788; }
+.proto-feed .presence-more {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(232,243,237,.9); color: #61766a; font-size: 10px; font-weight: 800;
+}
+
+/* 폴라로이드 캡션 */
+.proto-feed .polaroid-caption { padding: 14px 6px 0; }
+.proto-feed .my-record-box {
+  background-color: rgba(248,251,249,.88); border: 1px solid rgba(216,235,226,.9);
+  border-radius: 14px; padding: 12px; margin-bottom: 12px; overflow: hidden;
+}
+.proto-feed .my-record-box.friend { background: #fff8f5; border-color: #ffe0d4; }
+.proto-feed .my-record-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px;
+}
+.proto-feed .my-record-title { font-size: 12px; font-weight: 700; color: #1b4332; min-width: 0; }
+.proto-feed .record-more-btn {
+  flex-shrink: 0; border: 0; background: rgba(232,243,237,.96); color: #1b4332;
+  font-size: 11px; font-weight: 800; line-height: 1; border-radius: 999px; padding: 7px 9px;
+  cursor: pointer; box-shadow: inset 0 0 0 1px rgba(82,183,136,.16); font-family: inherit;
+  transition: transform .2s ease, background-color .2s ease, box-shadow .2s ease;
+}
+.proto-feed .record-more-btn:hover {
+  transform: translateY(-1px); background: #d9f4e6;
+  box-shadow: inset 0 0 0 1px rgba(82,183,136,.32), 0 6px 14px rgba(45,106,79,.12);
+}
+.proto-feed .memory-title {
+  font-size: 15px; font-weight: 700; color: #24382f; margin-bottom: 10px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; text-overflow: ellipsis; word-break: break-all;
+}
+.proto-feed .my-record-text {
+  font-size: 13px; color: #24382f; line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.proto-feed .memory-footer-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.proto-feed .memory-tag {
+  font-size: 10px; font-weight: 800; padding: 5px 10px; border-radius: 20px;
+  background-color: rgba(232,243,237,.94); color: #1b4332; border: 1px solid rgba(82,183,136,.18);
+}
+.proto-feed .memory-tag.highlight { color: #1b4332; background: rgba(82,183,136,.16); }
+.proto-feed .memory-meta-row { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; }
+.proto-feed .memory-date { font-size: 11px; color: #61766a; }
+.proto-feed .memory-message-count { font-size: 11px; font-weight: 700; color: #61766a; flex-shrink: 0; display: inline-flex; align-items: center; margin-left: auto; }
+
+/* ===== 추억 상세 모달 ===== */
+.proto-feed .memory-detail-backdrop {
+  position: fixed; inset: 0; background: rgba(8,28,22,.42); backdrop-filter: blur(8px);
+  z-index: 240;
+}
+.proto-feed .memory-detail-sheet {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(720px, calc(100% - 32px)); max-height: min(86vh, 720px);
+  background: linear-gradient(180deg, #ffffff 0%, #f4faf7 100%);
+  border: 1px solid rgba(198,224,211,.95); border-radius: 20px;
+  box-shadow: 0 30px 70px rgba(8,28,22,.32); padding: 20px 24px 24px;
+  z-index: 241; overflow-y: auto;
+}
+.proto-feed .memory-detail-head {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+  padding-bottom: 12px; border-bottom: 1px solid rgba(216,235,226,.9);
+}
+.proto-feed .memory-detail-kicker {
+  display: inline-flex; align-items: center; width: fit-content; border-radius: 999px;
+  padding: 6px 10px; background: #e8f3ed; color: #1b4332; font-size: 12px; font-weight: 800; margin-bottom: 8px;
+}
+.proto-feed .memory-detail-date { color: #607568; font-size: 12px; font-weight: 700; }
+.proto-feed .memory-detail-close {
+  width: 34px; height: 34px; border: 0; border-radius: 50%;
+  background: rgba(232,243,237,.96); color: #1b4332; font-size: 18px; cursor: pointer; flex-shrink: 0;
+  transition: transform .2s ease, background-color .2s ease;
+}
+.proto-feed .memory-detail-close:hover { transform: rotate(8deg) scale(1.04); background: #d9f4e6; }
+
+.proto-feed .memory-detail-columns { display: flex; gap: 20px; margin-top: 16px; }
+.proto-feed .memory-detail-photo-col { flex: 0 0 240px; }
+.proto-feed .memory-detail-photo { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 14px; display: block; }
+.proto-feed .memory-detail-photo--empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; text-align: center; background-color: #eef4f0;
+  background-image:
+    radial-gradient(circle at 50% 38%, rgba(82,183,136,.22), transparent 58%),
+    repeating-linear-gradient(135deg, rgba(82,183,136,.08) 0px, rgba(82,183,136,.08) 2px, transparent 2px, transparent 14px);
+  box-shadow: inset 0 0 0 1.5px rgba(82,183,136,.28);
+}
+.proto-feed .memory-detail-photo--empty .memory-image-text { color: #4c5f54; }
+.proto-feed .memory-detail-photo-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.proto-feed .memory-detail-photo-thumb {
+  position: relative; width: 42px; height: 42px; padding: 0; border-radius: 8px;
+  border: 2px solid transparent; overflow: hidden; cursor: pointer; opacity: .6;
+  transition: opacity .15s ease, border-color .15s ease;
+}
+.proto-feed .memory-detail-photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.proto-feed .memory-detail-photo-thumb:hover { opacity: .85; }
+.proto-feed .memory-detail-photo-thumb.is-active { opacity: 1; border-color: #52b788; }
+
+/* 사진 관리(작성자) */
+.proto-feed .memory-edit-photo-controls { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.proto-feed .memory-edit-photo-add {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 8px 12px; border: 1.5px dashed rgba(198,224,211,.92); border-radius: 10px;
+  background: #f7faf8; color: #6d8075; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.proto-feed .memory-edit-photo-add:hover { border-color: #52b788; color: #1b4332; }
+.proto-feed .memory-photo-mini-btn {
+  border: none; background: rgba(232,243,237,.96); color: #1b4332;
+  font-size: 12px; font-weight: 800; border-radius: 8px; padding: 7px 9px; cursor: pointer; font-family: inherit;
+}
+.proto-feed .memory-photo-mini-btn:disabled { opacity: .4; cursor: default; }
+.proto-feed .memory-photo-mini-btn.danger { color: #b23b3b; }
+
+.proto-feed .memory-detail-text-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.proto-feed .memory-detail-title-lg { color: #1f332a; font-size: 20px; line-height: 1.35; font-weight: 900; }
+.proto-feed .memory-detail-body-text {
+  overflow-y: auto; max-height: 220px; color: #24382f; font-size: 14px; line-height: 1.72;
+  white-space: pre-wrap; word-break: break-word;
+}
+.proto-feed .memory-detail-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+.proto-feed .memory-detail-tags .memory-tag { font-size: 11px; }
+
+/* 작성자 수정 폼 */
+.proto-feed .memory-detail-edit-form { display: flex; flex-direction: column; gap: 10px; }
+.proto-feed .memory-detail-edit-title-input,
+.proto-feed .memory-detail-edit-body-input {
+  width: 100%; border: 1px solid rgba(198,224,211,.92); border-radius: 10px;
+  background: #fff; color: #24382f; font-family: inherit; padding: 10px 12px;
+}
+.proto-feed .memory-detail-edit-title-input { font-size: 15px; font-weight: 700; }
+.proto-feed .memory-detail-edit-body-input { font-size: 14px; line-height: 1.6; min-height: 120px; resize: vertical; }
+.proto-feed .memory-detail-edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* 댓글(친구 한 줄 메시지) */
+.proto-feed .memory-detail-messages { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(216,235,226,.9); }
+.proto-feed .memory-detail-messages-title { font-size: 13px; font-weight: 800; color: #607568; margin-bottom: 10px; }
+.proto-feed .memory-message-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; }
+.proto-feed .memory-message-avatar {
+  width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  background: #52b788; color: #fff; font-size: 11px; font-weight: 800; flex-shrink: 0;
+}
+.proto-feed .memory-message-name { font-size: 12px; font-weight: 700; color: #24382f; flex-shrink: 0; min-width: 32px; }
+.proto-feed .memory-message-text { flex: 1; font-size: 13px; color: #24382f; }
+.proto-feed .memory-message-empty-text { flex: 1; font-size: 12px; font-style: italic; color: #607568; }
+.proto-feed .memory-message-delete-btn {
+  border: none; background: transparent; font-size: 11px; font-weight: 700; color: #607568;
+  cursor: pointer; padding: 4px 6px; font-family: inherit;
+}
+.proto-feed .memory-message-delete-btn:hover { color: #b23b3b; }
+.proto-feed .memory-message-compose {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px;
+}
+.proto-feed .memory-message-compose-input {
+  flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(198,224,211,.92);
+  background: #fff; color: #24382f; font-size: 13px; font-family: inherit;
+}
+
+/* 액션 바 */
+.proto-feed .memory-detail-actions {
+  display: flex; gap: 8px; margin-top: 18px; padding-top: 14px;
+  border-top: 1px solid rgba(216,235,226,.9);
+}
+.proto-feed .memory-detail-actions .spacer { flex: 1; }
+/* 상세/삭제 버튼은 공통 <Button variant="secondary|primary|danger">. */
+
+@media (max-width: 640px) {
+  .proto-feed .memory-detail-columns { flex-direction: column; }
+  .proto-feed .memory-detail-photo-col { flex-basis: auto; }
+}
+
+/* ===== 글쓰기 모달 (feed.html wm-*) ===== */
+.proto-feed .write-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9500;
+  display: flex; align-items: center; justify-content: center;
+}
+.proto-feed .write-modal {
+  background: #fff; border-radius: 20px; width: min(480px, calc(100vw - 32px));
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,.28); color: #24382f;
+}
+.proto-feed .wm-head { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px 0; }
+.proto-feed .wm-head h2 { font-size: 17px; font-weight: 800; color: #1b4332; margin: 0; }
+.proto-feed .wm-close {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: #f1f5f2; color: #61766a; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-family: inherit;
+}
+.proto-feed .wm-close:hover { background: #e8f3ed; color: #1b4332; }
+.proto-feed .wm-body { padding: 18px 24px 26px; display: flex; flex-direction: column; gap: 18px; }
+.proto-feed .wm-field { display: flex; flex-direction: column; gap: 7px; }
+.proto-feed .wm-label { font-size: 11px; font-weight: 700; color: #61766a; letter-spacing: .5px; text-transform: uppercase; }
+.proto-feed .wm-title-wrap { position: relative; }
+.proto-feed .wm-input {
+  width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #e2e8e4;
+  background: #fff; color: #24382f; font-size: 14px; font-family: inherit; resize: none;
+  transition: border-color .15s;
+}
+.proto-feed .wm-input:focus { outline: none; border-color: #52b788; }
+.proto-feed .wm-title-wrap .wm-input { padding-right: 52px; }
+.proto-feed .wm-char-count {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  font-size: 11px; color: #61766a; pointer-events: none;
+}
+.proto-feed .wm-photo-strip { display: flex; flex-wrap: wrap; gap: 8px; }
+.proto-feed .wm-photo-thumb { position: relative; width: 72px; height: 72px; border-radius: 12px; overflow: hidden; }
+.proto-feed .wm-photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.proto-feed .wm-img-remove {
+  position: absolute; top: 4px; right: 4px; z-index: 2; background: rgba(0,0,0,.6); color: #fff;
+  border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.proto-feed .wm-photo-add {
+  width: 72px; height: 72px; border-radius: 12px; border: 2px dashed #e2e8e4; background: #f7faf8; color: #61766a;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: border-color .15s, background .15s;
+}
+.proto-feed .wm-photo-add:hover { border-color: #52b788; background: #e8f3ed; }
+.proto-feed .wm-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.proto-feed .wm-chip {
+  display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 20px;
+  border: 1.5px solid #e2e8e4; background: #fff; cursor: pointer; font-size: 13px; color: #61766a;
+  user-select: none; font-family: inherit; transition: all .15s;
+}
+.proto-feed .wm-chip.on { border-color: #1b4332; background: #e8f3ed; color: #1b4332; font-weight: 700; }
+.proto-feed .wm-chip-av {
+  width: 22px; height: 22px; border-radius: 50%; background: #e2e8e4; color: #61766a;
+  font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+.proto-feed .wm-chip.on .wm-chip-av { background: #1b4332; color: #fff; }
+/* 기록 남기기 버튼은 공통 <Button variant="primary" size="lg">. */
+.proto-feed .wm-error { color: #d15b5b; font-size: 12px; font-weight: 600; }
+
+/* =====================================================================
+   라이트 모드 — 기본(다크)에 body.light-mode로 라이트 팔레트 덧입힘.
+   폴라로이드/모달은 이미 밝은 종이라 그대로 두고, 페이지 크롬 텍스트만 조정.
+   ===================================================================== */
+body.light-mode .proto-feed {
+  --primary-green: #1b4332;
+  --accent-green: #52b788;
+  --card-bg: #ffffff;
+  --bg-light: #fbf7ef;
+  --text-color: #2c3e35;
+  --text-muted: #61766a;
+  --border-color: #eadfd0;
+  --nav-item-bg-active: #edf4ec;
+  --input-bg: #ffffff;
+  --button-text: #ffffff;
+}
+body.light-mode .proto-feed .feed-title { color: #1b4332; }
+body.light-mode .proto-feed .polaroid-card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 4px rgba(0,0,0,.10), 0 10px 30px rgba(8,28,22,.18), 0 24px 60px rgba(8,28,22,.10);
+}
+body.light-mode .proto-feed .feed-empty-state { color: var(--text-muted); background: rgba(0,0,0,.03); border-color: var(--border-color); }

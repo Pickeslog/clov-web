@@ -16,6 +16,9 @@ export const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <Signup /> },
   { path: '/oauth2/redirect', element: <OAuthRedirect /> },
+  // 초대 딥링크: 코드가 경로에 담긴 공유 링크(/join/CLV-JOIN-XXXXXX).
+  // 로그인 안 된 친구도 랜딩할 수 있게 보호 라우트 밖에 둔다(JoinRoom이 인증 상태를 직접 처리).
+  { path: '/join/:code', element: <JoinRoom /> },
   {
     element: <ProtectedRoute />,
     children: [

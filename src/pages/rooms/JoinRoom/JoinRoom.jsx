@@ -1,8 +1,10 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import * as S from './JoinRoom.style'
 import { requestJoin } from '../../../api/invite'
+import { useAuthStore } from '../../../stores/authStore'
+import { setPendingJoin } from '../../../lib/pendingJoin'
 
 const describeError = (error) => {
   switch (error.code) {
@@ -18,15 +20,31 @@ const describeError = (error) => {
 }
 
 // 초대 코드로 가입을 "신청"하는 화면(계약 §7) — 신청 즉시 입장이 아니라 PENDING 생성.
+// 진입 경로 2가지:
+//  - /join/:code (공유 링크) → 로그인돼 있으면 자동 원탭 신청, 아니면 코드 기억 후 로그인 유도.
+//  - /join       (수동 입력, 보호 라우트) → 코드를 직접 입력해 신청.
 export default function JoinRoom() {
-  const [inviteCode, setInviteCode] = useState('')
+  const { code: codeParam } = useParams()
+  const linkCode = codeParam ? codeParam.trim().toUpperCase() : ''
+  const accessToken = useAuthStore((state) => state.accessToken)
+
+  const [inviteCode, setInviteCode] = useState(linkCode)
   const [message, setMessage] = useState('')
+  const autoFired = useRef(false)
 
   const { mutate, isPending, isSuccess } = useMutation({
-    mutationFn: () => requestJoin({ inviteCode: inviteCode.trim().toUpperCase() }),
+    mutationFn: (value) => requestJoin({ inviteCode: (value ?? inviteCode).trim().toUpperCase() }),
     onSuccess: () => setMessage(''),
     onError: (error) => setMessage(describeError(error)),
   })
+
+  // 링크로 들어온 경우: 로그인돼 있으면 즉시 1회 자동 신청("탭 한 번"), 아니면 코드를 기억해 둔다.
+  useEffect(() => {
+    if (!linkCode || autoFired.current) return
+    autoFired.current = true
+    if (accessToken) mutate(linkCode)
+    else setPendingJoin(linkCode)
+  }, [linkCode, accessToken, mutate])
 
   const handleSubmit = () => {
     setMessage('')
@@ -35,6 +53,49 @@ export default function JoinRoom() {
       return
     }
     mutate()
+  }
+
+  // 미로그인 상태로 초대 링크를 탄 친구 = 초대 랜딩(로그인/가입 유도).
+  if (linkCode && !accessToken) {
+    return (
+      <S.Page>
+        <S.TopBar>
+          <Link to="/" style={{ textDecoration: 'none' }}>
+            <S.Brand>Clov.</S.Brand>
+          </Link>
+        </S.TopBar>
+        <S.Body>
+          <S.Card>
+            <S.Title>우정공간에 초대받았어요</S.Title>
+            <S.Desc>로그인하면 이 초대 코드로 바로 가입 신청이 접수돼요.</S.Desc>
+            <div
+              style={{
+                padding: '14px 16px',
+                border: '1px dashed var(--mint)',
+                borderRadius: 14,
+                background: 'var(--glow)',
+                color: 'var(--forest)',
+                fontWeight: 900,
+                letterSpacing: '0.06em',
+                textAlign: 'center',
+              }}
+            >
+              {linkCode}
+            </div>
+            <S.SubmitBtn
+              as={Link}
+              to="/login"
+              style={{ display: 'grid', placeItems: 'center', textDecoration: 'none' }}
+            >
+              로그인하고 참여하기
+            </S.SubmitBtn>
+            <S.BackLink as={Link} to="/signup">
+              아직 계정이 없다면 회원가입
+            </S.BackLink>
+          </S.Card>
+        </S.Body>
+      </S.Page>
+    )
   }
 
   return (
@@ -59,6 +120,8 @@ export default function JoinRoom() {
                 </S.BackLink>
               </div>
             </S.SuccessBox>
+          ) : linkCode && isPending ? (
+            <S.SuccessBox>초대 코드 {linkCode} 로 가입 신청하는 중…</S.SuccessBox>
           ) : (
             <>
               <S.Field>

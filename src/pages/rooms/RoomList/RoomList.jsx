@@ -6,6 +6,7 @@ import { getRooms, createRoom, toggleRoomFavorite, leaveRoom } from '../../../ap
 import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/invite'
 import Header from '../../../components/Header/Header'
 import RoomPreviewModal from './RoomPreviewModal'
+import { takePendingJoin } from '../../../lib/pendingJoin'
 
 const DAY = 86400000
 const PAGE_SIZE = 9
@@ -79,6 +80,13 @@ const Icon = ({ name, style }) => <i className={`ti ${name}`} style={style} aria
 export default function RoomList() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+
+  // 로그인 안 된 채 초대 링크(/join/:code)를 탔던 친구 → 로그인 후 홈에 처음 도달하면
+  // 기억해 둔 코드로 되돌려보낸다(1회용). 어떤 로그인 경로(비번·소셜)든 여기를 거친다.
+  useEffect(() => {
+    const pending = takePendingJoin()
+    if (pending) navigate(`/join/${pending}`, { replace: true })
+  }, [navigate])
 
   const [createOpen, setCreateOpen] = useState(false)
   const [previewId, setPreviewId] = useState(null)

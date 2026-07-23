@@ -16,6 +16,9 @@
   --active-bg: #2b3020;
   --danger: #f87171;
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  /* 네이티브 위젯(생년월일 date 피커 등)이 OS(prefers-color-scheme)가 아니라
+     앱 테마를 따르게 고정 — 기본 다크. (index.css의 color-scheme:light dark 무력화) */
+  color-scheme: dark;
 }
 .proto-settings *, .proto-settings *::before, .proto-settings *::after { box-sizing: border-box; }
 
@@ -182,6 +185,7 @@ body.light-mode .proto-settings {
   --active-bg: #e8f3ed;
   --danger: #d95f5f;
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  color-scheme: light; /* 라이트 앱에선 native date 피커도 라이트로(다크 OS여도 달력 아이콘 대비 확보) */
 }
 /* primary 버튼 텍스트 — 라이트에선 어두운 배경이라 흰색. */
 body.light-mode .proto-settings .ps-opt-btn.on,

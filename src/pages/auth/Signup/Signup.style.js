@@ -13,6 +13,21 @@ const fadeIn = keyframes`from { opacity: 0; } to { opacity: 1; }`
 const modalUp = keyframes`from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); }`
 
 export const Page = styled.main`
+  /* 가입은 프로토타입처럼 "항상 라이트 크림 종이" 화면.
+     전역 tokens.css의 @media(prefers-color-scheme:dark) 토큰 오버라이드와
+     index.css의 color-scheme:light dark(native input/select 다크화)를 이 서브트리에서 무력화한다. */
+  color-scheme: light;
+  --forest: #073b24;
+  --leaf: #16874b;
+  --mint: #50d990;
+  --cream: #f7fbf6;
+  --paper: #ffffff;
+  --text: #0e2d1d;
+  --muted: #638772;
+  --line: rgba(22, 135, 75, 0.18);
+  --glow: rgba(80, 217, 144, 0.22);
+  --warn: #b45309;
+
   font-family: 'Outfit', sans-serif;
   min-height: 100vh;
   display: flex;

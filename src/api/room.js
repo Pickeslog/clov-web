@@ -11,6 +11,8 @@ export const getRoom = (roomId) => api.get(`/rooms/${roomId}`)
 export const updateRoom = (roomId, payload) => api.patch(`/rooms/${roomId}`, payload)
 export const getRoomMembers = (roomId) => api.get(`/rooms/${roomId}/members`)
 export const getRoomLevel = (roomId) => api.get(`/rooms/${roomId}/level`)
+// 마스코트 교감(+2 XP). 하루 3회 초과 시 429 MASCOT_INTERACTION_LIMIT_REACHED(계약 §12).
+export const interactMascot = (roomId) => api.post(`/rooms/${roomId}/mascot/interact`)
 export const leaveRoom = (roomId) => api.delete(`/rooms/${roomId}/members/me`)
 export const toggleRoomFavorite = (roomId, isFavorite) =>
   api.patch(`/rooms/${roomId}/favorite`, { isFavorite })

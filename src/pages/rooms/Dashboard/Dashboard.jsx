@@ -15,6 +15,7 @@ import { currentUserIdFromToken } from '../../../lib/jwt'
 import { parseUtc, ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
+import Mascot from '../../../components/Mascot/Mascot'
 // 우정공간에서 작성 모달을 인라인으로 띄우기 위해 각 화면의 모달을 재사용.
 import { ScheduleEditorModal } from '../../schedule/Schedule/Schedule'
 import { SCHEDULE_LIGHT_PALETTE } from '../../schedule/Schedule/palette'
@@ -245,6 +246,7 @@ export default function Dashboard() {
     <>
     <div className="proto-dashboard">
       <Header variant="room" roomId={roomId} activeTab="space" />
+      <Mascot roomId={roomId} />
       <div className="dash-main">
         {/* 성장 배너 */}
         <div className="v5-scene" ref={sceneRef} data-season={sKey} data-level={levelNum} data-event={isBirthday ? 'my_birthday' : 'none'}>

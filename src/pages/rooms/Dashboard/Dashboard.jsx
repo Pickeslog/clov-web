@@ -126,6 +126,8 @@ const daysTogether = (createdAt) => {
   return Math.floor((Date.now() - created.getTime()) / DAY) + 1
 }
 const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
+// 뱃지 색상 구분: 3일 이내=urgent, 7일 이내=soon, 그 외=far. 값이 없으면(파싱 불가) far로 취급.
+const ddayUrgency = (n) => (n == null ? 'far' : n <= 3 ? 'urgent' : n <= 7 ? 'soon' : 'far')
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
 // 상태 메시지 가중 길이(한글 2, 그 외 1) — 프로토타입 "한글 20자 / 영어 40자".
 const weightedLen = (s) => [...(s || '')].reduce((n, ch) => n + (/[㄰-㆏가-힣]/.test(ch) ? 2 : 1), 0)
@@ -374,7 +376,7 @@ export default function Dashboard() {
 
         {/* 다가오는 D-day */}
         <div className="section-title">
-          <span>다가오는 D-day</span>
+          <span className="section-title-label">다가오는 D-day</span>
           <div className="section-actions">
             <Button variant="dashed" size="sm" onClick={() => setComposeSchedule(true)}>+ 새 D-day 만들기</Button>
           </div>
@@ -390,7 +392,7 @@ export default function Dashboard() {
                   <span className="schedule-title">{p.title}</span>
                   <span className="schedule-date">{p.planDate}</span>
                 </div>
-                <span className="schedule-dday-badge">{ddayLabel(ddayDiff(p.planDate))}</span>
+                <span className={`schedule-dday-badge is-${ddayUrgency(ddayDiff(p.planDate))}`}>{ddayLabel(ddayDiff(p.planDate))}</span>
               </div>
             ))}
           </div>
@@ -398,7 +400,7 @@ export default function Dashboard() {
 
         {/* 참여자별 추억 증거 카드 */}
         <div className="section-title">
-          <span>참여자별 추억 증거 카드</span>
+          <span className="section-title-label">참여자별 추억 증거 카드</span>
           <div className="section-actions">
             <Button variant="dashed" size="sm" onClick={() => setComposeMemory(true)}>✎ 글쓰기</Button>
             <Button variant="action" size="sm" onClick={() => go('feed')}>전체 피드 보기</Button>

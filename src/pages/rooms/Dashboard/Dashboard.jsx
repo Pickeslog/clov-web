@@ -73,12 +73,20 @@ function buildParticles(season) {
 const REC_SRC = { w: 970, h: 215 }
 const REC_POS = { x: 619, y: -14, size: 279 }
 
-// 오늘이 내 생일인가(getMe.birthdate의 월·일 일치). 멤버 목록엔 생일이 없어 본인 기준.
+// 오늘이 내 생일인가(getMe.birthdate, "YYYY-MM-DD" — 연도 포함).
 function isTodayBirthday(birthdate) {
   const m = String(birthdate || '').match(/^(\d{4})-(\d{2})-(\d{2})/)
   if (!m) return false
   const now = new Date()
   return Number(m[2]) === now.getMonth() + 1 && Number(m[3]) === now.getDate()
+}
+// 오늘이 방 멤버의 생일인가(RoomMember.birthMonthDay, "MM-DD" — 계약 §6, 연도 없음).
+// 서버는 UTC라 "오늘"을 못 주므로(KST 00~09시엔 서버 기준 어제) 월/일만 받아 브라우저 로컬 날짜로 판단한다.
+function isTodayMonthDay(monthDay) {
+  const m = String(monthDay || '').match(/^(\d{2})-(\d{2})$/)
+  if (!m) return false
+  const now = new Date()
+  return Number(m[1]) === now.getMonth() + 1 && Number(m[2]) === now.getDate()
 }
 // 생일 색종이(프로토타입 confetti 분기 이식).
 function buildConfetti() {
@@ -156,11 +164,19 @@ export default function Dashboard() {
   })
   const createMemoryMutation = useCreateMemory(roomId, { onSuccess: () => setComposeMemory(false) })
 
-  // 배너 데코 — 생일이면 색종이+풍선, 아니면 계절 파티클. + 레코드판 샤인.
+  // 배너 데코 — 본인 생일=색종이+풍선, 친구 생일=색종이만(풍선 없음), 그 외=계절 파티클. + 레코드판 샤인.
   const sKey = seasonKey(new Date().getMonth() + 1)
-  const isBirthday = isTodayBirthday(me.data?.birthdate)
-  const particles = useMemo(() => (isBirthday ? buildConfetti() : buildParticles(sKey)), [isBirthday, sKey])
-  const balloons = useMemo(() => (isBirthday ? buildBalloons() : []), [isBirthday])
+  const isMyBirthday = isTodayBirthday(me.data?.birthdate)
+  // GET /members는 LEFT 멤버도 함께 반환하므로(계약 §6), 나간 사람의 생일로 배너가 뜨지 않도록 ACTIVE만 본다.
+  // 본인도 멤버 목록에 포함되므로 명시적으로 제외 — 안 그러면 me 쿼리가 늦게 도착하는 순간
+  // 본인을 "친구"로 착각해 "{내 닉네임}님의 생일입니다!"가 잠깐 뜰 수 있다.
+  // 동시에 여러 명이면(드묾) 첫 번째 사람 이름으로만 표시 — 프로토타입도 friendName 단일 값이다.
+  const birthdayFriend = (members.data?.items ?? [])
+    .find((m) => m.status === 'ACTIVE' && String(m.userId) !== String(currentUserId) && isTodayMonthDay(m.birthMonthDay))
+  const isFriendBirthday = Boolean(birthdayFriend)
+  const anyBirthday = isMyBirthday || isFriendBirthday
+  const particles = useMemo(() => (anyBirthday ? buildConfetti() : buildParticles(sKey)), [anyBirthday, sKey])
+  const balloons = useMemo(() => (isMyBirthday ? buildBalloons() : []), [isMyBirthday])
   const [recStyle, setRecStyle] = useState(null)
   const sceneRef = useCallback((node) => {
     if (!node) return undefined
@@ -250,7 +266,7 @@ export default function Dashboard() {
       <Mascot roomId={roomId} />
       <div className="dash-main">
         {/* 성장 배너 */}
-        <div className="v5-scene" ref={sceneRef} data-season={sKey} data-level={levelNum} data-event={isBirthday ? 'my_birthday' : 'none'}>
+        <div className="v5-scene" ref={sceneRef} data-season={sKey} data-level={levelNum} data-event={isMyBirthday ? 'my_birthday' : isFriendBirthday ? 'friend_birthday' : 'none'}>
           <div className="scene-sky" style={{ backgroundImage: `url('/banners/lp-${sKey}.png')` }} />
           <div className="season-particles" aria-hidden="true">
             {particles.map((p, i) => (
@@ -271,8 +287,8 @@ export default function Dashboard() {
           )}
           <div className="banner-hud">
             <div>
-              <p className={`hud-eyebrow ${isBirthday ? 'is-birthday' : ''}`}>
-                {isBirthday ? '🎂 생일 축하해요!' : '우리 함께한 지'}
+              <p className={`hud-eyebrow ${anyBirthday ? 'is-birthday' : ''}`}>
+                {isMyBirthday ? '🎂 생일 축하해요!' : isFriendBirthday ? `🎉 ${birthdayFriend.nickname}님의 생일입니다!` : '우리 함께한 지'}
               </p>
               <p className="hud-dday">D+{days}<span>일째</span></p>
             </div>

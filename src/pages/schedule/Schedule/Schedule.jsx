@@ -32,6 +32,12 @@ const DENSITY = [
 ]
 
 // ── D-day 유틸(공통 lib/datetime의 ddayDiff 사용, #78/#80) ───────────
+// ddayDiff는 읽을 수 없는 날짜에 null을 준다. null >= 0 은 true라서 그냥 비교하면
+// 이상한 날짜가 "다가오는 약속"에 섞인다 → 아래 헬퍼로 명시적으로 걸러 쓴다.
+const isUpcoming = (dateStr) => {
+  const d = ddayDiff(dateStr)
+  return d !== null && d >= 0
+}
 function calculateDday(dateStr) {
   const d = ddayDiff(dateStr)
   if (d === null) return 'D-day'
@@ -100,7 +106,7 @@ export default function Schedule() {
   const closestId = (() => {
     if (items.length === 0) return null
     const future = items
-      .filter((p) => p.planDate && ddayDiff(p.planDate) >= 0)
+      .filter((p) => isUpcoming(p.planDate))
       .sort((a, b) => ddayDiff(a.planDate) - ddayDiff(b.planDate))
     return (future[0] ?? items[0]).id
   })()
@@ -160,7 +166,7 @@ export default function Schedule() {
   // 밀도 필터 + 정렬(가까운 순).
   const passesDensity = (p) => {
     if (density === 'proof') return doneCountOf(p.id) < 4
-    if (density === 'upcoming') return p.planDate && ddayDiff(p.planDate) >= 0
+    if (density === 'upcoming') return isUpcoming(p.planDate)
     if (density === 'done') return doneCountOf(p.id) === 4
     return true
   }
@@ -170,7 +176,7 @@ export default function Schedule() {
   const counts = {
     all: items.length,
     proof: items.filter((p) => doneCountOf(p.id) < 4).length,
-    upcoming: items.filter((p) => p.planDate && ddayDiff(p.planDate) >= 0).length,
+    upcoming: items.filter((p) => isUpcoming(p.planDate)).length,
     done: items.filter((p) => doneCountOf(p.id) === 4).length,
   }
 

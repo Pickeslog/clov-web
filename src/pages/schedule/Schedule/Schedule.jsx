@@ -13,6 +13,7 @@ import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import { ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
+import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
 import { SCHEDULE_LIGHT_PALETTE } from './palette'
 
 // 계약 §8: status/memoryStatus.
@@ -69,6 +70,7 @@ export default function Schedule() {
   const queryClient = useQueryClient()
   const accessToken = useAuthStore((state) => state.accessToken)
   const currentUserId = currentUserIdFromToken(accessToken)
+  const confirm = useConfirm()
 
   const [selectedPlanId, setSelectedPlanId] = useState(null)
   const [density, setDensity] = useState('all')
@@ -232,7 +234,7 @@ export default function Schedule() {
               currentUserId={currentUserId}
               busy={detailBusy}
               onEdit={() => selectedPlan && setEditing(selectedPlan)}
-              onDelete={() => { if (window.confirm('정말 이 약속을 삭제하시겠어요?')) deleteMutation.mutate() }}
+              onDelete={async () => { if (await confirm('정말 이 약속을 삭제하시겠어요?', { confirmText: '삭제', variant: 'danger' })) deleteMutation.mutate() }}
               onComplete={() => completeMutation.mutate()}
               onCancel={() => cancelMutation.mutate()}
               onSkip={() => skipMutation.mutate()}

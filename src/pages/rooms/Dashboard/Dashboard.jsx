@@ -12,6 +12,7 @@ import { useCreateMemory } from '../../../hooks/useCreateMemory'
 import { useMemoryDetail } from '../../../hooks/useMemoryDetail'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
+import { parseUtc, ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 // 우정공간에서 작성 모달을 인라인으로 띄우기 위해 각 화면의 모달을 재사용.
@@ -34,8 +35,6 @@ const tierFor = (level) => TIERS.find((t) => (level ?? 1) <= t.max) ?? TIERS[TIE
 const MINI_AV_COLORS = ['#1b4332', '#52b788', '#74c69d', '#95d5b2']
 
 const DAY = 86400000
-// 백엔드는 오프셋 없는 UTC(LocalDateTime)를 반환 → Z 붙여 파싱.
-const parseUtc = (value) => new Date(value.endsWith('Z') ? value : `${value}Z`)
 // 계절: 이미지 키 + 한글 라벨.
 const seasonKey = (month) => (month >= 3 && month <= 5 ? 'spring' : month >= 6 && month <= 8 ? 'summer' : month >= 9 && month <= 11 ? 'fall' : 'winter')
 const SEASON_LABEL = { spring: '봄', summer: '여름', fall: '가을', winter: '겨울' }
@@ -111,13 +110,10 @@ function buildBalloons() {
 }
 
 const daysTogether = (createdAt) => {
-  if (!createdAt) return 1
-  return Math.floor((Date.now() - parseUtc(createdAt).getTime()) / DAY) + 1
-}
-const ddayOf = (planDate) => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return Math.round((new Date(`${planDate}T00:00:00`).getTime() - today.getTime()) / DAY)
+  // parseUtc는 값이 없거나 잘못되면 null을 준다 — 그대로 getTime()을 부르면 화면이 죽는다.
+  const created = parseUtc(createdAt)
+  if (!created) return 1
+  return Math.floor((Date.now() - created.getTime()) / DAY) + 1
 }
 const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
@@ -232,7 +228,8 @@ export default function Dashboard() {
   const track = (memories.data?.items ?? []).length || 1
 
   const upcoming = (plans.data?.items ?? [])
-    .filter((p) => p.planDate && ddayOf(p.planDate) >= 0)
+    // ddayDiff는 읽을 수 없는 날짜에 null을 준다. null >= 0 은 true라서 명시적으로 걸러야 한다.
+    .filter((p) => { const d = ddayDiff(p.planDate); return d !== null && d >= 0 })
     .sort((a, b) => a.planDate.localeCompare(b.planDate))
     .slice(0, 3)
   const memoryItems = (memories.data?.items ?? []).slice(0, 24)
@@ -374,7 +371,7 @@ export default function Dashboard() {
                   <span className="schedule-title">{p.title}</span>
                   <span className="schedule-date">{p.planDate}</span>
                 </div>
-                <span className="schedule-dday-badge">{ddayLabel(ddayOf(p.planDate))}</span>
+                <span className="schedule-dday-badge">{ddayLabel(ddayDiff(p.planDate))}</span>
               </div>
             ))}
           </div>

@@ -6,17 +6,13 @@ import { getRooms, createRoom, toggleRoomFavorite, leaveRoom } from '../../../ap
 import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/invite'
 import Header from '../../../components/Header/Header'
 import RoomPreviewModal from './RoomPreviewModal'
+import { ddayDiff } from '../../../lib/datetime'
 
-const DAY = 86400000
 const PAGE_SIZE = 9
 const ORDER_KEY = 'clov-room-order'
 
-const ddayOf = (planDate) => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return Math.round((new Date(`${planDate}T00:00:00`).getTime() - today.getTime()) / DAY)
-}
-const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
+// 읽을 수 없는 날짜는 ddayDiff가 null을 주므로 배지를 아예 감춘다(기존엔 NaN이 찍혔다).
+const ddayLabel = (n) => (n === null ? null : n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
 // 목적지 헤드라인 = 다음 약속 제목의 첫 단어(최대 6자), 없으면 "자유".
 const shortDest = (label) => (label || '').trim().split(/\s+/)[0].slice(0, 6)
 
@@ -321,7 +317,7 @@ export default function RoomList() {
             {visibleRooms.map((room) => {
               const tone = headTone(room)
               const hasPlan = Boolean(room.nextPlan?.planDate)
-              const dday = hasPlan ? ddayLabel(ddayOf(room.nextPlan.planDate)) : null
+              const dday = hasPlan ? ddayLabel(ddayDiff(room.nextPlan.planDate)) : null
               const sky = skyline(room.id)
               return (
                 <div

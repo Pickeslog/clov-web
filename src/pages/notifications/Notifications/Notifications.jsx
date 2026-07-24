@@ -17,13 +17,6 @@ const TABS = [
   { id: 'JOIN', label: '가입 신청', icon: '♧' },
 ]
 
-// 운영 공지가 아직 발행되지 않은 방도 프로토타입의 공지 탭이 빈 상태로 보이지 않도록 한다.
-// 실제 NOTICE가 도착하면 서버 데이터만 렌더한다.
-const PROTOTYPE_NOTICES = [
-  { id: 'prototype-update', prototype: true, type: 'NOTICE', isRead: true, createdAt: '2026-06-30T00:00:00Z', payload: { title: '[업데이트] ➕ 새로운 방 추가 기능이 적용되었습니다!', content: "이제 번거로운 친구 초대코드 대신 '새로운 방 추가' 기능을 통해 코드를 적고 간편하게 방에 접속할 수 있습니다." } },
-  { id: 'prototype-open', prototype: true, type: 'NOTICE', isRead: true, createdAt: '2026-06-29T00:00:00Z', payload: { title: '[공지] Clov v2.0 정식 오픈 안내 🎉', content: '일대일 단짝 연동 기능과 다크 모드 동기화 기능이 대폭 개선되었습니다. 더욱 안정적인 환경에서 소중한 추억을 기록해 보세요.' } },
-]
-
 const describeError = (error) => {
   switch (error.code) {
     case 'ROOM_CAPACITY_EXCEEDED': return '우정공간 정원(8명)이 가득 찼습니다.'
@@ -33,17 +26,21 @@ const describeError = (error) => {
   }
 }
 
+// 계약 §13 이벤트 카탈로그대로 subType별 문구. LEVEL_UP은 actor가 없다(방 전체 이벤트) —
+// actor.nickname을 그냥 읽으면 크래시나므로 반드시 subType을 먼저 분기한다.
 const messageFor = (notification) => {
-  const name = notification.actor?.nickname ?? notification.payload?.actorName
-  if (notification.type === 'FRIEND') return name ? `${name}님의 새로운 활동이 있습니다.` : '친구의 새로운 활동 알림이 있습니다.'
-  if (notification.type === 'NOTICE') return notification.payload?.content ?? 'Clov.의 새로운 소식을 확인해 보세요.'
-  return '새로운 알림이 있습니다.'
+  const { subType, actor, payload } = notification
+  switch (subType) {
+    case 'MEMORY_WRITE': return `${actor?.nickname}님이 추억을 남겼어요`
+    case 'PLAN_CREATE': return `${actor?.nickname}님이 새 약속을 만들었어요`
+    case 'PLAN_COMPLETE': return `${actor?.nickname}님이 약속을 완료했어요`
+    case 'ROOM_UPDATE': return `${actor?.nickname}님이 우정공간 정보를 바꿨어요`
+    case 'LEVEL_UP': return `우정공간이 Lv.${payload?.level}이 됐어요! 🎉`
+    default: return actor?.nickname ? `${actor.nickname}님의 새로운 활동이 있습니다.` : '새로운 알림이 있습니다.'
+  }
 }
 
-const titleFor = (notification) => {
-  if (notification.type === 'NOTICE') return notification.payload?.title ?? '[공지] Clov. 새로운 소식'
-  return notification.payload?.title ?? '우정공간 새 소식'
-}
+const titleFor = (notification) => (notification.type === 'NOTICE' ? '[공지] Clov. 새로운 소식' : '우정공간 새 소식')
 
 export default function Notifications({ onClose }) {
   const { roomId } = useParams()
@@ -154,7 +151,7 @@ export default function Notifications({ onClose }) {
                 isLoading={notificationsQuery.isPending}
                 isError={notificationsQuery.isError}
                 reading={readMutation.isPending}
-                onRead={(notification) => { if (!notification.prototype && !notification.isRead && !notification.readAt) readMutation.mutate(notification.id) }}
+                onRead={(notification) => { if (!notification.isRead && !notification.readAt) readMutation.mutate(notification.id) }}
                 onOpenJoin={() => setActiveTab('JOIN')}
               />
             )}
@@ -177,8 +174,8 @@ function NotificationList({ activeTab, notifications, pendingCount, isLoading, i
       {notifications.map((notification) => <NotificationCard key={notification.id} notification={notification} reading={reading} onRead={onRead} />)}
     </>
   }
-  if (notifications.length === 0 && activeTab === 'NOTICE') return PROTOTYPE_NOTICES.map((notification) => <NotificationCard key={notification.id} notification={notification} reading={reading} onRead={onRead} />)
-  if (notifications.length === 0) return <Empty text="새로운 친구 알림이 없습니다." />
+  // NOTICE(관리진 공지)는 아직 발행 기능이 없어 실제로 항상 빈 상태다 — 가짜 공지를 보여주지 않는다.
+  if (notifications.length === 0) return <Empty text={activeTab === 'NOTICE' ? '아직 공지가 없어요.' : '새로운 친구 알림이 없습니다.'} />
   return notifications.map((notification) => <NotificationCard key={notification.id} notification={notification} reading={reading} onRead={onRead} />)
 }
 

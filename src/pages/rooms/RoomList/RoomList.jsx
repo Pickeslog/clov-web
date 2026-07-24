@@ -7,6 +7,7 @@ import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/
 import Header from '../../../components/Header/Header'
 import RoomPreviewModal from './RoomPreviewModal'
 import { ddayDiff } from '../../../lib/datetime'
+import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
 
 const PAGE_SIZE = 9
 const ORDER_KEY = 'clov-room-order'
@@ -75,6 +76,7 @@ const Icon = ({ name, style }) => <i className={`ti ${name}`} style={style} aria
 export default function RoomList() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const confirm = useConfirm()
 
   const [createOpen, setCreateOpen] = useState(false)
   const [previewId, setPreviewId] = useState(null)
@@ -183,11 +185,11 @@ export default function RoomList() {
     mutationFn: (id) => leaveRoom(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rooms'] }),
   })
-  const handleLeave = (room) => {
+  const handleLeave = async (room) => {
     const msg = (room.memberCount ?? 1) <= 1
       ? `"${room.name}"에서 나갈까요? 지금 마지막 멤버라 30일간 보관되고, 코드로 되살릴 수 있어요.`
       : `"${room.name}"에서 나갈까요? 남은 멤버에게 나갔다고 알림이 가요.`
-    if (window.confirm(msg)) leaveMutation.mutate(room.id)
+    if (await confirm(msg, { confirmText: '나가기', variant: 'danger' })) leaveMutation.mutate(room.id)
   }
 
   // 드래그 앤 드롭 재정렬 — 프로토타입과 동일(끈 방을 놓은 카드의 자리에 꽂음 → "내 순서" 저장).

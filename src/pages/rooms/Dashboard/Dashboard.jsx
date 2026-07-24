@@ -16,6 +16,7 @@ import { parseUtc, ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 import Mascot from '../../../components/Mascot/Mascot'
+import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
 // 우정공간에서 작성 모달을 인라인으로 띄우기 위해 각 화면의 모달을 재사용.
 import { ScheduleEditorModal } from '../../schedule/Schedule/Schedule'
 import { SCHEDULE_LIGHT_PALETTE } from '../../schedule/Schedule/palette'
@@ -492,6 +493,7 @@ function DashboardMemoryDetail({ memoryId, roomId, currentUserId, onClose }) {
 // 코드로 입장 신청은 상대가 방 목록(RoomList)에서, 수락은 멤버가 알림에서 처리한다.
 function InviteModal({ roomId, roomName, onClose }) {
   const queryClient = useQueryClient()
+  const confirm = useConfirm()
   const [copied, setCopied] = useState('')
 
   const invites = useQuery({ queryKey: ['invites', roomId], queryFn: () => getInvites(roomId) })
@@ -546,7 +548,7 @@ function InviteModal({ roomId, roomName, onClose }) {
               type="button"
               className="invite-sub-btn"
               disabled={cancelMutation.isPending}
-              onClick={() => { if (window.confirm('이 초대 코드를 만료할까요? 기존 코드로는 더 입장 신청을 못 해요.')) cancelMutation.mutate(active.id) }}
+              onClick={async () => { if (await confirm('이 초대 코드를 만료할까요? 기존 코드로는 더 입장 신청을 못 해요.', { confirmText: '만료', variant: 'danger' })) cancelMutation.mutate(active.id) }}
             >
               이 코드 만료하기
             </button>

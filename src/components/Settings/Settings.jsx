@@ -10,6 +10,7 @@ import { uploadImage } from '../../lib/uploadImage'
 import { APP_BACKGROUNDS, applyAppBackground, applyCustomColor, getAppBackgroundId, getCustomColor } from '../../lib/appBackground'
 import { applyTheme, getDark } from '../../lib/theme'
 import { useAuthStore } from '../../stores/authStore'
+import { useConfirm } from '../ConfirmDialog/useConfirm'
 
 const LETTER_THEMES = [
   { value: 'giftbox', label: '선물상자' },
@@ -51,6 +52,7 @@ export default function Settings({ onClose }) {
 }
 
 function SettingsBody({ me, prefs, onClose }) {
+  const confirm = useConfirm()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const clear = useAuthStore((state) => state.clear)
@@ -256,7 +258,7 @@ function SettingsBody({ me, prefs, onClose }) {
             <div className="ps-action-group">
               <button type="button" className="ps-btn danger"
                 disabled={deleteMutation.isPending}
-                onClick={() => { if (window.confirm('정말 탈퇴하시겠어요? 되돌릴 수 없습니다.')) deleteMutation.mutate() }}>
+                onClick={async () => { if (await confirm('정말 탈퇴하시겠어요? 되돌릴 수 없습니다.', { confirmText: '탈퇴', variant: 'danger' })) deleteMutation.mutate() }}>
                 {deleteMutation.isPending ? '처리 중…' : '계정 탈퇴'}
               </button>
             </div>

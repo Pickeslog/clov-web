@@ -1,0 +1,30 @@
+/* =====================================================================
+   공유 확인 다이얼로그 — window.confirm 대체. 자체완결 팔레트(기본 다크 +
+   body.light-mode), 기존 .clov-btn(Button 컴포넌트)를 액션 버튼으로 재사용.
+   z-index 500: 기존 오버레이 중 가장 높은 값(Dashboard 400)보다 위에 뜨게 해서
+   다른 모달 위에서도 항상 보이게 한다.
+   ===================================================================== */
+.clov-confirm-overlay {
+  position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px);
+  animation: clovConfirmFadeIn .15s ease;
+}
+.clov-confirm-modal {
+  width: min(360px, 100%);
+  background: #1e2016; border: 1px solid #2a2c1e; border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  padding: 24px 22px 20px; color: #eef0e2;
+  display: flex; flex-direction: column; gap: 14px; text-align: center;
+  animation: clovConfirmSlideUp .18s cubic-bezier(.34, 1.56, .64, 1);
+}
+body.light-mode .clov-confirm-modal {
+  background: #ffffff; border-color: rgba(27, 67, 50, 0.14); color: #1b4332;
+  box-shadow: 0 12px 40px rgba(27, 67, 50, 0.16);
+}
+.clov-confirm-title { margin: 0; font-size: 16px; font-weight: 800; }
+.clov-confirm-message { margin: 0; font-size: 14px; line-height: 1.6; white-space: pre-line; }
+.clov-confirm-actions { display: flex; gap: 8px; margin-top: 4px; }
+.clov-confirm-actions .clov-btn { flex: 1; }
+
+@keyframes clovConfirmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes clovConfirmSlideUp { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }

@@ -9,6 +9,7 @@ import { useCreateMemory } from '../../../hooks/useCreateMemory'
 import { useMemoryDetail } from '../../../hooks/useMemoryDetail'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
+import { ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 
@@ -113,25 +114,15 @@ const parsePhotoDate = (dateStr) => {
 }
 // 약속 연결용 D-day 라벨(프로토타입 calculateDday). 파싱 불가는 'D-?'.
 const ddayLabel = (dateStr) => {
-  const m = String(dateStr || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/)
-  if (!m) return 'D-?'
-  const target = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
-  const today = new Date()
-  target.setHours(0, 0, 0, 0)
-  today.setHours(0, 0, 0, 0)
-  const diff = Math.round((target - today) / 86400000)
+  const diff = ddayDiff(dateStr)
+  if (diff === null) return 'D-?'
   if (diff === 0) return 'D-DAY'
   return diff > 0 ? `D-${diff}` : `D+${-diff}`
 }
 // 여권 영수증 D-day 도장 캡션(프로토타입 getMemoryDdayCaption).
 const ddayCaption = (dateStr) => {
-  const m = String(dateStr || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/)
-  if (!m) return '함께한 추억'
-  const target = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
-  const today = new Date()
-  target.setHours(0, 0, 0, 0)
-  today.setHours(0, 0, 0, 0)
-  const diff = Math.round((target - today) / 86400000)
+  const diff = ddayDiff(dateStr)
+  if (diff === null) return '함께한 추억'
   if (diff > 0) return '함께할 그날까지'
   if (diff === 0) return '드디어 오늘'
   return '함께 보낸 그날'

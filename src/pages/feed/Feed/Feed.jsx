@@ -188,7 +188,7 @@ export default function Feed() {
       <Header variant="room" roomId={roomId} activeTab="feed" />
       <div className="feed-page">
         <div className="feed-hero">
-          <div>
+          <div className="feed-hero-text">
             <div className="feed-title">월별 추억 아카이브</div>
             <div className="feed-subtitle">
               함께 남긴 기록을 월 단위로 접어서 보고, 필요한 달만 빠르게 꺼내봅니다.

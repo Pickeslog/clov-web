@@ -40,6 +40,10 @@
   display: flex; justify-content: space-between; align-items: flex-start;
   flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
 }
+/* 카드 배경 없이 페이지 배경(우드텍스처)에 바로 노출되던 헤더 텍스트 — 특히 부제(--text-muted)가
+   흐릿했다. 배경 박스로 대비 확보(대시보드 #95와 동일 패턴). */
+.proto-feed .feed-hero-text { background: rgba(0,0,0,.22); padding: 10px 14px; border-radius: 12px; }
+body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.55); }
 .proto-feed .feed-title { font-size: 20px; font-weight: 800; color: var(--accent-green); }
 .proto-feed .feed-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
 .proto-feed .feed-hero-meta { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }

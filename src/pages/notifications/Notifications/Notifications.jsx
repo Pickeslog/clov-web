@@ -77,6 +77,14 @@ export default function Notifications({ onClose }) {
     queryClient.invalidateQueries({ queryKey: ['joinRequests', roomId] })
   }
 
+  // 수락·되돌리기는 멤버 구성을 바꾸므로 방 상세(인원수)·멤버 목록·방 목록 캐시까지 무효화한다.
+  // ['room', roomId]는 접두 일치라 ['room', roomId, 'members']·['room', roomId, 'level']도 함께 갱신된다.
+  const invalidateMembership = () => {
+    invalidate()
+    queryClient.invalidateQueries({ queryKey: ['room', roomId] })
+    queryClient.invalidateQueries({ queryKey: ['rooms'] })
+  }
+
   const readMutation = useMutation({ mutationFn: markNotificationRead, onSuccess: invalidate })
   const acceptMutation = useMutation({
     mutationFn: acceptJoinRequest,
@@ -84,14 +92,14 @@ export default function Notifications({ onClose }) {
       const request = joinItems.find((item) => item.id === requestId)
       setAcceptedList((items) => [...items, { id: requestId, applicant: request?.applicant, applicantName: request?.applicantName, undoUntil: result.undoUntil ?? result.undoDeadlineAt }])
       setMessage('')
-      invalidate()
+      invalidateMembership()
     },
     onError: (error) => setMessage(describeError(error)),
   })
   const rejectMutation = useMutation({ mutationFn: rejectJoinRequest, onSuccess: () => { setMessage(''); invalidate() }, onError: (error) => setMessage(describeError(error)) })
   const undoMutation = useMutation({
     mutationFn: undoJoinRequest,
-    onSuccess: (_, requestId) => { setAcceptedList((items) => items.filter((item) => item.id !== requestId)); setMessage(''); invalidate() },
+    onSuccess: (_, requestId) => { setAcceptedList((items) => items.filter((item) => item.id !== requestId)); setMessage(''); invalidateMembership() },
     onError: (error) => setMessage(describeError(error)),
   })
 

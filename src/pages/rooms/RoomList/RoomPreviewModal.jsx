@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getRoom, getRoomMembers, getRoomLevel, updateRoom } from '../../../api/room'
 import { getInvites, createInvite } from '../../../api/invite'
 import { getNotifications } from '../../../api/notification'
+import { parseUtc } from '../../../lib/datetime'
 
 // 방 미리보기 모달 — 프로토타입 #room-preview-modal(무탭 소식 피드 + 방 프로필 편집 + 친구 초대) 이식.
 // 소식 피드 = 실제 알림(FRIEND=편지 / JOIN=합류 / NOTICE=공지).
@@ -22,10 +23,11 @@ const vehicleIcon = (v) => VEHICLE_ICON[v] ?? 'ti-plane'
 // 보딩패스 톤(프로토타입 TICKET_TONES 대표색).
 const ROOM_THEME_COLORS = ['#22705a', '#1f6b6b', '#4a6b3a', '#6b8f71', '#2563a8', '#7c5cbf', '#d1603d', '#c98a2e', '#c94f7c']
 
-const parseUtc = (v) => new Date(String(v).endsWith('Z') ? v : `${v}Z`)
 const relTime = (v) => {
-  if (!v) return ''
-  const diff = Date.now() - parseUtc(v).getTime()
+  // parseUtc는 값이 없거나 잘못되면 null을 준다 — 바로 getTime()을 부르면 화면이 죽는다.
+  const at = parseUtc(v)
+  if (!at) return ''
+  const diff = Date.now() - at.getTime()
   const m = Math.floor(diff / 60000)
   if (m < 1) return '방금'
   if (m < 60) return `${m}분 전`

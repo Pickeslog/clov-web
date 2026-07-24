@@ -9,6 +9,7 @@ import {
   rejectJoinRequest,
   undoJoinRequest,
 } from '../../../api/invite'
+import { parseUtc, formatDate, formatTime } from '../../../lib/datetime'
 
 const TABS = [
   { id: 'NOTICE', label: '관리진 공지', icon: '📣' },
@@ -22,18 +23,6 @@ const PROTOTYPE_NOTICES = [
   { id: 'prototype-update', prototype: true, type: 'NOTICE', isRead: true, createdAt: '2026-06-30T00:00:00Z', payload: { title: '[업데이트] ➕ 새로운 방 추가 기능이 적용되었습니다!', content: "이제 번거로운 친구 초대코드 대신 '새로운 방 추가' 기능을 통해 코드를 적고 간편하게 방에 접속할 수 있습니다." } },
   { id: 'prototype-open', prototype: true, type: 'NOTICE', isRead: true, createdAt: '2026-06-29T00:00:00Z', payload: { title: '[공지] Clov v2.0 정식 오픈 안내 🎉', content: '일대일 단짝 연동 기능과 다크 모드 동기화 기능이 대폭 개선되었습니다. 더욱 안정적인 환경에서 소중한 추억을 기록해 보세요.' } },
 ]
-
-// 백엔드는 오프셋 없는 UTC(LocalDateTime)를 반환 → Z 붙여 파싱. 값이 없으면 null(크래시 방지).
-const parseUtc = (value) => (value ? new Date(String(value).endsWith('Z') ? value : `${value}Z`) : null)
-const isValid = (d) => d && !Number.isNaN(d.getTime())
-const formatDate = (value) => {
-  const d = parseUtc(value)
-  return isValid(d) ? d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '. ').replace(/\.$/, '') : ''
-}
-const formatTime = (value) => {
-  const d = parseUtc(value)
-  return isValid(d) ? d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ''
-}
 
 const describeError = (error) => {
   switch (error.code) {

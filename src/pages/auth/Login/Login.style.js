@@ -13,9 +13,9 @@ const shakeInput = keyframes`
 `
 
 export const Page = styled.main`
-  /* 로그인은 프로토타입처럼 "항상 라이트 종이" 화면.
-     전역 tokens.css의 @media(prefers-color-scheme:dark) 토큰 오버라이드와
-     index.css의 color-scheme:light dark(native input 다크화)를 이 서브트리에서 무력화한다. */
+  /* 로그인은 프로토타입처럼 "항상 라이트 종이" 화면(#96 이후 tokens.css엔 다크
+     오버라이드가 없다 — 이 줄은 index.css의 color-scheme:light dark(native input
+     다크화)만 이 서브트리에서 무력화하면 됨). */
   color-scheme: light;
   --forest: #073b24;
   --leaf: #16874b;

@@ -1,6 +1,8 @@
 import styled from '@emotion/styled'
 
 export const Page = styled.main`
+  /* 초대참여도 로그인/가입과 동일한 "항상 라이트 종이" 화면(#96). */
+  color-scheme: light;
   min-height: 100vh;
   color: var(--text);
   font-family: 'Outfit', sans-serif;

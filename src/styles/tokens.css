@@ -15,21 +15,10 @@
   --overlay-bg: rgba(7, 59, 36, 0.32);
 }
 
-/* 다크모드 — 시스템 설정 기준(OS prefers-color-scheme). 별도 토글 UI는 아직 없음. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --forest: #bdf5d8;
-    --leaf: #6fe3a3;
-    --mint: #50d990;
-    --cream: #1c231d;
-    --paper: #202b22;
-    --text: #eaf5ee;
-    --muted: #9fb3a6;
-    --line: rgba(140, 255, 190, 0.16);
-    --glow: rgba(80, 217, 144, 0.28);
-    --warn: #f2b866;
-    --page-bg: linear-gradient(160deg, #10140f 0%, #141a12 55%, #171f15 100%);
-    --card-bg: rgba(32, 43, 34, 0.85);
-    --overlay-bg: rgba(0, 0, 0, 0.5);
-  }
-}
+/* 인증 화면(로그인/가입/초대참여/OAuth 리다이렉트)은 항상 라이트 종이 컨셉 —
+   OS 다크모드에 따라 위 토큰이 바뀌던 오버라이드를 제거해 고정한다(#96).
+   color-scheme은 여기서 전역으로 건드리지 않는다 — index.css가 :root에
+   이미 light dark를 선언 중이라, 여기서 light로 덮으면 다크모드 화면(Dashboard 등)의
+   네이티브 위젯(체크박스·스크롤바 등)까지 전부 라이트로 강제돼 버린다.
+   각 인증 화면(Login/Signup/JoinRoom/OAuthRedirect)의 최상위 컴포넌트가
+   자기 서브트리에서만 color-scheme: light를 선언해 범위를 좁힌다. */

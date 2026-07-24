@@ -6,6 +6,8 @@ const spin = keyframes`
 `
 
 export const Page = styled.main`
+  /* OAuth 리다이렉트도 로그인/가입과 동일한 "항상 라이트 종이" 화면(#96). */
+  color-scheme: light;
   min-height: 100vh;
   display: grid;
   place-items: center;

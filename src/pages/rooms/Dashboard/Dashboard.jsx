@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './dashboard.proto.css'
-import { getRoom, getRoomLevel, getRoomMembers, updateStatusMessage, updateRoom, presignRoomCover } from '../../../api/room'
+import { getRoom, getRoomLevel, getRoomMembers, getExpLogs, updateStatusMessage, updateRoom, presignRoomCover } from '../../../api/room'
 import { createPlan, getPlans } from '../../../api/plan'
 import { getMemories } from '../../../api/memory'
 import { getMe } from '../../../api/user'
@@ -12,7 +12,7 @@ import { useCreateMemory } from '../../../hooks/useCreateMemory'
 import { useMemoryDetail } from '../../../hooks/useMemoryDetail'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
-import { parseUtc, ddayDiff } from '../../../lib/datetime'
+import { parseUtc, ddayDiff, formatDate, formatTime } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 import Mascot from '../../../components/Mascot/Mascot'
@@ -133,6 +133,16 @@ const initialOf = (name) => (name || '?').trim().slice(0, 1)
 const weightedLen = (s) => [...(s || '')].reduce((n, ch) => n + (/[㄰-㆏가-힣]/.test(ch) ? 2 : 1), 0)
 const STATUS_MAX = 40
 
+// 경험치 히스토리 actionType → 한글 라벨(계약 §12, 이벤트정의서 §9.1).
+const EXP_ACTION_LABEL = {
+  MEMORY_WRITE: '추억 작성',
+  MEMORY_IMAGE_BONUS: '사진 첨부',
+  PLAN_CREATE: '약속 등록',
+  PLAN_COMPLETE: '약속 완료',
+  MASCOT_INTERACT: '마스코트 교감',
+}
+const expActionLabel = (actionType) => EXP_ACTION_LABEL[actionType] ?? '경험치 적립'
+
 export default function Dashboard() {
   const { roomId } = useParams()
   const navigate = useNavigate()
@@ -150,6 +160,7 @@ export default function Dashboard() {
   // null = 미편집(서버값 표시). 문자열 = 사용자가 편집 중.
   const [statusDraft, setStatusDraft] = useState(null)
   const [membersOpen, setMembersOpen] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const [coverViewOpen, setCoverViewOpen] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
   // 우정공간에서 바로 여는 작성 모달(일정계획 새 D-day / 추억 글쓰기).
@@ -299,7 +310,7 @@ export default function Dashboard() {
                 <span className="v5-photo-chip-dot" />
                 <span className="v5-photo-chip-text">{SEASON_LABEL[sKey]} 추억 재생 중 · {track}번째 트랙</span>
               </div>
-              <div className="lv-pill">
+              <div className="lv-pill" onClick={() => setHistoryOpen(true)} title="경험치 히스토리 보기">
                 <div className="lv-pill-bg" style={{ width: `${progress}%` }} />
                 <div className="lv-pill-content">
                   <span className="lv-badge-icon">Lv.{levelNum}</span>
@@ -442,6 +453,10 @@ export default function Dashboard() {
         <InviteModal roomId={roomId} roomName={data.name} onClose={() => setInviteOpen(false)} />
       )}
 
+      {historyOpen && (
+        <ExpHistoryModal roomId={roomId} onClose={() => setHistoryOpen(false)} />
+      )}
+
       {coverViewOpen && data.coverPhotoUrl && (
         <div className="cover-view-backdrop" onClick={() => setCoverViewOpen(false)}>
           <div className="cover-view-flip" onClick={(e) => e.stopPropagation()}>
@@ -582,6 +597,38 @@ function InviteModal({ roomId, roomName, onClose }) {
         {(createMutation.isError || cancelMutation.isError) && (
           <div className="invite-state" role="alert">잠시 후 다시 시도해 주세요.</div>
         )}
+      </div>
+    </div>
+  )
+}
+
+// 경험치 히스토리 — 레벨 배지 클릭으로 열리는 exp-logs 목록(계약 §12). 최신순, 백엔드 그대로 반환.
+function ExpHistoryModal({ roomId, onClose }) {
+  const logsQuery = useQuery({ queryKey: ['room', roomId, 'exp-logs'], queryFn: () => getExpLogs(roomId) })
+  const items = logsQuery.data?.items ?? []
+
+  return (
+    <div className="member-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="member-modal" role="dialog" aria-modal="true" aria-label="경험치 히스토리">
+        <div className="member-modal-head">
+          <span className="member-modal-title">경험치 히스토리</span>
+          <button type="button" className="member-modal-close" onClick={onClose} aria-label="닫기">✕</button>
+        </div>
+        {logsQuery.isPending && <div className="exp-history-empty">불러오는 중…</div>}
+        {logsQuery.isError && <div className="exp-history-empty">경험치 히스토리를 불러오지 못했습니다.</div>}
+        {logsQuery.isSuccess && items.length === 0 && (
+          <div className="exp-history-empty">아직 쌓인 경험치가 없어요.</div>
+        )}
+        {logsQuery.isSuccess && items.map((log) => (
+          <div className="exp-history-row" key={log.id}>
+            <span className="member-row-av exp-history-av">{initialOf(log.triggeredBy?.nickname)}</span>
+            <div className="exp-history-main">
+              <div className="exp-history-label">{log.triggeredBy?.nickname ?? '알 수 없음'}님 · {expActionLabel(log.actionType)}</div>
+              <div className="exp-history-date">{formatDate(log.createdAt)} {formatTime(log.createdAt)}</div>
+            </div>
+            <span className="exp-history-delta">+{log.expDelta}</span>
+          </div>
+        ))}
       </div>
     </div>
   )

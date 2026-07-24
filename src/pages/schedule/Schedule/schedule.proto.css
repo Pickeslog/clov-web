@@ -47,6 +47,11 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
+    /* 카드 배경 없이 페이지 배경에 바로 노출되던 텍스트라 대비가 부족했다 — 배경 박스로 보정.
+       이 화면은 라이트 팔레트로 고정이라(다크모드 미대응) 라이트용 배경만 있으면 된다. */
+    background: rgba(255,255,255,.6);
+    padding: 6px 12px;
+    border-radius: 10px;
   }
   .journey-page-kicker {
     font-family: 'Space Mono', 'Courier New', monospace;

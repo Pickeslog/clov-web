@@ -11,6 +11,7 @@ import {
 import { uploadImage } from '../../../lib/uploadImage'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
+import { ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
 import { SCHEDULE_LIGHT_PALETTE } from './palette'
 
@@ -30,24 +31,24 @@ const DENSITY = [
   { key: 'done', label: '완료된 약속' },
 ]
 
-// ── D-day 유틸(프로토타입 utils.js 이식) ─────────────────────────────
-function getDdayDiffDays(dateStr) {
-  if (!dateStr) return null
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const target = new Date(dateStr)
-  target.setHours(0, 0, 0, 0)
-  return Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+// ── D-day 유틸(공통 lib/datetime의 ddayDiff 사용, #78/#80) ───────────
+// ddayDiff는 읽을 수 없는 날짜에 null을 준다. null >= 0 은 true라서 그냥 비교하면
+// 이상한 날짜가 "다가오는 약속"에 섞인다 → 아래 헬퍼로 명시적으로 걸러 쓴다.
+const isUpcoming = (dateStr) => {
+  const d = ddayDiff(dateStr)
+  return d !== null && d >= 0
 }
 function calculateDday(dateStr) {
-  const d = getDdayDiffDays(dateStr)
+  const d = ddayDiff(dateStr)
   if (d === null) return 'D-day'
   if (d === 0) return 'D-Day'
   return d > 0 ? `D-${d}` : `D+${Math.abs(d)}`
 }
 function formatFriendlyDate(dateStr) {
   if (!dateStr) return '연도-월-일'
-  const date = new Date(dateStr)
+  const m = String(dateStr).match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/)
+  if (!m) return '연도-월-일'
+  const date = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
   const week = ['일', '월', '화', '수', '목', '금', '토']
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 (${week[date.getDay()]})`
 }
@@ -105,8 +106,8 @@ export default function Schedule() {
   const closestId = (() => {
     if (items.length === 0) return null
     const future = items
-      .filter((p) => p.planDate && getDdayDiffDays(p.planDate) >= 0)
-      .sort((a, b) => getDdayDiffDays(a.planDate) - getDdayDiffDays(b.planDate))
+      .filter((p) => isUpcoming(p.planDate))
+      .sort((a, b) => ddayDiff(a.planDate) - ddayDiff(b.planDate))
     return (future[0] ?? items[0]).id
   })()
   const effectiveId = selectedPlanId && items.some((p) => p.id === selectedPlanId) ? selectedPlanId : closestId
@@ -165,17 +166,17 @@ export default function Schedule() {
   // 밀도 필터 + 정렬(가까운 순).
   const passesDensity = (p) => {
     if (density === 'proof') return doneCountOf(p.id) < 4
-    if (density === 'upcoming') return p.planDate && getDdayDiffDays(p.planDate) >= 0
+    if (density === 'upcoming') return isUpcoming(p.planDate)
     if (density === 'done') return doneCountOf(p.id) === 4
     return true
   }
-  const sortByClosest = (a, b) => Math.abs(getDdayDiffDays(a.planDate) ?? 9e9) - Math.abs(getDdayDiffDays(b.planDate) ?? 9e9)
+  const sortByClosest = (a, b) => Math.abs(ddayDiff(a.planDate) ?? 9e9) - Math.abs(ddayDiff(b.planDate) ?? 9e9)
   const visible = items.filter(passesDensity).sort(sortByClosest)
 
   const counts = {
     all: items.length,
     proof: items.filter((p) => doneCountOf(p.id) < 4).length,
-    upcoming: items.filter((p) => p.planDate && getDdayDiffDays(p.planDate) >= 0).length,
+    upcoming: items.filter((p) => isUpcoming(p.planDate)).length,
     done: items.filter((p) => doneCountOf(p.id) === 4).length,
   }
 
@@ -306,7 +307,7 @@ function ReceiptCard({
     )
   }
 
-  const diff = getDdayDiffDays(plan.planDate)
+  const diff = ddayDiff(plan.planDate)
   const ddayText = calculateDday(plan.planDate)
   const stampColor = diff !== null && diff < 0 ? '#2e5233' : '#c0392b'
   const ddayPhrase = diff === null
@@ -503,7 +504,7 @@ export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, o
     const d = new Date()
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   })()
-  const diff = getDdayDiffDays(planDate)
+  const diff = ddayDiff(planDate)
   const ddayText = calculateDday(planDate)
   const stampColor = diff !== null && diff < 0 ? '#2e5233' : '#c0392b'
   const ddayPhrase = diff === null

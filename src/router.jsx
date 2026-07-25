@@ -10,6 +10,7 @@ import Feed from './pages/feed/Feed/Feed'
 import Letters from './pages/letters/Letters/Letters'
 import Notifications from './pages/notifications/Notifications/Notifications'
 import Schedule from './pages/schedule/Schedule/Schedule'
+import Shop from './pages/shop/Shop/Shop'
 
 // 라우팅 골격. 보호 라우트는 ProtectedRoute 하위에 둔다.
 export const router = createBrowserRouter([
@@ -21,6 +22,8 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <RoomList /> },
       { path: '/join', element: <JoinRoom /> },
+      // 상점은 재화가 사용자 단위라 방에 속하지 않는다 — 방 안/밖 어디서든 같은 경로.
+      { path: '/shop', element: <Shop /> },
       { path: '/rooms/:roomId', element: <Dashboard /> },
       { path: '/rooms/:roomId/feed', element: <Feed /> },
       { path: '/rooms/:roomId/letters', element: <Letters /> },

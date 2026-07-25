@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import './Header.css'
 import { getMe } from '../../api/user'
+import { getWallet } from '../../api/shop'
 import { useAuthStore } from '../../stores/authStore'
 import clovLogo from '../../assets/clov_logo.png'
 import Settings from '../Settings/Settings'
@@ -29,8 +30,12 @@ const initialOf = (name) => (name || '나').trim().slice(0, 1)
  */
 export default function Header({ variant = 'room', roomId, activeTab }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const clear = useAuthStore((state) => state.clear)
   const me = useQuery({ queryKey: ['me'], queryFn: getMe })
+  // 헤더 골드는 상점에서 구매하면 즉시 반영돼야 한다 — Shop이 같은 키를 무효화한다.
+  const wallet = useQuery({ queryKey: ['wallet'], queryFn: getWallet })
+  const onShop = location.pathname === '/shop'
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -87,6 +92,19 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
             </button>
           </nav>
         )}
+
+        {/* 상점 — 재화가 사용자 단위라 방 안/밖(room·home) 모두에서 같은 자리에 둔다. */}
+        <button
+          type="button"
+          className={`clov-hdr-shop${onShop ? ' active' : ''}`}
+          onClick={() => navigate('/shop')}
+          title="상점"
+          aria-current={onShop ? 'page' : undefined}
+        >
+          <NavIcon><path d="M4 8h16l-1.2 10a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8L4 8zM8.5 8V6a3.5 3.5 0 0 1 7 0v2" /></NavIcon>
+          <span className="clov-hdr-shop-label">상점</span>
+          {wallet.data && <span className="clov-hdr-gold"><i aria-hidden="true">G</i>{wallet.data.balance.toLocaleString()}</span>}
+        </button>
 
         <div className="clov-hdr-avatar-wrap">
           <button type="button" className="clov-hdr-avatar" onClick={() => setMenuOpen((v) => !v)} aria-haspopup="menu" title="내 계정">

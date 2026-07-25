@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './dashboard.proto.css'
@@ -168,6 +169,32 @@ function buildBurst(season) {
     }
   })
   return { confetti, notes }
+}
+
+// 티어업(111 단위)/만렙(777) 축하 폭죽(프로토타입 createBurst 이식) — 화면 임의 지점에서 방사형+
+// 중력 낙하로 흩어짐. LP 레코드판 폭죽(buildBurst)과는 색상·규모·용도가 달라 재사용하지 않는다.
+// 상태로 렌더해서 언마운트 시 자동 정리되게 한다 — 프로토타입처럼 DOM을 body에 직접 꽂고
+// setTimeout으로 지우면 방 전환·언마운트 때 파티클·타이머가 새어나간다(팀장 리뷰).
+const TIER_BURST_COLORS = ['#4ade80', '#22c55e', '#16a34a', '#facc15', '#fef08a', '#86efac', '#ffaa00', '#ff00aa']
+function buildTierBurstParticles(count, spread) {
+  return Array.from({ length: count }, (_, i) => {
+    const size = 10 + Math.random() * 15
+    const ang = Math.random() * Math.PI * 2
+    const dist = 50 + Math.random() * spread
+    const tx = Math.cos(ang) * dist
+    const ty = Math.sin(ang) * dist + Math.random() * 150
+    const rot = Math.random() * 720 - 360
+    return {
+      id: i,
+      style: {
+        width: `${size}px`, height: `${size}px`,
+        background: TIER_BURST_COLORS[Math.floor(Math.random() * TIER_BURST_COLORS.length)],
+        borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+        '--tx': `${tx}px`, '--ty': `${ty}px`, '--trot': `${rot}deg`,
+        transform: `scale(${(0.8 + Math.random()).toFixed(2)})`,
+      },
+    }
+  })
 }
 
 const daysTogether = (createdAt) => {
@@ -353,6 +380,79 @@ export default function Dashboard() {
     }
   }, [sKey])
   useEffect(() => () => { if (burstTimerRef.current) clearTimeout(burstTimerRef.current) }, [])
+
+  // 티어업(111 단위)/만렙(777) 축하 폭죽 — 진행 중인 웨이브들의 목록. 웨이브마다 자기 타이머로
+  // 스스로 사라지므로, 최대 동시 파티클 수가 한 웨이브분(최대 200개)으로 제한된다(팀장 리뷰:
+  // 만렙 5단계+마무리를 한꺼번에 렌더하면 최대 600개가 동시에 떠서 무겁다).
+  const [tierBursts, setTierBursts] = useState([])
+  const tierBurstTimersRef = useRef([])
+  useEffect(() => () => { tierBurstTimersRef.current.forEach(clearTimeout); tierBurstTimersRef.current = [] }, [])
+
+  const fireTierCelebration = useCallback((isMax) => {
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const mascotEl = document.querySelector('.clov-mascot-sprite') ?? document.querySelector('.clov-mascot')
+    const mascotRect = mascotEl?.getBoundingClientRect()
+    const bannerRect = sceneNodeRef.current?.getBoundingClientRect()
+    const fallback = bannerRect
+      ? { x: bannerRect.left + bannerRect.width / 2, y: bannerRect.top + bannerRect.height / 2 }
+      : { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+    const mascotPoint = mascotRect ? { x: mascotRect.left + mascotRect.width / 2, y: mascotRect.top + mascotRect.height / 2 } : fallback
+
+    const spawnStage = (point, count, spread, delay) => {
+      const startTimer = setTimeout(() => {
+        const stageId = `${Date.now()}-${Math.random()}`
+        setTierBursts((cur) => [...cur, { id: stageId, x: point.x, y: point.y, particles: buildTierBurstParticles(count, spread) }])
+        const endTimer = setTimeout(() => setTierBursts((cur) => cur.filter((b) => b.id !== stageId)), 1800)
+        tierBurstTimersRef.current.push(endTimer)
+      }, delay)
+      tierBurstTimersRef.current.push(startTimer)
+    }
+
+    if (isMax) {
+      // 만렙 6단계(프로토타입 triggerTierUpEvent 그대로): 정중앙(0ms) → 좌상(400) → 우상(800) →
+      // 좌하(1200) → 우하(1600) → 마스코트 마무리(2000). 정중앙만 파티클 200개/spread 600으로 더 큼.
+      const w = window.innerWidth, h = window.innerHeight
+      spawnStage({ x: w / 2, y: h / 2 }, 200, 600, 0)
+      spawnStage({ x: w * 0.2, y: h * 0.3 }, 100, 300, 400)
+      spawnStage({ x: w * 0.8, y: h * 0.3 }, 100, 300, 800)
+      spawnStage({ x: w * 0.3, y: h * 0.7 }, 100, 300, 1200)
+      spawnStage({ x: w * 0.7, y: h * 0.7 }, 100, 300, 1600)
+      spawnStage(mascotPoint, 150, 400, 2000)
+    } else {
+      spawnStage(mascotPoint, 100, 400, 0)
+    }
+  }, [])
+
+  // 마지막으로 본 레벨을 방마다 기기-로컬(localStorage)에 저장해뒀다가 새 값과 비교해서
+  // "티어가 바뀌었는지/만렙을 찍었는지" 판정한다. 같은 방을 쓰는 누구의 XP든(내 것이든 친구
+  // 것이든) 레벨이 올랐으면 같이 축하한다 — 방 레벨은 개인 것이 아니라 공동 성과다.
+  // localStorage를 쓰는 이유: 메모리(ref)만 쓰면 방을 나갔다 오거나(라우트에 key가 없어
+  // 재마운트도 안 됨) 새로고침하면 기준값이 사라져서, 밖에 있는 동안 친구가 레벨을 올려도
+  // 다시 들어왔을 때 못 잡는다 — localStorage는 페이지를 새로 열어도 남아있어서, 방에 다시
+  // 들어왔을 때 "내가 마지막으로 본 값"과 비교해 뒤늦게라도(캐치업) 터뜨릴 수 있다.
+  // 오탐 방지: level 쿼리가 로딩 중일 때의 임시값은 절대 안 읽고 안 쓴다(성공 후에만 비교·저장) —
+  // 안 그러면 로딩 중 임시값이 기준으로 저장돼 화면 진입할 때마다 잘못 터질 수 있다.
+  // 이 방(roomId)을 처음 보는 경우(저장된 값 없음)는 기준값만 저장하고 터뜨리지 않는다 —
+  // 막 들어온 방의 기존 레벨을 "방금 달성"으로 오해하면 안 된다.
+  useEffect(() => {
+    const newLevel = level.data?.friendshipLevel
+    if (!level.isSuccess || newLevel == null) return
+    const storageKey = `clov-room-${roomId}-last-seen-level`
+    let stored = null
+    try {
+      const raw = localStorage.getItem(storageKey)
+      stored = raw != null ? Number(raw) : null
+    } catch { /* storage 차단 무시 */ }
+    if (stored != null && Number.isFinite(stored) && newLevel > stored) {
+      // "티어가 바뀌었는지"가 아니라 "111의 배수(111/222/.../777)를 새로 찍었는지"로 판정한다 —
+      // 111 자체가 달성 순간이다(110→111에서 터짐, 111→112가 아니라). 한 번에 여러 레벨을 건너뛰어도
+      // (예: 100→115) 그 사이에 배수가 있으면 잡히도록 몫 비교로 계산한다.
+      const crossedMultiple = Math.floor(newLevel / 111) > Math.floor(stored / 111)
+      const justHitMax = newLevel >= MAX_LEVEL
+      if (crossedMultiple) fireTierCelebration(justHitMax)
+    }
+    try { localStorage.setItem(storageKey, String(newLevel)) } catch { /* storage 차단 무시 */ }
+  }, [level.isSuccess, level.data?.friendshipLevel, roomId, fireTierCelebration])
 
   if (room.isPending) {
     return <div className="proto-dashboard"><div className="dash-main"><div className="dash-state">불러오는 중…</div></div></div>
@@ -605,6 +705,17 @@ export default function Dashboard() {
 
       {historyOpen && (
         <ExpHistoryModal roomId={roomId} onClose={() => setHistoryOpen(false)} />
+      )}
+
+      {tierBursts.length > 0 && createPortal(
+        <div className="tier-burst-layer" aria-hidden="true">
+          {tierBursts.map((wave) => (
+            <div key={wave.id} className="tier-burst" style={{ left: wave.x, top: wave.y }}>
+              {wave.particles.map((p) => <span key={p.id} className="tier-burst-particle" style={p.style} />)}
+            </div>
+          ))}
+        </div>,
+        document.body,
       )}
 
       {coverViewOpen && data.coverPhotoUrl && (

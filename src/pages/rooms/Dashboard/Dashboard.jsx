@@ -854,9 +854,35 @@ function ClinePolaroid({ memory, isActive, onOpen }) {
   )
 }
 
+// 일기장 테마의 배경 레이어 — 펼친 책(종이 두께·본문·책등) + 메모지 + 스티커.
+// 전부 장식이라 pointer-events는 CSS에서 없애고, 카드 클릭을 가리지 않도록 cline-wire-area 앞에 깐다.
+function DiaryStage() {
+  return (
+    <>
+      <div className="diary-page-stack left" />
+      <div className="diary-page-stack right" />
+
+      <div className="diary-page-text left-page" />
+      <div className="diary-spine" />
+      <div className="diary-page-text right-page" />
+
+      <div className="diary-memo" />
+
+      <div className="diary-sticker clover" style={{ top: '8%', left: '6%', transform: 'rotate(-15deg) scale(1.15)' }} />
+      <div className="diary-sticker flower" style={{ top: '55%', left: '12%', transform: 'rotate(18deg) scale(1.05)' }} />
+      <div className="diary-sticker clover" style={{ bottom: '10%', left: '4%', transform: 'rotate(-8deg) scale(1.2)' }} />
+
+      <div className="diary-sticker flower" style={{ top: '12%', right: '5%', transform: 'rotate(12deg) scale(1.2)' }} />
+      <div className="diary-sticker clover" style={{ top: '45%', right: '8%', transform: 'rotate(-5deg) scale(1.8)' }} />
+      <div className="diary-sticker flower" style={{ bottom: '8%', right: '8%', transform: 'rotate(22deg) scale(1.15)' }} />
+    </>
+  )
+}
+
 // 참여자별 추억 증거 카드 — 빨랫줄+집게 캐러셀 + 필름스트립(프로토타입 cline 뷰어 기본 테마 이식).
 // 최신순 memories에서 index=현재("현재"), +delta=과거·-delta=최신 카드를 좌우로 건다.
-// cardTheme: 'clothesline'(빨랫줄, 기본 마크업) | 'stack'(겹침 카드, 빨랫줄/집게 없이 카드가 겹쳐 쌓임).
+// cardTheme: 'clothesline'(빨랫줄, 기본 마크업) | 'stack'(겹침 카드, 빨랫줄/집게 없이 카드가 겹쳐 쌓임)
+// | 'diary'(일기장, 펼친 책 위에 카드가 부채꼴로 놓임).
 function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
   const [index, setIndex] = useState(0)
   const framesRef = useRef(null)
@@ -864,6 +890,9 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
   const total = memories.length
   const clamp = (i) => Math.min(Math.max(i, 0), total - 1)
   const isStack = cardTheme === 'stack'
+  const isDiary = cardTheme === 'diary'
+  // 겹침 카드·일기장은 같은 슬롯 구성(±3)에 빨랫줄/집게가 없다. 일기장은 CSS에서 바깥 슬롯을 숨겨 4장만 보인다.
+  const isFanned = isStack || isDiary
 
   // index가 바뀌면 현재 프레임을 필름 중앙으로 스크롤.
   useEffect(() => {
@@ -872,13 +901,13 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
   }, [index])
 
   const SLOTS = [
-    ...(isStack ? [{ delta: 3, cls: 'far-far-past' }] : []),
+    ...(isFanned ? [{ delta: 3, cls: 'far-far-past' }] : []),
     { delta: 2, cls: 'far-past' },
     { delta: 1, cls: 'past' },
     { delta: 0, cls: 'current' },
     { delta: -1, cls: 'newer' },
     { delta: -2, cls: 'far-newer' },
-    ...(isStack ? [{ delta: -3, cls: 'far-far-newer' }] : []),
+    ...(isFanned ? [{ delta: -3, cls: 'far-far-newer' }] : []),
   ]
 
   const onPointerDown = (e) => {
@@ -900,23 +929,31 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
   }
 
   return (
-    <div className={`memory-evidence-viewer cline-viewer ${isStack ? 'theme-coverflow' : ''}`}>
+    <div className={`memory-evidence-viewer cline-viewer ${isStack ? 'theme-coverflow' : ''} ${isDiary ? 'theme-diary' : ''}`}>
       <div className="cline-stage">
+        {isDiary && <DiaryStage />}
         <div className="cline-wire-area">
           <div className="cline-wire" />
           <div className="cline-cards">
             {SLOTS.map(({ delta, cls }) => {
               const i = index + delta
-              if (i < 0 || i >= total) return <div key={cls} className="cline-card-slot cline-slot--empty" />
+              if (i < 0 || i >= total) {
+                // 일기장은 빈 슬롯도 슬롯 클래스를 달아야 CSS가 바깥 슬롯(far-newer 등)을 숨겨 4장 배치가 유지된다.
+                return <div key={cls} className={`cline-card-slot cline-slot--empty ${isDiary ? `cline-slot--${cls} is-empty` : ''}`} />
+              }
               const isActive = delta === 0
+              // 일기장: 펼친 책의 양쪽 페이지(delta 0·1) 둘 다 상세보기로 열린다.
+              const opensDetail = isActive || (isDiary && delta === 1)
+              // 일기장: 바깥쪽(+2) 카드는 2칸이 아니라 1칸만 넘겨 "책장을 한 장씩 넘기는" 느낌을 유지한다.
+              const target = isDiary && delta === 2 ? index + 1 : i
               return (
                 <div
                   key={cls}
                   className={`cline-card-slot cline-slot--${cls} ${isActive ? 'is-active' : ''}`}
-                  onClick={isActive ? undefined : () => setIndex(clamp(i))}
+                  onClick={opensDetail ? undefined : () => setIndex(clamp(target))}
                 >
-                  {!isStack && <Clothespin />}
-                  <ClinePolaroid memory={memories[i]} isActive={isActive} onOpen={isActive ? () => onOpen(memories[i]?.id) : undefined} />
+                  {!isFanned && <Clothespin />}
+                  <ClinePolaroid memory={memories[i]} isActive={isActive} onOpen={opensDetail ? () => onOpen(memories[i]?.id) : undefined} />
                 </div>
               )
             })}

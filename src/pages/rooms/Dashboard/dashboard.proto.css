@@ -462,6 +462,106 @@ body.light-mode .proto-dashboard .section-actions .clov-btn--action { background
 .proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-past:hover,
 .proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-newer:hover { transform: scale(.63) translateY(-6px); opacity: .88; filter: brightness(.92); z-index: 5; }
 .proto-dashboard .cline-viewer.theme-coverflow .cline-slot--empty { width: 210px; min-width: 210px; flex-shrink: 0; margin: 0 -38px; min-height: 20px; pointer-events: none; visibility: hidden; }
+
+/* ── 참여자별 추억 증거 카드 테마: 일기장(diary) — 펼친 책 위에 카드 4장이 부채꼴로 놓이는 스타일 ──
+   목업 desktop.css의 .cline-viewer.theme-diary 블록 이식. 이미지 경로만 public/diary/로 바꿨다. */
+.proto-dashboard .cline-viewer.theme-diary .cline-wire,
+.proto-dashboard .cline-viewer.theme-diary .cline-clip-svg { display: none !important; }
+
+.proto-dashboard .cline-viewer.theme-diary .cline-cards { justify-content: center; gap: 0; width: 100%; padding: 16px 0; }
+.proto-dashboard .cline-viewer.theme-diary .cline-card-slot {
+  position: relative; opacity: 1; filter: none;
+  transition: transform .3s cubic-bezier(.175, .885, .32, 1.275), z-index 0s;
+  margin-left: -50px; flex-shrink: 0; cursor: pointer; width: 210px; min-width: 210px;
+}
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--empty {
+  width: 210px; min-width: 210px; flex-shrink: 0; margin-left: -50px; pointer-events: none; visibility: hidden;
+}
+
+/* 일기장은 4장만 쓴다 — 바깥 슬롯은 감춘다 */
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--far-far-past,
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--far-far-newer,
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--far-newer { display: none !important; }
+
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--far-past { transform: rotate(-3deg) translateY(5px); z-index: 4; opacity: 1; margin-left: 0; }
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--past { transform: rotate(2deg) translateY(-2px); z-index: 5; opacity: 1; }
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--current { transform: rotate(7deg) translateY(2px); z-index: 6; opacity: 1; }
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--newer { transform: rotate(12deg) translateY(8px); z-index: 7; opacity: 1; }
+
+.proto-dashboard .cline-viewer.theme-diary .cline-card-slot:hover { transform: translateY(-20px) scale(1.15) rotate(0deg); z-index: 99; }
+.proto-dashboard .cline-viewer.theme-diary .cline-card-slot:hover .cline-polaroid { box-shadow: 0 20px 40px rgba(0,0,0,.3); }
+
+/* 펼친 책 무대 — ::before는 초록 표지, ::after는 종이면 */
+.proto-dashboard .cline-viewer.theme-diary .cline-stage {
+  position: relative; background-color: transparent; margin: 40px auto;
+  padding: 25px 30px 40px; width: 100%; max-width: 950px;
+  border-radius: 4px; box-shadow: none; z-index: 1;
+}
+.proto-dashboard .cline-viewer.theme-diary .cline-stage::before {
+  content: ''; position: absolute; top: -18px; right: -20px; bottom: -18px; left: -20px;
+  background-color: #9fc094;
+  background-image:
+    linear-gradient(90deg, rgba(255,255,255,.05) 0%, transparent 5%, transparent 95%, rgba(255,255,255,.05) 100%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='fleece'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.15' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23fleece)' opacity='0.35'/%3E%3C/svg%3E");
+  border-radius: 12px;
+  box-shadow:
+    inset 4px 4px 10px rgba(255,255,255,.2), inset -4px -4px 10px rgba(0,0,0,.15), inset 0 0 15px rgba(0,0,0,.1),
+    3px 5px 0 #5e7852, 15px 30px 50px rgba(0,0,0,.35);
+  z-index: -2; pointer-events: none;
+}
+.proto-dashboard .cline-viewer.theme-diary .cline-stage::after {
+  content: ''; position: absolute; inset: 0;
+  background-color: #fdfbf7;
+  background-image:
+    linear-gradient(to right,
+      rgba(0,0,0,.02) 0%, rgba(255,255,255,.4) 15%, rgba(255,255,255,0) 35%, rgba(0,0,0,.03) 48%,
+      rgba(0,0,0,.12) 50%, rgba(0,0,0,.03) 52%, rgba(255,255,255,0) 65%, rgba(255,255,255,.4) 85%, rgba(0,0,0,.02) 100%),
+    repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(160,180,200,.2) 27px, rgba(160,180,200,.2) 28px),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 40px rgba(139,115,85,.06),
+    0 0 0 1px #f4f0e6, 0 0 0 2px #e5ddcd, 0 0 0 3px rgba(0,0,0,.1),
+    -2px 0 5px rgba(0,0,0,.15), 2px 0 5px rgba(0,0,0,.15);
+  z-index: -1; pointer-events: none;
+}
+
+.proto-dashboard .cline-viewer.theme-diary .diary-page-stack { position: absolute; top: 3px; bottom: 3px; width: 24px; z-index: -2; pointer-events: none; }
+.proto-dashboard .cline-viewer.theme-diary .diary-page-stack.left {
+  left: -14px;
+  background: repeating-linear-gradient(to right, #ebdcb8 0px, #ebdcb8 1px, #fdf8e9 1px, #fdf8e9 3px);
+  border-right: 1px solid #d4ccb8; border-radius: 8px 0 0 8px;
+  box-shadow: inset 5px 0 10px rgba(0,0,0,.08), -3px 5px 10px rgba(0,0,0,.15);
+}
+.proto-dashboard .cline-viewer.theme-diary .diary-page-stack.right {
+  right: -14px;
+  background: repeating-linear-gradient(to left, #ebdcb8 0px, #ebdcb8 1px, #fdf8e9 1px, #fdf8e9 3px);
+  border-left: 1px solid #d4ccb8; border-radius: 0 8px 8px 0;
+  box-shadow: inset -5px 0 10px rgba(0,0,0,.08), 3px 5px 10px rgba(0,0,0,.15);
+}
+
+.proto-dashboard .cline-viewer.theme-diary .diary-page-text {
+  position: absolute; top: 20px; bottom: 20px; width: 42%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200'%3E%3Cstyle%3Etext { font-family: 'Times New Roman', serif; font-size: 8px; fill: rgba(0,0,0,0.18); letter-spacing: 0.2px; }%3C/style%3E%3Ctext x='15' y='20'%3EAt vero eos et accusamus et iusto odio dignissimos ducimus qui%3C/text%3E%3Ctext x='15' y='32'%3Eblanditiis praesentium voluptatum deleniti atque corrupti quos%3C/text%3E%3Ctext x='15' y='44'%3Edolores et quas molestias excepturi sint occaecati cupiditate%3C/text%3E%3Ctext x='15' y='56'%3Enon provident, similique sunt in culpa qui officia deserunt%3C/text%3E%3Ctext x='15' y='68'%3Emollitia animi, id est laborum et dolorum fuga. Et harum quidem%3C/text%3E%3Ctext x='15' y='80'%3Ererum facilis est et expedita distinctio. Nam libero tempore,%3C/text%3E%3Ctext x='15' y='92'%3Ecum soluta nobis est eligendi optio cumque nihil impedit quo%3C/text%3E%3Ctext x='15' y='104'%3Eminus id quod maxime placeat facere possimus, omnis voluptas%3C/text%3E%3Ctext x='15' y='116'%3Eassumenda est, omnis dolor repellendus. Temporibus autem%3C/text%3E%3Ctext x='15' y='128'%3Equibusdam et aut officiis debitis aut rerum necessitatibus%3C/text%3E%3Ctext x='15' y='140'%3Esaepe eveniet ut et voluptates repudiandae sint et molestiae%3C/text%3E%3Ctext x='15' y='152'%3Enon recusandae. Itaque earum rerum hic tenetur a sapiente%3C/text%3E%3Ctext x='15' y='164'%3Edelectus, ut aut reiciendis voluptatibus maiores alias%3C/text%3E%3Ctext x='15' y='176'%3Econsequatur aut perferendis doloribus asperiores repellat.%3C/text%3E%3C/svg%3E");
+  background-repeat: repeat-y; z-index: 2; pointer-events: none;
+}
+.proto-dashboard .cline-viewer.theme-diary .diary-page-text.left-page { left: 4%; background-position: left top; }
+.proto-dashboard .cline-viewer.theme-diary .diary-page-text.right-page { right: 4%; background-position: right top; }
+
+.proto-dashboard .cline-viewer.theme-diary .diary-memo {
+  position: absolute; top: -65px; left: 10%; width: 170px; height: 215px;
+  background-image: url('/diary/diary-memo.png');
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  border-radius: 0; box-shadow: none; transform: rotate(-3deg); z-index: 1; pointer-events: none;
+}
+
+.proto-dashboard .cline-viewer.theme-diary .diary-sticker {
+  position: absolute; width: 85px; height: 85px;
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+  z-index: 2; pointer-events: none; filter: drop-shadow(1px 2px 4px rgba(0,0,0,.15));
+}
+.proto-dashboard .cline-viewer.theme-diary .diary-sticker.clover { background-image: url('/diary/clover_sticker_transparent.png'); }
+.proto-dashboard .cline-viewer.theme-diary .diary-sticker.flower { background-image: url('/diary/flower_sticker_transparent.png'); }
 .proto-dashboard .cline-clip-svg {
   width: 28px; height: 48px; flex-shrink: 0; margin-bottom: -10px; position: relative; z-index: 4;
   filter: drop-shadow(0 3px 8px rgba(0,0,0,.45)) drop-shadow(0 1px 2px rgba(0,0,0,.3));

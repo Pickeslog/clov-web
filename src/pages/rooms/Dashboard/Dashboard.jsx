@@ -195,6 +195,28 @@ const EXP_ACTION_LABEL = {
   MASCOT_INTERACT: '마스코트 교감',
 }
 const expActionLabel = (actionType) => EXP_ACTION_LABEL[actionType] ?? '경험치 적립'
+// 사진 여러 장을 한 추억에 올리면 MEMORY_IMAGE_BONUS가 장당 한 행씩 쌓여 히스토리가 도배된다.
+// 정렬(최신순)을 유지해야 "언제 무엇을"이 안 흐트러지므로, 같은 추억이면 전부가 아니라
+// "바로 인접한" 행만 묶는다 — 시간 차를 두고 같은 추억에 두 번 사진을 올린 경우, 그 사이
+// 다른 활동이 끼어 있으면 별개 그룹으로 남아 각자의 시각이 보존된다(팀장 리뷰 결정).
+function groupAdjacentImageBonus(items) {
+  const groups = []
+  for (const log of items) {
+    const prev = groups[groups.length - 1]
+    const canMerge = prev
+      && prev.actionType === 'MEMORY_IMAGE_BONUS'
+      && log.actionType === 'MEMORY_IMAGE_BONUS'
+      && log.referenceId != null
+      && prev.referenceId === log.referenceId
+    if (canMerge) {
+      prev.expDelta += log.expDelta
+      prev.count += 1
+    } else {
+      groups.push({ ...log, count: 1 })
+    }
+  }
+  return groups
+}
 
 export default function Dashboard() {
   const { roomId } = useParams()
@@ -745,6 +767,9 @@ function ExpHistoryModal({ roomId, onClose }) {
     const d = parseUtc(log.createdAt)
     return d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
   })
+  // 그룹핑은 오늘 필터(#116) 결과 위에 얹는다 — 순서가 반대면 어제/오늘 항목이 한 그룹으로
+  // 섞인 뒤 대표 시각 하나로 걸러지면서 날짜가 어긋날 수 있다(팀장 리뷰).
+  const groupedItems = groupAdjacentImageBonus(items)
 
   return (
     <div className="member-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -760,11 +785,13 @@ function ExpHistoryModal({ roomId, onClose }) {
             {allItems.length === 0 ? '아직 쌓인 경험치가 없어요.' : '오늘 쌓은 경험치가 없어요.'}
           </div>
         )}
-        {logsQuery.isSuccess && items.map((log) => (
+        {logsQuery.isSuccess && groupedItems.map((log) => (
           <div className="exp-history-row" key={log.id}>
             <span className="member-row-av exp-history-av">{initialOf(log.triggeredBy?.nickname)}</span>
             <div className="exp-history-main">
-              <div className="exp-history-label">{log.triggeredBy?.nickname ?? '알 수 없음'}님 · {expActionLabel(log.actionType)}</div>
+              <div className="exp-history-label">
+                {log.triggeredBy?.nickname ?? '알 수 없음'}님 · {expActionLabel(log.actionType)}{log.count > 1 ? ` ×${log.count}` : ''}
+              </div>
               <div className="exp-history-date">{formatDate(log.createdAt)} {formatTime(log.createdAt)}</div>
             </div>
             <span className="exp-history-delta">+{log.expDelta}</span>

@@ -177,8 +177,10 @@ const daysTogether = (createdAt) => {
   return Math.floor((Date.now() - created.getTime()) / DAY) + 1
 }
 const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
-// 뱃지 색상 구분: 3일 이내=urgent, 7일 이내=soon, 그 외=far. 값이 없으면(파싱 불가) far로 취급.
-const ddayUrgency = (n) => (n == null ? 'far' : n <= 3 ? 'urgent' : n <= 7 ? 'soon' : 'far')
+// 뱃지 색상 구분(프로토타입 getDdayAccent 이식) — 지남=회색, 오늘=장미, 7일 이내=주황, 그 외=초록.
+// 대시보드의 upcoming 필터가 오늘/미래 일정만 남기므로 'past'는 이 화면에서 실제로 렌더되지 않지만,
+// 원본 함수 형태를 그대로 유지해 다른 화면에서 재사용할 때도 맞게 동작하게 한다.
+const ddayUrgency = (n) => (n == null ? 'far' : n < 0 ? 'past' : n === 0 ? 'today' : n <= 7 ? 'soon' : 'far')
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
 // 상태 메시지 가중 길이(한글 2, 그 외 1) — 프로토타입 "한글 20자 / 영어 40자".
 const weightedLen = (s) => [...(s || '')].reduce((n, ch) => n + (/[㄰-㆏가-힣]/.test(ch) ? 2 : 1), 0)
@@ -501,11 +503,23 @@ export default function Dashboard() {
             <Button variant="dashed" size="sm" onClick={() => setComposeSchedule(true)}>+ 새 D-day 만들기</Button>
           </div>
         </div>
-        {upcoming.length === 0 ? (
-          <div className="schedule-empty">예정된 약속이 없어요. 새 D-day를 만들어보세요.</div>
-        ) : (
-          <div className="schedule-grid">
-            {upcoming.map((p) => (
+        {/* 항상 3칸 — 부족한 칸은 "새로운 약속 만들기" 고스트 카드로 채운다(프로토타입 top3 로직 이식,
+            과거 일정으로 채우지는 않음: upcoming은 오늘/미래만이라 미래+고스트만). */}
+        <div className="schedule-grid">
+          {[0, 1, 2].map((i) => {
+            const p = upcoming[i]
+            if (!p) {
+              return (
+                <div key={`ghost-${i}`} className="schedule-banner schedule-banner--ghost" onClick={() => setComposeSchedule(true)}>
+                  <div className="schedule-info">
+                    <span className="schedule-icon">+</span>
+                    <span className="schedule-title">새로운 약속 만들기</span>
+                    <span className="schedule-date">클릭하여 일정을 추가해보세요</span>
+                  </div>
+                </div>
+              )
+            }
+            return (
               <div key={p.id} className="schedule-banner" onClick={() => go('schedule')}>
                 <div className="schedule-info">
                   <span className="schedule-icon">📅</span>
@@ -514,9 +528,9 @@ export default function Dashboard() {
                 </div>
                 <span className={`schedule-dday-badge is-${ddayUrgency(ddayDiff(p.planDate))}`}>{ddayLabel(ddayDiff(p.planDate))}</span>
               </div>
-            ))}
-          </div>
-        )}
+            )
+          })}
+        </div>
 
         {/* 참여자별 추억 증거 카드 */}
         <div className="section-title">

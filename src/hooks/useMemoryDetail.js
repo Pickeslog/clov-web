@@ -38,7 +38,9 @@ export function useMemoryDetail(memoryId, roomId, { onDeleted } = {}) {
       const imageUrl = await uploadImage((base) => presignMemoryImage(memoryId, base), file)
       return commitMemoryImage(memoryId, { imageUrl })
     },
-    onSuccess: invalidateBoth,
+    // 이미 쓴 추억에 사진을 나중에 추가해도 MEMORY_IMAGE_BONUS XP가 붙는다(계약 §12,
+    // MemoryService.commitImage) — 작성 시점 첨부(useCreateMemory)와 별개 경로라 따로 무효화 필요.
+    onSuccess: () => { invalidateBoth(); queryClient.invalidateQueries({ queryKey: ['room', roomId] }) },
   })
   const deleteImageMutation = useMutation({ mutationFn: (imageId) => deleteMemoryImage(imageId), onSuccess: invalidateBoth })
   const reorderImageMutation = useMutation({ mutationFn: (imageIds) => reorderMemoryImages(memoryId, { imageIds }), onSuccess: invalidateMemory })

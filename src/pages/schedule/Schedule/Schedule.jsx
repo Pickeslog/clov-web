@@ -126,13 +126,22 @@ export default function Schedule() {
 
   const createMutation = useMutation({
     mutationFn: (payload) => createPlan(roomId, payload),
-    onSuccess: (created) => { invalidateList(); setEditing(null); if (created?.id) setSelectedPlanId(created.id) },
+    // 약속 등록은 XP도 준다(PLAN_CREATE, 계약 §12) — room 프리픽스 무효화로 레벨 게이지/히스토리도 갱신.
+    onSuccess: (created) => {
+      invalidateList(); setEditing(null); if (created?.id) setSelectedPlanId(created.id)
+      queryClient.invalidateQueries({ queryKey: ['room', roomId] })
+    },
   })
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }) => updatePlan(id, payload),
     onSuccess: () => { invalidateList(); invalidateDetail(); setEditing(null) },
   })
-  const completeMutation = useMutation(detailMutation(() => completePlan(effectiveId)))
+  // 약속 완료는 XP도 준다(PLAN_COMPLETE, 계약 §12) — 다른 detailMutation류(취소/스킵/체크리스트)는
+  // XP가 없어서 공용 헬퍼를 안 쓰고 이것만 따로 room 프리픽스 무효화를 추가한다.
+  const completeMutation = useMutation({
+    mutationFn: () => completePlan(effectiveId),
+    onSuccess: () => { invalidateList(); invalidateDetail(); queryClient.invalidateQueries({ queryKey: ['room', roomId] }) },
+  })
   const cancelMutation = useMutation(detailMutation(() => cancelPlan(effectiveId)))
   const skipMutation = useMutation(detailMutation(() => skipPlanMemory(effectiveId)))
   const addCheckMutation = useMutation(detailMutation((content) => addChecklist(effectiveId, { content })))

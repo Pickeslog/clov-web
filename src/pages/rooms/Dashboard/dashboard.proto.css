@@ -369,10 +369,15 @@
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   font-size: 16px; font-weight: 700; color: var(--text-color); margin: 22px 0 14px;
 }
-/* 카드 배경 없이 페이지 배경(우드텍스처, index.css --clov-app-bg)에 바로 노출되는 텍스트라
-   다크모드 밝은 글자색만으로는 대비가 부족했다 — 라벨에 불투명 배경을 채워서 보정. */
-.proto-dashboard .section-title-label { background: rgba(0,0,0,.22); padding: 4px 12px; border-radius: 10px; }
-body.light-mode .proto-dashboard .section-title-label { background: rgba(255,255,255,.55); }
+/* 60% 불투명 카드 + 초록 점선 테두리. 완전 불투명(#1b4332 등)보다 가볍고 clov 톤에 맞지만,
+   투명도가 있는 만큼 글자색만은 배경 테마와 무관하게 확실히 대비되도록 고정한다. */
+.proto-dashboard .section-title-label {
+  padding: 4px 12px; border-radius: 10px;
+  background: rgba(0,0,0,.6); border: 1px dashed rgba(27,67,50,.7); color: #fff;
+}
+body.light-mode .proto-dashboard .section-title-label {
+  background: rgba(255,255,255,.6); border-color: rgba(82,183,136,.6); color: #12150a;
+}
 .proto-dashboard .section-actions { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
 /* 섹션 버튼은 공통 <Button variant="dashed|action"> 로 대체.
    action(텍스트 링크형)은 배경이 없어서(Button.css 공통 스타일) 같은 이유로 대비가 부족했다 —
@@ -398,17 +403,46 @@ body.light-mode .proto-dashboard .section-actions .clov-btn--action { background
 .proto-dashboard .schedule-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .proto-dashboard .schedule-date { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
 .proto-dashboard .schedule-dday-badge {
-  position: relative; background: var(--primary-green); color: var(--button-text);
+  position: relative; background: var(--primary-green);
+  /* 4색 다 밝은 파스텔이라 라이트모드의 var(--button-text)(흰색)는 대비가 다 WCAG 미달로 깨진다
+     (팀장 코멘트로 확인됨) — 테마 변수에 기대지 않고 배지 전용 고정 어두운 색을 쓴다. */
+  color: #12150a;
   padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; letter-spacing: -.5px; flex-shrink: 0;
+  /* position:relative만으로는 스태킹 컨텍스트가 안 생겨서 ::before(z-index:-1)가 카드 배경 뒤로
+     숨어버린다 — z-index를 명시해야 블롭이 카드 배경 위·배지 밑에 정확히 낀다(프로토타입 space.css:490). */
+  z-index: 1;
 }
-/* 임박도별 색상 구분 — 급함(3일 이내)=주황, 여유(7일 이내)=초록(default), 그 외=파랑 */
-.proto-dashboard .schedule-dday-badge.is-urgent { background: #e0873a; }
-.proto-dashboard .schedule-dday-badge.is-far { background: #3a7ce0; }
-.proto-dashboard .schedule-empty {
-  grid-column: 1 / -1; padding: 22px 16px; border-radius: 14px; text-align: center;
-  color: var(--text-muted); font-size: 13px; font-weight: 600;
-  background: rgba(255,255,255,.04); border: 1px dashed var(--border-color);
+/* 배지 뒤 유기적 블롭(물감 번짐) 장식 — 배지 자체 색을 그대로 물려받는다(프로토타입 space.css:493-504 이식) */
+.proto-dashboard .schedule-dday-badge::before {
+  content: ''; position: absolute; top: -2px; left: -4px; right: -2px; bottom: -3px;
+  background-color: inherit; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+  z-index: -1; opacity: .6;
 }
+/* 임박도 4단계(프로토타입 getDdayAccent 이식) — 지남=회색/오늘=장미/7일 이내=주황/그 외=초록.
+   'past'는 대시보드 upcoming 필터상 실제로는 렌더 안 되는 분기지만 원본 형태를 그대로 유지. */
+.proto-dashboard .schedule-dday-badge.is-past { background: #94a3b8; }
+.proto-dashboard .schedule-dday-badge.is-today { background: #fb7185; }
+.proto-dashboard .schedule-dday-badge.is-soon { background: #f59e0b; }
+.proto-dashboard .schedule-dday-badge.is-far { background: #4ade80; }
+/* 부족한 칸을 채우는 고스트 카드 — 실제 카드와 구분되게 점선 테두리 + 카드 스타일 배경.
+   페이지 배경은 사용자가 고를 수 있는 배경 테마(우드텍스처부터 네온 도시 사진까지)라 밝기·복잡도가
+   제각각이다. 반투명 배경(예: rgba(...,.04))으로는 어떤 배경을 깔아도 이미지가 그대로 비쳐서 글자가
+   묻힌다. 실제 카드가 --card-bg(불투명)로 이 문제를 피하듯, 고스트 카드도 거의 불투명한 배경을 써서
+   어떤 배경 테마 위에서도 카드 하나가 또렷이 도드라지게 한다. 테마 변수는 참조하지 않고
+   라이트 모드 색을 라이트/다크 공통으로 고정(다크모드 텍스트가 밝아서 생기는 문제 회피).*/
+.proto-dashboard .schedule-banner.schedule-banner--ghost {
+  cursor: pointer; border: 1.5px dashed rgba(27,67,50,.45); background: rgba(250,246,238,.94);
+}
+.proto-dashboard .schedule-banner.schedule-banner--ghost .schedule-info { color: #2c3e35; }
+.proto-dashboard .schedule-banner.schedule-banner--ghost .schedule-title,
+.proto-dashboard .schedule-banner.schedule-banner--ghost .schedule-date { color: #61766a; }
+/* "+ 새 D-day 만들기" 버튼(Button variant="dashed")도 같은 이유로 다크모드 기본 팔레트(연한 초록,
+   반투명)가 항상 밝은 페이지 배경 위에서 흐려 보인다. Button.css는 앱 전체 공용이라 건드리지 않고,
+   대시보드 스코프 안에서만 라이트 모드 색으로 고정한다. */
+.proto-dashboard .clov-btn--dashed {
+  background: #faf6ee; color: #2e5233; border-color: rgba(46,82,51,.45);
+}
+.proto-dashboard .clov-btn--dashed:not(:disabled):hover { background: #f3efe1; }
 
 /* ===== 참여자별 추억 증거 카드 (cline 빨랫줄+집게 캐러셀 + 필름스트립 · 프로토타입 이식) ===== */
 .proto-dashboard .memory-empty {
@@ -586,7 +620,9 @@ body.light-mode .proto-dashboard .cover-status-count { background: rgba(27,67,50
 body.light-mode .proto-dashboard .member-see { background: rgba(27,67,50,.08); color: #1b4332; border-color: rgba(27,67,50,.12); }
 body.light-mode .proto-dashboard .cover-status-save { color: #fff; }
 body.light-mode .proto-dashboard .schedule-banner { background: rgba(232,243,237,.92); border-color: rgba(255,255,255,.3); }
-body.light-mode .proto-dashboard .schedule-empty,
+/* 위의 일반 .schedule-banner 라이트모드 규칙(연녹색 배경)이 명시성 때문에 고스트 카드에도 걸리므로,
+   고스트 전용 값(거의 불투명한 크림색 배경 + 진한 점선)으로 다시 덮어써서 라이트/다크 동일하게 유지 */
+body.light-mode .proto-dashboard .schedule-banner.schedule-banner--ghost { border-color: rgba(27,67,50,.45); background: rgba(250,246,238,.94); }
 body.light-mode .proto-dashboard .memory-empty { background: rgba(0,0,0,.03); border-color: var(--border-color); }
 
 /* ===== 친구 초대 모달 (§7 초대코드 생성/복사·공유) — 팔레트 토큰이 라이트/다크 자동 대응 ===== */

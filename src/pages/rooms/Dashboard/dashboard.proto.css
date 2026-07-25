@@ -128,6 +128,10 @@
 @media (prefers-reduced-motion: reduce) {
   .proto-dashboard .v5-scene .v5-photo-rec-shine { animation: none; }
   .proto-dashboard .v5-scene .ptcl { animation: none !important; opacity: 0; }
+  .proto-dashboard .v5-scene .lv-pill.is-full { animation: none; }
+  .proto-dashboard .v5-scene .lv-pill-bg.is-pulse-xp { animation: none; }
+  .proto-dashboard .v5-photo-burst span { animation: none; opacity: 0; }
+  .proto-dashboard .v5-scene.levelup-pulse { animation: none; }
 }
 
 .proto-dashboard .v5-scene .banner-hud {
@@ -153,27 +157,83 @@
 .proto-dashboard .v5-photo-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: #a8e6b0; }
 .proto-dashboard .v5-photo-chip-text { font-size: 12.5px; font-weight: 800; letter-spacing: -.2px; white-space: nowrap; color: #f2fbf4; }
 .proto-dashboard .lv-pill {
-  position: relative; width: 190px; height: 32px;
-  background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.25); border-radius: 16px;
-  overflow: hidden; backdrop-filter: blur(8px); box-shadow: 0 4px 12px rgba(0,0,0,.15); pointer-events: all;
+  position: relative; width: fit-content; min-width: 190px; height: 32px;
+  background: rgba(0,0,0,.25); border-radius: 20px;
+  overflow: hidden; box-shadow: 0 4px 12px rgba(20,30,20,.28); pointer-events: all;
   cursor: pointer;
 }
 .proto-dashboard .lv-pill-bg {
   position: absolute; top: 0; left: 0; bottom: 0;
-  background: linear-gradient(90deg, rgba(26,136,72,.65) 0%, rgba(40,176,96,.85) 100%);
+  background: rgb(46,106,79);
   transition: width .9s cubic-bezier(.34,1.56,.64,1); z-index: 1;
 }
-.proto-dashboard .lv-pill-bg::after {
-  content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 26px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.95)); filter: blur(1.5px);
+.proto-dashboard .lv-pill-content {
+  position: relative; height: 100%; display: flex; align-items: center;
+  padding: 0 13px 0 11px; z-index: 2; gap: 8px; white-space: nowrap;
 }
-.proto-dashboard .lv-pill-content { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 12px; z-index: 2; }
 .proto-dashboard .lv-badge-icon {
   font-size: 11px; font-weight: 800; color: rgba(255,255,255,.95); background: rgba(0,0,0,.15);
-  padding: 4px 7px; border-radius: 10px; margin-right: 8px; line-height: 1;
+  padding: 4px 7px; border-radius: 10px; line-height: 1;
 }
-.proto-dashboard .lv-badge-name { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.95); text-shadow: 0 1px 3px rgba(0,0,0,.3); flex: 1; }
+.proto-dashboard .lv-badge-name { font-size: 12.5px; font-weight: 800; color: rgba(255,255,255,.95); text-shadow: 0 1px 3px rgba(0,0,0,.3); flex: 1; white-space: nowrap; }
 .proto-dashboard .lv-pct { font-size: 12px; font-weight: 800; color: rgba(255,255,255,.95); text-shadow: 0 1px 3px rgba(0,0,0,.3); }
+
+/* 계절별 배지/게이지 색상(프로토타입 space.css 이식). 배지는 data-bg-theme+data-season
+   조합이 필요(레코드판 테마 전용 장식이라서), 게이지는 data-season만으로 매칭된다. */
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="spring"] .v5-photo-chip { background: rgba(198,72,120,.82); }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="spring"] .v5-photo-chip-dot { background: #ffd9e8; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="spring"] .v5-photo-chip-text { color: #fff2f7; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="summer"] .v5-photo-chip { background: rgba(46,106,79,.82); }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="summer"] .v5-photo-chip-dot { background: #a8e6b0; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="summer"] .v5-photo-chip-text { color: #f2fbf4; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="fall"] .v5-photo-chip { background: rgba(168,84,26,.84); }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="fall"] .v5-photo-chip-dot { background: #ffd79a; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="fall"] .v5-photo-chip-text { color: #fff4e6; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="winter"] .v5-photo-chip { background: rgba(52,102,150,.84); }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="winter"] .v5-photo-chip-dot { background: #cfe8f5; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="winter"] .v5-photo-chip-text { color: #f0f9ff; }
+
+.proto-dashboard .v5-scene[data-season="spring"] .lv-pill-bg { background: rgb(198,72,120); }
+.proto-dashboard .v5-scene[data-season="summer"] .lv-pill-bg { background: rgb(46,106,79); }
+.proto-dashboard .v5-scene[data-season="fall"]   .lv-pill-bg { background: rgb(168,84,26); }
+.proto-dashboard .v5-scene[data-season="winter"] .lv-pill-bg { background: rgb(52,102,150); }
+
+/* 레벨 게이지 100% 도달 시 은은한 글로우를 계속 유지해서 눈에 띄게 함 */
+.proto-dashboard .v5-scene .lv-pill.is-full { animation: dashLvPillFullGlow 1.8s ease-in-out infinite; }
+@keyframes dashLvPillFullGlow {
+  0%, 100% { box-shadow: 0 4px 12px rgba(0,0,0,.15), 0 0 0 rgba(255,255,255,0); }
+  50%      { box-shadow: 0 4px 12px rgba(0,0,0,.15), 0 0 16px 4px rgba(255,255,255,.6); }
+}
+/* XP가 실제로 올랐을 때 게이지가 잠깐 밝게 반짝여서 "지금 찼다"를 알려줌 */
+.proto-dashboard .v5-scene .lv-pill-bg.is-pulse-xp { animation: dashLvPillXpFlash .5s ease-out; }
+@keyframes dashLvPillXpFlash {
+  0%   { filter: brightness(1.9) saturate(1.4); }
+  100% { filter: brightness(1) saturate(1); }
+}
+
+/* 레코드판 클릭 시 배너 전체에 퍼지는 충격파 펄스(scale+랜덤 글로우) — 장식 전용 */
+.proto-dashboard .v5-scene.levelup-pulse { animation: dashLevelPulse .6s ease-out; }
+@keyframes dashLevelPulse {
+  0%   { transform: scale(1); box-shadow: 0 18px 42px rgba(8,28,22,.28); }
+  50%  { transform: scale(1.012); box-shadow: 0 0 36px 10px var(--pulse-glow, rgba(255,255,255,.6)); }
+  100% { transform: scale(1); box-shadow: 0 18px 42px rgba(8,28,22,.28); }
+}
+
+/* LP 레코드판 클릭 인터랙션(색종이+음표 폭죽) — 장식 전용, 레벨업/XP API 호출 없음 */
+.proto-dashboard .v5-scene .v5-photo-rec { cursor: pointer; pointer-events: auto; }
+.proto-dashboard .v5-photo-burst { position: absolute; z-index: 211; width: 0; height: 0; pointer-events: none; }
+.proto-dashboard .v5-photo-burst span { position: absolute; left: 0; top: 0; }
+.proto-dashboard .v5-photo-burst span.v5-photo-confetti { box-shadow: 0 1px 3px rgba(0,0,0,.25); animation: dashPhotoBurst .9s ease-out forwards; }
+@keyframes dashPhotoBurst {
+  0%   { transform: translate(0,0) scale(1) rotate(0); opacity: 1; }
+  100% { transform: translate(var(--dx),var(--dy)) scale(.35) rotate(var(--dr)); opacity: 0; }
+}
+.proto-dashboard .v5-photo-burst span.v5-photo-note { font-weight: 700; text-shadow: 0 1px 4px rgba(60,40,20,.5); animation: dashPhotoNotePop 1.3s ease-out forwards; }
+@keyframes dashPhotoNotePop {
+  0%   { transform: translate(0,0) rotate(-8deg) scale(.6); opacity: 0; }
+  18%  { transform: translate(var(--nx0),-10px) rotate(0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--nx),var(--ny)) rotate(var(--nr)) scale(1); opacity: 0; }
+}
 
 /* ===== 대표 커버 카드 (main-photo-card / 보딩패스) ===== */
 .proto-dashboard .main-photo-card {

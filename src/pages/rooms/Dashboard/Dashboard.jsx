@@ -119,6 +119,57 @@ function buildBalloons() {
   })
 }
 
+// 레벨 게이지 진행률(%) — level 쿼리 응답에서 계산. 훅 순서를 지키려면 early return 전에도
+// 써야 해서 컴포넌트 밖에 함수로 뺐다(원래 렌더 본문에 있던 계산과 동일 공식).
+const MAX_LEVEL = TIERS[TIERS.length - 1].max
+const progressFromLevel = (lvData) => (lvData?.expForNextLevel ? Math.min(100, Math.round((lvData.expPoint / lvData.expForNextLevel) * 100)) : 0)
+
+// LP 레코드판 클릭 색종이+음표 폭죽(프로토타입 spawnConfettiBurst 이식) — 계절별 색상, 장식 전용(API 호출 없음).
+const BURST_COLORS = {
+  spring: ['#e05e8a', '#f4a6c6', '#ffd6e6', '#fff3d6'],
+  summer: ['#ffffff', '#a3d5e8', '#8ba84f', '#c9dd9f'],
+  fall: ['#c2571e', '#e08a3c', '#f2c078', '#ffe9c2'],
+  winter: ['#3f7cb0', '#8ec3e0', '#cfe8f5', '#ffffff'],
+}
+const NOTE_GLYPHS = ['♪', '♫', '♬', '♩']
+// 레코드판 클릭 시 배너 전체에 도는 랜덤 글로우 색(프로토타입 CLOV_PULSE_GLOW_COLORS 이식).
+const PULSE_GLOW_COLORS = ['rgba(255,255,255,.6)', 'rgba(182,201,138,.6)', 'rgba(168,216,234,.6)', 'rgba(255,194,209,.6)']
+function buildBurst(season) {
+  const colors = BURST_COLORS[season] || BURST_COLORS.summer
+  const spread = 110
+  const confetti = Array.from({ length: 32 }, (_, i) => {
+    const ang = Math.random() * Math.PI * 2
+    const dist = spread * 0.42 + Math.random() * spread * 0.58
+    const sz = 6 + Math.random() * 6
+    return {
+      id: `c${i}`,
+      style: {
+        width: `${sz}px`, height: `${sz}px`,
+        borderRadius: Math.random() < 0.5 ? '50%' : '2px',
+        background: colors[i % colors.length],
+        '--dx': `${Math.cos(ang) * dist}px`, '--dy': `${Math.sin(ang) * dist}px`,
+        '--dr': `${Math.random() * 540 - 270}deg`,
+      },
+    }
+  })
+  const notes = Array.from({ length: 3 }, (_, j) => {
+    const spreadX = (Math.random() * 2 - 1) * spread * 0.5
+    const rise = -(70 + Math.random() * 60)
+    return {
+      id: `n${j}`,
+      glyph: NOTE_GLYPHS[j % NOTE_GLYPHS.length],
+      style: {
+        fontSize: `${15 + Math.random() * 11}px`,
+        color: j % 2 ? '#fffdf7' : colors[j % colors.length],
+        '--nx0': `${spreadX * 0.3}px`, '--nx': `${spreadX}px`, '--ny': `${rise}px`,
+        '--nr': `${Math.random() * 50 - 25}deg`,
+        animationDuration: `${1.1 + Math.random() * 0.5}s`,
+      },
+    }
+  })
+  return { confetti, notes }
+}
+
 const daysTogether = (createdAt) => {
   // parseUtc는 값이 없거나 잘못되면 null을 준다 — 그대로 getTime()을 부르면 화면이 죽는다.
   const created = parseUtc(createdAt)
@@ -191,7 +242,11 @@ export default function Dashboard() {
   const particles = useMemo(() => (anyBirthday ? buildConfetti() : buildParticles(sKey)), [anyBirthday, sKey])
   const balloons = useMemo(() => (isMyBirthday ? buildBalloons() : []), [isMyBirthday])
   const [recStyle, setRecStyle] = useState(null)
+  // 레코드판 클릭 시 배너 전체에 펄스(scale+글로우)를 주기 위해 DOM 노드를 따로 들고 있는다
+  // (프로토타입처럼 클래스 제거→강제 리플로우→재부여 방식으로 연속 클릭에도 애니메이션이 재시작되게).
+  const sceneNodeRef = useRef(null)
   const sceneRef = useCallback((node) => {
+    sceneNodeRef.current = node
     if (!node) return undefined
     const compute = () => {
       const w = node.clientWidth
@@ -233,6 +288,41 @@ export default function Dashboard() {
     },
   })
 
+  // XP가 실제로 올라간 순간(레벨 쿼리 진행률 증가)에만 게이지를 잠깐 반짝여서 알려준다.
+  // early return 전에 불러야 하는 훅이라 level.data를 직접 쓴다(아래 lv/progress와 동일 공식).
+  const currentProgress = progressFromLevel(level.data)
+  const [xpPulse, setXpPulse] = useState(false)
+  const prevProgressRef = useRef(currentProgress)
+  useEffect(() => {
+    if (currentProgress > prevProgressRef.current) {
+      setXpPulse(true)
+      const timer = setTimeout(() => setXpPulse(false), 500)
+      prevProgressRef.current = currentProgress
+      return () => clearTimeout(timer)
+    }
+    prevProgressRef.current = currentProgress
+    return undefined
+  }, [currentProgress])
+
+  // LP 레코드판 클릭 → 색종이+음표 폭죽(장식 전용, 레벨업/XP API 호출 없음).
+  const [burst, setBurst] = useState(null)
+  const burstTimerRef = useRef(null)
+  const handleRecordClick = useCallback(() => {
+    if (burstTimerRef.current) clearTimeout(burstTimerRef.current)
+    setBurst({ key: Date.now(), ...buildBurst(sKey) })
+    burstTimerRef.current = setTimeout(() => setBurst(null), 1700)
+    // 배너 펄스(scale+글로우) — 클래스를 지웠다가 강제 리플로우 후 다시 붙여야 연속 클릭 때도 재생된다.
+    const el = sceneNodeRef.current
+    if (el) {
+      const glow = PULSE_GLOW_COLORS[Math.floor(Math.random() * PULSE_GLOW_COLORS.length)]
+      el.style.setProperty('--pulse-glow', glow)
+      el.classList.remove('levelup-pulse')
+      void el.offsetWidth
+      el.classList.add('levelup-pulse')
+    }
+  }, [sKey])
+  useEffect(() => () => { if (burstTimerRef.current) clearTimeout(burstTimerRef.current) }, [])
+
   if (room.isPending) {
     return <div className="proto-dashboard"><div className="dash-main"><div className="dash-state">불러오는 중…</div></div></div>
   }
@@ -253,7 +343,8 @@ export default function Dashboard() {
   const lv = level.data
   const levelNum = lv?.friendshipLevel ?? data.friendshipLevel ?? 1
   const tier = tierFor(levelNum)
-  const progress = lv?.expForNextLevel ? Math.min(100, Math.round((lv.expPoint / lv.expForNextLevel) * 100)) : 0
+  const progress = progressFromLevel(lv)
+  const isFull = progress >= 100 && levelNum < MAX_LEVEL
   const memberItems = members.data?.items ?? []
   const days = daysTogether(data.createdAt)
   const track = (memories.data?.items ?? []).length || 1
@@ -279,7 +370,7 @@ export default function Dashboard() {
       <Mascot roomId={roomId} />
       <div className="dash-main">
         {/* 성장 배너 */}
-        <div className="v5-scene" ref={sceneRef} data-season={sKey} data-level={levelNum} data-event={isMyBirthday ? 'my_birthday' : isFriendBirthday ? 'friend_birthday' : 'none'}>
+        <div className="v5-scene" ref={sceneRef} data-season={sKey} data-bg-theme="lp-turntable" data-level={levelNum} data-event={isMyBirthday ? 'my_birthday' : isFriendBirthday ? 'friend_birthday' : 'none'}>
           <div className="scene-sky" style={{ backgroundImage: `url('/banners/lp-${sKey}.png')` }} />
           <div className="season-particles" aria-hidden="true">
             {particles.map((p, i) => (
@@ -294,8 +385,24 @@ export default function Dashboard() {
             </div>
           )}
           {recStyle && (
-            <div className="v5-photo-rec" style={recStyle} aria-hidden="true">
+            <div
+              className="v5-photo-rec"
+              style={recStyle}
+              onClick={handleRecordClick}
+              role="button"
+              tabIndex={0}
+              aria-label="LP 레코드판"
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRecordClick() } }}
+            >
               <div className="v5-photo-rec-shine" />
+              {burst && (
+                <div className="v5-photo-burst" style={{ left: '50%', top: '50%' }}>
+                  {/* key에 burst.key(클릭 타임스탬프)를 섞어야 연속 클릭 시 React가 새 엘리먼트로 보고
+                      애니메이션을 재시작한다 — id만 쓰면 같은 노드를 재사용해 애니메이션이 안 터진다. */}
+                  {burst.confetti.map((p) => <span key={`${burst.key}-${p.id}`} className="v5-photo-confetti" style={p.style} />)}
+                  {burst.notes.map((n) => <span key={`${burst.key}-${n.id}`} className="v5-photo-note" style={n.style}>{n.glyph}</span>)}
+                </div>
+              )}
             </div>
           )}
           <div className="banner-hud">
@@ -310,8 +417,8 @@ export default function Dashboard() {
                 <span className="v5-photo-chip-dot" />
                 <span className="v5-photo-chip-text">{SEASON_LABEL[sKey]} 추억 재생 중 · {track}번째 트랙</span>
               </div>
-              <div className="lv-pill" onClick={() => setHistoryOpen(true)} title="경험치 히스토리 보기">
-                <div className="lv-pill-bg" style={{ width: `${progress}%` }} />
+              <div className={`lv-pill${isFull ? ' is-full' : ''}`} onClick={() => setHistoryOpen(true)} title="경험치 히스토리 보기">
+                <div className={`lv-pill-bg${xpPulse ? ' is-pulse-xp' : ''}`} style={{ width: `${progress}%` }} />
                 <div className="lv-pill-content">
                   <span className="lv-badge-icon">Lv.{levelNum}</span>
                   <span className="lv-badge-name">{tier.icon} {tier.name}</span>

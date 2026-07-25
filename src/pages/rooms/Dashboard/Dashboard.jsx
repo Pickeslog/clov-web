@@ -190,8 +190,7 @@ function buildTierBurstParticles(count, spread) {
         width: `${size}px`, height: `${size}px`,
         background: TIER_BURST_COLORS[Math.floor(Math.random() * TIER_BURST_COLORS.length)],
         borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-        '--tx': `${tx}px`, '--ty': `${ty}px`, '--trot': `${rot}deg`,
-        transform: `scale(${(0.8 + Math.random()).toFixed(2)})`,
+        '--tx': `${tx}px`, '--ty': `${ty}px`, '--trot': `${rot}deg`, '--tscale': (0.8 + Math.random()).toFixed(2),
       },
     }
   })
@@ -386,7 +385,14 @@ export default function Dashboard() {
   // 만렙 5단계+마무리를 한꺼번에 렌더하면 최대 600개가 동시에 떠서 무겁다).
   const [tierBursts, setTierBursts] = useState([])
   const tierBurstTimersRef = useRef([])
-  useEffect(() => () => { tierBurstTimersRef.current.forEach(clearTimeout); tierBurstTimersRef.current = [] }, [])
+  // 라우트에 key가 없어 방을 옮겨도 이 컴포넌트가 재마운트되지 않는다 — roomId가 바뀔 때도
+  // (언마운트 때와 마찬가지로) 진행 중이던 웨이브 타이머를 정리하고 화면에서 지운다.
+  // 안 그러면 만렙 연출 도중 다른 방으로 이동했을 때 그 방 화면에서 남은 폭죽이 떠버린다.
+  useEffect(() => () => {
+    tierBurstTimersRef.current.forEach(clearTimeout)
+    tierBurstTimersRef.current = []
+    setTierBursts([])
+  }, [roomId])
 
   const fireTierCelebration = useCallback((isMax) => {
     if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
@@ -444,12 +450,16 @@ export default function Dashboard() {
       stored = raw != null ? Number(raw) : null
     } catch { /* storage 차단 무시 */ }
     if (stored != null && Number.isFinite(stored) && newLevel > stored) {
-      // "티어가 바뀌었는지"가 아니라 "111의 배수(111/222/.../777)를 새로 찍었는지"로 판정한다 —
-      // 111 자체가 달성 순간이다(110→111에서 터짐, 111→112가 아니라). 한 번에 여러 레벨을 건너뛰어도
-      // (예: 100→115) 그 사이에 배수가 있으면 잡히도록 몫 비교로 계산한다.
-      const crossedMultiple = Math.floor(newLevel / 111) > Math.floor(stored / 111)
-      const justHitMax = newLevel >= MAX_LEVEL
-      if (crossedMultiple) fireTierCelebration(justHitMax)
+      // 배지에 실제로 표시되는 티어(tierFor)가 바뀌는 순간에 터뜨린다. 111의 배수 자체(110→111)로
+      // 판정하면 이 저장소의 티어 경계(max 이하, 즉 111은 아직 "씨앗의 우정")랑 한 레벨 어긋나서
+      // 두 가지가 깨진다 — ① 폭죽은 110→111에서 터지는데 배지 이름은 111→112에서 바뀌어 화면이
+      // 안 맞고, ② 마지막 티어 진입(666→667, "전설의 클로버 우정")이 111의 배수가 아니라서 축하가
+      // 아예 안 뜬다(대신 여전히 "황금빛" 상태인 666에서 터짐). tierFor 비교로 배지와 정확히 맞춘다.
+      // 777은 tierFor(776) === tierFor(777)(둘 다 마지막 티어)이라 티어 비교만으론 안 잡혀서
+      // 만렙 도달 여부를 별도로 OR 해준다(정본 space.js도 tierUp || maxLevelReached로 같은 구조).
+      const tierUp = tierFor(newLevel) !== tierFor(stored)
+      const maxReached = stored < MAX_LEVEL && newLevel >= MAX_LEVEL
+      if (tierUp || maxReached) fireTierCelebration(maxReached)
     }
     try { localStorage.setItem(storageKey, String(newLevel)) } catch { /* storage 차단 무시 */ }
   }, [level.isSuccess, level.data?.friendshipLevel, roomId, fireTierCelebration])

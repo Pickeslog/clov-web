@@ -245,7 +245,7 @@
 }
 @keyframes tierBurstFly {
   0%   { transform: translate(-50%, -50%) scale(.2) rotate(0deg); opacity: 1; }
-  100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1) rotate(var(--trot)); opacity: 0; }
+  100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(var(--tscale, 1)) rotate(var(--trot)); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .tier-burst-layer { display: none; }

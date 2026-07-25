@@ -27,6 +27,9 @@ export function useCreateMemory(roomId, { onSuccess } = {}) {
       queryClient.invalidateQueries({ queryKey: ['memories', roomId] })
       // 약속 연결 시 plan memory_status가 WRITTEN으로 바뀌므로 일정계획 목록도 갱신.
       queryClient.invalidateQueries({ queryKey: ['plans', roomId] })
+      // 추억 작성은 XP도 준다(MEMORY_WRITE, 계약 §12) — ['room', roomId] 프리픽스로 무효화하면
+      // level·exp-logs·members·room 상세가 한 번에 갱신된다(저장소 기존 관례, Notifications.jsx 참고).
+      queryClient.invalidateQueries({ queryKey: ['room', roomId] })
       onSuccess?.()
     },
   })

@@ -228,7 +228,12 @@ export default function Dashboard() {
 
   const createPlanMutation = useMutation({
     mutationFn: (payload) => createPlan(roomId, payload),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['plans', roomId] }); setComposeSchedule(false) },
+    // 약속 등록은 XP도 준다(PLAN_CREATE, 계약 §12) — room 프리픽스 무효화로 레벨 게이지/히스토리도 갱신.
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['plans', roomId] })
+      queryClient.invalidateQueries({ queryKey: ['room', roomId] })
+      setComposeSchedule(false)
+    },
   })
   const createMemoryMutation = useCreateMemory(roomId, { onSuccess: () => setComposeMemory(false) })
 

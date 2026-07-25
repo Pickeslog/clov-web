@@ -383,6 +383,25 @@ body.light-mode .proto-dashboard .section-actions .clov-btn--action { background
 .proto-dashboard .cline-slot--far-newer:hover { transform: rotate(5deg) scale(.8) translateY(-4px); opacity: .68; filter: saturate(.6) brightness(.96); }
 .proto-dashboard .cline-slot--current.is-active { transform: scale(1.04); transform-origin: top center; opacity: 1; filter: none; z-index: 10; }
 .proto-dashboard .cline-slot--empty { width: 200px; min-height: 20px; pointer-events: none; }
+
+/* ── 참여자별 추억 증거 카드 테마: 겹침 카드(coverflow) — 빨랫줄/집게 없이 카드가 겹쳐 쌓이는 스타일 ── */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-wire { display: none; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards { gap: 0; width: 100%; padding: 16px 0; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-card-slot { flex-shrink: 0; width: 210px; min-width: 210px; margin: 0 -38px; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--current.is-active { transform: scale(1.04); transform-origin: center center; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--past,
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--newer { transform: scale(.86); transform-origin: center center; opacity: .95; filter: brightness(.96); z-index: 8; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--past:hover,
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--newer:hover { transform: scale(.90) translateY(-6px); opacity: 1; filter: brightness(1); z-index: 9; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-past,
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-newer { transform: scale(.72); transform-origin: center center; opacity: .85; filter: brightness(.90); z-index: 6; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-past:hover,
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-newer:hover { transform: scale(.76) translateY(-6px); opacity: .95; filter: brightness(.98); z-index: 7; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-past,
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-newer { transform: scale(.58); transform-origin: center center; opacity: .70; filter: brightness(.82); z-index: 4; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-past:hover,
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-newer:hover { transform: scale(.63) translateY(-6px); opacity: .88; filter: brightness(.92); z-index: 5; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--empty { width: 210px; min-width: 210px; flex-shrink: 0; margin: 0 -38px; min-height: 20px; pointer-events: none; visibility: hidden; }
 .proto-dashboard .cline-clip-svg {
   width: 28px; height: 48px; flex-shrink: 0; margin-bottom: -10px; position: relative; z-index: 4;
   filter: drop-shadow(0 3px 8px rgba(0,0,0,.45)) drop-shadow(0 1px 2px rgba(0,0,0,.3));

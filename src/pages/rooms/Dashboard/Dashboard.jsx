@@ -725,10 +725,21 @@ function InviteModal({ roomId, roomName, onClose }) {
   )
 }
 
-// 경험치 히스토리 — 레벨 배지 클릭으로 열리는 exp-logs 목록(계약 §12). 최신순, 백엔드 그대로 반환.
+// 경험치 히스토리 — 레벨 배지 클릭으로 열리는 exp-logs 목록(계약 §12). 계약은 전체 이력을 그대로
+// 반환하지만(DB는 영구 보존), 화면은 오늘 것만 보여준다 — 팀장 합의로 화면단에서만 거른다.
+// 필터는 렌더 시점에만 평가되므로 모달을 열어둔 채 자정을 넘겨도 실시간 갱신은 안 되고,
+// 다시 열면 갱신된다.
 function ExpHistoryModal({ roomId, onClose }) {
   const logsQuery = useQuery({ queryKey: ['room', roomId, 'exp-logs'], queryFn: () => getExpLogs(roomId) })
-  const items = logsQuery.data?.items ?? []
+  const allItems = logsQuery.data?.items ?? []
+  // createdAt은 오프셋 없는 UTC라 문자열을 그대로 잘라 비교하면(slice(0,10)) KST 00~09시 사이엔
+  // 하루가 밀린다 — parseUtc로 파싱한 뒤 브라우저 로컬 날짜(연/월/일)로 비교한다.
+  // parseUtc는 값이 잘못되면 null을 주므로 필터에서 반드시 걸러야 한다(안 그러면 getFullYear에서 죽는다).
+  const now = new Date()
+  const items = allItems.filter((log) => {
+    const d = parseUtc(log.createdAt)
+    return d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
+  })
 
   return (
     <div className="member-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -740,7 +751,9 @@ function ExpHistoryModal({ roomId, onClose }) {
         {logsQuery.isPending && <div className="exp-history-empty">불러오는 중…</div>}
         {logsQuery.isError && <div className="exp-history-empty">경험치 히스토리를 불러오지 못했습니다.</div>}
         {logsQuery.isSuccess && items.length === 0 && (
-          <div className="exp-history-empty">아직 쌓인 경험치가 없어요.</div>
+          <div className="exp-history-empty">
+            {allItems.length === 0 ? '아직 쌓인 경험치가 없어요.' : '오늘 쌓은 경험치가 없어요.'}
+          </div>
         )}
         {logsQuery.isSuccess && items.map((log) => (
           <div className="exp-history-row" key={log.id}>

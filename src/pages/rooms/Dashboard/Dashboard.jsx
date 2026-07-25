@@ -5,7 +5,7 @@ import './dashboard.proto.css'
 import { getRoom, getRoomLevel, getRoomMembers, getExpLogs, updateStatusMessage, updateRoom, presignRoomCover } from '../../../api/room'
 import { createPlan, getPlans } from '../../../api/plan'
 import { getMemories } from '../../../api/memory'
-import { getMe } from '../../../api/user'
+import { getMe, getPreferences } from '../../../api/user'
 import { createInvite, getInvites, cancelInvite } from '../../../api/invite'
 import { uploadImage } from '../../../lib/uploadImage'
 import { useCreateMemory } from '../../../hooks/useCreateMemory'
@@ -207,6 +207,8 @@ export default function Dashboard() {
   const plans = useQuery({ queryKey: ['plans', roomId, { status: 'SCHEDULED' }], queryFn: () => getPlans(roomId, { status: 'SCHEDULED' }) })
   const memories = useQuery({ queryKey: ['memories', roomId], queryFn: () => getMemories(roomId) })
   const me = useQuery({ queryKey: ['me'], queryFn: getMe })
+  const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
+  const memoryCardTheme = prefs.data?.memoryCardTheme ?? 'stack'
 
   // null = 미편집(서버값 표시). 문자열 = 사용자가 편집 중.
   const [statusDraft, setStatusDraft] = useState(null)
@@ -527,7 +529,7 @@ export default function Dashboard() {
         {memoryItems.length === 0 ? (
           <div className="memory-empty">아직 추억이 없어요. 피드에서 첫 추억을 남겨보세요.</div>
         ) : (
-          <EvidenceViewer memories={memoryItems} onOpen={(id) => setSelectedMemoryId(id)} />
+          <EvidenceViewer memories={memoryItems} cardTheme={memoryCardTheme} onOpen={(id) => setSelectedMemoryId(id)} />
         )}
       </div>
 
@@ -854,12 +856,14 @@ function ClinePolaroid({ memory, isActive, onOpen }) {
 
 // 참여자별 추억 증거 카드 — 빨랫줄+집게 캐러셀 + 필름스트립(프로토타입 cline 뷰어 기본 테마 이식).
 // 최신순 memories에서 index=현재("현재"), +delta=과거·-delta=최신 카드를 좌우로 건다.
-function EvidenceViewer({ memories, onOpen }) {
+// cardTheme: 'clothesline'(빨랫줄, 기본 마크업) | 'stack'(겹침 카드, 빨랫줄/집게 없이 카드가 겹쳐 쌓임).
+function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
   const [index, setIndex] = useState(0)
   const framesRef = useRef(null)
   const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: false })
   const total = memories.length
   const clamp = (i) => Math.min(Math.max(i, 0), total - 1)
+  const isStack = cardTheme === 'stack'
 
   // index가 바뀌면 현재 프레임을 필름 중앙으로 스크롤.
   useEffect(() => {
@@ -868,11 +872,13 @@ function EvidenceViewer({ memories, onOpen }) {
   }, [index])
 
   const SLOTS = [
+    ...(isStack ? [{ delta: 3, cls: 'far-far-past' }] : []),
     { delta: 2, cls: 'far-past' },
     { delta: 1, cls: 'past' },
     { delta: 0, cls: 'current' },
     { delta: -1, cls: 'newer' },
     { delta: -2, cls: 'far-newer' },
+    ...(isStack ? [{ delta: -3, cls: 'far-far-newer' }] : []),
   ]
 
   const onPointerDown = (e) => {
@@ -894,7 +900,7 @@ function EvidenceViewer({ memories, onOpen }) {
   }
 
   return (
-    <div className="memory-evidence-viewer cline-viewer">
+    <div className={`memory-evidence-viewer cline-viewer ${isStack ? 'theme-coverflow' : ''}`}>
       <div className="cline-stage">
         <div className="cline-wire-area">
           <div className="cline-wire" />
@@ -909,7 +915,7 @@ function EvidenceViewer({ memories, onOpen }) {
                   className={`cline-card-slot cline-slot--${cls} ${isActive ? 'is-active' : ''}`}
                   onClick={isActive ? undefined : () => setIndex(clamp(i))}
                 >
-                  <Clothespin />
+                  {!isStack && <Clothespin />}
                   <ClinePolaroid memory={memories[i]} isActive={isActive} onOpen={isActive ? () => onOpen(memories[i]?.id) : undefined} />
                 </div>
               )

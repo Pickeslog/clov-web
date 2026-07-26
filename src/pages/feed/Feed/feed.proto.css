@@ -236,7 +236,7 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); 
 /* ===== 폴라로이드 추억 카드 (크림 종이 — 두 테마 공통) ===== */
 .proto-feed .memory-card { margin-bottom: 24px; transition: transform .3s ease, box-shadow .3s ease; }
 .proto-feed .polaroid-card {
-  background: #f7f9f7; padding: 10px 10px 38px; border-radius: 3px; color: #24382f;
+  background: #f7f9f7; padding: 10px; border-radius: 3px; color: #24382f;
   box-shadow: 0 2px 4px rgba(0,0,0,.22), 0 12px 34px rgba(0,0,0,.36), 0 26px 64px rgba(0,0,0,.20);
   transform: rotate(-1.5deg); transform-origin: center bottom;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import './feed.proto.css'
@@ -79,6 +79,49 @@ const cardTags = (item, isMine) => {
   const key = monthKeyOf(item.memoryDate)
   const monthTag = key ? `${key.split('-')[0]}년${key.split('-')[1]}월` : '기록'
   return ['소중한순간', isMine ? '내기록' : '친구기록', monthTag]
+}
+
+// 해시태그 1줄 고정(#125) — 태그 텍스트 길이가 제각각이라 개수만 잘라선 줄바꿈을 못 막는다
+// (예: 짧은 태그 3개는 한 줄에 들어가지만 긴 태그 3개는 넘친다). 실제로 렌더해 줄바꿈 여부를
+// 측정한 뒤, 첫 줄에 들어가는 만큼만 보여주고 나머지는 "+N"으로 묶는다. "+N" 칩 자체가 줄을
+// 넘기면 그만큼 한 개 더 줄인다 — effect가 재실행되며 수렴한다(매 렌더 최대 1씩 감소).
+function MemoryFooterTags({ tags }) {
+  const rowRef = useRef(null)
+  // cardTags()의 폴백 분기는 매 렌더 새 배열을 만들어 반환한다 — 참조로 비교하면 내용이
+  // 같아도 항상 "바뀐 것"으로 잡혀 부모가 리렌더될 때마다(검색어 입력 등) 태그가 전부
+  // 펼쳐졌다가 다시 접히는 깜빡임이 생긴다(팀장 리뷰). 내용 기준 키로 비교한다.
+  const tagsKey = tags.join('|')
+  const [prevKey, setPrevKey] = useState(tagsKey)
+  const [visibleCount, setVisibleCount] = useState(tags.length)
+  if (prevKey !== tagsKey) {
+    setPrevKey(tagsKey)
+    setVisibleCount(tags.length)
+  }
+
+  useLayoutEffect(() => {
+    const row = rowRef.current
+    if (!row) return
+    const chips = Array.from(row.children)
+    if (chips.length < 2) return
+    const firstTop = chips[0].offsetTop
+    const wrappedAt = chips.findIndex((chip) => chip.offsetTop !== firstTop)
+    if (wrappedAt === -1) return
+    const tagChipCount = Math.min(visibleCount, tags.length)
+    const next = wrappedAt < tagChipCount ? wrappedAt : Math.max(tagChipCount - 1, 0)
+    if (next !== visibleCount) setVisibleCount(next)
+  }, [tagsKey, visibleCount, tags.length])
+
+  const visible = tags.slice(0, visibleCount)
+  const rest = tags.length - visible.length
+
+  return (
+    <div className="memory-footer-tags" ref={rowRef}>
+      {visible.map((tag, index) => (
+        <div key={tag} className={`memory-tag ${index === 0 ? 'highlight' : ''}`}>#{tag}</div>
+      ))}
+      {rest > 0 && <div className="memory-tag memory-tag-more">+{rest}</div>}
+    </div>
+  )
 }
 
 // 검색: 제목·본문·날짜·태그·작성자/참여자 닉네임 중 하나라도 포함되면 true(프로토타입 postMatchesFeedSearch).
@@ -196,7 +239,7 @@ export default function Feed() {
           </div>
           <div className="feed-hero-meta">
             <div className="feed-month-summary">{summaryText}</div>
-            <Button variant="action" size="sm" onClick={() => setCreateOpen(true)}>
+            <Button variant="action" size="sm" className="feed-write-btn" onClick={() => setCreateOpen(true)}>
               <IconPencil /> 글쓰기
             </Button>
           </div>
@@ -269,7 +312,9 @@ export default function Feed() {
                       <div className="polaroid-presence-row">
                         {visibleAv.map((p, idx) => (
                           <span key={p.id ?? idx} className={`presence-tile ${idx === 0 ? 'is-author' : 'friend'}`} title={p.nickname}>
-                            <span className="presence-dot">{initialOf(p.nickname)}</span>
+                            <span className="presence-dot">
+                              {p.profileImageUrl ? <img src={p.profileImageUrl} alt="" /> : initialOf(p.nickname)}
+                            </span>
                           </span>
                         ))}
                         {restAv > 0 && <span className="presence-more">+{restAv}</span>}
@@ -288,11 +333,10 @@ export default function Feed() {
                         )}
                         {!item.thumbnailUrl && (
                           <>
-                            <span className="memory-clover-placeholder">🍀</span>
+                            <i className="ti ti-clover memory-clover-placeholder" aria-hidden="true" />
                             <span className="memory-image-text">사진이 없는 추억은<br />클로버로 보관됩니다</span>
                           </>
                         )}
-                        <span className="polaroid-zoom-hint">🔍 자세히</span>
                       </div>
                       <div className="polaroid-caption">
                         <div className={`my-record-box ${isMine ? 'mine' : 'friend'}`}>
@@ -305,11 +349,7 @@ export default function Feed() {
                           <div className="memory-title">{item.title}</div>
                           {preview && <div className="my-record-text">{preview}</div>}
                         </div>
-                        <div className="memory-footer-tags">
-                          {tags.map((tag, index) => (
-                            <div key={tag} className={`memory-tag ${index === 0 ? 'highlight' : ''}`}>#{tag}</div>
-                          ))}
-                        </div>
+                        <MemoryFooterTags tags={tags} />
                         <div className="memory-meta-row">
                           <span className="memory-date">{item.memoryDate || '날짜 미정'}</span>
                           <span className="memory-message-count"><IconComment />{item.commentCount ?? 0}</span>
@@ -1020,7 +1060,7 @@ export function MemoryDetailModal({
                   <img className="memory-detail-photo" src={activeImage.imageUrl} alt="추억 사진" />
                 ) : (
                   <div className="memory-detail-photo memory-detail-photo--empty">
-                    <span className="memory-clover-placeholder">🍀</span>
+                    <i className="ti ti-clover memory-clover-placeholder" aria-hidden="true" />
                     <span className="memory-image-text">사진이 없는 추억은<br />클로버로 보관됩니다</span>
                   </div>
                 )}
@@ -1144,7 +1184,7 @@ export function MemoryDetailModal({
                 ) : (
                   <div className="mp-photo-main mp-photo-main--empty">
                     <div className="cline-no-photo">
-                      <span>🍀</span>
+                      <i className="ti ti-photo-off cline-no-photo-icon" aria-hidden="true" />
                       <span className="cline-no-photo-text">사진 없음</span>
                     </div>
                   </div>

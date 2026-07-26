@@ -42,11 +42,23 @@
 }
 /* 카드 배경 없이 페이지 배경(우드텍스처)에 바로 노출되던 헤더 텍스트 — 특히 부제(--text-muted)가
    흐릿했다. 배경 박스로 대비 확보(대시보드 #95와 동일 패턴). */
-.proto-feed .feed-hero-text { background: rgba(0,0,0,.22); padding: 10px 14px; border-radius: 12px; }
-body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.55); }
+.proto-feed .feed-hero-text { background: rgba(0,0,0,.6); border: 1px dashed rgba(27,67,50,.7); padding: 10px 14px; border-radius: 12px; }
+body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); border-color: rgba(82,183,136,.6); }
 .proto-feed .feed-title { font-size: 20px; font-weight: 800; color: var(--accent-green); }
 .proto-feed .feed-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
 .proto-feed .feed-hero-meta { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+/* 프로토타입 글쓰기 버튼(02-main desktop.css/space.css .feed-write-btn) — 공용 Button에 className으로 얹는다.
+   .clov-btn를 같이 걸어 .clov-btn--action보다 특이성을 높인다(대시보드 .clov-btn--dashed와 같은 방식,
+   !important 안 씀). Space Mono는 clov-web에 로드돼 있지 않아 여기선 빼고 기본 폰트를 쓴다. */
+.proto-feed .clov-btn.feed-write-btn {
+  min-height: 34px; padding: 0 16px; border-radius: 7px;
+  border: 1.5px dashed rgba(46, 82, 51, 0.45);
+  background: #faf6ee; color: #2e5233;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.3px;
+  box-shadow: 0 4px 10px rgba(46, 82, 51, 0.12);
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.proto-feed .clov-btn.feed-write-btn:hover { background: #f3efe1; transform: translateY(-1px); box-shadow: 0 8px 16px rgba(46, 82, 51, 0.18); }
 .proto-feed .feed-month-summary {
   font-size: 13px; color: var(--text-muted); font-weight: 600;
   background: var(--nav-item-bg-active); padding: 5px 12px; border-radius: 20px;
@@ -226,7 +238,7 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.55);
 /* ===== 폴라로이드 추억 카드 (크림 종이 — 두 테마 공통) ===== */
 .proto-feed .memory-card { margin-bottom: 24px; transition: transform .3s ease, box-shadow .3s ease; }
 .proto-feed .polaroid-card {
-  background: #f7f9f7; padding: 10px 10px 52px; border-radius: 3px; color: #24382f;
+  background: #f7f9f7; padding: 10px; border-radius: 3px; color: #24382f;
   box-shadow: 0 2px 4px rgba(0,0,0,.22), 0 12px 34px rgba(0,0,0,.36), 0 26px 64px rgba(0,0,0,.20);
   transform: rotate(-1.5deg); transform-origin: center bottom;
 }
@@ -245,10 +257,6 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.55);
     radial-gradient(circle at 50% 38%, rgba(82,183,136,.22), transparent 58%),
     repeating-linear-gradient(135deg, rgba(82,183,136,.08) 0px, rgba(82,183,136,.08) 2px, transparent 2px, transparent 14px);
   box-shadow: inset 0 0 0 1.5px rgba(82,183,136,.28);
-}
-.proto-feed .polaroid-zoom-hint {
-  position: absolute; right: 10px; bottom: 10px; padding: 4px 9px; border-radius: 999px;
-  background: rgba(0,0,0,.55); color: #fff; font-size: 10px; font-weight: 700; pointer-events: none;
 }
 .proto-feed .polaroid-photo-count {
   position: absolute; right: 10px; top: 10px; padding: 4px 9px; border-radius: 999px;
@@ -282,7 +290,9 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.55);
 .proto-feed .polaroid-presence-row .presence-dot {
   width: 100%; height: 100%; display: grid; place-items: center; border-radius: 50%;
   background: #52b788; color: #fff; font-size: 11px; font-weight: 800; flex-shrink: 0;
+  position: relative; overflow: hidden;
 }
+.proto-feed .polaroid-presence-row .presence-dot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .proto-feed .polaroid-presence-row .presence-tile.friend .presence-dot { background: #ff9f7f; }
 .proto-feed .polaroid-presence-row .presence-tile.is-author .presence-dot { box-shadow: 0 0 0 2px #52b788; }
 .proto-feed .presence-more {
@@ -327,6 +337,7 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.55);
   background-color: rgba(232,243,237,.94); color: #1b4332; border: 1px solid rgba(82,183,136,.18);
 }
 .proto-feed .memory-tag.highlight { color: #1b4332; background: rgba(82,183,136,.16); }
+.proto-feed .memory-tag-more { color: #61766a; background: rgba(0,0,0,.05); }
 .proto-feed .memory-meta-row { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; }
 .proto-feed .memory-date { font-size: 11px; color: #61766a; }
 .proto-feed .memory-message-count { font-size: 11px; font-weight: 700; color: #61766a; flex-shrink: 0; display: inline-flex; align-items: center; margin-left: auto; }
@@ -502,7 +513,7 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.55);
   box-shadow: inset 0 0 0 1.5px rgba(82, 183, 136, 0.28);
 }
 .proto-feed .cline-no-photo { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #4c5f54; }
-.proto-feed .cline-no-photo > span:first-child { font-size: 26px; }
+.proto-feed .cline-no-photo-icon { font-size: 26px; }
 .proto-feed .cline-no-photo-text { font-size: 12px; font-weight: 700; }
 .proto-feed .mp-photo-index {
   position: absolute; top: 9px; left: 9px; padding: 4px 9px; border-radius: 999px;

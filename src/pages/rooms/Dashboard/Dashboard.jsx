@@ -23,15 +23,16 @@ import { ScheduleEditorModal } from '../../schedule/Schedule/Schedule'
 import { SCHEDULE_LIGHT_PALETTE } from '../../schedule/Schedule/palette'
 import { CreateMemoryModal, MemoryDetailModal } from '../../feed/Feed/Feed'
 
-// 우정 성장 티어(프로토타입 desktop.js 정본). 레벨은 111×7=777 → 7티어로 묶음.
+// 우정 성장 티어(프로토타입 desktop.js 정본 — 이름·구간은 그대로, 아이콘만 팀 표준(#123, 팀장
+// 확정)에 따라 tabler 웹폰트로 교체). icon은 이제 이모지가 아니라 `ti-<icon>` 접미사 문자열.
 const TIERS = [
-  { name: '씨앗의 우정', icon: '🌱', max: 111 },
-  { name: '새싹의 우정', icon: '🌿', max: 222 },
-  { name: '초록 클로버 우정', icon: '💚', max: 333 },
-  { name: '무성한 클로버 들판', icon: '🍀', max: 444 },
-  { name: '반짝이는 클로버 우정', icon: '🌟', max: 555 },
-  { name: '황금빛 클로버 우정', icon: '👑', max: 666 },
-  { name: '전설의 클로버 우정', icon: '💎', max: 777 },
+  { name: '씨앗의 우정', icon: 'seeding', max: 111 },
+  { name: '새싹의 우정', icon: 'plant', max: 222 },
+  { name: '초록 클로버 우정', icon: 'heart', max: 333 },
+  { name: '무성한 클로버 들판', icon: 'clover', max: 444 },
+  { name: '반짝이는 클로버 우정', icon: 'star', max: 555 },
+  { name: '황금빛 클로버 우정', icon: 'crown', max: 666 },
+  { name: '전설의 클로버 우정', icon: 'diamond', max: 777 },
 ]
 const tierFor = (level) => TIERS.find((t) => (level ?? 1) <= t.max) ?? TIERS[TIERS.length - 1]
 
@@ -562,7 +563,7 @@ export default function Dashboard() {
                 <div className={`lv-pill-bg${xpPulse ? ' is-pulse-xp' : ''}`} style={{ width: `${progress}%` }} />
                 <div className="lv-pill-content">
                   <span className="lv-badge-icon">Lv.{levelNum}</span>
-                  <span className="lv-badge-name">{tier.icon} {tier.name}</span>
+                  <span className="lv-badge-name"><i className={`ti ti-${tier.icon}`} aria-hidden="true" /> {tier.name}</span>
                   <span className="lv-pct">{progress}%</span>
                 </div>
               </div>
@@ -582,7 +583,9 @@ export default function Dashboard() {
                 onClick={() => setCoverViewOpen(true)}
               />
             ) : (
-              <div className="main-photo-empty" title="대표 사진 추가" onClick={() => setUploadOpen(true)}>🍀</div>
+              <div className="main-photo-empty" title="대표 사진 추가" aria-label="대표 사진 추가" onClick={() => setUploadOpen(true)}>
+                <i className="ti ti-camera-plus" aria-hidden="true" />
+              </div>
             )}
           </div>
           <div className="cover-summary">
@@ -659,7 +662,7 @@ export default function Dashboard() {
             return (
               <div key={p.id} className="schedule-banner" onClick={() => go('schedule')}>
                 <div className="schedule-info">
-                  <span className="schedule-icon">📅</span>
+                  <i className="ti ti-calendar schedule-icon" aria-hidden="true" />
                   <span className="schedule-title">{p.title}</span>
                   <span className="schedule-date">{p.planDate}</span>
                 </div>
@@ -673,7 +676,7 @@ export default function Dashboard() {
         <div className="section-title">
           <span className="section-title-label">참여자별 추억 증거 카드</span>
           <div className="section-actions">
-            <Button variant="dashed" size="sm" onClick={() => setComposeMemory(true)}>✎ 글쓰기</Button>
+            <Button variant="dashed" size="sm" onClick={() => setComposeMemory(true)}><i className="ti ti-pencil" aria-hidden="true" /> 글쓰기</Button>
             <Button variant="action" size="sm" onClick={() => go('feed')}>전체 피드 보기</Button>
           </div>
         </div>
@@ -826,10 +829,10 @@ function InviteModal({ roomId, roomName, onClose }) {
     <div className="invite-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="invite-modal" role="dialog" aria-modal="true" aria-label="친구 초대">
         <div className="invite-modal-head">
-          <span className="invite-modal-title">🤝 친구 초대하기</span>
+          <span className="invite-modal-title"><i className="ti ti-user-plus" aria-hidden="true" /> 친구 초대하기</span>
           <button type="button" className="invite-modal-close" onClick={onClose} aria-label="닫기">✕</button>
         </div>
-        <div className="invite-icon">📨</div>
+        <div className="invite-icon"><i className="ti ti-mail" aria-hidden="true" /></div>
         <p className="invite-desc">
           아래 초대 코드를 복사해 친구에게 보내세요.<br />
           친구가 코드로 입장을 신청하면, 멤버 누구나 수락할 수 있어요.
@@ -1023,7 +1026,7 @@ function ClinePolaroid({ memory, isActive, onOpen }) {
         {memory.thumbnailUrl ? (
           <img src={memory.thumbnailUrl} alt={memory.title} draggable={false} />
         ) : (
-          <div className="cline-no-photo"><span>🍀</span><span className="cline-no-photo-text">사진 없음</span></div>
+          <div className="cline-no-photo"><i className="ti ti-photo-off cline-no-photo-icon" aria-hidden="true" /><span className="cline-no-photo-text">사진 없음</span></div>
         )}
       </div>
       <div className="cline-caption">

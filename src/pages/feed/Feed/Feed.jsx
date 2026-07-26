@@ -196,7 +196,7 @@ export default function Feed() {
           </div>
           <div className="feed-hero-meta">
             <div className="feed-month-summary">{summaryText}</div>
-            <Button variant="action" size="sm" onClick={() => setCreateOpen(true)}>
+            <Button variant="action" size="sm" className="feed-write-btn" onClick={() => setCreateOpen(true)}>
               <IconPencil /> 글쓰기
             </Button>
           </div>
@@ -259,6 +259,9 @@ export default function Feed() {
                 const isMine = String(item.writer?.id) === String(currentUserId)
                 const authorLabel = isMine ? '내 기록' : `${item.writer?.nickname}의 기록`
                 const tags = cardTags(item, isMine)
+                // 해시태그 1줄 제한 — 넘치면 참여자 아바타(+N)와 같은 패턴으로 묶는다(카드 높이 고정, #125).
+                const visibleTags = tags.slice(0, 3)
+                const restTags = tags.length - visibleTags.length
                 const avatars = cardAvatars(item)
                 const visibleAv = avatars.slice(0, 4)
                 const restAv = avatars.length - visibleAv.length
@@ -269,7 +272,9 @@ export default function Feed() {
                       <div className="polaroid-presence-row">
                         {visibleAv.map((p, idx) => (
                           <span key={p.id ?? idx} className={`presence-tile ${idx === 0 ? 'is-author' : 'friend'}`} title={p.nickname}>
-                            <span className="presence-dot">{initialOf(p.nickname)}</span>
+                            <span className="presence-dot">
+                              {p.profileImageUrl ? <img src={p.profileImageUrl} alt="" /> : initialOf(p.nickname)}
+                            </span>
                           </span>
                         ))}
                         {restAv > 0 && <span className="presence-more">+{restAv}</span>}
@@ -288,11 +293,10 @@ export default function Feed() {
                         )}
                         {!item.thumbnailUrl && (
                           <>
-                            <span className="memory-clover-placeholder">🍀</span>
+                            <i className="ti ti-clover memory-clover-placeholder" aria-hidden="true" />
                             <span className="memory-image-text">사진이 없는 추억은<br />클로버로 보관됩니다</span>
                           </>
                         )}
-                        <span className="polaroid-zoom-hint">🔍 자세히</span>
                       </div>
                       <div className="polaroid-caption">
                         <div className={`my-record-box ${isMine ? 'mine' : 'friend'}`}>
@@ -306,9 +310,10 @@ export default function Feed() {
                           {preview && <div className="my-record-text">{preview}</div>}
                         </div>
                         <div className="memory-footer-tags">
-                          {tags.map((tag, index) => (
+                          {visibleTags.map((tag, index) => (
                             <div key={tag} className={`memory-tag ${index === 0 ? 'highlight' : ''}`}>#{tag}</div>
                           ))}
+                          {restTags > 0 && <div className="memory-tag memory-tag-more">+{restTags}</div>}
                         </div>
                         <div className="memory-meta-row">
                           <span className="memory-date">{item.memoryDate || '날짜 미정'}</span>
@@ -1020,7 +1025,7 @@ export function MemoryDetailModal({
                   <img className="memory-detail-photo" src={activeImage.imageUrl} alt="추억 사진" />
                 ) : (
                   <div className="memory-detail-photo memory-detail-photo--empty">
-                    <span className="memory-clover-placeholder">🍀</span>
+                    <i className="ti ti-clover memory-clover-placeholder" aria-hidden="true" />
                     <span className="memory-image-text">사진이 없는 추억은<br />클로버로 보관됩니다</span>
                   </div>
                 )}
@@ -1144,7 +1149,7 @@ export function MemoryDetailModal({
                 ) : (
                   <div className="mp-photo-main mp-photo-main--empty">
                     <div className="cline-no-photo">
-                      <span>🍀</span>
+                      <i className="ti ti-photo-off cline-no-photo-icon" aria-hidden="true" />
                       <span className="cline-no-photo-text">사진 없음</span>
                     </div>
                   </div>

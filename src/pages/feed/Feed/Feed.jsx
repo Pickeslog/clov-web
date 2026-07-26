@@ -387,6 +387,7 @@ export default function Feed() {
         <MemoryDetailModal
           {...memoryDetail}
           currentUserId={currentUserId}
+          members={memberItems}
           onClose={() => setSelectedMemoryId(null)}
         />
       )}
@@ -933,6 +934,7 @@ export function MemoryDetailModal({
   memory,
   isLoading,
   currentUserId,
+  members = [],
   onClose,
   onSave,
   onDelete,
@@ -942,6 +944,8 @@ export function MemoryDetailModal({
   commentsLoading,
   onAddComment,
   addingComment,
+  onUpdateComment,
+  updatingComment,
   onDeleteComment,
   onUploadImage,
   uploadingImage,
@@ -952,7 +956,9 @@ export function MemoryDetailModal({
   const [isEditing, setEditing] = useState(false)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [commentText, setCommentText] = useState('')
+  const [newMessageDraft, setNewMessageDraft] = useState('')
+  const [editingCommentId, setEditingCommentId] = useState(null)
+  const [editMessageDraft, setEditMessageDraft] = useState('')
   const [photoIndex, setPhotoIndex] = useState(0)
   const [galleryIndex, setGalleryIndex] = useState(-1) // -1 = 닫힘, 그 외 = 전체보기 인덱스
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -998,43 +1004,121 @@ export function MemoryDetailModal({
     setEditing(true)
   }
 
-  const handleAddComment = () => {
-    if (!commentText.trim()) return
-    onAddComment(commentText.trim())
-    setCommentText('')
+  const startEditMessage = (comment) => {
+    setEditingCommentId(comment.id)
+    setEditMessageDraft(comment.content)
+  }
+  const cancelEditMessage = () => {
+    // 서버 값(comment.content)으로 복구 — 로컬 초안은 그냥 버린다(팀장 리뷰).
+    setEditingCommentId(null)
+    setEditMessageDraft('')
+  }
+  const saveEditMessage = () => {
+    if (!editMessageDraft.trim()) return
+    onUpdateComment(editingCommentId, editMessageDraft.trim())
+    setEditingCommentId(null)
+  }
+  const submitNewMessage = () => {
+    if (!newMessageDraft.trim()) return
+    onAddComment(newMessageDraft.trim())
+    setNewMessageDraft('')
   }
 
-  // 한 줄 메시지(프로덕션 댓글 모델) — 여권/수정 두 모드 공용.
+  // 한 줄 메시지 — 방 멤버 전원을 행으로(#126, 프로토타입 space.js 구조).
+  // 메시지 있으면 표시, 본인이고 없으면 그 자리에 입력창, 남이고 없으면 "아직 메시지 없음".
+  // 서버 제약이 추억당 작성자 1인 1개라 화면도 멤버당 최대 1개로 맞춘다.
+  const activeMembers = members.filter((m) => m.status === 'ACTIVE')
+  const commentByWriterId = new Map(comments.map((c) => [String(c.writer?.id), c]))
+  // 나간(LEFT)·탈퇴(익명화) 멤버가 남긴 메시지 — 현재 멤버 행에는 안 나오니 기록 보존을 위해
+  // 아래에 따로 모아 보여준다(팀장 리뷰). ACTIVE 멤버 목록에 없는 작성자의 메시지가 대상.
+  const formerComments = comments.filter(
+    (c) => !activeMembers.some((m) => String(m.userId) === String(c.writer?.id)),
+  )
+
   const messagesBlock = (
     <div className="memory-detail-messages">
       <div className="memory-detail-messages-title">친구 한 줄 메시지</div>
       {commentsLoading && <div className="feed-state">불러오는 중…</div>}
-      {!commentsLoading && comments.length === 0 && (
-        <div className="memory-message-row"><span className="memory-message-empty-text">첫 한 줄을 남겨보세요.</span></div>
+      {!commentsLoading && activeMembers.map((member) => {
+        const isSelf = String(member.userId) === String(currentUserId)
+        const comment = commentByWriterId.get(String(member.userId))
+
+        if (comment && editingCommentId === comment.id) {
+          return (
+            <div className="memory-message-row" key={member.userId}>
+              <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+              <span className="memory-message-name">{member.nickname}</span>
+              <input
+                className="memory-message-compose-input"
+                value={editMessageDraft}
+                maxLength={255}
+                onChange={(e) => setEditMessageDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') saveEditMessage() }}
+              />
+              <Button variant="secondary" size="sm" disabled={!editMessageDraft.trim() || updatingComment} onClick={saveEditMessage}>
+                {updatingComment ? '저장 중…' : '저장'}
+              </Button>
+              <button type="button" className="memory-message-action-btn" onClick={cancelEditMessage}>취소</button>
+            </div>
+          )
+        }
+
+        if (comment) {
+          return (
+            <div className="memory-message-row" key={member.userId}>
+              <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+              <span className="memory-message-name">{member.nickname}</span>
+              <span className="memory-message-text">{comment.content}</span>
+              {isSelf && (
+                <>
+                  <button type="button" className="memory-message-action-btn" onClick={() => startEditMessage(comment)}>수정</button>
+                  <button type="button" className="memory-message-action-btn danger" onClick={() => onDeleteComment(comment.id)}>삭제</button>
+                </>
+              )}
+            </div>
+          )
+        }
+
+        if (isSelf) {
+          return (
+            <div className="memory-message-row" key={member.userId}>
+              <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+              <span className="memory-message-name">{member.nickname}</span>
+              <input
+                className="memory-message-compose-input"
+                value={newMessageDraft}
+                maxLength={255}
+                placeholder="한 줄 메시지를 남겨보세요"
+                onChange={(e) => setNewMessageDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') submitNewMessage() }}
+              />
+              <Button variant="secondary" size="sm" disabled={!newMessageDraft.trim() || addingComment} onClick={submitNewMessage}>
+                {addingComment ? '등록 중…' : '등록'}
+              </Button>
+            </div>
+          )
+        }
+
+        return (
+          <div className="memory-message-row" key={member.userId}>
+            <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+            <span className="memory-message-name">{member.nickname}</span>
+            <span className="memory-message-empty-text">아직 메시지 없음</span>
+          </div>
+        )
+      })}
+      {formerComments.length > 0 && (
+        <>
+          <div className="memory-detail-messages-former-title">이전 멤버</div>
+          {formerComments.map((comment) => (
+            <div className="memory-message-row" key={comment.id}>
+              <span className="memory-message-avatar">{initialOf(comment.writer?.nickname)}</span>
+              <span className="memory-message-name">{comment.writer?.nickname}</span>
+              <span className="memory-message-text">{comment.content}</span>
+            </div>
+          ))}
+        </>
       )}
-      {comments.map((comment) => (
-        <div className="memory-message-row" key={comment.id}>
-          <span className="memory-message-avatar">{initialOf(comment.writer?.nickname)}</span>
-          <span className="memory-message-name">{comment.writer?.nickname}</span>
-          <span className="memory-message-text">{comment.content}</span>
-          {String(comment.writer?.id) === String(currentUserId) && (
-            <button type="button" className="memory-message-delete-btn" onClick={() => onDeleteComment(comment.id)}>삭제</button>
-          )}
-        </div>
-      ))}
-      <div className="memory-message-compose">
-        <input
-          className="memory-message-compose-input"
-          value={commentText}
-          maxLength={255}
-          placeholder="한 줄 남기기"
-          onChange={(e) => setCommentText(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleAddComment() }}
-        />
-        <Button variant="secondary" size="sm" disabled={!commentText.trim() || addingComment} onClick={handleAddComment}>
-          {addingComment ? '등록 중…' : '등록'}
-        </Button>
-      </div>
     </div>
   )
 

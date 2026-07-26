@@ -781,6 +781,7 @@ export default function Dashboard() {
           memoryId={selectedMemoryId}
           roomId={roomId}
           currentUserId={currentUserId}
+          members={memberItems}
           onClose={() => setSelectedMemoryId(null)}
         />
       </div>
@@ -791,9 +792,9 @@ export default function Dashboard() {
 
 // 우정공간 증거 카드에서 여는 추억 상세 — 피드와 동일한 여권 상세 모달(MemoryDetailModal)을
 // 공용 훅(useMemoryDetail)으로 그대로 재사용한다.
-function DashboardMemoryDetail({ memoryId, roomId, currentUserId, onClose }) {
+function DashboardMemoryDetail({ memoryId, roomId, currentUserId, members, onClose }) {
   const memoryDetail = useMemoryDetail(memoryId, roomId, { onDeleted: onClose })
-  return <MemoryDetailModal {...memoryDetail} currentUserId={currentUserId} onClose={onClose} />
+  return <MemoryDetailModal {...memoryDetail} currentUserId={currentUserId} members={members} onClose={onClose} />
 }
 
 // 친구 초대 모달 — 방의 활성 초대코드를 만들어/보여주고 복사·공유(계약 §7).

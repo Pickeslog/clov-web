@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   getMemory, getComments, updateMemory, deleteMemory,
-  createComment, deleteComment,
+  createComment, updateComment, deleteComment,
   presignMemoryImage, commitMemoryImage, deleteMemoryImage, reorderMemoryImages,
 } from '../api/memory'
 import { uploadImage } from '../lib/uploadImage'
@@ -31,7 +31,16 @@ export function useMemoryDetail(memoryId, roomId, { onDeleted } = {}) {
 
   const updateMutation = useMutation({ mutationFn: (payload) => updateMemory(memoryId, payload), onSuccess: invalidateBoth })
   const deleteMutation = useMutation({ mutationFn: () => deleteMemory(memoryId), onSuccess: () => { invalidateFeed(); onDeleted?.() } })
-  const addCommentMutation = useMutation({ mutationFn: (content) => createComment(memoryId, { content }), onSuccess: invalidateBoth })
+  const addCommentMutation = useMutation({
+    mutationFn: (content) => createComment(memoryId, { content }),
+    onSuccess: invalidateBoth,
+    // 추억당 작성자 1인 1개(계약 §10) — 캐시가 어긋난 상태에서(레이스 등) 이미 남긴 걸 또
+    // 등록하면 서버가 409로 막는다. 사용자 실수가 아니라 낙관적 화면과 실제 상태가 어긋난
+    // 것뿐이라 에러로 띄우지 않고 조용히 다시 불러와 그 행이 스스로 "메시지 있음"으로
+    // 정리되게 한다(팀장 리뷰).
+    onError: (err) => { if (err.code === 'COMMENT_ALREADY_EXISTS') invalidateBoth() },
+  })
+  const updateCommentMutation = useMutation({ mutationFn: ({ commentId, content }) => updateComment(commentId, { content }), onSuccess: invalidateBoth })
   const deleteCommentMutation = useMutation({ mutationFn: (commentId) => deleteComment(commentId), onSuccess: invalidateBoth })
   const uploadImageMutation = useMutation({
     mutationFn: async (file) => {
@@ -56,6 +65,8 @@ export function useMemoryDetail(memoryId, roomId, { onDeleted } = {}) {
     commentsLoading: comments.isPending,
     onAddComment: (content) => addCommentMutation.mutate(content),
     addingComment: addCommentMutation.isPending,
+    onUpdateComment: (commentId, content) => updateCommentMutation.mutate({ commentId, content }),
+    updatingComment: updateCommentMutation.isPending,
     onDeleteComment: (commentId) => deleteCommentMutation.mutate(commentId),
     onUploadImage: (file) => uploadImageMutation.mutate(file),
     uploadingImage: uploadImageMutation.isPending,

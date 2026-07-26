@@ -47,16 +47,18 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); 
 .proto-feed .feed-title { font-size: 20px; font-weight: 800; color: var(--accent-green); }
 .proto-feed .feed-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
 .proto-feed .feed-hero-meta { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-/* 프로토타입 글쓰기 버튼(02-main desktop.css/space.css .feed-write-btn) — 공용 Button에 className으로 얹는다. */
-.proto-feed .feed-write-btn {
+/* 프로토타입 글쓰기 버튼(02-main desktop.css/space.css .feed-write-btn) — 공용 Button에 className으로 얹는다.
+   .clov-btn를 같이 걸어 .clov-btn--action보다 특이성을 높인다(대시보드 .clov-btn--dashed와 같은 방식,
+   !important 안 씀). Space Mono는 clov-web에 로드돼 있지 않아 여기선 빼고 기본 폰트를 쓴다. */
+.proto-feed .clov-btn.feed-write-btn {
   min-height: 34px; padding: 0 16px; border-radius: 7px;
   border: 1.5px dashed rgba(46, 82, 51, 0.45);
-  background: #faf6ee; color: #2e5233 !important;
-  font-family: 'Space Mono', 'Courier New', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.3px;
+  background: #faf6ee; color: #2e5233;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.3px;
   box-shadow: 0 4px 10px rgba(46, 82, 51, 0.12);
   transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
 }
-.proto-feed .feed-write-btn:hover { background: #f3efe1; transform: translateY(-1px); box-shadow: 0 8px 16px rgba(46, 82, 51, 0.18); }
+.proto-feed .clov-btn.feed-write-btn:hover { background: #f3efe1; transform: translateY(-1px); box-shadow: 0 8px 16px rgba(46, 82, 51, 0.18); }
 .proto-feed .feed-month-summary {
   font-size: 13px; color: var(--text-muted); font-weight: 600;
   background: var(--nav-item-bg-active); padding: 5px 12px; border-radius: 20px;

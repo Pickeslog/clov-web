@@ -87,12 +87,14 @@ const cardTags = (item, isMine) => {
 // 넘기면 그만큼 한 개 더 줄인다 — effect가 재실행되며 수렴한다(매 렌더 최대 1씩 감소).
 function MemoryFooterTags({ tags }) {
   const rowRef = useRef(null)
-  // tags가 바뀌면(다른 카드로 재사용되거나 데이터 갱신) 렌더 중에 즉시 리셋 — 별도 effect 불필요
-  // (React 공식 패턴: prop 변화에 맞춰 state를 조정할 땐 effect보다 렌더 중 비교가 낫다).
-  const [prevTags, setPrevTags] = useState(tags)
+  // cardTags()의 폴백 분기는 매 렌더 새 배열을 만들어 반환한다 — 참조로 비교하면 내용이
+  // 같아도 항상 "바뀐 것"으로 잡혀 부모가 리렌더될 때마다(검색어 입력 등) 태그가 전부
+  // 펼쳐졌다가 다시 접히는 깜빡임이 생긴다(팀장 리뷰). 내용 기준 키로 비교한다.
+  const tagsKey = tags.join('|')
+  const [prevKey, setPrevKey] = useState(tagsKey)
   const [visibleCount, setVisibleCount] = useState(tags.length)
-  if (prevTags !== tags) {
-    setPrevTags(tags)
+  if (prevKey !== tagsKey) {
+    setPrevKey(tagsKey)
     setVisibleCount(tags.length)
   }
 
@@ -107,7 +109,7 @@ function MemoryFooterTags({ tags }) {
     const tagChipCount = Math.min(visibleCount, tags.length)
     const next = wrappedAt < tagChipCount ? wrappedAt : Math.max(tagChipCount - 1, 0)
     if (next !== visibleCount) setVisibleCount(next)
-  }, [tags, visibleCount])
+  }, [tagsKey, visibleCount, tags.length])
 
   const visible = tags.slice(0, visibleCount)
   const rest = tags.length - visible.length

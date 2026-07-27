@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import * as S from './JoinRoom.style'
 import { requestJoin } from '../../../api/invite'
@@ -19,7 +19,13 @@ const describeError = (error) => {
 
 // 초대 코드로 가입을 "신청"하는 화면(계약 §7) — 신청 즉시 입장이 아니라 PENDING 생성.
 export default function JoinRoom() {
-  const [inviteCode, setInviteCode] = useState('')
+  const { code } = useParams()
+  const [searchParams] = useSearchParams()
+  // 공유 링크는 경로(/join/:code)와 쿼리(?code=/?roomCode=) 두 형식이 모두 쓰인다 — 둘 다 지원.
+  // 코드만 채워주고 제출은 하지 않는다: 가입 신청은 5분 되돌리기가 붙는 부수효과가 있어 사용자가 직접 눌러야 한다.
+  const [inviteCode, setInviteCode] = useState(
+    () => code ?? searchParams.get('code') ?? searchParams.get('roomCode') ?? '',
+  )
   const [message, setMessage] = useState('')
 
   const { mutate, isPending, isSuccess } = useMutation({

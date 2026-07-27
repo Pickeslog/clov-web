@@ -63,7 +63,9 @@ export function useMemoryDetail(memoryId, roomId, { onDeleted } = {}) {
     deleting: deleteMutation.isPending,
     comments: comments.data?.items ?? [],
     commentsLoading: comments.isPending,
-    onAddComment: (content) => addCommentMutation.mutate(content),
+    // options를 그대로 넘겨 호출부가 성공/실패 시점을 잡을 수 있게 한다(입력 내용 보존 등).
+    // 훅 레벨 onSuccess/onError는 그대로 먼저 실행된다.
+    onAddComment: (content, options) => addCommentMutation.mutate(content, options),
     addingComment: addCommentMutation.isPending,
     onUpdateComment: (commentId, content) => updateCommentMutation.mutate({ commentId, content }),
     updatingComment: updateCommentMutation.isPending,

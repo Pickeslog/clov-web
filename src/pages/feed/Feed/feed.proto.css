@@ -58,7 +58,10 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); 
   box-shadow: 0 4px 10px rgba(46, 82, 51, 0.12);
   transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
 }
-.proto-feed .clov-btn.feed-write-btn:hover { background: #f3efe1; transform: translateY(-1px); box-shadow: 0 8px 16px rgba(46, 82, 51, 0.18); }
+/* color를 여기서 다시 못박아야 한다 — 이 규칙에 color가 없으면 Button.css의
+   `.clov-btn--action:not(:disabled):hover { color: #b6e08a }`와 특이성이 동률(0,3,0)이 되고,
+   Button.css가 나중에 주입돼서 다크용 연초록이 크림 종이 버튼 위에 얹힌다. */
+.proto-feed .clov-btn.feed-write-btn:hover { background: #f3efe1; color: #2e5233; transform: translateY(-1px); box-shadow: 0 8px 16px rgba(46, 82, 51, 0.18); }
 .proto-feed .feed-month-summary {
   font-size: 13px; color: var(--text-muted); font-weight: 600;
   background: var(--nav-item-bg-active); padding: 5px 12px; border-radius: 20px;

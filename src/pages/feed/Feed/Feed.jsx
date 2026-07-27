@@ -1018,10 +1018,17 @@ export function MemoryDetailModal({
     onUpdateComment(editingCommentId, editMessageDraft.trim())
     setEditingCommentId(null)
   }
+  // 등록이 확정된 뒤에 입력창을 비운다. mutate 직후 무조건 비우면 네트워크 오류·500일 때
+  // 사용자가 쓴 내용이 복구 경로 없이 증발한다.
   const submitNewMessage = () => {
-    if (!newMessageDraft.trim()) return
-    onAddComment(newMessageDraft.trim())
-    setNewMessageDraft('')
+    const content = newMessageDraft.trim()
+    if (!content) return
+    onAddComment(content, {
+      onSuccess: () => setNewMessageDraft(''),
+      // 409(이미 남김)는 실패가 아니라 낙관적 화면이 어긋난 것뿐이라 훅이 조용히 재조회한다.
+      // 그 행은 곧 "메시지 있음"으로 정리되니 초안도 같이 비운다.
+      onError: (err) => { if (err?.code === 'COMMENT_ALREADY_EXISTS') setNewMessageDraft('') },
+    })
   }
 
   // 한 줄 메시지 — 방 멤버 전원을 행으로(#126, 프로토타입 space.js 구조).

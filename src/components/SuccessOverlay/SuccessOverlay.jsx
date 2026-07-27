@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './SuccessOverlay.css'
 
@@ -38,18 +38,26 @@ export default function SuccessOverlay({ nickname, durationMs = 3000, onDone }) 
   const [phase, setPhase] = useState('enter') // enter -> active -> zoomout -> warp
   const [line] = useState(() => pickRandom(WELCOME_LINES)(nickname || '사용자'))
 
+  // onDone을 effect 의존성에 두면, 호출자가 인라인 화살표(매 렌더마다 새 정체성)를 넘길 때
+  // 오버레이 표시 중 호출자가 리렌더될 때마다 타이머 3개가 0부터 다시 시작한다.
+  // 공용 컴포넌트라 호출자를 통제할 수 없으니 ref로 최신 값만 담아 effect 의존성에서 뺀다.
+  const onDoneRef = useRef(onDone)
+  useEffect(() => {
+    onDoneRef.current = onDone
+  })
+
   useEffect(() => {
     const raf = requestAnimationFrame(() => setPhase('active'))
     const zoomoutTimer = setTimeout(() => setPhase('zoomout'), durationMs)
     const warpTimer = setTimeout(() => setPhase('warp'), durationMs + 320)
-    const doneTimer = setTimeout(() => onDone?.(), durationMs + 320 + 340)
+    const doneTimer = setTimeout(() => onDoneRef.current?.(), durationMs + 320 + 340)
     return () => {
       cancelAnimationFrame(raf)
       clearTimeout(zoomoutTimer)
       clearTimeout(warpTimer)
       clearTimeout(doneTimer)
     }
-  }, [durationMs, onDone])
+  }, [durationMs])
 
   const className = [
     'clov-success-overlay',

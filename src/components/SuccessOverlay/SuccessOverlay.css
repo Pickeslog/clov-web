@@ -1,0 +1,164 @@
+/* ══════════════════════════════════════════════
+   로그인 성공 오버레이(공통 컴포넌트) — 정본
+   test-web-design/02-main/css/success-overlay.css + js/success-overlay.js 이식(#152).
+   ══════════════════════════════════════════════ */
+/* 배경은 뷰포트를 항상 100% 꽉 채운 채로 유지 — 절대 scale 하지 않는다.
+   (내용만 줌/워프시켜야 가장자리에 페이지 배경이 비치는 문제가 없다) */
+.clov-success-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(80, 217, 144, .28), transparent 30%),
+    radial-gradient(circle at 82% 78%, rgba(80, 217, 144, .16), transparent 34%),
+    linear-gradient(160deg, #073b24 0%, #0b5b33 60%, #0d6b3c 100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .32s ease, visibility .32s ease;
+}
+.clov-success-overlay.is-active { opacity: 1; visibility: visible; }
+/* 배경은 워프 중에도 opacity:1을 유지한 채 페이지 이동 직전까지 화면을 완전히 덮고 있어야
+   한다 — 여기서 페이드시키면 그 틈으로 로그인 화면이 다시 비쳐 보이는 문제가 생긴다 */
+
+/* 떠오르는 잎사귀 — overlay가 is-active일 때만 애니메이션을 돌려 백그라운드에서
+   불필요하게 CPU를 쓰지 않는다 */
+.clov-success-leaves { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.clov-success-leaf {
+  position: absolute;
+  bottom: -24px;
+  border-radius: 0 50% 50% 50%;
+  background: rgba(80, 217, 144, .55);
+}
+.clov-success-overlay.is-active .clov-success-leaf { animation: clov-leaf-float linear infinite; }
+@keyframes clov-leaf-float {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  12%  { opacity: .6; }
+  88%  { opacity: .3; }
+  100% { transform: translateY(-115vh) rotate(50deg); opacity: 0; }
+}
+
+/* 하단 웨이브 다이바이더 — 두 겹 곡선이 화면 아래쪽에 겹쳐 배경에 층을 더한다 */
+.clov-success-wave {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: 0;
+  width: 120%;
+  height: 22vh;
+  z-index: 0;
+  pointer-events: none;
+}
+.clov-success-wave-back { fill: rgba(255, 255, 255, .06); }
+.clov-success-wave-front { fill: rgba(255, 255, 255, .1); }
+.clov-success-overlay.is-active .clov-success-wave-back { animation: clov-wave-drift-back 5.5s ease-in-out infinite; }
+.clov-success-overlay.is-active .clov-success-wave-front { animation: clov-wave-drift-front 4s ease-in-out infinite; }
+@keyframes clov-wave-drift-back {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(-10%, 4px); }
+}
+@keyframes clov-wave-drift-front {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(9%, -3px); }
+}
+
+/* 내용(체크/문구)만 줌/워프 — 배경 사각형은 그대로 두고 콘텐츠만 숨을 고르듯 작아졌다가
+   빛으로 응축되듯 하얗게 바래며 한 점으로 작아져 사라진다 */
+.clov-success-stage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  text-align: center;
+  color: #fff;
+  transform: scale(1);
+  transform-origin: 50% 50%;
+  filter: brightness(1) saturate(1);
+  opacity: 1;
+  transition: transform .4s ease;
+}
+.clov-success-overlay.is-zoomout .clov-success-stage { transform: scale(.9); }
+.clov-success-overlay.is-warp .clov-success-stage {
+  transform: scale(.08);
+  filter: brightness(2.6) saturate(0);
+  opacity: 0;
+  transition: transform .32s cubic-bezier(.55, 0, .85, .35), filter .3s ease, opacity .28s ease .06s;
+}
+
+.clov-success-check { width: 108px; height: 108px; }
+.clov-success-check svg { width: 100%; height: 100%; }
+.clov-success-circle {
+  fill: none;
+  stroke: url(#clovSuccessGradient);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 327;
+  stroke-dashoffset: 327;
+}
+.clov-success-tick {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 70;
+  stroke-dashoffset: 70;
+}
+.clov-success-overlay.is-active .clov-success-circle {
+  animation: clov-success-circle-draw .9s ease forwards;
+}
+.clov-success-overlay.is-active .clov-success-tick {
+  animation: clov-success-tick-draw .4s ease forwards .72s;
+}
+@keyframes clov-success-circle-draw {
+  0%   { stroke-dashoffset: 327; }
+  78%  { stroke-dashoffset: -21; }
+  92%  { stroke-dashoffset: 9; }
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes clov-success-tick-draw   { to { stroke-dashoffset: 0; } }
+
+.clov-success-text {
+  max-width: 380px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .4s ease .5s, transform .4s ease .5s;
+}
+.clov-success-overlay.is-active .clov-success-text { opacity: 1; transform: translateY(0); }
+
+.clov-success-egg-hint {
+  max-width: 340px;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, .68);
+  font-size: .82rem;
+  font-weight: 600;
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .4s ease .85s, transform .4s ease .85s;
+}
+.clov-success-overlay.is-active .clov-success-egg-hint { opacity: 1; transform: translateY(0); }
+.clov-success-egg-hint .clov-success-egg-label {
+  margin-right: 6px;
+  color: #b9f3d1;
+  font-weight: 800;
+}
+
+/* 정본 대비 수정 — infinite 애니메이션 3개(낙엽·물결 앞뒤)가 정본 블록엔 빠져 있어서
+   모션 최소화를 켠 사용자에게도 계속 움직였다(#152 리뷰에서 지적됨). 여기서 같이 끈다. */
+@media (prefers-reduced-motion: reduce) {
+  .clov-success-circle, .clov-success-tick { animation: none !important; stroke-dashoffset: 0 !important; }
+  .clov-success-text, .clov-success-egg-hint { transition: none !important; opacity: 1 !important; transform: none !important; }
+  .clov-success-stage { transition: none !important; transform: none !important; }
+  .clov-success-leaf,
+  .clov-success-wave-back,
+  .clov-success-wave-front { animation: none !important; }
+}

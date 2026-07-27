@@ -8,6 +8,7 @@ import Header from '../../../components/Header/Header'
 import RoomPreviewModal from './RoomPreviewModal'
 import { ddayDiff } from '../../../lib/datetime'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
+import { describeInviteError, extractJoinedRoomId } from '../../../lib/inviteError'
 
 const PAGE_SIZE = 9
 const ORDER_KEY = 'clov-room-order'
@@ -174,7 +175,14 @@ export default function RoomList() {
       setJoinMessage('가입 신청이 접수됐어요. 멤버가 수락하면 참여가 확정돼요.')
       queryClient.invalidateQueries({ queryKey: ['join-requests', 'mine'] })
     },
-    onError: (error) => setJoinMessage(error.message ?? '참여에 실패했어요.'),
+    onError: (error) => {
+      const roomId = extractJoinedRoomId(error)
+      if (roomId) {
+        navigate(`/rooms/${roomId}`)
+        return
+      }
+      setJoinMessage(describeInviteError(error))
+    },
   })
   const cancelReqMutation = useMutation({
     mutationFn: (id) => cancelJoinRequest(id),

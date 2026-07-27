@@ -5,6 +5,7 @@ import { login } from '../../../api/auth'
 import { oauthAuthorizeUrl } from '../../../api/client'
 import { useAuthStore } from '../../../stores/authStore'
 import { takeReturnTo } from '../../../lib/returnUrl'
+import SuccessOverlay from '../../../components/SuccessOverlay/SuccessOverlay'
 import logo from '../../../assets/clov_logo.png'
 
 const EMAIL_RE = /\S+@\S+\.\S+/
@@ -40,6 +41,8 @@ export default function Login() {
   const [shake, setShake] = useState({ email: false, password: false })
   const [submitting, setSubmitting] = useState(false)
   const [remember, setRemember] = useState(true)
+  // null이면 오버레이 없음. 로그인 성공 시에만 채워진다(#152).
+  const [successOverlay, setSuccessOverlay] = useState(null)
 
   const handleLogin = async () => {
     setMessage('')
@@ -56,8 +59,9 @@ export default function Login() {
     try {
       const data = await login({ email: email.trim(), password })
       setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken }, { remember })
-      // 보호 라우트에 튕겨서 왔으면 그 자리로 돌려보낸다(#137). 없으면 방 목록.
-      navigate(takeReturnTo(), { replace: true })
+      // takeReturnTo()는 소비형이라 오버레이 시작 전에 부르면 안 된다 — 오버레이가 도는 동안
+      // 새로고침/탭 종료 시 returnTo가 이미 사라진 채 홈으로 떨어진다. 오버레이 완료 콜백에서 부른다.
+      setSuccessOverlay({ nickname: data.user?.nickname })
     } catch (error) {
       setMessage(
         error.code === 'INVALID_CREDENTIALS'
@@ -77,6 +81,16 @@ export default function Login() {
 
   const startSocialLogin = (provider) => {
     window.location.assign(oauthAuthorizeUrl(provider))
+  }
+
+  if (successOverlay) {
+    return (
+      <SuccessOverlay
+        nickname={successOverlay.nickname}
+        durationMs={1600}
+        onDone={() => navigate(takeReturnTo(), { replace: true })}
+      />
+    )
   }
 
   return (

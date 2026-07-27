@@ -618,6 +618,36 @@ body.light-mode .proto-dashboard .section-actions .clov-btn--action { background
   .proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-card-slot { animation: none; }
 }
 
+/* ── 겹침 카드(coverflow) 3D 마우스 틸트 (#114 P3, 정본 space.css) ──
+   마우스 위치에 따라 카드가 커서 쪽으로 기운다. 각도는 JS가 --rotateX/--rotateY로 넣어준다.
+   기본값이 0deg라 호버 전에는 평평 — 즉 P1의 정적 3D 대열 그대로다.
+   회전 대상은 카드(.cline-polaroid)이고 대열 배치는 슬롯(.cline-card-slot)이 맡는다.
+   둘을 분리했기 때문에 P2의 슬라이드 애니메이션(슬롯에 걸림)과 겹치지 않는다. */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-polaroid {
+  transform-style: preserve-3d;
+  transform: perspective(800px) rotateX(var(--rotateX, 0deg)) rotateY(var(--rotateY, 0deg));
+  transition: transform .18s ease-out, box-shadow .28s ease;
+  will-change: transform;
+}
+/* 호버 중에는 추종을 빠르게(0.18s→0.15s) 하고 그림자를 키워 떠 있는 느낌을 준다. */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-polaroid.is-3d-hovering {
+  transition: transform .15s cubic-bezier(.2, 0, .2, 1), box-shadow .28s ease;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .22), 0 24px 56px rgba(0, 0, 0, .26) !important;
+  z-index: 100 !important;
+}
+/* 호버 중인 카드가 옆 카드에 가려지지 않도록 슬롯째 최전방으로(현재 카드 z-index:50보다 위). */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-card-slot.is-3d-hovering { z-index: 100 !important; }
+
+/* 모션 최소화 설정이면 기울기만 끈다. 그림자·z-index 상승은 "어느 카드 위에 있는지" 알려주는
+   호버 표시라 모션이 아니므로 남긴다(P2 블록과 같은 판단). */
+@media (prefers-reduced-motion: reduce) {
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-polaroid,
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-polaroid.is-3d-hovering {
+    transform: none;
+    transition: box-shadow .28s ease;
+  }
+}
+
 /* ── 참여자별 추억 증거 카드 테마: 일기장(diary) — 펼친 책 위에 카드 4장이 부채꼴로 놓이는 스타일 ──
    목업 desktop.css의 .cline-viewer.theme-diary 블록 이식. 이미지 경로만 public/diary/로 바꿨다. */
 .proto-dashboard .cline-viewer.theme-diary .cline-wire,

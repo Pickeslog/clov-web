@@ -1080,6 +1080,12 @@ function DiaryStage() {
 // | 'diary'(일기장, 펼친 책 위에 카드가 부채꼴로 놓임).
 function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
   const [index, setIndex] = useState(0)
+  // 겹침 카드 방향성 전환(#114 P2). dir = 정본 space.js:13의 evidenceSlideDirection —
+  // 과거로 넘기면 'past', 최신으로 넘기면 'current'.
+  // seq는 애니메이션 재시작용이다: 슬롯 <div>는 key={cls}로 고정돼 index가 바뀌어도 같은 DOM 노드가
+  // 재사용되기 때문에, 클래스만 그대로면 CSS 애니메이션이 다시 돌지 않는다(같은 방향 연속 클릭).
+  // .cline-cards의 key를 갈아 리마운트시켜 정본(innerHTML 재생성)과 같은 재시작을 만든다.
+  const [slide, setSlide] = useState({ dir: null, seq: 0 })
   const framesRef = useRef(null)
   const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: false })
   const total = memories.length
@@ -1088,6 +1094,14 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
   const isDiary = cardTheme === 'diary'
   // 겹침 카드·일기장은 같은 슬롯 구성(±3)에 빨랫줄/집게가 없다. 일기장은 CSS에서 바깥 슬롯을 숨겨 4장만 보인다.
   const isFanned = isStack || isDiary
+
+  // 카드 이동은 전부 이 함수를 거친다(카드 클릭·필름스트립 클릭). 방향을 여기서 한 번만 정한다.
+  const goTo = (next) => {
+    const target = clamp(next)
+    if (target === index) return
+    setSlide((prev) => ({ dir: target > index ? 'past' : 'current', seq: prev.seq + 1 }))
+    setIndex(target)
+  }
 
   // index가 바뀌면 현재 프레임을 필름 중앙으로 스크롤.
   useEffect(() => {
@@ -1129,7 +1143,14 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
         {isDiary && <DiaryStage />}
         <div className="cline-wire-area">
           <div className="cline-wire" />
-          <div className="cline-cards">
+          {/* 겹침 카드만 방향 클래스를 단다(#114 P2). key를 갈아 애니메이션을 재시작시키므로
+              다른 테마에서는 불필요한 리마운트가 없게 고정 key를 쓴다.
+              전환이 끝난 뒤 클래스를 지우지 않는 것은 의도적이다 — 각 keyframe의 100%가 정적 규칙과
+              같은 값이라 forwards로 멈춘 상태가 정적 대열과 동일하고, 다음 이동에서 어차피 덮인다. */}
+          <div
+            key={isStack ? slide.seq : 'cards'}
+            className={`cline-cards${isStack && slide.dir ? ` slide-${slide.dir}` : ''}`}
+          >
             {SLOTS.map(({ delta, cls }) => {
               const i = index + delta
               if (i < 0 || i >= total) {
@@ -1147,7 +1168,7 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
                 <div
                   key={cls}
                   className={`cline-card-slot cline-slot--${cls} ${isActive ? 'is-active' : ''}`}
-                  onClick={opensDetail ? undefined : () => setIndex(clamp(target))}
+                  onClick={opensDetail ? undefined : () => goTo(target)}
                 >
                   {!isFanned && <Clothespin />}
                   <ClinePolaroid memory={memories[i]} isActive={isActive} onOpen={opensDetail ? () => onOpen(memories[i]?.id) : undefined} />
@@ -1176,7 +1197,7 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
                   key={m.id}
                   type="button"
                   className={`cline-film-frame ${orig === index ? 'is-current' : ''}`}
-                  onClick={() => { if (!drag.current.moved) setIndex(orig) }}
+                  onClick={() => { if (!drag.current.moved) goTo(orig) }}
                   aria-label={`${m.title} 보기`}
                 >
                   {m.thumbnailUrl && <img src={m.thumbnailUrl} alt="" draggable={false} />}

@@ -57,7 +57,11 @@ export const useAuthStore = create(
       // remember=false면 다음 방문부터 sessionStorage만 읽는다(탭을 닫으면 로그아웃).
       // 이전에 remember=true로 로그인한 적이 있으면 localStorage에 토큰이 남아 있어 꺼도
       // 로그인이 유지돼버리므로, 매번 양쪽을 먼저 지우고 고른 storage에만 새로 쓴다.
-      setTokens: ({ accessToken, refreshToken }, { remember = true } = {}) => {
+      // 토큰 갱신(client.js)·가입·소셜 교환은 remember를 안 넘기고 이 함수를 부른다 — 그때
+      // 기본값을 true로 두면 "유지 꺼둔" 사용자도 액세스 토큰이 갱신되는 순간(30분 TTL) 영구
+      // 로그인으로 바뀐다. 명시적으로 넘긴 경우(로그인 화면)만 기준을 바꾸고, 나머지는 현재
+      // 선택을 그대로 이어가도록 기본값을 readRemember()로 둔다.
+      setTokens: ({ accessToken, refreshToken }, { remember = readRemember() } = {}) => {
         writeRemember(remember)
         clearBothStorages()
         set({ accessToken, refreshToken })

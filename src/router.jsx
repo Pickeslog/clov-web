@@ -21,6 +21,7 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <RoomList /> },
       { path: '/join', element: <JoinRoom /> },
+      { path: '/join/:code', element: <JoinRoom /> },
       { path: '/rooms/:roomId', element: <Dashboard /> },
       { path: '/rooms/:roomId/feed', element: <Feed /> },
       { path: '/rooms/:roomId/letters', element: <Letters /> },

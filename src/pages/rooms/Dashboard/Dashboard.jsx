@@ -1088,6 +1088,9 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
   const [slide, setSlide] = useState({ dir: null, seq: 0 })
   const framesRef = useRef(null)
   const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: false })
+  // 지금 기울어져 있는 카드. state가 아니라 ref인 이유는 마우스가 움직일 때마다 리렌더가 나면
+  // 안 되기 때문이다 — 각도는 CSS 변수로 DOM에 직접 쓴다(정본 space.js:1330-1360과 같은 방식).
+  const tilted = useRef(null)
   const total = memories.length
   const clamp = (i) => Math.min(Math.max(i, 0), total - 1)
   const isStack = cardTheme === 'stack'
@@ -1107,6 +1110,9 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
   useEffect(() => {
     const cur = framesRef.current?.querySelector('.cline-film-frame.is-current')
     cur?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    // 카드가 넘어가면 .cline-cards가 통째로 리마운트되므로(P2의 key 교체) 기울여 뒀던 카드는
+    // DOM에서 떨어져 나간다. 참조만 남으면 그 노드가 회수되지 않으니 여기서 놓아준다.
+    tilted.current = null
   }, [index])
 
   const SLOTS = [
@@ -1137,8 +1143,47 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
     if (el && Math.abs(e.deltaY) >= Math.abs(e.deltaX) && e.deltaY) { el.scrollLeft += e.deltaY; e.preventDefault() }
   }
 
+  // ── 겹침 카드 3D 마우스 틸트 (#114 P3) ─────────────────────────────────
+  // 정본 space.js:1330-1360은 window에 리스너를 달고 뷰어를 closest로 찾아 위임하지만,
+  // React에서는 뷰어 컨테이너에 직접 걸면 같은 위임이면서 언마운트 시 정리까지 자동이다.
+  const untilt = () => {
+    const card = tilted.current
+    if (!card) return
+    tilted.current = null
+    card.style.removeProperty('--rotateX')
+    card.style.removeProperty('--rotateY')
+    card.classList.remove('is-3d-hovering')
+    card.closest('.cline-card-slot')?.classList.remove('is-3d-hovering')
+  }
+
+  const onTiltMove = (e) => {
+    // 손가락·펜은 제외한다. 터치는 포인터가 화면을 "떠나는" 이벤트가 없어서 탭 한 번에
+    // 기울어진 채로 굳어버린다(정본에는 이 가드가 없다 — 목업이 데스크톱 전용이라 드러나지 않았을 뿐).
+    const card = e.pointerType === 'mouse' ? e.target.closest('.cline-polaroid') : null
+    if (tilted.current && tilted.current !== card) untilt()
+    if (!card) return
+
+    // 기준점은 카드가 아니라 부모 슬롯이다. 카드는 자기가 기울면 사각형이 같이 움직여서
+    // 그걸 기준으로 각도를 다시 계산하면 서로를 밀어내며 떨린다(정본 주석의 jitter).
+    const slot = card.closest('.cline-card-slot') ?? card
+    const rect = slot.getBoundingClientRect()
+    const unit = (v) => Math.max(-1, Math.min(1, v))
+    const normX = unit((e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2))
+    const normY = unit((e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2))
+
+    tilted.current = card
+    card.style.setProperty('--rotateY', `${(normX * 18).toFixed(2)}deg`)
+    card.style.setProperty('--rotateX', `${(-normY * 15).toFixed(2)}deg`)
+    card.classList.add('is-3d-hovering')
+    slot.classList.add('is-3d-hovering')
+  }
+
   return (
-    <div className={`memory-evidence-viewer cline-viewer ${isStack ? 'theme-coverflow' : ''} ${isDiary ? 'theme-diary' : ''}`}>
+    <div
+      className={`memory-evidence-viewer cline-viewer ${isStack ? 'theme-coverflow' : ''} ${isDiary ? 'theme-diary' : ''}`}
+      onPointerMove={isStack ? onTiltMove : undefined}
+      onPointerLeave={isStack ? untilt : undefined}
+    >
       <div className="cline-stage">
         {isDiary && <DiaryStage />}
         <div className="cline-wire-area">

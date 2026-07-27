@@ -616,7 +616,7 @@ body.light-mode .proto-dashboard .section-actions .clov-btn--action { background
 
 .proto-dashboard .cline-viewer.theme-diary .diary-memo {
   position: absolute; top: -65px; left: 10%; width: 170px; height: 215px;
-  background-image: url('/diary/diary-memo.png');
+  background-image: url('/diary/diary-memo.webp');
   background-size: cover; background-position: center; background-repeat: no-repeat;
   border-radius: 0; box-shadow: none; transform: rotate(-3deg); z-index: 1; pointer-events: none;
 }
@@ -626,8 +626,8 @@ body.light-mode .proto-dashboard .section-actions .clov-btn--action { background
   background-size: contain; background-repeat: no-repeat; background-position: center;
   z-index: 2; pointer-events: none; filter: drop-shadow(1px 2px 4px rgba(0,0,0,.15));
 }
-.proto-dashboard .cline-viewer.theme-diary .diary-sticker.clover { background-image: url('/diary/clover_sticker_transparent.png'); }
-.proto-dashboard .cline-viewer.theme-diary .diary-sticker.flower { background-image: url('/diary/flower_sticker_transparent.png'); }
+.proto-dashboard .cline-viewer.theme-diary .diary-sticker.clover { background-image: url('/diary/clover_sticker_transparent.webp'); }
+.proto-dashboard .cline-viewer.theme-diary .diary-sticker.flower { background-image: url('/diary/flower_sticker_transparent.webp'); }
 .proto-dashboard .cline-clip-svg {
   width: 28px; height: 48px; flex-shrink: 0; margin-bottom: -10px; position: relative; z-index: 4;
   filter: drop-shadow(0 3px 8px rgba(0,0,0,.45)) drop-shadow(0 1px 2px rgba(0,0,0,.3));

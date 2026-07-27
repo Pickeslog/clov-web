@@ -25,6 +25,7 @@ export default function Login() {
   const [message, setMessage] = useState('')
   const [shake, setShake] = useState({ email: false, password: false })
   const [submitting, setSubmitting] = useState(false)
+  const [remember, setRemember] = useState(true)
 
   const handleLogin = async () => {
     setMessage('')
@@ -40,7 +41,7 @@ export default function Login() {
     setSubmitting(true)
     try {
       const data = await login({ email: email.trim(), password })
-      setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken })
+      setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken }, { remember })
       // 보호 라우트에 튕겨서 왔으면 그 자리로 돌려보낸다(#137). 없으면 방 목록.
       navigate(takeReturnTo(), { replace: true })
     } catch (error) {
@@ -176,7 +177,7 @@ export default function Login() {
 
             <S.FormOptions>
               <S.Remember>
-                <input type="checkbox" defaultChecked />
+                <input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} />
                 <span>로그인 유지</span>
               </S.Remember>
               <S.SubLink

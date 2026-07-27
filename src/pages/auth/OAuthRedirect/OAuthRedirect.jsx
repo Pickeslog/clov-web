@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { exchangeOAuthCode, submitOAuthConsent } from '../../../api/auth'
 import { useAuthStore } from '../../../stores/authStore'
+import { takeReturnTo } from '../../../lib/returnUrl'
 import * as S from './OAuthRedirect.style'
 
 const initialAgreements = { service: false, privacy: false, marketing: false }
@@ -29,7 +30,8 @@ export default function OAuthRedirect() {
 
         if (exchangeResult.authenticated) {
           setTokens({ accessToken: exchangeResult.accessToken, refreshToken: exchangeResult.refreshToken })
-          navigate('/', { replace: true })
+          // 소셜은 백엔드로 전체 페이지 이동을 했다 돌아온다 — 목적지가 sessionStorage에 있어 살아남는다(#137).
+          navigate(takeReturnTo(), { replace: true })
           return
         }
 
@@ -63,7 +65,7 @@ export default function OAuthRedirect() {
     try {
       const result = await submitOAuthConsent(registration.registrationToken, agreements)
       setTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken })
-      navigate('/', { replace: true })
+      navigate(takeReturnTo(), { replace: true })
     } catch (error) {
       setMessage(errorMessage(error))
     } finally {

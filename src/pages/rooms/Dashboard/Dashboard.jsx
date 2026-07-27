@@ -1122,8 +1122,10 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
             {SLOTS.map(({ delta, cls }) => {
               const i = index + delta
               if (i < 0 || i >= total) {
-                // 일기장은 빈 슬롯도 슬롯 클래스를 달아야 CSS가 바깥 슬롯(far-newer 등)을 숨겨 4장 배치가 유지된다.
-                return <div key={cls} className={`cline-card-slot cline-slot--empty ${isDiary ? `cline-slot--${cls} is-empty` : ''}`} />
+                // 겹침 카드·일기장은 빈 슬롯도 슬롯 클래스를 달아야 CSS가 자리를 잡는다.
+                // 일기장은 바깥 슬롯(far-newer 등)을 숨겨 4장 배치를 유지하고,
+                // 겹침 카드는 .is-empty 규칙이 210px 폭·-38px 마진을 고정해 3D 대열이 어긋나지 않게 한다(정본 space.js:1191).
+                return <div key={cls} className={`cline-card-slot cline-slot--empty ${isFanned ? `cline-slot--${cls} is-empty` : ''}`} />
               }
               const isActive = delta === 0
               // 일기장: 펼친 책의 양쪽 페이지(delta 0·1) 둘 다 상세보기로 열린다.

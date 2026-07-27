@@ -494,24 +494,40 @@ body.light-mode .proto-dashboard .section-actions .clov-btn--action { background
 .proto-dashboard .cline-slot--current.is-active { transform: scale(1.04); transform-origin: top center; opacity: 1; filter: none; z-index: 10; }
 .proto-dashboard .cline-slot--empty { width: 200px; min-height: 20px; pointer-events: none; }
 
-/* ── 참여자별 추억 증거 카드 테마: 겹침 카드(coverflow) — 빨랫줄/집게 없이 카드가 겹쳐 쌓이는 스타일 ── */
-.proto-dashboard .cline-viewer.theme-coverflow .cline-wire { display: none; }
-.proto-dashboard .cline-viewer.theme-coverflow .cline-cards { gap: 0; width: 100%; padding: 16px 0; }
+/* ── 참여자별 추억 증거 카드 테마: 겹침 카드(coverflow) — 빨랫줄/집게 없이 카드가 3D로 겹쳐 쌓이는 스타일 ──
+   정본 = test-web-design/02-main/styles/space.css (대시보드 프로토타입 index.html이 실제 로드하는 CSS).
+   구판 css/desktop.css에는 3D가 없어 처음 이식할 때 회전이 통째로 빠졌었다(#114).
+   perspective/transform-style은 .cline-cards(부모)에 있어야 자식 슬롯의 rotateY가 원근으로 보인다 —
+   이게 빠지면 회전이 납작하게 눌려 그냥 좁아진 카드처럼 렌더된다. */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-wire,
+.proto-dashboard .cline-viewer.theme-coverflow .cline-clip-svg { display: none !important; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards { gap: 0; width: 100%; padding: 16px 0; perspective: 1000px; transform-style: preserve-3d; }
 .proto-dashboard .cline-viewer.theme-coverflow .cline-card-slot { flex-shrink: 0; width: 210px; min-width: 210px; margin: 0 -38px; }
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--current.is-active { transform: scale(1.04); transform-origin: center center; }
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--past,
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--newer { transform: scale(.86); transform-origin: center center; opacity: .95; filter: brightness(.96); z-index: 8; }
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--past:hover,
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--newer:hover { transform: scale(.90) translateY(-6px); opacity: 1; filter: brightness(1); z-index: 9; }
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-past,
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-newer { transform: scale(.72); transform-origin: center center; opacity: .85; filter: brightness(.90); z-index: 6; }
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-past:hover,
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-newer:hover { transform: scale(.76) translateY(-6px); opacity: .95; filter: brightness(.98); z-index: 7; }
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-past,
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-newer { transform: scale(.58); transform-origin: center center; opacity: .70; filter: brightness(.82); z-index: 4; }
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-past:hover,
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-newer:hover { transform: scale(.63) translateY(-6px); opacity: .88; filter: brightness(.92); z-index: 5; }
-.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--empty { width: 210px; min-width: 210px; flex-shrink: 0; margin: 0 -38px; min-height: 20px; pointer-events: none; visibility: hidden; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--current.is-active { transform: translateZ(15px) scale(.93) rotateY(0deg); transform-origin: center center; z-index: 50; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--past { transform: scale(.86) rotateY(25deg) translateX(-12px); transform-origin: center center; opacity: .75; filter: brightness(.96); z-index: 8; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--newer { transform: scale(.86) rotateY(-25deg) translateX(12px); transform-origin: center center; opacity: .75; filter: brightness(.96); z-index: 8; }
+/* 호버는 transform을 그대로 두고 밝기·z-index만 올린다(정본). 크기가 바뀌면 3D 대열이 흐트러진다. */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--past:hover { transform: scale(.86) rotateY(25deg) translateX(-12px); opacity: 1; filter: brightness(1); z-index: 20; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--newer:hover { transform: scale(.86) rotateY(-25deg) translateX(12px); opacity: 1; filter: brightness(1); z-index: 20; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-past { transform: scale(.72) rotateY(35deg) translateX(-24px); transform-origin: center center; opacity: .55; filter: brightness(.90); z-index: 6; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-newer { transform: scale(.72) rotateY(-35deg) translateX(24px); transform-origin: center center; opacity: .55; filter: brightness(.90); z-index: 6; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-past:hover { transform: scale(.72) rotateY(35deg) translateX(-24px); opacity: 1; filter: brightness(1); z-index: 25; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-newer:hover { transform: scale(.72) rotateY(-35deg) translateX(24px); opacity: 1; filter: brightness(1); z-index: 25; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-past { transform: scale(.58) rotateY(45deg) translateX(-36px); transform-origin: center center; opacity: .40; filter: brightness(.82); z-index: 4; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-newer { transform: scale(.58) rotateY(-45deg) translateX(36px); transform-origin: center center; opacity: .40; filter: brightness(.82); z-index: 4; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-past:hover { transform: scale(.58) rotateY(45deg) translateX(-36px); opacity: 1; filter: brightness(1); z-index: 30; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-newer:hover { transform: scale(.58) rotateY(-45deg) translateX(36px); opacity: 1; filter: brightness(1); z-index: 30; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--empty,
+.proto-dashboard .cline-viewer.theme-coverflow .cline-card-slot.is-empty {
+  width: 210px !important; min-width: 210px !important; flex-shrink: 0 !important;
+  margin: 0 -38px !important; min-height: 20px !important; pointer-events: none !important; visibility: hidden !important;
+}
+/* 정본 space.js는 ±3 슬롯(far-far-*)을 viewType === 'desktop'일 때만 렌더한다. 프로덕션은 폭과 무관하게
+   항상 7슬롯이고 슬롯이 210px 고정(flex-shrink:0)이라 좁은 화면에서 가로로 넘친다 → 같은 결과를 CSS로 낸다. */
+@media (max-width: 900px) {
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-past,
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-newer { display: none; }
+}
 
 /* ── 참여자별 추억 증거 카드 테마: 일기장(diary) — 펼친 책 위에 카드 4장이 부채꼴로 놓이는 스타일 ──
    목업 desktop.css의 .cline-viewer.theme-diary 블록 이식. 이미지 경로만 public/diary/로 바꿨다. */

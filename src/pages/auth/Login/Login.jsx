@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './login.proto.css'
 import { login } from '../../../api/auth'
@@ -18,6 +18,19 @@ const SOCIALS = [
 export default function Login() {
   const navigate = useNavigate()
   const setTokens = useAuthStore((state) => state.setTokens)
+  const accessToken = useAuthStore((state) => state.accessToken)
+
+  // 이미 로그인된 상태로 /login에 들어온 경우 즉시 돌려보낸다(login.md §2).
+  // takeReturnTo()는 sessionStorage를 한 번 읽고 지우는 소비형 함수라, StrictMode의
+  // effect 이중 실행에서 두 번 불리면 두 번째 호출은 저장된 경로를 이미 잃어버린다.
+  // ref로 한 번만 실행되게 막는다(OAuthRedirect.jsx의 exchangeOnce와 같은 이유).
+  const redirectedRef = useRef(false)
+  useEffect(() => {
+    if (accessToken && !redirectedRef.current) {
+      redirectedRef.current = true
+      navigate(takeReturnTo(), { replace: true })
+    }
+  }, [accessToken, navigate])
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

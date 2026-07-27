@@ -205,8 +205,7 @@ const daysTogether = (createdAt) => {
 }
 const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
 // 뱃지 색상 구분(프로토타입 getDdayAccent 이식) — 지남=회색, 오늘=장미, 7일 이내=주황, 그 외=초록.
-// 대시보드의 upcoming 필터가 오늘/미래 일정만 남기므로 'past'는 이 화면에서 실제로 렌더되지 않지만,
-// 원본 함수 형태를 그대로 유지해 다른 화면에서 재사용할 때도 맞게 동작하게 한다.
+// 'past'(회색)는 D-day 칸을 지난 약속으로 채우기 시작하면서 실제로 렌더된다(#112).
 const ddayUrgency = (n) => (n == null ? 'far' : n < 0 ? 'past' : n === 0 ? 'today' : n <= 7 ? 'soon' : 'far')
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
 // 상태 메시지 가중 길이(한글 2, 그 외 1) — 프로토타입 "한글 20자 / 영어 40자".
@@ -255,7 +254,9 @@ export default function Dashboard() {
   const room = useQuery({ queryKey: ['room', roomId], queryFn: () => getRoom(roomId) })
   const level = useQuery({ queryKey: ['room', roomId, 'level'], queryFn: () => getRoomLevel(roomId) })
   const members = useQuery({ queryKey: ['room', roomId, 'members'], queryFn: () => getRoomMembers(roomId) })
-  const plans = useQuery({ queryKey: ['plans', roomId, { status: 'SCHEDULED' }], queryFn: () => getPlans(roomId, { status: 'SCHEDULED' }) })
+  // status 필터 없이 전부 받는다 — D-day 칸을 지난 약속으로도 채우기 때문(#112).
+  // 키·호출 형태를 Schedule·Feed(둘 다 ['plans', roomId] + getPlans(roomId))와 맞춰 캐시를 공유한다.
+  const plans = useQuery({ queryKey: ['plans', roomId], queryFn: () => getPlans(roomId) })
   const memories = useQuery({ queryKey: ['memories', roomId], queryFn: () => getMemories(roomId) })
   const me = useQuery({ queryKey: ['me'], queryFn: getMe })
   const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
@@ -491,11 +492,21 @@ export default function Dashboard() {
   const days = daysTogether(data.createdAt)
   const track = (memories.data?.items ?? []).length || 1
 
-  const upcoming = (plans.data?.items ?? [])
-    // ddayDiff는 읽을 수 없는 날짜에 null을 준다. null >= 0 은 true라서 명시적으로 걸러야 한다.
+  // D-day 3칸 = 다가오는 약속 먼저, 남는 칸은 지난 약속으로 채운다(정본 js/schedule.js:216의
+  // `[...futureSchedules, ...pastSchedules].slice(0, 3)`). 미래 1개·과거 5개인 방이면 미래1+과거2.
+  // ddayDiff는 읽을 수 없는 날짜에 null을 준다. null >= 0 은 true라서 명시적으로 걸러야 한다.
+  const planItems = plans.data?.items ?? []
+  const futurePlans = planItems
+    // 다가오는 칸은 아직 안 한 약속만 — 완료/취소된 약속은 "다가오는"이 아니다.
+    .filter((p) => p.status === 'SCHEDULED')
     .filter((p) => { const d = ddayDiff(p.planDate); return d !== null && d >= 0 })
     .sort((a, b) => a.planDate.localeCompare(b.planDate))
-    .slice(0, 3)
+  const pastPlans = planItems
+    // 지난 칸은 완료된 약속과 완료 처리 안 한 채 지나간 약속 둘 다. 취소된 약속은 뺀다.
+    .filter((p) => p.status !== 'CANCELED')
+    .filter((p) => { const d = ddayDiff(p.planDate); return d !== null && d < 0 })
+    .sort((a, b) => b.planDate.localeCompare(a.planDate)) // 최근에 지난 것부터
+  const ddaySlots = [...futurePlans, ...pastPlans].slice(0, 3)
   const memoryItems = (memories.data?.items ?? []).slice(0, 24)
 
   const savedStatus = data.myStatusMessage ?? ''
@@ -643,11 +654,11 @@ export default function Dashboard() {
             <Button variant="dashed" size="sm" onClick={() => setComposeSchedule(true)}>+ 새 D-day 만들기</Button>
           </div>
         </div>
-        {/* 항상 3칸 — 부족한 칸은 "새로운 약속 만들기" 고스트 카드로 채운다(프로토타입 top3 로직 이식,
-            과거 일정으로 채우지는 않음: upcoming은 오늘/미래만이라 미래+고스트만). */}
+        {/* 항상 3칸 — 다가오는 약속 → 지난 약속 → 그래도 남으면 "새로운 약속 만들기" 고스트 카드
+            (정본 top3 로직 이식, #112). 지난 약속은 회색 D+ 배지로 구분된다. */}
         <div className="schedule-grid">
           {[0, 1, 2].map((i) => {
-            const p = upcoming[i]
+            const p = ddaySlots[i]
             if (!p) {
               return (
                 <div key={`ghost-${i}`} className="schedule-banner schedule-banner--ghost" onClick={() => setComposeSchedule(true)}>

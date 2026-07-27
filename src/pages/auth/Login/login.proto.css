@@ -1,0 +1,383 @@
+/* =====================================================================
+   Login — 프로토타입(01-auth/login.html 인라인 <style>) 그대로 이식.
+   @emotion/styled 재번역 대신 프로토타입의 실제 규칙을 .proto-login 스코프
+   아래로 복사한다(#150). 값(px·색)은 원본과 동일.
+   이 화면은 프로토타입처럼 "항상 라이트 종이" 고정 — 다크모드 토글 없음.
+   전역 tokens.css의 다크 오버라이드·index.css의 color-scheme:light dark를
+   이 서브트리에서 color-scheme:light로 무력화한다.
+   ===================================================================== */
+.proto-login {
+  color-scheme: light;
+  --forest: #073b24;
+  --leaf: #16874b;
+  --mint: #50d990;
+  --text: #0e2d1d;
+  --muted: #638772;
+  --line: rgba(22, 135, 75, 0.18);
+  --glow: rgba(80, 217, 144, 0.22);
+  --warn: #b45309;
+
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  overflow-x: hidden;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(217, 201, 143, .28), transparent 28%),
+    radial-gradient(circle at 84% 82%, rgba(232, 220, 174, .2), transparent 32%),
+    linear-gradient(135deg, #fffdf3 0%, #fffaf0 48%, #fdf6e3 100%);
+}
+.proto-login *,
+.proto-login *::before,
+.proto-login *::after { box-sizing: border-box; }
+
+@media (max-width: 820px) {
+  .proto-login { padding: 18px; align-items: start; }
+}
+
+@keyframes login-rise {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes login-shake-input {
+  0%, 100% { transform: translateX(0); border-color: var(--line); }
+  20%, 60% { transform: translateX(-6px); border-color: #f87171; box-shadow: 0 0 0 4px rgba(248, 113, 113, .18); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+/* ===== 셸(2단 레이아웃) ===== */
+.proto-login .login-shell {
+  position: relative;
+  width: min(980px, 100%);
+  min-height: 640px;
+  display: grid;
+  grid-template-columns: minmax(310px, 0.92fr) minmax(360px, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(22, 135, 75, .18);
+  border-radius: 30px;
+  background: rgba(255, 255, 255, .76);
+  box-shadow: 0 32px 90px rgba(7, 59, 36, .16), 0 1px 0 rgba(255, 255, 255, .9) inset;
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  animation: login-rise 0.65s cubic-bezier(.22, 1, .36, 1) both;
+}
+@media (max-width: 820px) {
+  .proto-login .login-shell { grid-template-columns: 1fr; min-height: 0; border-radius: 24px; }
+}
+
+/* ===== 좌측 브랜드/기억 패널 ===== */
+.proto-login .login-memory-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 42px;
+  overflow: hidden;
+  color: #fff;
+  background:
+    linear-gradient(160deg, rgba(7, 59, 36, .98), rgba(11, 91, 51, .94)),
+    radial-gradient(circle at 20% 20%, rgba(80, 217, 144, .34), transparent 26%);
+}
+.proto-login .login-memory-panel::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  right: -120px;
+  top: -90px;
+  border-radius: 50%;
+  background: rgba(80, 217, 144, .18);
+  filter: blur(6px);
+}
+.proto-login .login-memory-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .07) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .65), transparent 85%);
+  pointer-events: none;
+}
+@media (max-width: 820px) {
+  .proto-login .login-memory-panel { min-height: 300px; padding: 30px; }
+}
+
+.proto-login .login-brand {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 900;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+.proto-login .login-brand-mark {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1a8e52, #5de49a);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .18), 0 0 0 6px rgba(255, 255, 255, .08);
+  font-size: 1.45rem;
+}
+.proto-login .login-brand-mark img { width: 28px; height: 28px; object-fit: contain; }
+
+.proto-login .login-panel-copy { position: relative; z-index: 1; margin-top: auto; }
+.proto-login .login-panel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 18px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .1);
+  color: #c9f7dc;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.proto-login .login-panel-title {
+  /* 전역 index.css의 h1{font-family:var(--heading);color:var(--text-h)} 리셋 무력화(team-guides/19 §8) */
+  font-family: 'Outfit', sans-serif;
+  color: #fff;
+  font-size: 2.55rem;
+  line-height: 1.08;
+  font-weight: 900;
+}
+@media (max-width: 820px) {
+  .proto-login .login-panel-title { font-size: 2.05rem; }
+}
+.proto-login .login-panel-text {
+  max-width: 300px;
+  margin-top: 16px;
+  color: rgba(255, 255, 255, .76);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  font-weight: 500;
+}
+.proto-login .login-memory-stack { position: relative; z-index: 1; margin-top: 42px; display: grid; gap: 12px; }
+@media (max-width: 820px) {
+  .proto-login .login-memory-stack { display: none; }
+}
+.proto-login .login-memory-note {
+  width: min(280px, 100%);
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .1);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, .12);
+}
+.proto-login .login-memory-note:nth-of-type(2) { margin-left: 34px; background: rgba(255, 255, 255, .15); }
+.proto-login .login-note-date { color: #b9f3d1; font-size: 0.72rem; font-weight: 800; }
+.proto-login .login-note-text { margin-top: 6px; color: #fff; font-size: 0.86rem; font-weight: 700; line-height: 1.42; }
+
+/* ===== 우측 폼 패널 ===== */
+.proto-login .login-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 44px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .92), rgba(250, 255, 252, .82));
+}
+@media (max-width: 820px) {
+  .proto-login .login-form-panel { padding: 34px 24px; }
+}
+.proto-login .login-form-box { width: 100%; max-width: 380px; }
+.proto-login .login-form-kicker {
+  margin-bottom: 10px;
+  color: var(--leaf);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.proto-login .login-form-title {
+  /* 전역 index.css의 h2{font-family:var(--heading)} 리셋 무력화(team-guides/19 §8) */
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--text);
+}
+.proto-login .login-form-desc { margin: 8px 0 24px; color: var(--muted); font-size: 0.92rem; line-height: 1.55; font-weight: 500; }
+
+.proto-login .login-input-group { position: relative; margin-bottom: 16px; }
+.proto-login .login-input-label { display: block; margin-bottom: 8px; color: var(--forest); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.02em; }
+.proto-login .login-input-label-row { display: flex; align-items: center; gap: 8px; min-height: 24px; margin-bottom: 8px; }
+.proto-login .login-input-label-row label { margin-bottom: 0; }
+.proto-login .login-input-wrap { position: relative; display: flex; align-items: center; }
+.proto-login .login-input-wrap:focus-within .input-icon { transform: scale(1.12); }
+.proto-login .input-icon { position: absolute; left: 15px; z-index: 2; font-size: 1.05rem; pointer-events: none; transition: transform 0.2s; }
+
+.proto-login .login-input {
+  width: 100%;
+  height: 54px;
+  padding: 0 48px 0 46px;
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .82);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.96rem;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.22s, box-shadow 0.22s, background-color 0.22s, transform 0.22s;
+}
+.proto-login .login-input.is-shake { animation: login-shake-input 0.4s ease; }
+.proto-login .login-input:focus { border-color: var(--mint); background: #fff; box-shadow: 0 0 0 5px var(--glow); }
+
+.proto-login .login-input-suffix {
+  position: absolute;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(80, 217, 144, .14);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s;
+}
+.proto-login .login-input-suffix:hover,
+.proto-login .login-input-suffix:focus-visible {
+  color: var(--leaf);
+  background: rgba(80, 217, 144, .26);
+  outline: none;
+  transform: scale(1.04);
+}
+.proto-login .login-input-suffix svg {
+  width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+.proto-login .login-input-status {
+  padding: 0 10px;
+  color: var(--warn);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-6px);
+  font-size: 0.73rem;
+  font-weight: 900;
+  line-height: 22px;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 0.18s, transform 0.18s, visibility 0.18s;
+}
+.proto-login .login-input-status.is-show { opacity: 1; visibility: visible; transform: translateX(0); }
+
+.proto-login .login-form-options {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 8px 0 24px; color: var(--muted); font-size: 0.84rem; font-weight: 700;
+}
+.proto-login .login-remember { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.proto-login .login-remember input { width: 16px; height: 16px; accent-color: var(--leaf); }
+.proto-login .login-remember input:checked + span { color: var(--leaf); font-weight: 900; }
+.proto-login .login-remember span { transition: color 0.2s, font-weight 0.2s; }
+.proto-login .login-sublink { border: 0; background: transparent; color: var(--leaf); font: inherit; font-weight: 900; cursor: pointer; }
+.proto-login .login-sublink:hover { color: var(--forest); }
+
+.proto-login .login-btn-primary {
+  width: 100%;
+  height: 54px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #093d26, #16874b 56%, #50d990);
+  color: #fff;
+  box-shadow: 0 14px 32px rgba(22, 135, 75, .3);
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+}
+.proto-login .login-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(22, 135, 75, .38); filter: saturate(1.06); }
+.proto-login .login-btn-primary:active { transform: translateY(0); }
+.proto-login .login-btn-primary:disabled { opacity: 0.7; cursor: default; transform: none; filter: none; }
+
+.proto-login .login-message {
+  height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  color: var(--warn);
+  opacity: 0;
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 22px;
+  transition: height 0.18s, margin-top 0.18s, opacity 0.18s;
+}
+.proto-login .login-message.is-show { height: 22px; margin-top: 10px; opacity: 1; }
+
+.proto-login .login-divider {
+  display: flex; align-items: center; gap: 12px; margin: 26px 0 18px;
+  color: var(--muted); font-size: 0.8rem; font-weight: 800;
+}
+.proto-login .login-divider::before,
+.proto-login .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+.proto-login .login-social-row { display: flex; justify-content: center; gap: 38px; }
+.proto-login .login-social-btn {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.proto-login .login-social-btn:hover,
+.proto-login .login-social-btn:focus-visible { transform: translateY(-4px); outline: none; }
+.proto-login .login-social-btn::after {
+  content: attr(data-label);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translate(-50%, -4px);
+  padding: 5px 10px;
+  border: 1px solid rgba(80, 217, 144, .22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .94);
+  color: var(--forest);
+  box-shadow: 0 8px 18px rgba(7, 59, 36, .08);
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s, transform 0.18s, visibility 0.18s;
+  pointer-events: none;
+}
+.proto-login .login-social-btn:hover::after,
+.proto-login .login-social-btn:focus-visible::after { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+.proto-login .login-social-btn:hover .social-logo,
+.proto-login .login-social-btn:focus-visible .social-logo { transform: scale(1.07); box-shadow: 0 12px 24px rgba(7, 59, 36, .18); }
+
+.proto-login .social-logo {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 8px 18px rgba(7, 59, 36, .13);
+  transition: transform 0.2s, box-shadow 0.2s;
+  background: #fff;
+}
+.proto-login .social-logo.provider-kakao { background: #fee500; }
+.proto-login .social-logo.provider-naver { background: #03c75a; }
+.proto-login .social-logo.provider-google { border: 1px solid rgba(7, 59, 36, .08); }
+.proto-login .social-logo svg { width: 100%; height: 100%; display: block; }
+
+.proto-login .login-signup-link { margin-top: 36px; text-align: center; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+.proto-login .login-signup-link a { color: var(--leaf); font-weight: 900; text-decoration: none; }
+.proto-login .login-signup-link a:hover { color: var(--forest); }

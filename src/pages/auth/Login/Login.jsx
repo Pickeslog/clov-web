@@ -4,6 +4,7 @@ import * as S from './Login.style'
 import { login } from '../../../api/auth'
 import { oauthAuthorizeUrl } from '../../../api/client'
 import { useAuthStore } from '../../../stores/authStore'
+import { takeReturnTo } from '../../../lib/returnUrl'
 import logo from '../../../assets/clov_logo.png'
 
 const EMAIL_RE = /\S+@\S+\.\S+/
@@ -40,7 +41,8 @@ export default function Login() {
     try {
       const data = await login({ email: email.trim(), password })
       setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken })
-      navigate('/', { replace: true })
+      // 보호 라우트에 튕겨서 왔으면 그 자리로 돌려보낸다(#137). 없으면 방 목록.
+      navigate(takeReturnTo(), { replace: true })
     } catch (error) {
       setMessage(
         error.code === 'INVALID_CREDENTIALS'

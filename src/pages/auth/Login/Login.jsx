@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './login.proto.css'
 import { login } from '../../../api/auth'
@@ -18,6 +18,20 @@ const SOCIALS = [
 export default function Login() {
   const navigate = useNavigate()
   const setTokens = useAuthStore((state) => state.setTokens)
+
+  // 이미 로그인된 상태로 /login에 들어온 경우 즉시 돌려보낸다(login.md §2).
+  // "마운트 시점에 이미 로그인이었나"만 본다 — 로그인 성공으로 토큰이 막 생기는 경우는
+  // handleLogin이 이미 navigate(takeReturnTo())로 처리하므로 여기서 또 반응하면 안 된다.
+  // accessToken을 의존성/구독에 넣으면 로그인 성공 직후 이 effect가 다시 돌아
+  // takeReturnTo()가 두 번 불려 두 번째는 값을 잃고 '/'로 덮어쓴다(리뷰에서 실측된 회귀).
+  const wasLoggedInOnMount = useRef(Boolean(useAuthStore.getState().accessToken))
+  const redirectedRef = useRef(false)
+  // useEffect는 페인트 뒤에 돌아 폼이 한 번 그려졌다 사라질 수 있어 useLayoutEffect 사용.
+  useLayoutEffect(() => {
+    if (!wasLoggedInOnMount.current || redirectedRef.current) return
+    redirectedRef.current = true
+    navigate(takeReturnTo(), { replace: true })
+  }, [navigate])
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

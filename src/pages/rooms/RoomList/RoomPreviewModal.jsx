@@ -4,6 +4,7 @@ import { getRoom, getRoomMembers, getRoomLevel, updateRoom } from '../../../api/
 import { getInvites, createInvite } from '../../../api/invite'
 import { getNotifications } from '../../../api/notification'
 import { parseUtc } from '../../../lib/datetime'
+import { validateRoomName } from '../../../lib/roomName'
 
 // 방 미리보기 모달 — 프로토타입 #room-preview-modal(무탭 소식 피드 + 방 프로필 편집 + 친구 초대) 이식.
 // 소식 피드 = 실제 알림(FRIEND=편지 / JOIN=합류 / NOTICE=공지).
@@ -226,7 +227,8 @@ function EditView({ room, roomId, onDone, onSaved }) {
     onError: (error) => setMessage(error.message ?? '방 정보를 저장하지 못했어요.'),
   })
   const submit = () => {
-    if (!name.trim()) { setMessage('방 이름을 입력해주세요.'); return }
+    const nameError = validateRoomName(name)
+    if (nameError) { setMessage(nameError); return }
     setMessage('')
     mutate()
   }
@@ -255,7 +257,7 @@ function EditView({ room, roomId, onDone, onSaved }) {
       </div>
 
       <div className="ed-lbl">우정공간 이름 <span className="h">바꾸면 멤버에게 알림</span></div>
-      <input className="ed-in" value={name} maxLength={100} placeholder="방 이름 (2~20자)" onChange={(e) => setName(e.target.value)} />
+      <input className="ed-in" value={name} maxLength={20} placeholder="방 이름 (2~20자)" onChange={(e) => setName(e.target.value)} />
 
       <div className="ed-lbl">소개글 <span className="h mute">공용 메모 · 60자</span></div>
       <textarea className="ed-in" value={description} maxLength={60} onChange={(e) => setDescription(e.target.value)} />

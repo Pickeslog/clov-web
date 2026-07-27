@@ -529,6 +529,95 @@ body.light-mode .proto-dashboard .section-actions .clov-btn--action { background
   .proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-newer { display: none; }
 }
 
+/* ── 겹침 카드(coverflow) 방향성 슬라이드 전환 (#114 P2, 정본 styles/space.css:3569~3646 그대로) ──
+   카드를 넘길 때 덱 전체가 넘긴 방향에서 밀려 들어오고(cf-deck-*), 그 위에서 슬롯마다
+   자기 새 자리로 가는 개별 애니메이션이 같은 0.52s 동안 돈다.
+   방향 = 정본 space.js:13 — nextIndex > previousIndex 면 'past'(과거로), 작으면 'current'(최신으로).
+   각 keyframe의 100%는 위 정적 규칙의 transform과 같은 값이라, 애니메이션이 끝나 forwards로
+   멈춘 상태가 정적 대열과 정확히 일치한다(끝나고 튀지 않는다). */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past {
+  animation: cf-deck-right 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current {
+  animation: cf-deck-left 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes cf-deck-left {
+  0% { transform: perspective(1000px) translateX(95px) rotateY(-8deg); }
+  100% { transform: perspective(1000px) translateX(0) rotateY(0deg); }
+}
+@keyframes cf-deck-right {
+  0% { transform: perspective(1000px) translateX(-95px) rotateY(8deg); }
+  100% { transform: perspective(1000px) translateX(0) rotateY(0deg); }
+}
+
+/* 1. slide-current (최신 쪽으로 넘길 때: 카드가 오른쪽에서 왼쪽으로 흘러간다) */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-slot--current.is-active {
+  animation: cf-current-grow 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-slot--past {
+  animation: cf-current-shrink 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-slot--newer {
+  animation: cf-current-step-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-slot--far-past {
+  animation: cf-current-step-out 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes cf-current-grow {
+  0% { transform: scale(.86) rotateY(-25deg) translateX(12px); opacity: .75; filter: brightness(.96); }
+  100% { transform: translateZ(15px) scale(.93) rotateY(0deg); opacity: 1; filter: brightness(1); }
+}
+@keyframes cf-current-shrink {
+  0% { transform: translateZ(15px) scale(.93) rotateY(0deg); opacity: 1; filter: brightness(1); }
+  100% { transform: scale(.86) rotateY(25deg) translateX(-12px); opacity: .75; filter: brightness(.96); }
+}
+@keyframes cf-current-step-in {
+  0% { transform: scale(.72) rotateY(-35deg) translateX(24px); opacity: .55; filter: brightness(.90); }
+  100% { transform: scale(.86) rotateY(-25deg) translateX(12px); opacity: .75; filter: brightness(.96); }
+}
+@keyframes cf-current-step-out {
+  0% { transform: scale(.86) rotateY(25deg) translateX(-12px); opacity: .75; filter: brightness(.96); }
+  100% { transform: scale(.72) rotateY(35deg) translateX(-24px); opacity: .55; filter: brightness(.90); }
+}
+
+/* 2. slide-past (과거 쪽으로 넘길 때: 카드가 왼쪽에서 오른쪽으로 흘러간다) */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--current.is-active {
+  animation: cf-past-grow 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--newer {
+  animation: cf-past-shrink 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--past {
+  animation: cf-past-step-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--far-newer {
+  animation: cf-past-step-out 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes cf-past-grow {
+  0% { transform: scale(.86) rotateY(25deg) translateX(-12px); opacity: .75; filter: brightness(.96); }
+  100% { transform: translateZ(15px) scale(.93) rotateY(0deg); opacity: 1; filter: brightness(1); }
+}
+@keyframes cf-past-shrink {
+  0% { transform: translateZ(15px) scale(.93) rotateY(0deg); opacity: 1; filter: brightness(1); }
+  100% { transform: scale(.86) rotateY(-25deg) translateX(12px); opacity: .75; filter: brightness(.96); }
+}
+@keyframes cf-past-step-in {
+  0% { transform: scale(.72) rotateY(35deg) translateX(-24px); opacity: .55; filter: brightness(.90); }
+  100% { transform: scale(.86) rotateY(25deg) translateX(-12px); opacity: .75; filter: brightness(.96); }
+}
+@keyframes cf-past-step-out {
+  0% { transform: scale(.86) rotateY(-25deg) translateX(12px); opacity: .75; filter: brightness(.96); }
+  100% { transform: scale(.72) rotateY(-35deg) translateX(24px); opacity: .55; filter: brightness(.90); }
+}
+
+/* 모션 최소화 설정이면 전환만 끈다 — 정적 3D 대열(P1)은 그대로 둔다(#105 선례와 같은 방식). */
+@media (prefers-reduced-motion: reduce) {
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past,
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current,
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-card-slot,
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-card-slot { animation: none; }
+}
+
 /* ── 참여자별 추억 증거 카드 테마: 일기장(diary) — 펼친 책 위에 카드 4장이 부채꼴로 놓이는 스타일 ──
    목업 desktop.css의 .cline-viewer.theme-diary 블록 이식. 이미지 경로만 public/diary/로 바꿨다. */
 .proto-dashboard .cline-viewer.theme-diary .cline-wire,

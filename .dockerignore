@@ -1,0 +1,32 @@
+# 빌드 컨텍스트에서 뺄 것. 없으면 COPY . . 가 node_modules(106M)·.git(12M)까지 올린다.
+#
+# ⚠️ .env.production 은 절대 제외하지 말 것.
+#    빠지면 npm run build가 client.js의 개발 기본값(localhost:8080)을 번들에 굽는다(#160).
+
+node_modules
+dist
+dist-ssr
+
+.git
+.github
+.gitignore
+
+# 개인 로컬 값만 제외 — 모드별 기본값(.env.development/.env.production)은 빌드에 필요하다
+.env
+.env.local
+*.local
+
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+.vscode
+.idea
+.DS_Store
+
+Dockerfile
+.dockerignore
+
+docs
+.claude

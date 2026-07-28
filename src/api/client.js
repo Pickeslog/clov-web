@@ -22,6 +22,27 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// 진행 중인 갱신 요청. 401이 동시에 여러 개 나도 /auth/refresh는 한 번만 부른다.
+//
+// 서버(AuthService.refresh)는 리프레시 토큰을 1회용으로 회수한다. 그래서 401 난 요청들이
+// 각자 갱신을 부르면 하나만 200이고 나머지는 401 TOKEN_EXPIRED로 떨어지는데, 그 실패가
+// catch의 clear()를 돌려 방금 성공한 갱신이 저장한 토큰까지 지워버린다 → 로그아웃.
+// 대시보드는 진입 시 쿼리를 7개 쏘므로 만료 상태로 들어가면 매번 이 상황이 된다(#158).
+let refreshInFlight = null
+
+function refreshAccessToken(refreshToken) {
+  refreshInFlight ??= refreshClient
+    .post('/auth/refresh', { refreshToken })
+    .then((refreshed) => {
+      // remember를 넘기지 않아야 authStore가 현재 "로그인 유지" 선택을 그대로 이어간다(#144).
+      useAuthStore.getState().setTokens(refreshed.data.data)
+    })
+    .finally(() => {
+      refreshInFlight = null
+    })
+  return refreshInFlight
+}
+
 // 응답 봉투 언래핑을 이 한 곳에서만 한다: {success,data} → data / {success,error} → throw.
 // 401이면 refresh로 한 번 재시도한다.
 api.interceptors.response.use(
@@ -30,11 +51,11 @@ api.interceptors.response.use(
     const { config, response } = error
 
     if (response?.status === 401 && config && !config.__isRetry) {
-      const { refreshToken, setTokens, clear } = useAuthStore.getState()
+      const { refreshToken, clear } = useAuthStore.getState()
       if (refreshToken) {
         try {
-          const refreshed = await refreshClient.post('/auth/refresh', { refreshToken })
-          setTokens(refreshed.data.data)
+          await refreshAccessToken(refreshToken)
+          // 재시도는 요청 인터셉터를 다시 타므로 새 액세스 토큰이 자동으로 실린다.
           config.__isRetry = true
           return api(config)
         } catch {

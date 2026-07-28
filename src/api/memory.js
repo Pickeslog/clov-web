@@ -12,6 +12,8 @@ export const updateMemory = (memoryId, payload) => api.patch(`/memories/${memory
 export const deleteMemory = (memoryId) => api.delete(`/memories/${memoryId}`)
 export const getComments = (memoryId) => api.get(`/memories/${memoryId}/comments`)
 export const createComment = (memoryId, payload) => api.post(`/memories/${memoryId}/comments`, payload)
+// 한 줄 메시지 수정(작성자 본인). 추억당 작성자 1인 1개라 재작성 대신 이걸로 고친다(계약 §10, clov-api #68).
+export const updateComment = (commentId, payload) => api.patch(`/comments/${commentId}`, payload)
 export const deleteComment = (commentId) => api.delete(`/comments/${commentId}`)
 // 이미지(계약 §10 R2): presign → R2 PUT → commit. 삭제·순서 재정렬.
 export const presignMemoryImage = (memoryId, payload) => api.post(`/memories/${memoryId}/images/presign`, payload)

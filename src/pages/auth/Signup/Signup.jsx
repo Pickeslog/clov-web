@@ -5,6 +5,7 @@ import { SERVICE_TERMS, PRIVACY_TERMS } from './termsContent'
 import { signup } from '../../../api/auth'
 import { oauthAuthorizeUrl } from '../../../api/client'
 import { useAuthStore } from '../../../stores/authStore'
+import { takeReturnTo } from '../../../lib/returnUrl'
 import logo from '../../../assets/clov_logo.png'
 
 const EMAIL_RE = /\S+@\S+\.\S+/
@@ -297,7 +298,7 @@ export default function Signup() {
               {nickname.trim() || '클로버'}님의 우정공간이 준비됐어요.<br />
               이제 친구를 초대하고 첫 약속을 만들어 볼까요? 🌱
             </S.SuccessSub>
-            <S.BtnPrimary type="button" onClick={() => navigate('/', { replace: true })} style={{ marginTop: 0 }}>
+            <S.BtnPrimary type="button" onClick={() => navigate(takeReturnTo(), { replace: true })} style={{ marginTop: 0 }}>
               시작하기 →
             </S.BtnPrimary>
           </S.SuccessWrap>

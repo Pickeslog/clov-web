@@ -71,7 +71,7 @@ function SettingsBody({ me, prefs, onClose }) {
   const [pref, setPref] = useState({
     darkMode: getDark(),
     letterTheme: prefs.letterTheme ?? 'giftbox',
-    memoryCardTheme: prefs.memoryCardTheme ?? 'clothesline',
+    memoryCardTheme: prefs.memoryCardTheme ?? 'stack',
     mascotType: prefs.mascotType ?? 'crobi',
   })
 

@@ -8,6 +8,8 @@ import Header from '../../../components/Header/Header'
 import RoomPreviewModal from './RoomPreviewModal'
 import { ddayDiff } from '../../../lib/datetime'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
+import { describeInviteError, extractJoinedRoomId } from '../../../lib/inviteError'
+import { validateRoomName } from '../../../lib/roomName'
 
 const PAGE_SIZE = 9
 const ORDER_KEY = 'clov-room-order'
@@ -174,7 +176,14 @@ export default function RoomList() {
       setJoinMessage('가입 신청이 접수됐어요. 멤버가 수락하면 참여가 확정돼요.')
       queryClient.invalidateQueries({ queryKey: ['join-requests', 'mine'] })
     },
-    onError: (error) => setJoinMessage(error.message ?? '참여에 실패했어요.'),
+    onError: (error) => {
+      const roomId = extractJoinedRoomId(error)
+      if (roomId) {
+        navigate(`/rooms/${roomId}`)
+        return
+      }
+      setJoinMessage(describeInviteError(error))
+    },
   })
   const cancelReqMutation = useMutation({
     mutationFn: (id) => cancelJoinRequest(id),
@@ -464,7 +473,8 @@ function CreateRoomModal({ onClose, onCreated }) {
 
   const submit = () => {
     setMessage('')
-    if (!name.trim()) { setMessage('공간 이름을 입력해주세요.'); return }
+    const nameError = validateRoomName(name)
+    if (nameError) { setMessage(nameError); return }
     mutate({ name: name.trim(), description: description.trim() || null, themeColor, transportType, coverPhotoUrl: null, coverTitle: null })
   }
 
@@ -506,8 +516,8 @@ function CreateRoomModal({ onClose, onCreated }) {
         </div>
 
         <div className="field-wrap">
-          <div className="field-label"><label htmlFor="room-name">우정공간 이름 *</label></div>
-          <input className="text-input" id="room-name" value={name} placeholder="예: 제주 가치가자" maxLength={100} onChange={(e) => setName(e.target.value)} autoFocus />
+          <div className="field-label"><label htmlFor="room-name">우정공간 이름 * <span className="field-hint">2~20자</span></label></div>
+          <input className="text-input" id="room-name" value={name} placeholder="예: 제주 가치가자" maxLength={20} onChange={(e) => setName(e.target.value)} autoFocus />
         </div>
 
         <div className="field-wrap">

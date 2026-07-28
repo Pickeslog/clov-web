@@ -128,6 +128,10 @@
 @media (prefers-reduced-motion: reduce) {
   .proto-dashboard .v5-scene .v5-photo-rec-shine { animation: none; }
   .proto-dashboard .v5-scene .ptcl { animation: none !important; opacity: 0; }
+  .proto-dashboard .v5-scene .lv-pill.is-full { animation: none; }
+  .proto-dashboard .v5-scene .lv-pill-bg.is-pulse-xp { animation: none; }
+  .proto-dashboard .v5-photo-burst span { animation: none; opacity: 0; }
+  .proto-dashboard .v5-scene.levelup-pulse { animation: none; }
 }
 
 .proto-dashboard .v5-scene .banner-hud {
@@ -153,27 +157,99 @@
 .proto-dashboard .v5-photo-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: #a8e6b0; }
 .proto-dashboard .v5-photo-chip-text { font-size: 12.5px; font-weight: 800; letter-spacing: -.2px; white-space: nowrap; color: #f2fbf4; }
 .proto-dashboard .lv-pill {
-  position: relative; width: 190px; height: 32px;
-  background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.25); border-radius: 16px;
-  overflow: hidden; backdrop-filter: blur(8px); box-shadow: 0 4px 12px rgba(0,0,0,.15); pointer-events: all;
+  position: relative; width: fit-content; min-width: 190px; height: 32px;
+  background: rgba(0,0,0,.25); border-radius: 20px;
+  overflow: hidden; box-shadow: 0 4px 12px rgba(20,30,20,.28); pointer-events: all;
   cursor: pointer;
 }
 .proto-dashboard .lv-pill-bg {
   position: absolute; top: 0; left: 0; bottom: 0;
-  background: linear-gradient(90deg, rgba(26,136,72,.65) 0%, rgba(40,176,96,.85) 100%);
+  background: rgb(46,106,79);
   transition: width .9s cubic-bezier(.34,1.56,.64,1); z-index: 1;
 }
-.proto-dashboard .lv-pill-bg::after {
-  content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 26px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.95)); filter: blur(1.5px);
+.proto-dashboard .lv-pill-content {
+  position: relative; height: 100%; display: flex; align-items: center;
+  padding: 0 13px 0 11px; z-index: 2; gap: 8px; white-space: nowrap;
 }
-.proto-dashboard .lv-pill-content { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 12px; z-index: 2; }
 .proto-dashboard .lv-badge-icon {
   font-size: 11px; font-weight: 800; color: rgba(255,255,255,.95); background: rgba(0,0,0,.15);
-  padding: 4px 7px; border-radius: 10px; margin-right: 8px; line-height: 1;
+  padding: 4px 7px; border-radius: 10px; line-height: 1;
 }
-.proto-dashboard .lv-badge-name { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.95); text-shadow: 0 1px 3px rgba(0,0,0,.3); flex: 1; }
+.proto-dashboard .lv-badge-name { font-size: 12.5px; font-weight: 800; color: rgba(255,255,255,.95); text-shadow: 0 1px 3px rgba(0,0,0,.3); flex: 1; white-space: nowrap; }
 .proto-dashboard .lv-pct { font-size: 12px; font-weight: 800; color: rgba(255,255,255,.95); text-shadow: 0 1px 3px rgba(0,0,0,.3); }
+
+/* 계절별 배지/게이지 색상(프로토타입 space.css 이식). 배지는 data-bg-theme+data-season
+   조합이 필요(레코드판 테마 전용 장식이라서), 게이지는 data-season만으로 매칭된다. */
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="spring"] .v5-photo-chip { background: rgba(198,72,120,.82); }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="spring"] .v5-photo-chip-dot { background: #ffd9e8; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="spring"] .v5-photo-chip-text { color: #fff2f7; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="summer"] .v5-photo-chip { background: rgba(46,106,79,.82); }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="summer"] .v5-photo-chip-dot { background: #a8e6b0; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="summer"] .v5-photo-chip-text { color: #f2fbf4; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="fall"] .v5-photo-chip { background: rgba(168,84,26,.84); }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="fall"] .v5-photo-chip-dot { background: #ffd79a; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="fall"] .v5-photo-chip-text { color: #fff4e6; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="winter"] .v5-photo-chip { background: rgba(52,102,150,.84); }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="winter"] .v5-photo-chip-dot { background: #cfe8f5; }
+.proto-dashboard .v5-scene[data-bg-theme="lp-turntable"][data-season="winter"] .v5-photo-chip-text { color: #f0f9ff; }
+
+.proto-dashboard .v5-scene[data-season="spring"] .lv-pill-bg { background: rgb(198,72,120); }
+.proto-dashboard .v5-scene[data-season="summer"] .lv-pill-bg { background: rgb(46,106,79); }
+.proto-dashboard .v5-scene[data-season="fall"]   .lv-pill-bg { background: rgb(168,84,26); }
+.proto-dashboard .v5-scene[data-season="winter"] .lv-pill-bg { background: rgb(52,102,150); }
+
+/* 레벨 게이지 100% 도달 시 은은한 글로우를 계속 유지해서 눈에 띄게 함 */
+.proto-dashboard .v5-scene .lv-pill.is-full { animation: dashLvPillFullGlow 1.8s ease-in-out infinite; }
+@keyframes dashLvPillFullGlow {
+  0%, 100% { box-shadow: 0 4px 12px rgba(0,0,0,.15), 0 0 0 rgba(255,255,255,0); }
+  50%      { box-shadow: 0 4px 12px rgba(0,0,0,.15), 0 0 16px 4px rgba(255,255,255,.6); }
+}
+/* XP가 실제로 올랐을 때 게이지가 잠깐 밝게 반짝여서 "지금 찼다"를 알려줌 */
+.proto-dashboard .v5-scene .lv-pill-bg.is-pulse-xp { animation: dashLvPillXpFlash .5s ease-out; }
+@keyframes dashLvPillXpFlash {
+  0%   { filter: brightness(1.9) saturate(1.4); }
+  100% { filter: brightness(1) saturate(1); }
+}
+
+/* 레코드판 클릭 시 배너 전체에 퍼지는 충격파 펄스(scale+랜덤 글로우) — 장식 전용 */
+.proto-dashboard .v5-scene.levelup-pulse { animation: dashLevelPulse .6s ease-out; }
+@keyframes dashLevelPulse {
+  0%   { transform: scale(1); box-shadow: 0 18px 42px rgba(8,28,22,.28); }
+  50%  { transform: scale(1.012); box-shadow: 0 0 36px 10px var(--pulse-glow, rgba(255,255,255,.6)); }
+  100% { transform: scale(1); box-shadow: 0 18px 42px rgba(8,28,22,.28); }
+}
+
+/* LP 레코드판 클릭 인터랙션(색종이+음표 폭죽) — 장식 전용, 레벨업/XP API 호출 없음 */
+.proto-dashboard .v5-scene .v5-photo-rec { cursor: pointer; pointer-events: auto; }
+.proto-dashboard .v5-photo-burst { position: absolute; z-index: 211; width: 0; height: 0; pointer-events: none; }
+.proto-dashboard .v5-photo-burst span { position: absolute; left: 0; top: 0; }
+.proto-dashboard .v5-photo-burst span.v5-photo-confetti { box-shadow: 0 1px 3px rgba(0,0,0,.25); animation: dashPhotoBurst .9s ease-out forwards; }
+@keyframes dashPhotoBurst {
+  0%   { transform: translate(0,0) scale(1) rotate(0); opacity: 1; }
+  100% { transform: translate(var(--dx),var(--dy)) scale(.35) rotate(var(--dr)); opacity: 0; }
+}
+.proto-dashboard .v5-photo-burst span.v5-photo-note { font-weight: 700; text-shadow: 0 1px 4px rgba(60,40,20,.5); animation: dashPhotoNotePop 1.3s ease-out forwards; }
+@keyframes dashPhotoNotePop {
+  0%   { transform: translate(0,0) rotate(-8deg) scale(.6); opacity: 0; }
+  18%  { transform: translate(var(--nx0),-10px) rotate(0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--nx),var(--ny)) rotate(var(--nr)) scale(1); opacity: 0; }
+}
+
+/* 티어업(111 단위)/만렙(777) 축하 폭죽 — 화면 전체를 덮는 고정 레이어(body에 포털로 붙는다,
+   배너 안에 두면 overflow:hidden에 잘려서 화면 전체로 못 퍼진다). */
+.tier-burst-layer { position: fixed; inset: 0; z-index: 99999; pointer-events: none; }
+.tier-burst { position: absolute; width: 0; height: 0; transform: translate(-50%, -50%); }
+.tier-burst-particle {
+  position: absolute; left: 0; top: 0; pointer-events: none;
+  animation: tierBurstFly 1.8s cubic-bezier(.1,.8,.2,1) forwards;
+}
+@keyframes tierBurstFly {
+  0%   { transform: translate(-50%, -50%) scale(.2) rotate(0deg); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(var(--tscale, 1)) rotate(var(--trot)); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tier-burst-layer { display: none; }
+}
 
 /* ===== 대표 커버 카드 (main-photo-card / 보딩패스) ===== */
 .proto-dashboard .main-photo-card {
@@ -192,7 +268,7 @@
   background:
     radial-gradient(circle at 50% 38%, rgba(82,183,136,.22), transparent 58%),
     repeating-linear-gradient(135deg, rgba(82,183,136,.1) 0px, rgba(82,183,136,.1) 2px, transparent 2px, transparent 14px);
-  font-size: 40px;
+  font-size: 40px; color: var(--accent-green);
 }
 
 /* 대표 사진 변경(카메라) 버튼 */
@@ -309,10 +385,15 @@
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   font-size: 16px; font-weight: 700; color: var(--text-color); margin: 22px 0 14px;
 }
-/* 카드 배경 없이 페이지 배경(우드텍스처, index.css --clov-app-bg)에 바로 노출되는 텍스트라
-   다크모드 밝은 글자색만으로는 대비가 부족했다 — 라벨에 불투명 배경을 채워서 보정. */
-.proto-dashboard .section-title-label { background: rgba(0,0,0,.22); padding: 4px 12px; border-radius: 10px; }
-body.light-mode .proto-dashboard .section-title-label { background: rgba(255,255,255,.55); }
+/* 60% 불투명 카드 + 초록 점선 테두리. 완전 불투명(#1b4332 등)보다 가볍고 clov 톤에 맞지만,
+   투명도가 있는 만큼 글자색만은 배경 테마와 무관하게 확실히 대비되도록 고정한다. */
+.proto-dashboard .section-title-label {
+  padding: 4px 12px; border-radius: 10px;
+  background: rgba(0,0,0,.6); border: 1px dashed rgba(27,67,50,.7); color: #fff;
+}
+body.light-mode .proto-dashboard .section-title-label {
+  background: rgba(255,255,255,.6); border-color: rgba(82,183,136,.6); color: #12150a;
+}
 .proto-dashboard .section-actions { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
 /* 섹션 버튼은 공통 <Button variant="dashed|action"> 로 대체.
    action(텍스트 링크형)은 배경이 없어서(Button.css 공통 스타일) 같은 이유로 대비가 부족했다 —
@@ -338,17 +419,46 @@ body.light-mode .proto-dashboard .section-actions .clov-btn--action { background
 .proto-dashboard .schedule-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .proto-dashboard .schedule-date { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
 .proto-dashboard .schedule-dday-badge {
-  position: relative; background: var(--primary-green); color: var(--button-text);
+  position: relative; background: var(--primary-green);
+  /* 4색 다 밝은 파스텔이라 라이트모드의 var(--button-text)(흰색)는 대비가 다 WCAG 미달로 깨진다
+     (팀장 코멘트로 확인됨) — 테마 변수에 기대지 않고 배지 전용 고정 어두운 색을 쓴다. */
+  color: #12150a;
   padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; letter-spacing: -.5px; flex-shrink: 0;
+  /* position:relative만으로는 스태킹 컨텍스트가 안 생겨서 ::before(z-index:-1)가 카드 배경 뒤로
+     숨어버린다 — z-index를 명시해야 블롭이 카드 배경 위·배지 밑에 정확히 낀다(프로토타입 space.css:490). */
+  z-index: 1;
 }
-/* 임박도별 색상 구분 — 급함(3일 이내)=주황, 여유(7일 이내)=초록(default), 그 외=파랑 */
-.proto-dashboard .schedule-dday-badge.is-urgent { background: #e0873a; }
-.proto-dashboard .schedule-dday-badge.is-far { background: #3a7ce0; }
-.proto-dashboard .schedule-empty {
-  grid-column: 1 / -1; padding: 22px 16px; border-radius: 14px; text-align: center;
-  color: var(--text-muted); font-size: 13px; font-weight: 600;
-  background: rgba(255,255,255,.04); border: 1px dashed var(--border-color);
+/* 배지 뒤 유기적 블롭(물감 번짐) 장식 — 배지 자체 색을 그대로 물려받는다(프로토타입 space.css:493-504 이식) */
+.proto-dashboard .schedule-dday-badge::before {
+  content: ''; position: absolute; top: -2px; left: -4px; right: -2px; bottom: -3px;
+  background-color: inherit; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+  z-index: -1; opacity: .6;
 }
+/* 임박도 4단계(프로토타입 getDdayAccent 이식) — 지남=회색/오늘=장미/7일 이내=주황/그 외=초록.
+   'past'는 대시보드 upcoming 필터상 실제로는 렌더 안 되는 분기지만 원본 형태를 그대로 유지. */
+.proto-dashboard .schedule-dday-badge.is-past { background: #94a3b8; }
+.proto-dashboard .schedule-dday-badge.is-today { background: #fb7185; }
+.proto-dashboard .schedule-dday-badge.is-soon { background: #f59e0b; }
+.proto-dashboard .schedule-dday-badge.is-far { background: #4ade80; }
+/* 부족한 칸을 채우는 고스트 카드 — 실제 카드와 구분되게 점선 테두리 + 카드 스타일 배경.
+   페이지 배경은 사용자가 고를 수 있는 배경 테마(우드텍스처부터 네온 도시 사진까지)라 밝기·복잡도가
+   제각각이다. 반투명 배경(예: rgba(...,.04))으로는 어떤 배경을 깔아도 이미지가 그대로 비쳐서 글자가
+   묻힌다. 실제 카드가 --card-bg(불투명)로 이 문제를 피하듯, 고스트 카드도 거의 불투명한 배경을 써서
+   어떤 배경 테마 위에서도 카드 하나가 또렷이 도드라지게 한다. 테마 변수는 참조하지 않고
+   라이트 모드 색을 라이트/다크 공통으로 고정(다크모드 텍스트가 밝아서 생기는 문제 회피).*/
+.proto-dashboard .schedule-banner.schedule-banner--ghost {
+  cursor: pointer; border: 1.5px dashed rgba(27,67,50,.45); background: rgba(250,246,238,.94);
+}
+.proto-dashboard .schedule-banner.schedule-banner--ghost .schedule-info { color: #2c3e35; }
+.proto-dashboard .schedule-banner.schedule-banner--ghost .schedule-title,
+.proto-dashboard .schedule-banner.schedule-banner--ghost .schedule-date { color: #61766a; }
+/* "+ 새 D-day 만들기" 버튼(Button variant="dashed")도 같은 이유로 다크모드 기본 팔레트(연한 초록,
+   반투명)가 항상 밝은 페이지 배경 위에서 흐려 보인다. Button.css는 앱 전체 공용이라 건드리지 않고,
+   대시보드 스코프 안에서만 라이트 모드 색으로 고정한다. */
+.proto-dashboard .clov-btn--dashed {
+  background: #faf6ee; color: #2e5233; border-color: rgba(46,82,51,.45);
+}
+.proto-dashboard .clov-btn--dashed:not(:disabled):hover { background: #f3efe1; }
 
 /* ===== 참여자별 추억 증거 카드 (cline 빨랫줄+집게 캐러셀 + 필름스트립 · 프로토타입 이식) ===== */
 .proto-dashboard .memory-empty {
@@ -383,6 +493,260 @@ body.light-mode .proto-dashboard .section-actions .clov-btn--action { background
 .proto-dashboard .cline-slot--far-newer:hover { transform: rotate(5deg) scale(.8) translateY(-4px); opacity: .68; filter: saturate(.6) brightness(.96); }
 .proto-dashboard .cline-slot--current.is-active { transform: scale(1.04); transform-origin: top center; opacity: 1; filter: none; z-index: 10; }
 .proto-dashboard .cline-slot--empty { width: 200px; min-height: 20px; pointer-events: none; }
+
+/* ── 참여자별 추억 증거 카드 테마: 겹침 카드(coverflow) — 빨랫줄/집게 없이 카드가 3D로 겹쳐 쌓이는 스타일 ──
+   정본 = test-web-design/02-main/styles/space.css (대시보드 프로토타입 index.html이 실제 로드하는 CSS).
+   구판 css/desktop.css에는 3D가 없어 처음 이식할 때 회전이 통째로 빠졌었다(#114).
+   perspective/transform-style은 .cline-cards(부모)에 있어야 자식 슬롯의 rotateY가 원근으로 보인다 —
+   이게 빠지면 회전이 납작하게 눌려 그냥 좁아진 카드처럼 렌더된다. */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-wire,
+.proto-dashboard .cline-viewer.theme-coverflow .cline-clip-svg { display: none !important; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards { gap: 0; width: 100%; padding: 16px 0; perspective: 1000px; transform-style: preserve-3d; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-card-slot { flex-shrink: 0; width: 210px; min-width: 210px; margin: 0 -38px; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--current.is-active { transform: translateZ(15px) scale(.93) rotateY(0deg); transform-origin: center center; z-index: 50; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--past { transform: scale(.86) rotateY(25deg) translateX(-12px); transform-origin: center center; opacity: .75; filter: brightness(.96); z-index: 8; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--newer { transform: scale(.86) rotateY(-25deg) translateX(12px); transform-origin: center center; opacity: .75; filter: brightness(.96); z-index: 8; }
+/* 호버는 transform을 그대로 두고 밝기·z-index만 올린다(정본). 크기가 바뀌면 3D 대열이 흐트러진다. */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--past:hover { transform: scale(.86) rotateY(25deg) translateX(-12px); opacity: 1; filter: brightness(1); z-index: 20; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--newer:hover { transform: scale(.86) rotateY(-25deg) translateX(12px); opacity: 1; filter: brightness(1); z-index: 20; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-past { transform: scale(.72) rotateY(35deg) translateX(-24px); transform-origin: center center; opacity: .55; filter: brightness(.90); z-index: 6; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-newer { transform: scale(.72) rotateY(-35deg) translateX(24px); transform-origin: center center; opacity: .55; filter: brightness(.90); z-index: 6; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-past:hover { transform: scale(.72) rotateY(35deg) translateX(-24px); opacity: 1; filter: brightness(1); z-index: 25; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-newer:hover { transform: scale(.72) rotateY(-35deg) translateX(24px); opacity: 1; filter: brightness(1); z-index: 25; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-past { transform: scale(.58) rotateY(45deg) translateX(-36px); transform-origin: center center; opacity: .40; filter: brightness(.82); z-index: 4; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-newer { transform: scale(.58) rotateY(-45deg) translateX(36px); transform-origin: center center; opacity: .40; filter: brightness(.82); z-index: 4; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-past:hover { transform: scale(.58) rotateY(45deg) translateX(-36px); opacity: 1; filter: brightness(1); z-index: 30; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-newer:hover { transform: scale(.58) rotateY(-45deg) translateX(36px); opacity: 1; filter: brightness(1); z-index: 30; }
+.proto-dashboard .cline-viewer.theme-coverflow .cline-slot--empty,
+.proto-dashboard .cline-viewer.theme-coverflow .cline-card-slot.is-empty {
+  width: 210px !important; min-width: 210px !important; flex-shrink: 0 !important;
+  margin: 0 -38px !important; min-height: 20px !important; pointer-events: none !important; visibility: hidden !important;
+}
+/* 정본 space.js는 ±3 슬롯(far-far-*)을 viewType === 'desktop'일 때만 렌더한다. 프로덕션은 폭과 무관하게
+   항상 7슬롯이고 슬롯이 210px 고정(flex-shrink:0)이라 좁은 화면에서 가로로 넘친다 → 같은 결과를 CSS로 낸다. */
+@media (max-width: 900px) {
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-past,
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-slot--far-far-newer { display: none; }
+}
+
+/* ── 겹침 카드(coverflow) 방향성 슬라이드 전환 (#114 P2, 정본 styles/space.css:3569~3646 그대로) ──
+   카드를 넘길 때 덱 전체가 넘긴 방향에서 밀려 들어오고(cf-deck-*), 그 위에서 슬롯마다
+   자기 새 자리로 가는 개별 애니메이션이 같은 0.52s 동안 돈다.
+   방향 = 정본 space.js:13 — nextIndex > previousIndex 면 'past'(과거로), 작으면 'current'(최신으로).
+   각 keyframe의 100%는 위 정적 규칙의 transform과 같은 값이라, 애니메이션이 끝나 forwards로
+   멈춘 상태가 정적 대열과 정확히 일치한다(끝나고 튀지 않는다). */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past {
+  animation: cf-deck-right 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current {
+  animation: cf-deck-left 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes cf-deck-left {
+  0% { transform: perspective(1000px) translateX(95px) rotateY(-8deg); }
+  100% { transform: perspective(1000px) translateX(0) rotateY(0deg); }
+}
+@keyframes cf-deck-right {
+  0% { transform: perspective(1000px) translateX(-95px) rotateY(8deg); }
+  100% { transform: perspective(1000px) translateX(0) rotateY(0deg); }
+}
+
+/* 1. slide-current (최신 쪽으로 넘길 때: 카드가 오른쪽에서 왼쪽으로 흘러간다) */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-slot--current.is-active {
+  animation: cf-current-grow 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-slot--past {
+  animation: cf-current-shrink 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-slot--newer {
+  animation: cf-current-step-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-slot--far-past {
+  animation: cf-current-step-out 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes cf-current-grow {
+  0% { transform: scale(.86) rotateY(-25deg) translateX(12px); opacity: .75; filter: brightness(.96); }
+  100% { transform: translateZ(15px) scale(.93) rotateY(0deg); opacity: 1; filter: brightness(1); }
+}
+@keyframes cf-current-shrink {
+  0% { transform: translateZ(15px) scale(.93) rotateY(0deg); opacity: 1; filter: brightness(1); }
+  100% { transform: scale(.86) rotateY(25deg) translateX(-12px); opacity: .75; filter: brightness(.96); }
+}
+@keyframes cf-current-step-in {
+  0% { transform: scale(.72) rotateY(-35deg) translateX(24px); opacity: .55; filter: brightness(.90); }
+  100% { transform: scale(.86) rotateY(-25deg) translateX(12px); opacity: .75; filter: brightness(.96); }
+}
+@keyframes cf-current-step-out {
+  0% { transform: scale(.86) rotateY(25deg) translateX(-12px); opacity: .75; filter: brightness(.96); }
+  100% { transform: scale(.72) rotateY(35deg) translateX(-24px); opacity: .55; filter: brightness(.90); }
+}
+
+/* 2. slide-past (과거 쪽으로 넘길 때: 카드가 왼쪽에서 오른쪽으로 흘러간다) */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--current.is-active {
+  animation: cf-past-grow 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--newer {
+  animation: cf-past-shrink 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--past {
+  animation: cf-past-step-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--far-newer {
+  animation: cf-past-step-out 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes cf-past-grow {
+  0% { transform: scale(.86) rotateY(25deg) translateX(-12px); opacity: .75; filter: brightness(.96); }
+  100% { transform: translateZ(15px) scale(.93) rotateY(0deg); opacity: 1; filter: brightness(1); }
+}
+@keyframes cf-past-shrink {
+  0% { transform: translateZ(15px) scale(.93) rotateY(0deg); opacity: 1; filter: brightness(1); }
+  100% { transform: scale(.86) rotateY(-25deg) translateX(12px); opacity: .75; filter: brightness(.96); }
+}
+@keyframes cf-past-step-in {
+  0% { transform: scale(.72) rotateY(35deg) translateX(-24px); opacity: .55; filter: brightness(.90); }
+  100% { transform: scale(.86) rotateY(25deg) translateX(-12px); opacity: .75; filter: brightness(.96); }
+}
+@keyframes cf-past-step-out {
+  0% { transform: scale(.86) rotateY(-25deg) translateX(12px); opacity: .75; filter: brightness(.96); }
+  100% { transform: scale(.72) rotateY(-35deg) translateX(24px); opacity: .55; filter: brightness(.90); }
+}
+
+/* 모션 최소화 설정이면 전환만 끈다 — 정적 3D 대열(P1)은 그대로 둔다(#105 선례와 같은 방식). */
+@media (prefers-reduced-motion: reduce) {
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past,
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current,
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-card-slot,
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-card-slot { animation: none; }
+}
+
+/* ── 겹침 카드(coverflow) 3D 마우스 틸트 (#114 P3, 정본 space.css) ──
+   마우스 위치에 따라 카드가 커서 쪽으로 기운다. 각도는 JS가 --rotateX/--rotateY로 넣어준다.
+   기본값이 0deg라 호버 전에는 평평 — 즉 P1의 정적 3D 대열 그대로다.
+   회전 대상은 카드(.cline-polaroid)이고 대열 배치는 슬롯(.cline-card-slot)이 맡는다.
+   둘을 분리했기 때문에 P2의 슬라이드 애니메이션(슬롯에 걸림)과 겹치지 않는다. */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-polaroid {
+  transform-style: preserve-3d;
+  transform: perspective(800px) rotateX(var(--rotateX, 0deg)) rotateY(var(--rotateY, 0deg));
+  transition: transform .18s ease-out, box-shadow .28s ease;
+  will-change: transform;
+}
+/* 호버 중에는 추종을 빠르게(0.18s→0.15s) 하고 그림자를 키워 떠 있는 느낌을 준다. */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-polaroid.is-3d-hovering {
+  transition: transform .15s cubic-bezier(.2, 0, .2, 1), box-shadow .28s ease;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .22), 0 24px 56px rgba(0, 0, 0, .26) !important;
+  z-index: 100 !important;
+}
+/* 호버 중인 카드가 옆 카드에 가려지지 않도록 슬롯째 최전방으로(현재 카드 z-index:50보다 위). */
+.proto-dashboard .cline-viewer.theme-coverflow .cline-card-slot.is-3d-hovering { z-index: 100 !important; }
+
+/* 모션 최소화 설정이면 기울기만 끈다. 그림자·z-index 상승은 "어느 카드 위에 있는지" 알려주는
+   호버 표시라 모션이 아니므로 남긴다(P2 블록과 같은 판단). */
+@media (prefers-reduced-motion: reduce) {
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-polaroid,
+  .proto-dashboard .cline-viewer.theme-coverflow .cline-polaroid.is-3d-hovering {
+    transform: none;
+    transition: box-shadow .28s ease;
+  }
+}
+
+/* ── 참여자별 추억 증거 카드 테마: 일기장(diary) — 펼친 책 위에 카드 4장이 부채꼴로 놓이는 스타일 ──
+   목업 desktop.css의 .cline-viewer.theme-diary 블록 이식. 이미지 경로만 public/diary/로 바꿨다. */
+.proto-dashboard .cline-viewer.theme-diary .cline-wire,
+.proto-dashboard .cline-viewer.theme-diary .cline-clip-svg { display: none !important; }
+
+.proto-dashboard .cline-viewer.theme-diary .cline-cards { justify-content: center; gap: 0; width: 100%; padding: 16px 0; }
+.proto-dashboard .cline-viewer.theme-diary .cline-card-slot {
+  position: relative; opacity: 1; filter: none;
+  transition: transform .3s cubic-bezier(.175, .885, .32, 1.275), z-index 0s;
+  margin-left: -50px; flex-shrink: 0; cursor: pointer; width: 210px; min-width: 210px;
+}
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--empty {
+  width: 210px; min-width: 210px; flex-shrink: 0; margin-left: -50px; pointer-events: none; visibility: hidden;
+}
+
+/* 일기장은 4장만 쓴다 — 바깥 슬롯은 감춘다 */
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--far-far-past,
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--far-far-newer,
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--far-newer { display: none !important; }
+
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--far-past { transform: rotate(-3deg) translateY(5px); z-index: 4; opacity: 1; margin-left: 0; }
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--past { transform: rotate(2deg) translateY(-2px); z-index: 5; opacity: 1; }
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--current { transform: rotate(7deg) translateY(2px); z-index: 6; opacity: 1; }
+.proto-dashboard .cline-viewer.theme-diary .cline-slot--newer { transform: rotate(12deg) translateY(8px); z-index: 7; opacity: 1; }
+
+.proto-dashboard .cline-viewer.theme-diary .cline-card-slot:hover { transform: translateY(-20px) scale(1.15) rotate(0deg); z-index: 99; }
+.proto-dashboard .cline-viewer.theme-diary .cline-card-slot:hover .cline-polaroid { box-shadow: 0 20px 40px rgba(0,0,0,.3); }
+
+/* 펼친 책 무대 — ::before는 초록 표지, ::after는 종이면 */
+.proto-dashboard .cline-viewer.theme-diary .cline-stage {
+  position: relative; background-color: transparent; margin: 40px auto;
+  padding: 25px 30px 40px; width: 100%; max-width: 950px;
+  border-radius: 4px; box-shadow: none; z-index: 1;
+}
+.proto-dashboard .cline-viewer.theme-diary .cline-stage::before {
+  content: ''; position: absolute; top: -18px; right: -20px; bottom: -18px; left: -20px;
+  background-color: #9fc094;
+  background-image:
+    linear-gradient(90deg, rgba(255,255,255,.05) 0%, transparent 5%, transparent 95%, rgba(255,255,255,.05) 100%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='fleece'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.15' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23fleece)' opacity='0.35'/%3E%3C/svg%3E");
+  border-radius: 12px;
+  box-shadow:
+    inset 4px 4px 10px rgba(255,255,255,.2), inset -4px -4px 10px rgba(0,0,0,.15), inset 0 0 15px rgba(0,0,0,.1),
+    3px 5px 0 #5e7852, 15px 30px 50px rgba(0,0,0,.35);
+  z-index: -2; pointer-events: none;
+}
+.proto-dashboard .cline-viewer.theme-diary .cline-stage::after {
+  content: ''; position: absolute; inset: 0;
+  background-color: #fdfbf7;
+  background-image:
+    linear-gradient(to right,
+      rgba(0,0,0,.02) 0%, rgba(255,255,255,.4) 15%, rgba(255,255,255,0) 35%, rgba(0,0,0,.03) 48%,
+      rgba(0,0,0,.12) 50%, rgba(0,0,0,.03) 52%, rgba(255,255,255,0) 65%, rgba(255,255,255,.4) 85%, rgba(0,0,0,.02) 100%),
+    repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(160,180,200,.2) 27px, rgba(160,180,200,.2) 28px),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 40px rgba(139,115,85,.06),
+    0 0 0 1px #f4f0e6, 0 0 0 2px #e5ddcd, 0 0 0 3px rgba(0,0,0,.1),
+    -2px 0 5px rgba(0,0,0,.15), 2px 0 5px rgba(0,0,0,.15);
+  z-index: -1; pointer-events: none;
+}
+
+.proto-dashboard .cline-viewer.theme-diary .diary-page-stack { position: absolute; top: 3px; bottom: 3px; width: 24px; z-index: -2; pointer-events: none; }
+.proto-dashboard .cline-viewer.theme-diary .diary-page-stack.left {
+  left: -14px;
+  background: repeating-linear-gradient(to right, #ebdcb8 0px, #ebdcb8 1px, #fdf8e9 1px, #fdf8e9 3px);
+  border-right: 1px solid #d4ccb8; border-radius: 8px 0 0 8px;
+  box-shadow: inset 5px 0 10px rgba(0,0,0,.08), -3px 5px 10px rgba(0,0,0,.15);
+}
+.proto-dashboard .cline-viewer.theme-diary .diary-page-stack.right {
+  right: -14px;
+  background: repeating-linear-gradient(to left, #ebdcb8 0px, #ebdcb8 1px, #fdf8e9 1px, #fdf8e9 3px);
+  border-left: 1px solid #d4ccb8; border-radius: 0 8px 8px 0;
+  box-shadow: inset -5px 0 10px rgba(0,0,0,.08), 3px 5px 10px rgba(0,0,0,.15);
+}
+
+.proto-dashboard .cline-viewer.theme-diary .diary-page-text {
+  position: absolute; top: 20px; bottom: 20px; width: 42%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200'%3E%3Cstyle%3Etext { font-family: 'Times New Roman', serif; font-size: 8px; fill: rgba(0,0,0,0.18); letter-spacing: 0.2px; }%3C/style%3E%3Ctext x='15' y='20'%3EAt vero eos et accusamus et iusto odio dignissimos ducimus qui%3C/text%3E%3Ctext x='15' y='32'%3Eblanditiis praesentium voluptatum deleniti atque corrupti quos%3C/text%3E%3Ctext x='15' y='44'%3Edolores et quas molestias excepturi sint occaecati cupiditate%3C/text%3E%3Ctext x='15' y='56'%3Enon provident, similique sunt in culpa qui officia deserunt%3C/text%3E%3Ctext x='15' y='68'%3Emollitia animi, id est laborum et dolorum fuga. Et harum quidem%3C/text%3E%3Ctext x='15' y='80'%3Ererum facilis est et expedita distinctio. Nam libero tempore,%3C/text%3E%3Ctext x='15' y='92'%3Ecum soluta nobis est eligendi optio cumque nihil impedit quo%3C/text%3E%3Ctext x='15' y='104'%3Eminus id quod maxime placeat facere possimus, omnis voluptas%3C/text%3E%3Ctext x='15' y='116'%3Eassumenda est, omnis dolor repellendus. Temporibus autem%3C/text%3E%3Ctext x='15' y='128'%3Equibusdam et aut officiis debitis aut rerum necessitatibus%3C/text%3E%3Ctext x='15' y='140'%3Esaepe eveniet ut et voluptates repudiandae sint et molestiae%3C/text%3E%3Ctext x='15' y='152'%3Enon recusandae. Itaque earum rerum hic tenetur a sapiente%3C/text%3E%3Ctext x='15' y='164'%3Edelectus, ut aut reiciendis voluptatibus maiores alias%3C/text%3E%3Ctext x='15' y='176'%3Econsequatur aut perferendis doloribus asperiores repellat.%3C/text%3E%3C/svg%3E");
+  background-repeat: repeat-y; z-index: 2; pointer-events: none;
+}
+.proto-dashboard .cline-viewer.theme-diary .diary-page-text.left-page { left: 4%; background-position: left top; }
+.proto-dashboard .cline-viewer.theme-diary .diary-page-text.right-page { right: 4%; background-position: right top; }
+
+.proto-dashboard .cline-viewer.theme-diary .diary-memo {
+  position: absolute; top: -65px; left: 10%; width: 170px; height: 215px;
+  background-image: url('/diary/diary-memo.webp');
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  border-radius: 0; box-shadow: none; transform: rotate(-3deg); z-index: 1; pointer-events: none;
+}
+
+.proto-dashboard .cline-viewer.theme-diary .diary-sticker {
+  position: absolute; width: 85px; height: 85px;
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+  z-index: 2; pointer-events: none; filter: drop-shadow(1px 2px 4px rgba(0,0,0,.15));
+}
+.proto-dashboard .cline-viewer.theme-diary .diary-sticker.clover { background-image: url('/diary/clover_sticker_transparent.webp'); }
+.proto-dashboard .cline-viewer.theme-diary .diary-sticker.flower { background-image: url('/diary/flower_sticker_transparent.webp'); }
 .proto-dashboard .cline-clip-svg {
   width: 28px; height: 48px; flex-shrink: 0; margin-bottom: -10px; position: relative; z-index: 4;
   filter: drop-shadow(0 3px 8px rgba(0,0,0,.45)) drop-shadow(0 1px 2px rgba(0,0,0,.3));
@@ -406,7 +770,7 @@ body.light-mode .proto-dashboard .section-actions .clov-btn--action { background
 }
 .proto-dashboard .cline-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .proto-dashboard .cline-no-photo { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.proto-dashboard .cline-no-photo span:first-child { font-size: 28px; }
+.proto-dashboard .cline-no-photo-icon { font-size: 28px; color: #9ab; }
 .proto-dashboard .cline-no-photo-text { font-size: 9px; color: #9ab; font-weight: 600; }
 .proto-dashboard .cline-caption { position: absolute; bottom: 0; left: 7px; right: 7px; padding: 8px 2px 10px; }
 .proto-dashboard .cline-caption-title { font-size: 11.5px; font-weight: 900; color: #111; line-height: 1.3; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -526,7 +890,9 @@ body.light-mode .proto-dashboard .cover-status-count { background: rgba(27,67,50
 body.light-mode .proto-dashboard .member-see { background: rgba(27,67,50,.08); color: #1b4332; border-color: rgba(27,67,50,.12); }
 body.light-mode .proto-dashboard .cover-status-save { color: #fff; }
 body.light-mode .proto-dashboard .schedule-banner { background: rgba(232,243,237,.92); border-color: rgba(255,255,255,.3); }
-body.light-mode .proto-dashboard .schedule-empty,
+/* 위의 일반 .schedule-banner 라이트모드 규칙(연녹색 배경)이 명시성 때문에 고스트 카드에도 걸리므로,
+   고스트 전용 값(거의 불투명한 크림색 배경 + 진한 점선)으로 다시 덮어써서 라이트/다크 동일하게 유지 */
+body.light-mode .proto-dashboard .schedule-banner.schedule-banner--ghost { border-color: rgba(27,67,50,.45); background: rgba(250,246,238,.94); }
 body.light-mode .proto-dashboard .memory-empty { background: rgba(0,0,0,.03); border-color: var(--border-color); }
 
 /* ===== 친구 초대 모달 (§7 초대코드 생성/복사·공유) — 팔레트 토큰이 라이트/다크 자동 대응 ===== */
@@ -548,7 +914,7 @@ body.light-mode .proto-dashboard .memory-empty { background: rgba(0,0,0,.03); bo
   width: 32px; height: 32px; border-radius: 50%; border: none;
   background: var(--nav-item-bg-active); color: var(--text-muted); font-size: 14px; cursor: pointer;
 }
-.proto-dashboard .invite-icon { font-size: 42px; margin-bottom: 10px; }
+.proto-dashboard .invite-icon { font-size: 42px; margin-bottom: 10px; color: var(--accent-green); }
 .proto-dashboard .invite-desc { color: var(--text-muted); font-size: 13px; line-height: 1.6; margin-bottom: 20px; }
 .proto-dashboard .invite-code-box {
   display: flex; align-items: center; gap: 10px; margin-bottom: 12px;

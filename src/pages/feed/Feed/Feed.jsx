@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import './feed.proto.css'
@@ -79,6 +79,49 @@ const cardTags = (item, isMine) => {
   const key = monthKeyOf(item.memoryDate)
   const monthTag = key ? `${key.split('-')[0]}년${key.split('-')[1]}월` : '기록'
   return ['소중한순간', isMine ? '내기록' : '친구기록', monthTag]
+}
+
+// 해시태그 1줄 고정(#125) — 태그 텍스트 길이가 제각각이라 개수만 잘라선 줄바꿈을 못 막는다
+// (예: 짧은 태그 3개는 한 줄에 들어가지만 긴 태그 3개는 넘친다). 실제로 렌더해 줄바꿈 여부를
+// 측정한 뒤, 첫 줄에 들어가는 만큼만 보여주고 나머지는 "+N"으로 묶는다. "+N" 칩 자체가 줄을
+// 넘기면 그만큼 한 개 더 줄인다 — effect가 재실행되며 수렴한다(매 렌더 최대 1씩 감소).
+function MemoryFooterTags({ tags }) {
+  const rowRef = useRef(null)
+  // cardTags()의 폴백 분기는 매 렌더 새 배열을 만들어 반환한다 — 참조로 비교하면 내용이
+  // 같아도 항상 "바뀐 것"으로 잡혀 부모가 리렌더될 때마다(검색어 입력 등) 태그가 전부
+  // 펼쳐졌다가 다시 접히는 깜빡임이 생긴다(팀장 리뷰). 내용 기준 키로 비교한다.
+  const tagsKey = tags.join('|')
+  const [prevKey, setPrevKey] = useState(tagsKey)
+  const [visibleCount, setVisibleCount] = useState(tags.length)
+  if (prevKey !== tagsKey) {
+    setPrevKey(tagsKey)
+    setVisibleCount(tags.length)
+  }
+
+  useLayoutEffect(() => {
+    const row = rowRef.current
+    if (!row) return
+    const chips = Array.from(row.children)
+    if (chips.length < 2) return
+    const firstTop = chips[0].offsetTop
+    const wrappedAt = chips.findIndex((chip) => chip.offsetTop !== firstTop)
+    if (wrappedAt === -1) return
+    const tagChipCount = Math.min(visibleCount, tags.length)
+    const next = wrappedAt < tagChipCount ? wrappedAt : Math.max(tagChipCount - 1, 0)
+    if (next !== visibleCount) setVisibleCount(next)
+  }, [tagsKey, visibleCount, tags.length])
+
+  const visible = tags.slice(0, visibleCount)
+  const rest = tags.length - visible.length
+
+  return (
+    <div className="memory-footer-tags" ref={rowRef}>
+      {visible.map((tag, index) => (
+        <div key={tag} className={`memory-tag ${index === 0 ? 'highlight' : ''}`}>#{tag}</div>
+      ))}
+      {rest > 0 && <div className="memory-tag memory-tag-more">+{rest}</div>}
+    </div>
+  )
 }
 
 // 검색: 제목·본문·날짜·태그·작성자/참여자 닉네임 중 하나라도 포함되면 true(프로토타입 postMatchesFeedSearch).
@@ -196,7 +239,7 @@ export default function Feed() {
           </div>
           <div className="feed-hero-meta">
             <div className="feed-month-summary">{summaryText}</div>
-            <Button variant="action" size="sm" onClick={() => setCreateOpen(true)}>
+            <Button variant="action" size="sm" className="feed-write-btn" onClick={() => setCreateOpen(true)}>
               <IconPencil /> 글쓰기
             </Button>
           </div>
@@ -269,7 +312,9 @@ export default function Feed() {
                       <div className="polaroid-presence-row">
                         {visibleAv.map((p, idx) => (
                           <span key={p.id ?? idx} className={`presence-tile ${idx === 0 ? 'is-author' : 'friend'}`} title={p.nickname}>
-                            <span className="presence-dot">{initialOf(p.nickname)}</span>
+                            <span className="presence-dot">
+                              {p.profileImageUrl ? <img src={p.profileImageUrl} alt="" /> : initialOf(p.nickname)}
+                            </span>
                           </span>
                         ))}
                         {restAv > 0 && <span className="presence-more">+{restAv}</span>}
@@ -288,11 +333,10 @@ export default function Feed() {
                         )}
                         {!item.thumbnailUrl && (
                           <>
-                            <span className="memory-clover-placeholder">🍀</span>
+                            <i className="ti ti-clover memory-clover-placeholder" aria-hidden="true" />
                             <span className="memory-image-text">사진이 없는 추억은<br />클로버로 보관됩니다</span>
                           </>
                         )}
-                        <span className="polaroid-zoom-hint">🔍 자세히</span>
                       </div>
                       <div className="polaroid-caption">
                         <div className={`my-record-box ${isMine ? 'mine' : 'friend'}`}>
@@ -305,11 +349,7 @@ export default function Feed() {
                           <div className="memory-title">{item.title}</div>
                           {preview && <div className="my-record-text">{preview}</div>}
                         </div>
-                        <div className="memory-footer-tags">
-                          {tags.map((tag, index) => (
-                            <div key={tag} className={`memory-tag ${index === 0 ? 'highlight' : ''}`}>#{tag}</div>
-                          ))}
-                        </div>
+                        <MemoryFooterTags tags={tags} />
                         <div className="memory-meta-row">
                           <span className="memory-date">{item.memoryDate || '날짜 미정'}</span>
                           <span className="memory-message-count"><IconComment />{item.commentCount ?? 0}</span>
@@ -347,6 +387,7 @@ export default function Feed() {
         <MemoryDetailModal
           {...memoryDetail}
           currentUserId={currentUserId}
+          members={memberItems}
           onClose={() => setSelectedMemoryId(null)}
         />
       )}
@@ -893,6 +934,7 @@ export function MemoryDetailModal({
   memory,
   isLoading,
   currentUserId,
+  members = [],
   onClose,
   onSave,
   onDelete,
@@ -902,6 +944,8 @@ export function MemoryDetailModal({
   commentsLoading,
   onAddComment,
   addingComment,
+  onUpdateComment,
+  updatingComment,
   onDeleteComment,
   onUploadImage,
   uploadingImage,
@@ -912,7 +956,9 @@ export function MemoryDetailModal({
   const [isEditing, setEditing] = useState(false)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [commentText, setCommentText] = useState('')
+  const [newMessageDraft, setNewMessageDraft] = useState('')
+  const [editingCommentId, setEditingCommentId] = useState(null)
+  const [editMessageDraft, setEditMessageDraft] = useState('')
   const [photoIndex, setPhotoIndex] = useState(0)
   const [galleryIndex, setGalleryIndex] = useState(-1) // -1 = 닫힘, 그 외 = 전체보기 인덱스
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -958,43 +1004,128 @@ export function MemoryDetailModal({
     setEditing(true)
   }
 
-  const handleAddComment = () => {
-    if (!commentText.trim()) return
-    onAddComment(commentText.trim())
-    setCommentText('')
+  const startEditMessage = (comment) => {
+    setEditingCommentId(comment.id)
+    setEditMessageDraft(comment.content)
+  }
+  const cancelEditMessage = () => {
+    // 서버 값(comment.content)으로 복구 — 로컬 초안은 그냥 버린다(팀장 리뷰).
+    setEditingCommentId(null)
+    setEditMessageDraft('')
+  }
+  const saveEditMessage = () => {
+    if (!editMessageDraft.trim()) return
+    onUpdateComment(editingCommentId, editMessageDraft.trim())
+    setEditingCommentId(null)
+  }
+  // 등록이 확정된 뒤에 입력창을 비운다. mutate 직후 무조건 비우면 네트워크 오류·500일 때
+  // 사용자가 쓴 내용이 복구 경로 없이 증발한다.
+  const submitNewMessage = () => {
+    const content = newMessageDraft.trim()
+    if (!content) return
+    onAddComment(content, {
+      onSuccess: () => setNewMessageDraft(''),
+      // 409(이미 남김)는 실패가 아니라 낙관적 화면이 어긋난 것뿐이라 훅이 조용히 재조회한다.
+      // 그 행은 곧 "메시지 있음"으로 정리되니 초안도 같이 비운다.
+      onError: (err) => { if (err?.code === 'COMMENT_ALREADY_EXISTS') setNewMessageDraft('') },
+    })
   }
 
-  // 한 줄 메시지(프로덕션 댓글 모델) — 여권/수정 두 모드 공용.
+  // 한 줄 메시지 — 방 멤버 전원을 행으로(#126, 프로토타입 space.js 구조).
+  // 메시지 있으면 표시, 본인이고 없으면 그 자리에 입력창, 남이고 없으면 "아직 메시지 없음".
+  // 서버 제약이 추억당 작성자 1인 1개라 화면도 멤버당 최대 1개로 맞춘다.
+  const activeMembers = members.filter((m) => m.status === 'ACTIVE')
+  const commentByWriterId = new Map(comments.map((c) => [String(c.writer?.id), c]))
+  // 나간(LEFT)·탈퇴(익명화) 멤버가 남긴 메시지 — 현재 멤버 행에는 안 나오니 기록 보존을 위해
+  // 아래에 따로 모아 보여준다(팀장 리뷰). ACTIVE 멤버 목록에 없는 작성자의 메시지가 대상.
+  const formerComments = comments.filter(
+    (c) => !activeMembers.some((m) => String(m.userId) === String(c.writer?.id)),
+  )
+
   const messagesBlock = (
     <div className="memory-detail-messages">
       <div className="memory-detail-messages-title">친구 한 줄 메시지</div>
       {commentsLoading && <div className="feed-state">불러오는 중…</div>}
-      {!commentsLoading && comments.length === 0 && (
-        <div className="memory-message-row"><span className="memory-message-empty-text">첫 한 줄을 남겨보세요.</span></div>
+      {!commentsLoading && activeMembers.map((member) => {
+        const isSelf = String(member.userId) === String(currentUserId)
+        const comment = commentByWriterId.get(String(member.userId))
+
+        if (comment && editingCommentId === comment.id) {
+          return (
+            <div className="memory-message-row" key={member.userId}>
+              <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+              <span className="memory-message-name">{member.nickname}</span>
+              <input
+                className="memory-message-compose-input"
+                value={editMessageDraft}
+                maxLength={255}
+                onChange={(e) => setEditMessageDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') saveEditMessage() }}
+              />
+              <Button variant="secondary" size="sm" disabled={!editMessageDraft.trim() || updatingComment} onClick={saveEditMessage}>
+                {updatingComment ? '저장 중…' : '저장'}
+              </Button>
+              <button type="button" className="memory-message-action-btn" onClick={cancelEditMessage}>취소</button>
+            </div>
+          )
+        }
+
+        if (comment) {
+          return (
+            <div className="memory-message-row" key={member.userId}>
+              <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+              <span className="memory-message-name">{member.nickname}</span>
+              <span className="memory-message-text">{comment.content}</span>
+              {isSelf && (
+                <>
+                  <button type="button" className="memory-message-action-btn" onClick={() => startEditMessage(comment)}>수정</button>
+                  <button type="button" className="memory-message-action-btn danger" onClick={() => onDeleteComment(comment.id)}>삭제</button>
+                </>
+              )}
+            </div>
+          )
+        }
+
+        if (isSelf) {
+          return (
+            <div className="memory-message-row" key={member.userId}>
+              <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+              <span className="memory-message-name">{member.nickname}</span>
+              <input
+                className="memory-message-compose-input"
+                value={newMessageDraft}
+                maxLength={255}
+                placeholder="한 줄 메시지를 남겨보세요"
+                onChange={(e) => setNewMessageDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') submitNewMessage() }}
+              />
+              <Button variant="secondary" size="sm" disabled={!newMessageDraft.trim() || addingComment} onClick={submitNewMessage}>
+                {addingComment ? '등록 중…' : '등록'}
+              </Button>
+            </div>
+          )
+        }
+
+        return (
+          <div className="memory-message-row" key={member.userId}>
+            <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+            <span className="memory-message-name">{member.nickname}</span>
+            <span className="memory-message-empty-text">아직 메시지 없음</span>
+          </div>
+        )
+      })}
+      {formerComments.length > 0 && (
+        <>
+          <div className="memory-detail-messages-former-title">이전 멤버</div>
+          {formerComments.map((comment) => (
+            <div className="memory-message-row" key={comment.id}>
+              <span className="memory-message-avatar">{initialOf(comment.writer?.nickname)}</span>
+              <span className="memory-message-name">{comment.writer?.nickname}</span>
+              <span className="memory-message-text">{comment.content}</span>
+            </div>
+          ))}
+        </>
       )}
-      {comments.map((comment) => (
-        <div className="memory-message-row" key={comment.id}>
-          <span className="memory-message-avatar">{initialOf(comment.writer?.nickname)}</span>
-          <span className="memory-message-name">{comment.writer?.nickname}</span>
-          <span className="memory-message-text">{comment.content}</span>
-          {String(comment.writer?.id) === String(currentUserId) && (
-            <button type="button" className="memory-message-delete-btn" onClick={() => onDeleteComment(comment.id)}>삭제</button>
-          )}
-        </div>
-      ))}
-      <div className="memory-message-compose">
-        <input
-          className="memory-message-compose-input"
-          value={commentText}
-          maxLength={255}
-          placeholder="한 줄 남기기"
-          onChange={(e) => setCommentText(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleAddComment() }}
-        />
-        <Button variant="secondary" size="sm" disabled={!commentText.trim() || addingComment} onClick={handleAddComment}>
-          {addingComment ? '등록 중…' : '등록'}
-        </Button>
-      </div>
     </div>
   )
 
@@ -1020,7 +1151,7 @@ export function MemoryDetailModal({
                   <img className="memory-detail-photo" src={activeImage.imageUrl} alt="추억 사진" />
                 ) : (
                   <div className="memory-detail-photo memory-detail-photo--empty">
-                    <span className="memory-clover-placeholder">🍀</span>
+                    <i className="ti ti-clover memory-clover-placeholder" aria-hidden="true" />
                     <span className="memory-image-text">사진이 없는 추억은<br />클로버로 보관됩니다</span>
                   </div>
                 )}
@@ -1144,7 +1275,7 @@ export function MemoryDetailModal({
                 ) : (
                   <div className="mp-photo-main mp-photo-main--empty">
                     <div className="cline-no-photo">
-                      <span>🍀</span>
+                      <i className="ti ti-photo-off cline-no-photo-icon" aria-hidden="true" />
                       <span className="cline-no-photo-text">사진 없음</span>
                     </div>
                   </div>

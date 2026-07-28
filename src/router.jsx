@@ -22,6 +22,7 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <RoomList /> },
       { path: '/join', element: <JoinRoom /> },
+      { path: '/join/:code', element: <JoinRoom /> },
       // 상점은 재화가 사용자 단위라 방에 속하지 않는다 — 방 안/밖 어디서든 같은 경로.
       { path: '/shop', element: <Shop /> },
       { path: '/rooms/:roomId', element: <Dashboard /> },

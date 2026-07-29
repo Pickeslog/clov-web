@@ -116,6 +116,15 @@ function SettingsBody({ me, prefs, onClose }) {
     ? <img src={me.profileImageUrl} alt="" />
     : (me.nickname?.trim()?.[0] ?? '🙂')
 
+  const [codeCopied, setCodeCopied] = useState(false)
+  const copyInviteCode = () => {
+    if (!me.personalInviteCode) return
+    navigator.clipboard?.writeText(me.personalInviteCode).then(() => {
+      setCodeCopied(true)
+      setTimeout(() => setCodeCopied(false), 1500)
+    }).catch(() => {})
+  }
+
   return (
     <>
       <div className="ps-head">
@@ -135,11 +144,15 @@ function SettingsBody({ me, prefs, onClose }) {
           <div className="ps-nav">
             <div className="ps-nav-group">
               <p className="ps-nav-label">계정</p>
-              <button type="button" className={`ps-nav-item${pane === 'account' ? ' active' : ''}`} onClick={() => setPane('account')}>개인정보 수정</button>
+              <button type="button" className={`ps-nav-item${pane === 'account' ? ' active' : ''}`} onClick={() => setPane('account')}>
+                <i className="ti ti-user-circle" aria-hidden="true" /> 개인정보 수정
+              </button>
             </div>
             <div className="ps-nav-group">
               <p className="ps-nav-label">화면</p>
-              <button type="button" className={`ps-nav-item${pane === 'theme' ? ' active' : ''}`} onClick={() => setPane('theme')}>테마 설정</button>
+              <button type="button" className={`ps-nav-item${pane === 'theme' ? ' active' : ''}`} onClick={() => setPane('theme')}>
+                <i className="ti ti-palette" aria-hidden="true" /> 테마 설정
+              </button>
             </div>
           </div>
           <div className="ps-rail-footer"><i className="ti ti-clover" aria-hidden="true" /> Clov.</div>
@@ -148,41 +161,47 @@ function SettingsBody({ me, prefs, onClose }) {
         <section className="ps-panel">
           {pane === 'account' ? (
             <>
-              <div className="ps-section">
-                <div className="ps-section-title">기본 정보</div>
-                <div className="ps-basic">
-                  <button type="button" className="ps-avatar-upload" onClick={() => fileInputRef.current?.click()} disabled={imageMutation.isPending} aria-label="프로필 사진 변경">
+              <div className="ps-hero">
+                <div className="ps-hero-banner" />
+                <div className="ps-hero-row">
+                  <button type="button" className="ps-hero-avatar" onClick={() => fileInputRef.current?.click()} disabled={imageMutation.isPending} aria-label="프로필 사진 변경">
                     {avatarInner}
+                    <span className="ps-hero-avatar-cam"><i className="ti ti-camera" aria-hidden="true" /></span>
                   </button>
-                  <div className="ps-field">
-                    <label className="ps-label" htmlFor="set-nickname">이름 / 닉네임</label>
-                    <input className="ps-input" id="set-nickname" value={nickname} maxLength={50} onChange={(e) => setNickname(e.target.value)} />
-                  </div>
                   <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) imageMutation.mutate(f); e.target.value = '' }} />
+                  <div className="ps-hero-id">
+                    <input className="ps-hero-name" value={nickname} maxLength={50} onChange={(e) => setNickname(e.target.value)} aria-label="이름 / 닉네임" />
+                    <span className="ps-hero-email"><i className="ti ti-mail" aria-hidden="true" /> {me.email}</span>
+                  </div>
                 </div>
-                <div className="ps-basic-hint">{imageMutation.isPending ? '사진 업로드 중…' : '프로필 사진을 클릭하면 변경할 수 있어요'}</div>
+                <div className="ps-hero-hint">{imageMutation.isPending ? '사진 업로드 중…' : '프로필 사진을 클릭하면 변경할 수 있어요'}</div>
                 {imageMutation.isError && <div className="ps-err">{imageMutation.error?.message}</div>}
               </div>
 
               <div className="ps-section">
-                <div className="ps-section-title">연락처</div>
-                <div className="ps-field">
-                  <label className="ps-label" htmlFor="set-email">이메일</label>
-                  <input className="ps-input" id="set-email" type="email" value={me.email ?? ''} readOnly />
+                <div className="ps-section-title">내 정보</div>
+                <div className="ps-icon-field">
+                  <i className="ti ti-gift" aria-hidden="true" />
+                  <div className="ps-icon-field-body">
+                    <span className="ps-icon-field-label">내 초대코드</span>
+                    <span className="ps-icon-field-value ps-mono">{me.personalInviteCode ?? '-'}</span>
+                  </div>
+                  <button type="button" className="ps-icon-field-action" onClick={copyInviteCode}>
+                    <i className={`ti ${codeCopied ? 'ti-check' : 'ti-copy'}`} aria-hidden="true" /> {codeCopied ? '복사됨' : '복사'}
+                  </button>
                 </div>
-                <div className="ps-field">
-                  <label className="ps-label" htmlFor="set-code">내 초대코드</label>
-                  <input className="ps-input" id="set-code" value={me.personalInviteCode ?? ''} readOnly />
-                </div>
-                <div className="ps-field">
-                  <label className="ps-label" htmlFor="set-birth">생년월일</label>
-                  <input className="ps-input" id="set-birth" type="date" value={birthdate ?? ''} onChange={(e) => setBirthdate(e.target.value)} />
+                <div className="ps-icon-field">
+                  <i className="ti ti-cake" aria-hidden="true" />
+                  <div className="ps-icon-field-body">
+                    <label className="ps-icon-field-label" htmlFor="set-birth">생년월일</label>
+                    <input className="ps-icon-field-input" id="set-birth" type="date" value={birthdate ?? ''} onChange={(e) => setBirthdate(e.target.value)} />
+                  </div>
                 </div>
               </div>
 
               {!me.isSocial && (
                 <div className="ps-section">
-                  <div className="ps-section-title">비밀번호 변경</div>
+                  <div className="ps-section-title"><i className="ti ti-shield-lock" aria-hidden="true" /> 비밀번호 및 보안</div>
                   <PasswordField label="현재 비밀번호" id="set-cur" value={currentPassword} show={showPw.cur}
                     onToggle={() => setShowPw((s) => ({ ...s, cur: !s.cur }))} onChange={setCurrentPassword} />
                   <PasswordField label="새 비밀번호" id="set-new" value={newPassword} show={showPw.next} placeholder="8~20자, 영문·숫자·특수 2종 이상"
@@ -200,6 +219,18 @@ function SettingsBody({ me, prefs, onClose }) {
                   </button>
                 </div>
               )}
+
+              <div className="ps-danger-zone">
+                <div className="ps-danger-zone-text">
+                  <div className="ps-danger-zone-title"><i className="ti ti-alert-triangle" aria-hidden="true" /> 계정 삭제</div>
+                  <p>계정을 삭제하면 우정공간·추억·설정이 모두 사라지고 되돌릴 수 없어요.</p>
+                </div>
+                <button type="button" className="ps-btn danger"
+                  disabled={deleteMutation.isPending}
+                  onClick={async () => { if (await confirm('정말 탈퇴하시겠어요? 되돌릴 수 없습니다.', { confirmText: '탈퇴', variant: 'danger' })) deleteMutation.mutate() }}>
+                  {deleteMutation.isPending ? '처리 중…' : '계정 탈퇴'}
+                </button>
+              </div>
             </>
           ) : (
             <>
@@ -254,14 +285,7 @@ function SettingsBody({ me, prefs, onClose }) {
 
       <div className="ps-actions">
         {pane === 'account' ? (
-          <div className="ps-actions-row">
-            <div className="ps-action-group">
-              <button type="button" className="ps-btn danger"
-                disabled={deleteMutation.isPending}
-                onClick={async () => { if (await confirm('정말 탈퇴하시겠어요? 되돌릴 수 없습니다.', { confirmText: '탈퇴', variant: 'danger' })) deleteMutation.mutate() }}>
-                {deleteMutation.isPending ? '처리 중…' : '계정 탈퇴'}
-              </button>
-            </div>
+          <div className="ps-actions-row" style={{ justifyContent: 'flex-end' }}>
             <div className="ps-action-group" style={{ alignItems: 'center' }}>
               {profileSave.isSuccess && <span className="ps-ok">저장됨</span>}
               {profileSave.isError && <span className="ps-err">{profileSave.error?.message}</span>}

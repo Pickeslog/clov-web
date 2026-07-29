@@ -57,7 +57,8 @@
 .proto-settings .ps-nav { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 10px; }
 .proto-settings .ps-nav-group + .ps-nav-group { margin-top: 14px; }
 .proto-settings .ps-nav-label { margin: 0 0 4px; padding: 0 10px; color: var(--muted); font-size: 11px; font-weight: 800; }
-.proto-settings .ps-nav-item { padding: 10px 12px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; text-align: left; border: none; background: none; width: 100%; font-family: inherit; }
+.proto-settings .ps-nav-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; text-align: left; border: none; background: none; width: 100%; font-family: inherit; }
+.proto-settings .ps-nav-item i.ti { font-size: 15px; }
 .proto-settings .ps-nav-item:hover { background: var(--card-bg); }
 .proto-settings .ps-nav-item.active { background: var(--card-bg); color: var(--accent); }
 .proto-settings .ps-rail-footer {
@@ -93,17 +94,62 @@
 }
 .proto-settings .ps-inline-btn:disabled { opacity: 0.5; cursor: default; }
 
-/* 기본 정보 아바타 + 닉네임 */
-.proto-settings .ps-basic { display: flex; align-items: center; gap: 14px; }
-.proto-settings .ps-avatar-upload {
-  position: relative; width: 64px; height: 64px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%;
-  border: 0; background: linear-gradient(135deg, var(--accent), var(--primary)); color: #fff; cursor: pointer; overflow: hidden;
-  font-size: 22px; font-weight: 900; transition: transform 0.15s;
+/* 계정 패널 히어로 — 배너 + 오버랩 아바타(Discord 프로필 카드 참고) */
+.proto-settings .ps-hero { margin: -20px -24px 18px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+.proto-settings .ps-hero-banner {
+  height: 84px;
+  background: linear-gradient(120deg, var(--accent), var(--primary) 70%);
 }
-.proto-settings .ps-avatar-upload:hover { transform: scale(1.05); }
-.proto-settings .ps-avatar-upload img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.proto-settings .ps-basic-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
-.proto-settings .ps-basic .ps-field { flex: 1; margin-bottom: 0; }
+.proto-settings .ps-hero-row { display: flex; align-items: flex-end; gap: 14px; padding: 0 24px; margin-top: -34px; }
+.proto-settings .ps-hero-avatar {
+  position: relative; width: 76px; height: 76px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%;
+  border: 4px solid var(--card-bg); background: linear-gradient(135deg, var(--accent), var(--primary)); color: #fff;
+  cursor: pointer; overflow: hidden; font-size: 26px; font-weight: 900; transition: transform 0.15s;
+}
+.proto-settings .ps-hero-avatar:hover { transform: scale(1.05); }
+.proto-settings .ps-hero-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.proto-settings .ps-hero-avatar-cam {
+  position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0, 0, 0, 0.45); color: #fff;
+  font-size: 18px; opacity: 0; transition: opacity 0.15s;
+}
+.proto-settings .ps-hero-avatar:hover .ps-hero-avatar-cam { opacity: 1; }
+.proto-settings .ps-hero-id { min-width: 0; padding-bottom: 6px; }
+.proto-settings .ps-hero-name {
+  display: block; width: 100%; border: none; background: none; padding: 2px 0; color: var(--text);
+  font: inherit; font-size: 18px; font-weight: 900; outline: none; border-radius: 6px;
+}
+.proto-settings .ps-hero-name:focus { box-shadow: 0 0 0 2px rgba(82, 183, 136, 0.3); padding: 2px 6px; margin: 0 -6px; }
+.proto-settings .ps-hero-email { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.proto-settings .ps-hero-hint { padding: 6px 24px 0; font-size: 12px; color: var(--muted); }
+
+/* 아이콘 필드 행(초대코드/생년월일 등) */
+.proto-settings .ps-icon-field {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--active-bg);
+}
+.proto-settings .ps-icon-field + .ps-icon-field { margin-top: 8px; }
+.proto-settings .ps-icon-field > i.ti { flex-shrink: 0; font-size: 18px; color: var(--accent); }
+.proto-settings .ps-icon-field-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.proto-settings .ps-icon-field-label { font-size: 11px; font-weight: 800; color: var(--muted); }
+.proto-settings .ps-icon-field-value { font-size: 14px; font-weight: 700; color: var(--text); }
+.proto-settings .ps-icon-field-value.ps-mono { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; letter-spacing: 0.04em; }
+.proto-settings .ps-icon-field-input {
+  width: 100%; border: none; background: none; padding: 0; color: var(--text); font: inherit; font-size: 14px; outline: none;
+}
+.proto-settings .ps-icon-field-action {
+  flex-shrink: 0; display: flex; align-items: center; gap: 5px; height: 30px; padding: 0 12px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--card-bg); color: var(--muted); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer;
+}
+.proto-settings .ps-icon-field-action:hover { border-color: var(--accent); color: var(--accent); }
+
+/* 위험 구역 — 계정 삭제 */
+.proto-settings .ps-danger-zone {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; padding: 16px;
+  border: 1.5px solid color-mix(in srgb, var(--danger) 40%, var(--border)); border-radius: 14px;
+  background: color-mix(in srgb, var(--danger) 6%, transparent);
+}
+.proto-settings .ps-danger-zone-title { display: flex; align-items: center; gap: 6px; color: var(--danger); font-size: 13px; font-weight: 900; }
+.proto-settings .ps-danger-zone-text p { margin: 4px 0 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+.proto-settings .ps-danger-zone .ps-btn { flex-shrink: 0; min-width: 0; }
 
 /* 테마/바탕화면 스와치 */
 .proto-settings .ps-swatches { display: flex; gap: 10px; flex-wrap: wrap; }

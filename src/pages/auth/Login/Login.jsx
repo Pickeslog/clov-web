@@ -209,13 +209,9 @@ export default function Login() {
                 <input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} />
                 <span>로그인 유지</span>
               </label>
-              <button
-                type="button"
-                className="login-sublink"
-                onClick={() => setMessage('비밀번호 찾기는 추후 연결될 예정입니다.')}
-              >
+              <Link to="/forgot-password" className="login-sublink">
                 비밀번호 찾기
-              </button>
+              </Link>
             </div>
 
             <button type="button" className="login-btn-primary" onClick={handleLogin} disabled={submitting}>

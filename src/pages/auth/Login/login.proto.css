@@ -280,7 +280,8 @@
 .proto-login .login-remember input { width: 16px; height: 16px; accent-color: var(--leaf); }
 .proto-login .login-remember input:checked + span { color: var(--leaf); font-weight: 900; }
 .proto-login .login-remember span { transition: color 0.2s, font-weight 0.2s; }
-.proto-login .login-sublink { border: 0; background: transparent; color: var(--leaf); font: inherit; font-weight: 900; cursor: pointer; }
+/* button과 <Link>(앵커) 양쪽에 쓰인다 — 앵커 기본 밑줄을 지워 둘의 모양을 맞춘다(#162). */
+.proto-login .login-sublink { border: 0; background: transparent; color: var(--leaf); font: inherit; font-weight: 900; cursor: pointer; text-decoration: none; }
 .proto-login .login-sublink:hover { color: var(--forest); }
 
 .proto-login .login-btn-primary {

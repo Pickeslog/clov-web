@@ -118,29 +118,6 @@
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
-/* ── 주간 할인 캐러셀 ──
-   Discord 상점의 "가로로 흐르는 특가 줄" 레이아웃만 참고한 구조. 색·아이콘·문구는
-   그대로 Clov 톤 유지, 카드 자체 마크업은 shop-grid와 동일(renderCard 재사용). */
-.proto-shop .shop-deals { position: relative; }
-.proto-shop .shop-carousel {
-  display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x proximity;
-  padding-bottom: 4px; scrollbar-width: none;
-}
-.proto-shop .shop-carousel::-webkit-scrollbar { display: none; }
-.proto-shop .shop-carousel .shop-card { flex: 0 0 220px; scroll-snap-align: start; }
-.proto-shop .shop-deals-next {
-  position: absolute; top: 50%; right: -6px; transform: translateY(-50%);
-  width: 34px; height: 34px; display: grid; place-items: center; flex-shrink: 0;
-  border-radius: 50%; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);
-  cursor: pointer; box-shadow: 0 6px 16px rgba(0, 0, 0, .3);
-  transition: background .15s, color .15s, border-color .15s;
-}
-.proto-shop .shop-deals-next:hover { background: var(--accent); border-color: var(--accent); color: #14150e; }
-.proto-shop .shop-deals-next svg { display: block; }
-@media (max-width: 640px) {
-  .proto-shop .shop-deals-next { display: none; }
-}
-
 .proto-shop .shop-card {
   position: relative; display: flex; flex-direction: column; overflow: hidden;
   background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px;
@@ -231,8 +208,6 @@
   .proto-shop .shop-head h1 { font-size: 21px; }
   .proto-shop .shop-balance { align-items: center; }
   .proto-shop .shop-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-  .proto-shop .shop-carousel { gap: 12px; }
-  .proto-shop .shop-carousel .shop-card { flex-basis: 150px; }
 }
 
 /* ── 라이트 모드 ── */

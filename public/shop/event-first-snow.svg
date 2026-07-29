@@ -1,0 +1,27 @@
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="첫눈 오는 날 한정 프레임">
+  <defs>
+    <linearGradient id="fs-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2c3e5c"/>
+      <stop offset="100%" stop-color="#5b7396"/>
+    </linearGradient>
+  </defs>
+  <rect x="52" y="40" width="216" height="160" rx="14" fill="url(#fs-sky)"/>
+  <g stroke="#f4f9ff" stroke-width="2.5" stroke-linecap="round">
+    <g transform="translate(112 92)">
+      <path d="M0 -15 V15"/><path d="M-13 -7.5 L13 7.5"/><path d="M-13 7.5 L13 -7.5"/>
+      <path d="M0 -15 L-4 -10"/><path d="M0 -15 L4 -10"/>
+      <path d="M0 15 L-4 10"/><path d="M0 15 L4 10"/>
+    </g>
+    <g transform="translate(206 130) scale(0.7)">
+      <path d="M0 -15 V15"/><path d="M-13 -7.5 L13 7.5"/><path d="M-13 7.5 L13 -7.5"/>
+    </g>
+  </g>
+  <g fill="#f4f9ff">
+    <circle cx="80" cy="150" r="3"/>
+    <circle cx="152" cy="66" r="2.4"/>
+    <circle cx="240" cy="80" r="2.4"/>
+    <circle cx="166" cy="152" r="2.6"/>
+    <circle cx="96" cy="118" r="2"/>
+  </g>
+  <path d="M52 176 Q100 158 148 174 Q196 190 268 168 L268 186 Q268 200 254 200 L66 200 Q52 200 52 186 Z" fill="#f4f9ff" opacity="0.95"/>
+</svg>

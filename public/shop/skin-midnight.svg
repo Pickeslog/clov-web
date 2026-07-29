@@ -1,0 +1,21 @@
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="깊은 밤 하늘빛 테마">
+  <defs>
+    <linearGradient id="mn-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1a3a"/>
+      <stop offset="100%" stop-color="#25406e"/>
+    </linearGradient>
+  </defs>
+  <rect x="52" y="40" width="216" height="160" rx="14" fill="url(#mn-sky)"/>
+  <circle cx="222" cy="80" r="20" fill="#dfe9ff"/>
+  <circle cx="214" cy="74" r="20" fill="#0b1a3a" opacity="0.92"/>
+  <g fill="#dfe9ff">
+    <circle cx="88" cy="74" r="2.6"/>
+    <circle cx="120" cy="60" r="1.8"/>
+    <circle cx="150" cy="86" r="2.2"/>
+    <circle cx="100" cy="110" r="1.8"/>
+    <circle cx="176" cy="66" r="1.8"/>
+    <circle cx="70" cy="132" r="2.2"/>
+    <circle cx="196" cy="120" r="2"/>
+  </g>
+  <path d="M52 176 Q96 140 136 166 Q176 190 216 158 Q244 138 268 152 L268 186 Q268 200 254 200 L66 200 Q52 200 52 186 Z" fill="#050d1f" opacity="0.85"/>
+</svg>

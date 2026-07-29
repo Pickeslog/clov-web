@@ -97,7 +97,7 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
         <button
           type="button"
           className={`clov-hdr-shop${onShop ? ' active' : ''}`}
-          onClick={() => navigate('/shop')}
+          onClick={() => navigate('/shop', { state: roomId ? { fromRoomId: roomId } : undefined })}
           title="상점"
           aria-current={onShop ? 'page' : undefined}
         >

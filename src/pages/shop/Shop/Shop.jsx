@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './shop.proto.css'
 import { equipItem, getInventory, getShopItems, getWallet, purchaseItem, unequipItem } from '../../../api/shop'
@@ -15,13 +16,49 @@ const RARITY = {
 }
 const RARITY_ORDER = ['COMMON', 'UNCOMMON', 'RARE', 'EPIC', 'LEGENDARY']
 
+// ── 아이콘 ── 이 화면은 이모지를 쓰지 않는다(#164). 전부 currentColor 스트로크 SVG.
+const Icon = ({ size = 16, children, ...rest }) => (
+  <svg
+    width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...rest}
+  >
+    {children}
+  </svg>
+)
+const BagIcon = (p) => <Icon {...p}><path d="M4 8h16l-1.2 10a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8L4 8zM8.5 8V6a3.5 3.5 0 0 1 7 0v2" /></Icon>
+const TagIcon = (p) => <Icon {...p}><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9z" /><circle cx="7.5" cy="7.5" r="1.2" /></Icon>
+const SparkIcon = (p) => <Icon {...p}><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" /></Icon>
+const CheckIcon = (p) => <Icon {...p}><path d="m20 6-11 11-5-5" /></Icon>
+const BoxIcon = (p) => <Icon {...p}><path d="M21 8v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8" /><path d="M2 4h20v4H2zM10 12h4" /></Icon>
+const AlertIcon = (p) => <Icon {...p}><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></Icon>
+const ShirtIcon = (p) => <Icon {...p}><path d="M9 3 4 6l2 4 2-1v11h8V9l2 1 2-4-5-3a3 3 0 0 1-6 0z" /></Icon>
+const PaletteIcon = (p) => <Icon {...p}><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 1.6-3.2 2 2 0 0 1 1.6-3.2H18a3 3 0 0 0 3-3 9 9 0 0 0-9-8.6z" /><circle cx="7.5" cy="11" r="1" /><circle cx="12" cy="7.5" r="1" /><circle cx="16.5" cy="11" r="1" /></Icon>
+const GiftIcon = (p) => <Icon {...p}><path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2 8h20v4H2zM12 8v13" /><path d="M12 8S9.5 3 7.5 4.5 9 8 12 8zM12 8s2.5-5 4.5-3.5S15 8 12 8z" /></Icon>
+
+// 금화 — 이모지 대신 그린 SVG(금색은 고정값: 재화 식별이 테마에 흔들리면 안 된다).
+const CoinIcon = ({ size = 15 }) => (
+  <svg className="shop-coin" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+    <defs>
+      <linearGradient id="shop-coin-g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#fbbf24" />
+        <stop offset="100%" stopColor="#d97706" />
+      </linearGradient>
+    </defs>
+    <circle cx="12" cy="12" r="10" fill="url(#shop-coin-g)" />
+    <circle cx="12" cy="12" r="7.2" fill="none" stroke="#4a2c00" strokeOpacity=".28" strokeWidth="1.4" />
+    <path d="M12 7.6v8.8M9.6 9.6h3.2a1.9 1.9 0 0 1 0 3.8H9.6h3.4a1.9 1.9 0 0 1 0 3.8" fill="none"
+      stroke="#4a2c00" strokeOpacity=".62" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
 const CATEGORIES = [
-  { key: 'all', label: '전체' },
-  { key: 'COSTUME', label: '코스튬' },
-  { key: 'SKIN', label: '스킨' },
-  { key: 'EVENT', label: '이벤트·한정' },
+  { key: 'all', label: '전체', Icon: SparkIcon },
+  { key: 'COSTUME', label: '코스튬', Icon: ShirtIcon },
+  { key: 'SKIN', label: '스킨', Icon: PaletteIcon },
+  { key: 'EVENT', label: '이벤트·한정', Icon: GiftIcon },
 ]
-const CATEGORY_ART = { COSTUME: '코스튬 아트', SKIN: '스킨 아트', EVENT: '한정 아트' }
+// 아트가 아직 없는 아이템의 폴백 아이콘(텍스트 플레이스홀더 대체).
+const CATEGORY_FALLBACK = { COSTUME: ShirtIcon, SKIN: PaletteIcon, EVENT: GiftIcon }
 
 // 서버 에러코드 → 사용자 문구. 계약 §15의 구매 실패 3종만 따로 풀어 쓴다.
 const PURCHASE_ERRORS = {
@@ -39,10 +76,15 @@ const rarityOf = (key) => RARITY[key] ?? RARITY.COMMON
 
 export default function Shop() {
   const queryClient = useQueryClient()
+  const location = useLocation()
   const [category, setCategory] = useState('all')
   const [rarity, setRarity] = useState('all')
   const [owned, setOwned] = useState(false) // 보유함 탭
   const [message, setMessage] = useState(null) // { tone: 'ok' | 'err', text }
+
+  // 방 안에서 상점으로 들어왔다면 그 방의 네비를 유지한다 — 헤더가 통째로
+  // 바뀌면 "헤더가 사라진" 것처럼 보이고 방으로 돌아갈 길도 없어진다(#164).
+  const fromRoomId = location.state?.fromRoomId ?? null
 
   const wallet = useQuery({ queryKey: ['wallet'], queryFn: getWallet })
   const preferences = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
@@ -117,16 +159,24 @@ export default function Shop() {
 
   return (
     <main className="proto-shop">
-      <Header variant="home" />
+      {fromRoomId
+        ? <Header variant="room" roomId={fromRoomId} />
+        : <Header variant="home" />}
       <div className="shop-wrap">
         <header className="shop-head">
-          <div>
-            <h1>상점 <small>코스튬 &amp; 스킨</small></h1>
-            <p>활동으로 모은 골드로 마스코트와 화면을 꾸며보세요.</p>
+          <div className="shop-head-title">
+            <span className="shop-head-icon"><BagIcon size={22} /></span>
+            <div>
+              <h1>상점 <small>코스튬 &amp; 스킨</small></h1>
+              <p>활동으로 모은 골드로 마스코트와 화면을 꾸며보세요.</p>
+            </div>
           </div>
           <span className="shop-balance">
-            <i aria-hidden="true">G</i>
-            {wallet.isPending ? '—' : gold(balance)}
+            <span className="shop-balance-label">보유 골드</span>
+            <span className="shop-balance-value">
+              <CoinIcon size={19} />
+              {wallet.isPending ? '—' : gold(balance)}
+            </span>
           </span>
         </header>
 
@@ -138,29 +188,44 @@ export default function Shop() {
               className={`shop-chip${!owned && category === tab.key ? ' active' : ''}`}
               onClick={() => changeCategory(tab.key)}
             >
+              <tab.Icon size={14} />
               {tab.label}
             </button>
           ))}
           <span className="shop-filters-spacer" />
           <button type="button" className={`shop-chip${owned ? ' active' : ''}`} onClick={openInventory}>
+            <BoxIcon size={14} />
             보유함
           </button>
         </div>
 
-        {message && <div className={`shop-msg ${message.tone}`} role="status">{message.text}</div>}
+        {message && (
+          <div className={`shop-msg ${message.tone}`} role="status">
+            {message.tone === 'ok' ? <CheckIcon size={16} /> : <AlertIcon size={16} />}
+            {message.text}
+          </div>
+        )}
 
         {active.isPending ? (
           <div className="shop-empty">불러오는 중…</div>
         ) : active.isError ? (
-          <div className="shop-empty">상점을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>
+          <div className="shop-empty">
+            <AlertIcon size={26} />
+            상점을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+          </div>
         ) : owned ? (
           <section className="shop-section">
             <div className="shop-section-head">
-              <h2>보유함</h2>
+              <h2><BoxIcon size={17} />보유함</h2>
               <span className="shop-section-sub">{items.length}종 보유 중</span>
             </div>
             {items.length === 0
-              ? <div className="shop-empty">아직 구매한 아이템이 없어요.</div>
+              ? (
+                <div className="shop-empty">
+                  <BoxIcon size={26} />
+                  아직 구매한 아이템이 없어요.
+                </div>
+              )
               : <div className="shop-grid">{items.map(renderCard)}</div>}
           </section>
         ) : (
@@ -168,7 +233,7 @@ export default function Shop() {
             {discounted.length > 0 && (
               <section className="shop-section">
                 <div className="shop-section-head">
-                  <h2>주간 할인</h2>
+                  <h2><TagIcon size={17} />주간 할인</h2>
                   <span className="shop-section-note">
                     최대 {Math.max(...discounted.map((item) => item.discountRate))}% 할인 중
                   </span>
@@ -180,7 +245,7 @@ export default function Shop() {
 
             <section className="shop-section">
               <div className="shop-section-head">
-                <h2>등급별 아이템</h2>
+                <h2><SparkIcon size={17} />등급별 아이템</h2>
                 <span className="shop-filters-spacer" />
                 <button
                   type="button"
@@ -201,7 +266,12 @@ export default function Shop() {
                 ))}
               </div>
               {items.length === 0
-                ? <div className="shop-empty">조건에 맞는 아이템이 없어요.</div>
+                ? (
+                  <div className="shop-empty">
+                    <SparkIcon size={26} />
+                    조건에 맞는 아이템이 없어요.
+                  </div>
+                )
                 : <div className="shop-grid">{items.map(renderCard)}</div>}
             </section>
           </>
@@ -217,15 +287,21 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
   const affordable = balance >= item.finalPrice
   // 오늘 범위: COSTUME만 마스코트에 장착 가능(서버도 동일하게 검증). SKIN/EVENT는 보유만.
   const equippable = item.category === 'COSTUME'
+  const FallbackIcon = CATEGORY_FALLBACK[item.category] ?? SparkIcon
 
   return (
     <article className={`shop-card${item.owned ? ' owned' : ''}`} style={{ '--rarity': meta.color, '--rarity-soft': meta.soft }}>
       <div className="shop-art">
         {discounted && !item.owned && <span className="shop-badge">-{item.discountRate}%</span>}
-        {item.owned && <span className="shop-owned-badge">{equipped ? '장착 중' : '보유 중'}</span>}
+        {item.owned && (
+          <span className="shop-owned-badge">
+            <CheckIcon size={12} />
+            {equipped ? '장착 중' : '보유 중'}
+          </span>
+        )}
         {item.imageUrl
           ? <img src={item.imageUrl} alt="" />
-          : <span className="shop-art-label">{CATEGORY_ART[item.category] ?? '아이템'}</span>}
+          : <span className="shop-art-fallback"><FallbackIcon size={46} /></span>}
       </div>
 
       <div className="shop-body">
@@ -236,7 +312,7 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
         <div className="shop-price">
           {discounted && <span className="shop-price-was">{gold(item.price)}</span>}
           <span className={`shop-price-now${discounted ? ' discounted' : ''}`}>
-            <i className="shop-coin" aria-hidden="true" />
+            <CoinIcon />
             {gold(item.finalPrice)}
           </span>
         </div>
@@ -252,7 +328,10 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
               {equipped ? (unequipPending ? '해제 중…' : '장착 해제') : (equipPending ? '장착 중…' : '장착하기')}
             </button>
           ) : (
-            <button type="button" className="shop-buy" disabled>보유 중</button>
+            <button type="button" className="shop-buy" disabled>
+              <CheckIcon size={14} />
+              보유 중
+            </button>
           )
         ) : (
           <button
@@ -261,6 +340,7 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
             disabled={pending || !affordable}
             onClick={onBuy}
           >
+            {!pending && affordable && <BagIcon size={14} />}
             {pending ? '구매 중…' : affordable ? '구매하기' : '골드 부족'}
           </button>
         )}

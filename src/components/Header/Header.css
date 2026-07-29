@@ -87,10 +87,25 @@
 
 @media (max-width: 640px) {
   .clov-hdr-nav .clov-hdr-nav-btn span:last-child { display: none; }
-  .clov-hdr-nav-btn { padding: 7px 9px; }
+  .clov-hdr-nav-btn { padding: 7px 7px; }
   /* 좁은 화면에선 "상점" 글자를 접고 아이콘 + 골드만 남긴다(잔액은 계속 보여야 한다). */
   .clov-hdr-shop-label { display: none; }
   .clov-hdr-shop { padding: 6px 8px; gap: 4px; }
+
+  /* 방 안(네비 4탭 + 알림 + 상점 + 아바타)에선 375px 기준으로 헤더가 120px 넘쳐
+     페이지 전체에 가로 스크롤이 생긴다. 탭 줄만 가로로 흐르게 하고 나머지는
+     항상 보이게 고정한다 — 상점·아바타는 잘리면 안 되는 진입점이다(#164). */
+  .clov-hdr { padding: 12px 12px; gap: 8px; }
+  .clov-hdr-left { min-width: 0; flex-shrink: 0; }
+  .clov-hdr-right { min-width: 0; flex: 1; justify-content: flex-end; }
+  .clov-hdr-logo { font-size: 17px; }
+  .clov-hdr-nav {
+    min-width: 0; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+    /* 스크롤 가능한 줄이라는 힌트만 남기고 스크롤바 자체는 숨긴다. */
+    -webkit-overflow-scrolling: touch;
+  }
+  .clov-hdr-nav::-webkit-scrollbar { display: none; }
+  .clov-hdr-nav-btn { flex-shrink: 0; }
 }
 
 /* ── 라이트 모드 ── */

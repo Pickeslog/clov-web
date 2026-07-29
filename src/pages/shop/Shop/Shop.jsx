@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './shop.proto.css'
@@ -34,6 +34,7 @@ const AlertIcon = (p) => <Icon {...p}><circle cx="12" cy="12" r="9" /><path d="M
 const ShirtIcon = (p) => <Icon {...p}><path d="M9 3 4 6l2 4 2-1v11h8V9l2 1 2-4-5-3a3 3 0 0 1-6 0z" /></Icon>
 const PaletteIcon = (p) => <Icon {...p}><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 1.6-3.2 2 2 0 0 1 1.6-3.2H18a3 3 0 0 0 3-3 9 9 0 0 0-9-8.6z" /><circle cx="7.5" cy="11" r="1" /><circle cx="12" cy="7.5" r="1" /><circle cx="16.5" cy="11" r="1" /></Icon>
 const GiftIcon = (p) => <Icon {...p}><path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2 8h20v4H2zM12 8v13" /><path d="M12 8S9.5 3 7.5 4.5 9 8 12 8zM12 8s2.5-5 4.5-3.5S15 8 12 8z" /></Icon>
+const ArrowIcon = (p) => <Icon {...p}><path d="M9 6l6 6-6 6" /></Icon>
 
 // 금화 — 이모지 대신 그린 SVG(금색은 고정값: 재화 식별이 테마에 흔들리면 안 된다).
 const CoinIcon = ({ size = 15 }) => (
@@ -81,6 +82,12 @@ export default function Shop() {
   const [rarity, setRarity] = useState('all')
   const [owned, setOwned] = useState(false) // 보유함 탭
   const [message, setMessage] = useState(null) // { tone: 'ok' | 'err', text }
+  const dealsRef = useRef(null)
+  const scrollDeals = () => {
+    const el = dealsRef.current
+    if (!el) return
+    el.scrollBy({ left: el.clientWidth * 0.9, behavior: 'smooth' })
+  }
 
   // 방 안에서 상점으로 들어왔다면 그 방의 네비를 유지한다 — 헤더가 통째로
   // 바뀌면 "헤더가 사라진" 것처럼 보이고 방으로 돌아갈 길도 없어진다(#164).
@@ -239,7 +246,14 @@ export default function Shop() {
                   </span>
                   <span className="shop-section-sub">{discounted.length}종</span>
                 </div>
-                <div className="shop-grid">{discounted.map(renderCard)}</div>
+                <div className="shop-deals">
+                  <div className="shop-carousel" ref={dealsRef}>{discounted.map(renderCard)}</div>
+                  {discounted.length > 2 && (
+                    <button type="button" className="shop-deals-next" aria-label="다음 할인 상품 보기" onClick={scrollDeals}>
+                      <ArrowIcon size={18} />
+                    </button>
+                  )}
+                </div>
               </section>
             )}
 

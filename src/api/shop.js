@@ -8,3 +8,6 @@ export const getWallet = () => api.get('/shop/wallet')
 export const getInventory = () => api.get('/shop/inventory')
 // 청구액은 서버가 계산한다 — 프론트는 금액을 보내지 않는다.
 export const purchaseItem = (itemId) => api.post(`/shop/items/${itemId}/purchase`)
+// 장착/해제 — COSTUME만 가능(서버가 카테고리 검증). 장착 상태는 preferences.equippedItem으로 조회한다.
+export const equipItem = (itemId) => api.post(`/shop/items/${itemId}/equip`)
+export const unequipItem = () => api.delete('/shop/equipped')

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './shop.proto.css'
-import { getInventory, getShopItems, getWallet, purchaseItem } from '../../../api/shop'
+import { equipItem, getInventory, getShopItems, getWallet, purchaseItem, unequipItem } from '../../../api/shop'
+import { getPreferences } from '../../../api/user'
 import Header from '../../../components/Header/Header'
 
 // 서버 enum ↔ 화면 문구. 등급색은 다크/라이트 공통(등급 식별이 테마에 흔들리면 안 된다).
@@ -28,6 +29,10 @@ const PURCHASE_ERRORS = {
   ITEM_ALREADY_OWNED: '이미 보유 중인 아이템이에요.',
   ITEM_NOT_PURCHASABLE: '지금은 판매하지 않는 아이템이에요.',
 }
+const EQUIP_ERRORS = {
+  ITEM_NOT_OWNED: '보유하지 않은 아이템이에요.',
+  ITEM_NOT_EQUIPPABLE: '이 아이템은 장착할 수 없어요.',
+}
 
 const gold = (n) => Number(n ?? 0).toLocaleString()
 const rarityOf = (key) => RARITY[key] ?? RARITY.COMMON
@@ -40,6 +45,7 @@ export default function Shop() {
   const [message, setMessage] = useState(null) // { tone: 'ok' | 'err', text }
 
   const wallet = useQuery({ queryKey: ['wallet'], queryFn: getWallet })
+  const preferences = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
   const catalog = useQuery({
     queryKey: ['shop', 'items', category, rarity],
     queryFn: () => getShopItems({ category, rarity }),
@@ -64,10 +70,32 @@ export default function Shop() {
     },
   })
 
+  const equip = useMutation({
+    mutationFn: equipItem,
+    onSuccess: (result) => {
+      setMessage({ tone: 'ok', text: `‘${result.name}’을(를) 장착했어요.` })
+      queryClient.invalidateQueries({ queryKey: ['preferences'] })
+    },
+    onError: (error) => {
+      setMessage({ tone: 'err', text: EQUIP_ERRORS[error.code] ?? error.message ?? '장착하지 못했습니다.' })
+    },
+  })
+  const unequip = useMutation({
+    mutationFn: unequipItem,
+    onSuccess: () => {
+      setMessage({ tone: 'ok', text: '장착을 해제했어요.' })
+      queryClient.invalidateQueries({ queryKey: ['preferences'] })
+    },
+    onError: (error) => {
+      setMessage({ tone: 'err', text: error.message ?? '장착 해제하지 못했습니다.' })
+    },
+  })
+
   const active = owned ? inventory : catalog
   const items = active.data?.items ?? []
   const balance = wallet.data?.balance ?? 0
   const discounted = owned ? [] : items.filter((item) => item.discountRate > 0)
+  const equippedItemId = preferences.data?.equippedItem?.itemId ?? null
 
   const changeCategory = (key) => { setOwned(false); setCategory(key); setMessage(null) }
   const openInventory = () => { setOwned(true); setMessage(null) }
@@ -79,6 +107,11 @@ export default function Shop() {
       balance={balance}
       pending={purchase.isPending && purchase.variables === item.id}
       onBuy={() => { setMessage(null); purchase.mutate(item.id) }}
+      equipped={item.id === equippedItemId}
+      equipPending={equip.isPending && equip.variables === item.id}
+      unequipPending={unequip.isPending}
+      onEquip={() => { setMessage(null); equip.mutate(item.id) }}
+      onUnequip={() => { setMessage(null); unequip.mutate() }}
     />
   )
 
@@ -178,16 +211,18 @@ export default function Shop() {
   )
 }
 
-function ItemCard({ item, balance, pending, onBuy }) {
+function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequipPending, onEquip, onUnequip }) {
   const meta = rarityOf(item.rarity)
   const discounted = item.discountRate > 0
   const affordable = balance >= item.finalPrice
+  // 오늘 범위: COSTUME만 마스코트에 장착 가능(서버도 동일하게 검증). SKIN/EVENT는 보유만.
+  const equippable = item.category === 'COSTUME'
 
   return (
     <article className={`shop-card${item.owned ? ' owned' : ''}`} style={{ '--rarity': meta.color, '--rarity-soft': meta.soft }}>
       <div className="shop-art">
         {discounted && !item.owned && <span className="shop-badge">-{item.discountRate}%</span>}
-        {item.owned && <span className="shop-owned-badge">보유 중</span>}
+        {item.owned && <span className="shop-owned-badge">{equipped ? '장착 중' : '보유 중'}</span>}
         {item.imageUrl
           ? <img src={item.imageUrl} alt="" />
           : <span className="shop-art-label">{CATEGORY_ART[item.category] ?? '아이템'}</span>}
@@ -207,7 +242,18 @@ function ItemCard({ item, balance, pending, onBuy }) {
         </div>
 
         {item.owned ? (
-          <button type="button" className="shop-buy" disabled>보유 중</button>
+          equippable ? (
+            <button
+              type="button"
+              className={`shop-buy${equipped ? ' equipped' : ''}`}
+              disabled={equipPending || unequipPending}
+              onClick={equipped ? onUnequip : onEquip}
+            >
+              {equipped ? (unequipPending ? '해제 중…' : '장착 해제') : (equipPending ? '장착 중…' : '장착하기')}
+            </button>
+          ) : (
+            <button type="button" className="shop-buy" disabled>보유 중</button>
+          )
         ) : (
           <button
             type="button"

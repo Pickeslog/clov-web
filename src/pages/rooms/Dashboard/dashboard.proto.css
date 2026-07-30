@@ -390,14 +390,24 @@
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   font-size: 16px; font-weight: 700; color: var(--text-color); margin: 16px 0 14px;
   padding: 6px 12px; border-radius: 12px;
-  background: rgba(0,0,0,.35); border: 1px dashed rgba(27,67,50,.7);
+  /* 테두리는 실선 — 버튼 3개가 전부 점선(크림톤 통일, 아래 참고)이라 행 테두리까지
+     점선이면 "점선 안에 점선"이 겹쳐 산만해진다(리뷰 지적, #174). */
+  /* .35였던 값을 .48로 올림 — 밝고 저채도인 배경 테마(minimal-clover 등)에서 직접
+     확인해보니 블러만으론 행이 배경에 묻혀 카드 경계가 안 보였다(#176 리뷰 지적). */
+  background: rgba(0,0,0,.48); border: 1px solid rgba(27,67,50,.7);
   backdrop-filter: blur(10px) saturate(120%);
 }
 body.light-mode .proto-dashboard .section-title {
   background: rgba(250,246,238,.94); border-color: rgba(82,183,136,.6);
+  /* 라이트는 배경이 이미 94% 불투명이라 블러가 보일 수 없다 — 꺼서 불필요한
+     GPU 합성 레이어를 안 만들고, "라이트에서도 블러가 의미 있다"는 오해도 없앤다. */
+  backdrop-filter: none;
 }
-/* 라벨은 이제 행 배경 위에 얹히므로 자체 배경·테두리 없이 텍스트만 — 색은
-   .section-title의 var(--text-color)를 그대로 물려받는다(다크=밝은 글자/라이트=어두운 글자). */
+/* .section-title-label — 의도적으로 CSS 규칙이 없다. 라벨이 이제 행 배경 위에
+   얹히므로 자체 배경·테두리 없이 텍스트만 남기고, 색은 위 .section-title의
+   var(--text-color)를 그대로 물려받는다(다크=밝은 글자/라이트=어두운 글자).
+   Dashboard.jsx의 className은 그대로 둔다(요소 식별용) — 규칙이 없다고 실수로
+   되돌리지 말 것. */
 .proto-dashboard .section-actions { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
 /* "전체 피드 보기"(action)를 "+ 새 D-day 만들기"/"글쓰기"(dashed)와 같은 색으로 통일한다.
    실제 렌더 색은 481행 .clov-btn--dashed 오버라이드(항상 크림톤 고정, 다크모드 무관)이므로

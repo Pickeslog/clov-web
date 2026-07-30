@@ -183,24 +183,24 @@ export default function Shop() {
           </span>
         </header>
 
-        <div className="shop-filters">
+        <nav className="shop-tabs">
           {CATEGORIES.map((tab) => (
             <button
               key={tab.key}
               type="button"
-              className={`shop-chip${!owned && category === tab.key ? ' active' : ''}`}
+              className={`shop-tab${!owned && category === tab.key ? ' active' : ''}`}
               onClick={() => changeCategory(tab.key)}
             >
               <tab.Icon size={14} />
               {tab.label}
             </button>
           ))}
-          <span className="shop-filters-spacer" />
-          <button type="button" className={`shop-chip${owned ? ' active' : ''}`} onClick={openInventory}>
+          <span className="shop-tabs-spacer" />
+          <button type="button" className={`shop-tab${owned ? ' active' : ''}`} onClick={openInventory}>
             <BoxIcon size={14} />
             보유함
           </button>
-        </div>
+        </nav>
 
         {message && (
           <div className={`shop-msg ${message.tone}`} role="status">

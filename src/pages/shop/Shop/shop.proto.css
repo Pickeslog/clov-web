@@ -74,9 +74,35 @@
   display: inline-flex; align-items: center; gap: 7px;
   color: var(--gold); font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums;
 }
+/* 구매 성공 시 코인이 도착하는 타이밍에 맞춰 숫자를 한 번 튕겨준다. */
+@keyframes shop-balance-pop { 0% { transform: scale(1); } 40% { transform: scale(1.16); } 100% { transform: scale(1); } }
+.proto-shop .shop-balance-value.pulse { animation: shop-balance-pop .45s ease; }
 
 /* 골드 코인 — 이모지 대신 SVG. 크기는 상속(font-size 기준)받지 않고 고정. */
 .proto-shop .shop-coin { display: block; flex-shrink: 0; }
+
+/* ── 구매 마이크로 인터랙션 — 구매 버튼에서 보유 골드 표시까지 코인이 날아간다. ── */
+.proto-shop .shop-coin-layer { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+.proto-shop .shop-flying-coin {
+  position: fixed; display: block; transform: translate(-50%, -50%) scale(1); opacity: 1;
+  transition: transform .65s cubic-bezier(.16, .84, .44, 1), opacity .65s ease .15s;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .35));
+}
+.proto-shop .shop-flying-coin.flying {
+  transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.4);
+  opacity: 0;
+}
+
+/* ── 정렬 셀렉트 ── */
+.proto-shop .shop-sort {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; color: var(--muted);
+}
+.proto-shop .shop-sort select {
+  padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--chip-bg); color: var(--text); font: inherit; font-size: 12px; font-weight: 700;
+  cursor: pointer;
+}
 
 /* ── 카테고리 탭 ──
    Discord 상점의 상단 탭 내비를 참고했지만 pill이 아니라 밑줄 탭으로 —

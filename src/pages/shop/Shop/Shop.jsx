@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './shop.proto.css'
 import { equipItem, getInventory, getShopItems, getWallet, purchaseItem, unequipItem } from '../../../api/shop'
@@ -76,13 +76,38 @@ const EQUIP_ERRORS = {
 
 const gold = (n) => Number(n ?? 0).toLocaleString()
 const rarityOf = (key) => RARITY[key] ?? RARITY.COMMON
+const rectCenter = (r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
+
+const SORTS = [
+  { key: 'default', label: '추천순' },
+  { key: 'priceAsc', label: '가격 낮은순' },
+  { key: 'priceDesc', label: '가격 높은순' },
+  { key: 'newest', label: '최신순' },
+]
+// id는 서버 auto-increment PK라 숫자가 클수록 최근 등록된 아이템이다.
+// createdAt 필드가 계약에 없어 이걸로 "최신순"을 대신한다.
+const sortItems = (items, sort) => {
+  if (sort === 'default') return items
+  const arr = [...items]
+  if (sort === 'priceAsc') arr.sort((a, b) => a.finalPrice - b.finalPrice)
+  else if (sort === 'priceDesc') arr.sort((a, b) => b.finalPrice - a.finalPrice)
+  else if (sort === 'newest') arr.sort((a, b) => Number(b.id) - Number(a.id))
+  return arr
+}
 
 export default function Shop() {
   const queryClient = useQueryClient()
   const [category, setCategory] = useState('all')
   const [rarity, setRarity] = useState('all')
   const [owned, setOwned] = useState(false) // 보유함 탭
+  const [sort, setSort] = useState('default')
   const [message, setMessage] = useState(null) // { tone: 'ok' | 'err', text }
+
+  // 구매 마이크로 인터랙션 — 클릭한 구매 버튼에서 보유 골드 표시까지 코인이 날아간다.
+  const [flyingCoins, setFlyingCoins] = useState([])
+  const [balancePulse, setBalancePulse] = useState(false)
+  const balanceRef = useRef(null)
+  const lastBuyRectRef = useRef(null)
 
   const wallet = useQuery({ queryKey: ['wallet'], queryFn: getWallet })
   const preferences = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
@@ -104,6 +129,17 @@ export default function Shop() {
       // 헤더 골드도 같은 ['wallet'] 키를 보므로 함께 갱신된다.
       queryClient.invalidateQueries({ queryKey: ['wallet'] })
       queryClient.invalidateQueries({ queryKey: ['shop'] })
+
+      if (lastBuyRectRef.current && balanceRef.current) {
+        const from = rectCenter(lastBuyRectRef.current)
+        const to = rectCenter(balanceRef.current.getBoundingClientRect())
+        setFlyingCoins((coins) => [...coins, { id: `${Date.now()}-${Math.random()}`, from, to }])
+      }
+      // 코인이 도착할 즈음(비행 애니메이션 시간과 맞춤) 잔액 숫자를 한 번 튕겨준다.
+      setTimeout(() => {
+        setBalancePulse(true)
+        setTimeout(() => setBalancePulse(false), 500)
+      }, 550)
     },
     onError: (error) => {
       setMessage({ tone: 'err', text: PURCHASE_ERRORS[error.code] ?? error.message ?? '구매하지 못했습니다.' })
@@ -133,11 +169,14 @@ export default function Shop() {
 
   const active = owned ? inventory : catalog
   const items = active.data?.items ?? []
+  // 최대 십수 종 규모라 메모이제이션 없이 매 렌더 정렬해도 비용이 무시할 만하다.
+  const sortedItems = sortItems(items, sort)
   const balance = wallet.data?.balance ?? 0
   const equippedItemId = preferences.data?.equippedItem?.itemId ?? null
 
   const changeCategory = (key) => { setOwned(false); setCategory(key); setMessage(null) }
   const openInventory = () => { setOwned(true); setMessage(null) }
+  const removeFlyingCoin = (id) => setFlyingCoins((coins) => coins.filter((c) => c.id !== id))
 
   const renderCard = (item) => (
     <ItemCard
@@ -145,7 +184,7 @@ export default function Shop() {
       item={item}
       balance={balance}
       pending={purchase.isPending && purchase.variables === item.id}
-      onBuy={() => { setMessage(null); purchase.mutate(item.id) }}
+      onBuy={(e) => { setMessage(null); lastBuyRectRef.current = e.currentTarget.getBoundingClientRect(); purchase.mutate(item.id) }}
       equipped={item.id === equippedItemId}
       equipPending={equip.isPending && equip.variables === item.id}
       unequipPending={unequip.isPending}
@@ -170,7 +209,7 @@ export default function Shop() {
           </div>
           <span className="shop-balance">
             <span className="shop-balance-label">보유 골드</span>
-            <span className="shop-balance-value">
+            <span ref={balanceRef} className={`shop-balance-value${balancePulse ? ' pulse' : ''}`}>
               <CoinIcon size={19} />
               {wallet.isPending ? '—' : gold(balance)}
             </span>
@@ -215,6 +254,8 @@ export default function Shop() {
             <div className="shop-section-head">
               <h2><BoxIcon size={17} />보유함</h2>
               <span className="shop-section-sub">{items.length}종 보유 중</span>
+              <span className="shop-filters-spacer" />
+              <SortSelect value={sort} onChange={setSort} />
             </div>
             {items.length === 0
               ? (
@@ -223,13 +264,14 @@ export default function Shop() {
                   아직 구매한 아이템이 없어요.
                 </div>
               )
-              : <div className="shop-grid">{items.map(renderCard)}</div>}
+              : <div className="shop-grid">{sortedItems.map(renderCard)}</div>}
           </section>
         ) : (
             <section className="shop-section">
               <div className="shop-section-head">
                 <h2><SparkIcon size={17} />등급별 아이템</h2>
                 <span className="shop-filters-spacer" />
+                <SortSelect value={sort} onChange={setSort} />
                 <button
                   type="button"
                   className={`shop-chip${rarity === 'all' ? ' active' : ''}`}
@@ -255,11 +297,51 @@ export default function Shop() {
                     조건에 맞는 아이템이 없어요.
                   </div>
                 )
-                : <div className="shop-grid">{items.map(renderCard)}</div>}
+                : <div className="shop-grid">{sortedItems.map(renderCard)}</div>}
             </section>
         )}
       </div>
+
+      {flyingCoins.length > 0 && (
+        <div className="shop-coin-layer" aria-hidden="true">
+          {flyingCoins.map((coin) => (
+            <FlyingCoin key={coin.id} coin={coin} onDone={() => removeFlyingCoin(coin.id)} />
+          ))}
+        </div>
+      )}
     </main>
+  )
+}
+
+function SortSelect({ value, onChange }) {
+  return (
+    <label className="shop-sort">
+      정렬
+      <select value={value} onChange={(e) => onChange(e.target.value)}>
+        {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+      </select>
+    </label>
+  )
+}
+
+// 구매 버튼 위치 → 보유 골드 표시까지 코인 하나가 날아가는 짧은 연출.
+function FlyingCoin({ coin, onDone }) {
+  const [flying, setFlying] = useState(false)
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setFlying(true))
+    const timer = setTimeout(onDone, 700)
+    return () => { cancelAnimationFrame(raf); clearTimeout(timer) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  const dx = coin.to.x - coin.from.x
+  const dy = coin.to.y - coin.from.y
+  return (
+    <span
+      className={`shop-flying-coin${flying ? ' flying' : ''}`}
+      style={{ left: coin.from.x, top: coin.from.y, '--dx': `${dx}px`, '--dy': `${dy}px` }}
+    >
+      <CoinIcon size={16} />
+    </span>
   )
 }
 

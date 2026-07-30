@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './shop.proto.css'
@@ -35,20 +35,25 @@ const PaletteIcon = (p) => <Icon {...p}><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 
 const GiftIcon = (p) => <Icon {...p}><path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2 8h20v4H2zM12 8v13" /><path d="M12 8S9.5 3 7.5 4.5 9 8 12 8zM12 8s2.5-5 4.5-3.5S15 8 12 8z" /></Icon>
 
 // 금화 — 이모지 대신 그린 SVG(금색은 고정값: 재화 식별이 테마에 흔들리면 안 된다).
-const CoinIcon = ({ size = 15 }) => (
-  <svg className="shop-coin" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-    <defs>
-      <linearGradient id="shop-coin-g" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#fbbf24" />
-        <stop offset="100%" stopColor="#d97706" />
-      </linearGradient>
-    </defs>
-    <circle cx="12" cy="12" r="10" fill="url(#shop-coin-g)" />
-    <circle cx="12" cy="12" r="7.2" fill="none" stroke="#4a2c00" strokeOpacity=".28" strokeWidth="1.4" />
-    <path d="M12 7.6v8.8M9.6 9.6h3.2a1.9 1.9 0 0 1 0 3.8H9.6h3.4a1.9 1.9 0 0 1 0 3.8" fill="none"
-      stroke="#4a2c00" strokeOpacity=".62" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
+// 그라디언트 id는 인스턴스마다 고유해야 한다 — 카드가 여러 장 그려지면 같은 id의
+// <linearGradient>가 문서에 중복돼 뒤 인스턴스부터 채우기가 깨진다(#164).
+const CoinIcon = ({ size = 15 }) => {
+  const gradientId = useId()
+  return (
+    <svg className="shop-coin" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fbbf24" />
+          <stop offset="100%" stopColor="#d97706" />
+        </linearGradient>
+      </defs>
+      <circle cx="12" cy="12" r="10" fill={`url(#${gradientId})`} />
+      <circle cx="12" cy="12" r="7.2" fill="none" stroke="#4a2c00" strokeOpacity=".28" strokeWidth="1.4" />
+      <path d="M12 7.6v8.8M9.6 9.6h3.2a1.9 1.9 0 0 1 0 3.8H9.6h3.4a1.9 1.9 0 0 1 0 3.8" fill="none"
+        stroke="#4a2c00" strokeOpacity=".62" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
 
 const CATEGORIES = [
   { key: 'all', label: '전체', Icon: SparkIcon },

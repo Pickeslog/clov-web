@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { getRooms } from '../../api/room'
@@ -10,6 +11,12 @@ const initialOf = (name) => (name || '?').trim().slice(0, 1)
 export default function RoomSwitcher({ currentRoomId, onClose }) {
   const navigate = useNavigate()
   const rooms = useQuery({ queryKey: ['rooms'], queryFn: getRooms })
+
+  useEffect(() => {
+    const onKeyDown = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
   const items = rooms.data?.items ?? []
   const others = items.filter((r) => String(r.id) !== String(currentRoomId))
 

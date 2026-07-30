@@ -1,5 +1,4 @@
 import { useId, useState } from 'react'
-import { useLocation } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './shop.proto.css'
 import { equipItem, getInventory, getShopItems, getWallet, purchaseItem, unequipItem } from '../../../api/shop'
@@ -80,15 +79,10 @@ const rarityOf = (key) => RARITY[key] ?? RARITY.COMMON
 
 export default function Shop() {
   const queryClient = useQueryClient()
-  const location = useLocation()
   const [category, setCategory] = useState('all')
   const [rarity, setRarity] = useState('all')
   const [owned, setOwned] = useState(false) // 보유함 탭
   const [message, setMessage] = useState(null) // { tone: 'ok' | 'err', text }
-
-  // 방 안에서 상점으로 들어왔다면 그 방의 네비를 유지한다 — 헤더가 통째로
-  // 바뀌면 "헤더가 사라진" 것처럼 보이고 방으로 돌아갈 길도 없어진다(#164).
-  const fromRoomId = location.state?.fromRoomId ?? null
 
   const wallet = useQuery({ queryKey: ['wallet'], queryFn: getWallet })
   const preferences = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
@@ -162,9 +156,9 @@ export default function Shop() {
 
   return (
     <main className="proto-shop">
-      {fromRoomId
-        ? <Header variant="room" roomId={fromRoomId} />
-        : <Header variant="home" />}
+      {/* 상점은 어디서 들어왔든 항상 home 헤더 — 방 안에서 들어왔다고 방 네비 탭이
+          남아있으면 페이지마다 헤더 모양이 달라져 오히려 헷갈린다. */}
+      <Header variant="home" />
       <div className="shop-wrap">
         <header className="shop-head">
           <div className="shop-head-title">

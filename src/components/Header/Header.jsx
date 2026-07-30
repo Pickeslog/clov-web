@@ -93,11 +93,12 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
           </nav>
         )}
 
-        {/* 상점 — 재화가 사용자 단위라 방 안/밖(room·home) 모두에서 같은 자리에 둔다. */}
+        {/* 상점 — 재화가 사용자 단위라 방 안/밖(room·home) 모두에서 같은 자리에 둔다.
+            상점 화면 자체는 어디서 들어왔든 항상 home 헤더를 쓰므로 roomId를 넘기지 않는다. */}
         <button
           type="button"
           className={`clov-hdr-shop${onShop ? ' active' : ''}`}
-          onClick={() => navigate('/shop', { state: roomId ? { fromRoomId: roomId } : undefined })}
+          onClick={() => navigate('/shop')}
           title="상점"
           aria-current={onShop ? 'page' : undefined}
         >

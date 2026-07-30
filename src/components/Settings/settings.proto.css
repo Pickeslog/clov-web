@@ -19,6 +19,10 @@
   /* 네이티브 위젯(생년월일 date 피커 등)이 OS(prefers-color-scheme)가 아니라
      앱 테마를 따르게 고정 — 기본 다크. (index.css의 color-scheme:light dark 무력화) */
   color-scheme: dark;
+  /* html이 line-height:26.1px(18px 기준)를 고정값으로 내려보내 라벨(12px)·버튼(13px) 같은
+     작은 텍스트가 그 줄높이를 그대로 물려받아 상하 여백이 붕 뜬 것처럼 보였다 — 폰트 크기에
+     비례하는 line-height로 재설정. */
+  line-height: 1.4;
 }
 .proto-settings *, .proto-settings *::before, .proto-settings *::after { box-sizing: border-box; }
 

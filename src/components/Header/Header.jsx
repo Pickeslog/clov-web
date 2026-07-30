@@ -8,6 +8,7 @@ import { useAuthStore } from '../../stores/authStore'
 import clovLogo from '../../assets/clov_logo.png'
 import Settings from '../Settings/Settings'
 import Notifications from '../../pages/notifications/Notifications/Notifications'
+import MascotWardrobe from './MascotWardrobe'
 
 // 방 내부 네비 탭 — 프로토타입 clov-header main 타입.
 const TABS = [
@@ -106,6 +107,8 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
           <span className="clov-hdr-shop-label">상점</span>
           {wallet.data && <span className="clov-hdr-gold"><i aria-hidden="true">G</i>{wallet.data.balance.toLocaleString()}</span>}
         </button>
+
+        <MascotWardrobe onNavigateShop={() => navigate('/shop', { state: roomId ? { fromRoomId: roomId } : undefined })} />
 
         <div className="clov-hdr-avatar-wrap">
           <button type="button" className="clov-hdr-avatar" onClick={() => setMenuOpen((v) => !v)} aria-haspopup="menu" title="내 계정">

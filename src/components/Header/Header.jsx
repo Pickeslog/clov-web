@@ -93,7 +93,8 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
           </nav>
         )}
 
-        {/* 상점 — 재화가 사용자 단위라 방 안/밖(room·home) 모두에서 같은 자리에 둔다. */}
+        {/* 상점 — 재화가 사용자 단위라 방 안/밖(room·home) 모두에서 같은 자리에 둔다.
+            방 안에서 들어왔으면 그 방의 roomId를 넘겨 상점도 같은 공통(room) 헤더를 쓴다. */}
         <button
           type="button"
           className={`clov-hdr-shop${onShop ? ' active' : ''}`}

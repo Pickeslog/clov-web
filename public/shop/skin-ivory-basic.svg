@@ -1,0 +1,12 @@
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="아이보리 기본 테마">
+  <rect x="52" y="40" width="216" height="160" rx="14" fill="#f5efe1"/>
+  <rect x="52" y="40" width="216" height="160" rx="14" fill="none" stroke="#ded3bd" stroke-width="3"/>
+  <g stroke="#ded3bd" stroke-width="3" stroke-linecap="round">
+    <path d="M80 88 H240"/>
+    <path d="M80 112 H240"/>
+    <path d="M80 136 H206"/>
+  </g>
+  <circle cx="92" cy="68" r="8" fill="#c9a876"/>
+  <path d="M112 68 H196" stroke="#ded3bd" stroke-width="6" stroke-linecap="round"/>
+  <path d="M80 166 H150" stroke="#c9a876" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+</svg>

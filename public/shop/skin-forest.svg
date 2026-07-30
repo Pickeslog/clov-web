@@ -1,0 +1,21 @@
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Clov 시그니처 포레스트 그린 테마">
+  <defs>
+    <linearGradient id="fr-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b5b33"/>
+      <stop offset="100%" stop-color="#073b24"/>
+    </linearGradient>
+  </defs>
+  <rect x="52" y="40" width="216" height="160" rx="14" fill="url(#fr-bg)"/>
+  <g fill="#50d990" opacity="0.9">
+    <circle cx="146" cy="104" r="17"/>
+    <circle cx="174" cy="104" r="17"/>
+    <circle cx="146" cy="132" r="17"/>
+    <circle cx="174" cy="132" r="17"/>
+  </g>
+  <rect x="157" y="130" width="6" height="42" rx="3" fill="#16874b"/>
+  <g fill="#50d990" opacity="0.28">
+    <circle cx="82" cy="70" r="10"/>
+    <circle cx="242" cy="168" r="13"/>
+    <circle cx="238" cy="72" r="7"/>
+  </g>
+</svg>

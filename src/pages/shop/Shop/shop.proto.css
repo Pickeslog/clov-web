@@ -1,0 +1,231 @@
+/* =====================================================================
+   Shop — 상점(코스튬 & 스킨).
+   시안의 회색 SaaS 톤 대신 다른 이식 화면과 같은 포레스트 다크를 쓰고,
+   라이트 모드는 body.light-mode로 덧입힌다(헤더·다른 화면과 동일 규칙).
+   폰트는 앱 브랜드 폰트 Outfit — 시스템 폰트를 쓰면 이 화면만 톤이 튄다(#164).
+   등급색은 다크/라이트 공통 — 등급 식별이 테마에 따라 흔들리면 안 된다.
+   ===================================================================== */
+.proto-shop {
+  --primary: #5a7a3e;
+  --accent: #9ccc65;
+  --card-bg: #1e2016;
+  --text: #eef0e2;
+  --muted: #b7c99a;
+  --border: #2a2c1e;
+  --active-bg: #2b3020;
+  --chip-bg: #191a12;
+  --gold: #f5c451;
+  --sale: #ef7a6b;
+  --danger: #f87171;
+
+  /* 등급 팔레트 — 시안의 일반/고급/희귀/영웅/전설 순서 그대로. */
+  --r-common: #9aa39b;
+  --r-uncommon: #3fae6d;
+  --r-rare: #4a90e2;
+  --r-epic: #a678e2;
+  --r-legendary: #e0993a;
+
+  min-height: 100vh;
+  color: var(--text);
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* 배경은 index.css의 body(글로벌 --clov-app-bg)가 담당 — 페이지는 투명. */
+  background: transparent;
+}
+.proto-shop *, .proto-shop *::before, .proto-shop *::after { box-sizing: border-box; }
+
+.proto-shop .shop-wrap { max-width: 1160px; margin: 0 auto; padding: 4px 20px 64px; }
+
+/* ── 페이지 헤드 ──
+   헤더(공통)와 페이지 제목이 각각 골드를 띄우면 같은 숫자가 두 번 보인다.
+   페이지 쪽은 "보유 골드" 라벨을 붙여 지갑 카드로 읽히게 한다. */
+.proto-shop .shop-head {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+  padding: 22px 22px 18px; margin-bottom: 22px;
+  border: 1px solid var(--border); border-radius: 20px;
+  background: var(--card-bg);
+}
+.proto-shop .shop-head-title { display: flex; align-items: center; gap: 12px; }
+.proto-shop .shop-head-icon {
+  width: 42px; height: 42px; flex-shrink: 0; display: grid; place-items: center;
+  border-radius: 14px; background: var(--active-bg); color: var(--accent);
+}
+.proto-shop .shop-head-icon svg { display: block; }
+/* 전역 index.css의 h1,h2{font-family:var(--heading); color:var(--text-h)} 리셋 무력화
+   (team-guides/19 §8). --text-h는 OS prefers-color-scheme를 따라 뒤집혀서, 그대로 두면
+   앱 테마와 무관하게 글자가 배경과 같은 색이 돼 사라진다(#164). */
+.proto-shop .shop-head h1,
+.proto-shop .shop-section-head h2 {
+  font-family: inherit; color: var(--text);
+}
+.proto-shop .shop-head h1 {
+  margin: 0; font-size: 25px; font-weight: 800; letter-spacing: -0.5px;
+  display: flex; align-items: baseline; gap: 9px;
+}
+.proto-shop .shop-head h1 small { font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+.proto-shop .shop-head p { margin: 5px 0 0; font-size: 13px; color: var(--muted); }
+
+.proto-shop .shop-balance {
+  display: inline-flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0;
+  padding: 10px 18px; border-radius: 16px;
+  background: rgba(245, 196, 81, 0.12); border: 1px solid rgba(245, 196, 81, 0.3);
+}
+.proto-shop .shop-balance-label { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.04em; }
+.proto-shop .shop-balance-value {
+  display: inline-flex; align-items: center; gap: 7px;
+  color: var(--gold); font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+
+/* 골드 코인 — 이모지 대신 SVG. 크기는 상속(font-size 기준)받지 않고 고정. */
+.proto-shop .shop-coin { display: block; flex-shrink: 0; }
+
+/* ── 필터 칩 ── */
+.proto-shop .shop-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 26px; }
+.proto-shop .shop-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 18px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--card-bg);
+  font: inherit; font-size: 13px; font-weight: 700; color: var(--muted);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.proto-shop .shop-chip:hover { border-color: var(--primary); color: var(--accent); }
+.proto-shop .shop-chip.active { background: var(--accent); border-color: var(--accent); color: #14150e; }
+.proto-shop .shop-chip svg { display: block; }
+.proto-shop .shop-filters-spacer { flex: 1 1 auto; }
+
+/* ── 섹션 ──
+   섹션 헤더는 카드 밖(페이지 배경 위)에 놓인다. 페이지 배경은 사용자가 고르는
+   배경 테마(크림 종이·사진 등)라 색을 예측할 수 없으므로, 맨 텍스트를 올리지 않고
+   항상 카드 표면 위에 얹는다. 안 그러면 밝은 배경에서 글자가 사라진다(#164). */
+.proto-shop .shop-section { margin-bottom: 38px; }
+.proto-shop .shop-section-head {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+  padding: 12px 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--card-bg);
+}
+.proto-shop .shop-section-head h2 {
+  margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.3px;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.proto-shop .shop-section-head h2 svg { display: block; color: var(--accent); }
+.proto-shop .shop-section-note { font-size: 13px; font-weight: 700; color: var(--sale); }
+.proto-shop .shop-section-sub {
+  font-size: 12px; color: var(--muted); padding: 4px 12px;
+  border-radius: 999px; background: var(--chip-bg); border: 1px solid var(--border);
+}
+
+/* ── 카드 그리드 ── */
+.proto-shop .shop-grid {
+  display: grid; gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.proto-shop .shop-card {
+  position: relative; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.proto-shop .shop-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 10px 28px rgba(0, 0, 0, .35); }
+/* 보유 아이템은 흐리게 죽이지 않는다 — 장착 대상이라 오히려 또렷해야 한다(#164). */
+.proto-shop .shop-card.owned { border-color: color-mix(in srgb, var(--accent) 42%, var(--border)); }
+
+/* 아이템 아트 — 등급색 은은한 그라디언트 위에 SVG를 얹는다.
+   카드에서 아트가 차지하는 비중을 키운 구성(참고: Discord 상점 카드)만 가져오고,
+   4:3 SVG는 그대로 object-fit: contain으로 잘리지 않게 유지한다. */
+.proto-shop .shop-art {
+  position: relative; aspect-ratio: 1 / 1; display: grid; place-items: center; overflow: hidden;
+  background: linear-gradient(155deg, var(--rarity-soft), transparent 70%), var(--chip-bg);
+  border-bottom: 1px solid var(--border);
+}
+.proto-shop .shop-art img { width: 100%; height: 100%; object-fit: contain; transition: transform .25s ease; }
+.proto-shop .shop-card:hover .shop-art img { transform: scale(1.06); }
+/* 이미지가 아직 없는 아이템 — 텍스트 대신 카테고리 아이콘을 크게. */
+.proto-shop .shop-art-fallback { display: grid; place-items: center; color: var(--muted); opacity: .5; }
+.proto-shop .shop-art-fallback svg { display: block; }
+
+.proto-shop .shop-badge {
+  position: absolute; top: 10px; left: 10px; z-index: 1;
+  padding: 4px 9px; border-radius: 8px;
+  background: var(--sale); color: #2a0f0a; font-size: 12px; font-weight: 800;
+}
+.proto-shop .shop-owned-badge {
+  position: absolute; top: 10px; right: 10px; z-index: 1;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 9px; border-radius: 8px;
+  background: var(--active-bg); border: 1px solid var(--primary); color: var(--accent);
+  font-size: 11px; font-weight: 800;
+}
+.proto-shop .shop-owned-badge svg { display: block; }
+
+.proto-shop .shop-body { display: flex; flex-direction: column; gap: 7px; padding: 13px 14px 15px; flex: 1; }
+.proto-shop .shop-rarity { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; color: var(--rarity); }
+.proto-shop .shop-rarity::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--rarity); }
+.proto-shop .shop-name { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.35; }
+.proto-shop .shop-desc {
+  margin: 0; font-size: 12px; line-height: 1.5; color: var(--muted);
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.proto-shop .shop-price { display: flex; align-items: center; gap: 7px; margin-top: auto; padding-top: 6px; }
+.proto-shop .shop-price-was { font-size: 12px; color: var(--muted); text-decoration: line-through; font-variant-numeric: tabular-nums; }
+.proto-shop .shop-price-now {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text);
+}
+.proto-shop .shop-price-now.discounted { color: var(--sale); }
+
+.proto-shop .shop-buy {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  margin-top: 10px; width: 100%; padding: 10px 12px; border-radius: 12px; cursor: pointer;
+  border: none; background: var(--primary); color: #f2f7ea;
+  font: inherit; font-size: 13px; font-weight: 800;
+  transition: background .15s, opacity .15s;
+}
+.proto-shop .shop-buy svg { display: block; }
+.proto-shop .shop-buy:hover:not(:disabled) { background: var(--accent); color: #14150e; }
+.proto-shop .shop-buy:disabled { cursor: default; background: var(--active-bg); color: var(--muted); }
+.proto-shop .shop-buy.poor { background: var(--chip-bg); border: 1px solid var(--border); color: var(--muted); cursor: not-allowed; }
+.proto-shop .shop-buy.equipped { background: var(--chip-bg); border: 1px solid var(--accent); color: var(--accent); }
+.proto-shop .shop-buy.equipped:hover:not(:disabled) { background: var(--accent); color: #14150e; }
+
+/* ── 상태 표시 ── */
+.proto-shop .shop-msg {
+  display: flex; align-items: center; gap: 9px;
+  padding: 11px 16px; border-radius: 12px; margin-bottom: 18px;
+  font-size: 13px; font-weight: 700; border: 1px solid transparent;
+}
+.proto-shop .shop-msg svg { display: block; flex-shrink: 0; }
+.proto-shop .shop-msg.ok { background: rgba(63, 174, 109, .14); border-color: rgba(63, 174, 109, .34); color: #7ede9f; }
+.proto-shop .shop-msg.err { background: rgba(248, 113, 113, .12); border-color: rgba(248, 113, 113, .32); color: var(--danger); }
+.proto-shop .shop-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 54px 20px; text-align: center; font-size: 13px; color: var(--muted);
+  border: 1px dashed var(--border); border-radius: 18px; background: var(--card-bg);
+}
+.proto-shop .shop-empty svg { display: block; opacity: .55; }
+
+@media (max-width: 640px) {
+  .proto-shop .shop-wrap { padding: 4px 14px 48px; }
+  .proto-shop .shop-head { flex-direction: column; align-items: stretch; gap: 14px; padding: 18px; }
+  .proto-shop .shop-head h1 { font-size: 21px; }
+  .proto-shop .shop-balance { align-items: center; }
+  .proto-shop .shop-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+}
+
+/* ── 라이트 모드 ── */
+body.light-mode .proto-shop {
+  --card-bg: #ffffff;
+  --text: #2c3e35;
+  --muted: #61766a;
+  --border: #e4ebe1;
+  --active-bg: #edf4ec;
+  --chip-bg: #f4f8f2;
+  --accent: #1b4332;
+  --primary: #2f6b4a;
+  --gold: #a86612;
+  --sale: #c2410c;
+}
+body.light-mode .proto-shop .shop-chip.active { background: #1b4332; border-color: #1b4332; color: #fff; }
+body.light-mode .proto-shop .shop-balance { background: rgba(217, 119, 6, .1); border-color: rgba(217, 119, 6, .28); }
+body.light-mode .proto-shop .shop-badge { color: #fff; }
+body.light-mode .proto-shop .shop-card:hover { box-shadow: 0 10px 28px rgba(8, 28, 22, .1); }
+body.light-mode .proto-shop .shop-buy:hover:not(:disabled) { background: #1b4332; color: #fff; }
+body.light-mode .proto-shop .shop-art { background: linear-gradient(155deg, var(--rarity-soft), transparent 70%), #f7faf6; }

@@ -25,6 +25,8 @@ export default function Mascot({ roomId }) {
   useEffect(() => () => clearTimeout(bubbleTimer.current), [])
 
   const mascotType = prefs.data?.mascotType === 'rob' ? 'rob' : 'crobi'
+  // 장착한 코스튬이 있으면 기본 스프라이트 대신 코스튬 이미지로 완전히 교체한다.
+  const equippedSprite = prefs.data?.equippedItem?.imageUrl
 
   const showBubble = (text) => {
     setBubble(text)
@@ -59,7 +61,7 @@ export default function Mascot({ roomId }) {
         disabled={interactMutation.isPending}
         onClick={() => interactMutation.mutate()}
       >
-        <img className="clov-mascot-sprite" src={SPRITES[mascotType]} alt="" draggable="false" />
+        <img className="clov-mascot-sprite" src={equippedSprite || SPRITES[mascotType]} alt="" draggable="false" />
       </button>
     </div>
   )

@@ -13,7 +13,10 @@
   border-bottom: 1px solid #2a2c1e;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
-.clov-hdr *, .clov-hdr *::before, .clov-hdr *::after { box-sizing: border-box; }
+/* line-height도 리셋한다 — 안 하면 전역 html(18px/26.1px)의 큰 줄높이가 헤더의
+   12~13px 텍스트에 그대로 상속돼 상점 칩·골드 배지가 실제 글자보다 훨씬 두꺼워지고
+   내부 요소끼리 정렬이 어긋나 보인다. */
+.clov-hdr *, .clov-hdr *::before, .clov-hdr *::after { box-sizing: border-box; line-height: 1.2; }
 .clov-hdr-left, .clov-hdr-right { display: flex; align-items: center; gap: 8px; }
 
 .clov-hdr-back {
@@ -41,6 +44,28 @@
 .clov-hdr-nav-icon-btn { padding: 7px 9px; }
 .clov-hdr-nav-btn svg { display: block; }
 
+/* 상점 버튼 — 네비 탭과 같은 톤이되 골드 잔액 칩이 붙어 한 덩어리로 보인다. */
+.clov-hdr-shop {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 10px; cursor: pointer;
+  border: 1px solid #2a2c1e; background: #22261a;
+  font: inherit; font-size: 13px; font-weight: 700; color: #b7c99a;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.clov-hdr-shop:hover, .clov-hdr-shop.active { background: #2b3020; color: #9ccc65; border-color: #3c4a2a; }
+.clov-hdr-shop svg { display: block; }
+.clov-hdr-gold {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px 2px 4px; border-radius: 999px;
+  background: rgba(251, 191, 36, 0.14); color: #f5c451;
+  font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.clov-hdr-gold i {
+  width: 14px; height: 14px; border-radius: 50%; display: grid; place-items: center;
+  background: linear-gradient(150deg, #fbbf24, #d97706); color: #4a2c00;
+  font-size: 9px; font-weight: 900; font-style: normal;
+}
+
 .clov-hdr-avatar-wrap { position: relative; }
 .clov-hdr-avatar {
   width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
@@ -65,7 +90,25 @@
 
 @media (max-width: 640px) {
   .clov-hdr-nav .clov-hdr-nav-btn span:last-child { display: none; }
-  .clov-hdr-nav-btn { padding: 7px 9px; }
+  .clov-hdr-nav-btn { padding: 7px 7px; }
+  /* 좁은 화면에선 "상점" 글자를 접고 아이콘 + 골드만 남긴다(잔액은 계속 보여야 한다). */
+  .clov-hdr-shop-label { display: none; }
+  .clov-hdr-shop { padding: 6px 8px; gap: 4px; }
+
+  /* 방 안(네비 4탭 + 알림 + 상점 + 아바타)에선 375px 기준으로 헤더가 120px 넘쳐
+     페이지 전체에 가로 스크롤이 생긴다. 탭 줄만 가로로 흐르게 하고 나머지는
+     항상 보이게 고정한다 — 상점·아바타는 잘리면 안 되는 진입점이다(#164). */
+  .clov-hdr { padding: 12px 12px; gap: 8px; }
+  .clov-hdr-left { min-width: 0; flex-shrink: 0; }
+  .clov-hdr-right { min-width: 0; flex: 1; justify-content: flex-end; }
+  .clov-hdr-logo { font-size: 17px; }
+  .clov-hdr-nav {
+    min-width: 0; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+    /* 스크롤 가능한 줄이라는 힌트만 남기고 스크롤바 자체는 숨긴다. */
+    -webkit-overflow-scrolling: touch;
+  }
+  .clov-hdr-nav::-webkit-scrollbar { display: none; }
+  .clov-hdr-nav-btn { flex-shrink: 0; }
 }
 
 /* ── 라이트 모드 ── */
@@ -75,6 +118,9 @@ body.light-mode .clov-hdr-back:hover { background: #edf4ec; color: #1b4332; }
 body.light-mode .clov-hdr-logo { color: #1b4332; }
 body.light-mode .clov-hdr-nav-btn { color: #79ad90; }
 body.light-mode .clov-hdr-nav-btn:hover, body.light-mode .clov-hdr-nav-btn.active { background: #edf4ec; color: #1b4332; }
+body.light-mode .clov-hdr-shop { background: #f4f8f2; border-color: #e0ebdc; color: #4a6b58; }
+body.light-mode .clov-hdr-shop:hover, body.light-mode .clov-hdr-shop.active { background: #edf4ec; color: #1b4332; border-color: #cfe3c8; }
+body.light-mode .clov-hdr-gold { background: rgba(217, 119, 6, 0.12); color: #a86612; }
 body.light-mode .clov-hdr-avatar { background: #edf4ec; color: #1b4332; }
 body.light-mode .clov-hdr-dropdown { background: #fff; border-color: #eadfd0; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12); }
 body.light-mode .clov-hdr-dropdown button { color: #2c3e35; }

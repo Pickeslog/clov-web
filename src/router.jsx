@@ -3,6 +3,8 @@ import ProtectedRoute from './routes/ProtectedRoute'
 import Login from './pages/auth/Login/Login'
 import Signup from './pages/auth/Signup/Signup'
 import OAuthRedirect from './pages/auth/OAuthRedirect/OAuthRedirect'
+import ForgotPassword from './pages/auth/PasswordReset/ForgotPassword'
+import ResetPassword from './pages/auth/PasswordReset/ResetPassword'
 import RoomList from './pages/rooms/RoomList/RoomList'
 import Dashboard from './pages/rooms/Dashboard/Dashboard'
 import JoinRoom from './pages/rooms/JoinRoom/JoinRoom'
@@ -17,6 +19,9 @@ export const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <Signup /> },
   { path: '/oauth2/redirect', element: <OAuthRedirect /> },
+  // 비밀번호 재설정(계약 §4-4) — 비로그인 상태로 들어오는 화면이라 보호 라우트 밖이다.
+  { path: '/forgot-password', element: <ForgotPassword /> },
+  { path: '/reset-password', element: <ResetPassword /> },
   {
     element: <ProtectedRoute />,
     children: [

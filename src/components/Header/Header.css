@@ -13,7 +13,10 @@
   border-bottom: 1px solid #2a2c1e;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
-.clov-hdr *, .clov-hdr *::before, .clov-hdr *::after { box-sizing: border-box; }
+/* line-height도 리셋한다 — 안 하면 전역 html(18px/26.1px)의 큰 줄높이가 헤더의
+   12~13px 텍스트에 그대로 상속돼 상점 칩·골드 배지가 실제 글자보다 훨씬 두꺼워지고
+   내부 요소끼리 정렬이 어긋나 보인다. */
+.clov-hdr *, .clov-hdr *::before, .clov-hdr *::after { box-sizing: border-box; line-height: 1.2; }
 .clov-hdr-left, .clov-hdr-right { display: flex; align-items: center; gap: 8px; }
 
 .clov-hdr-back {

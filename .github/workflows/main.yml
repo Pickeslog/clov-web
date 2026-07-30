@@ -12,9 +12,10 @@ jobs:
       # clov-api의 같은 워크플로를 그대로 옮겼다. 구조·스텝 순서·시크릿 이름 규칙은 동일하고,
       # 프론트라서 달라지는 자리에만 손을 댔다(주석으로 표시).
       #
-      # api와 결정적으로 다른 점 하나: VITE_API_BASE_URL은 런타임 설정이 아니라
-      # **빌드 시점에 번들 문자열로 박힌다.** 그래서 사람별 시크릿이 하나 더 있고,
-      # api에서 뺐던 "시크릿 주입" 스텝이 프론트에는 있어야 한다.
+      # api와 결정적으로 다른 점 하나: VITE_* 는 런타임 설정이 아니라 **빌드 시점에 번들
+      # 문자열로 박힌다.** 그래서 사람별 시크릿(REACT_ENV_<이름>)이 하나 더 있고, api에서
+      # 뺐던 "시크릿 주입" 스텝이 프론트에는 있어야 한다. 강사님 원본의 REACT_ENV 방식
+      # (base64로 인코딩한 env 파일을 러너에서 풀어 쓰기)을 그대로 따랐다.
       - name: "환경변수 세팅"
         run: |
           if [ "${{github.ref}}" == 'refs/heads/deploy-myeongjun' ]; then
@@ -25,7 +26,7 @@ jobs:
             echo "KEY_EOF" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{secrets.DOCKER_USERNAME_MYEONGJUN}}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{secrets.DOCKER_PASSWORD_MYEONGJUN}}" >> $GITHUB_ENV
-            echo "VITE_API_BASE_URL=${{secrets.VITE_API_BASE_URL_MYEONGJUN}}" >> $GITHUB_ENV
+            echo "REACT_ENV=${{secrets.REACT_ENV_MYEONGJUN}}" >> $GITHUB_ENV
           fi
           if [ "${{github.ref}}" == 'refs/heads/deploy-chacha' ]; then
             echo "GCP_VM_HOST=${{secrets.GCP_VM_HOST_CHACHA}}" >> $GITHUB_ENV
@@ -35,7 +36,7 @@ jobs:
             echo "KEY_EOF" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{secrets.DOCKER_USERNAME_CHACHA}}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{secrets.DOCKER_PASSWORD_CHACHA}}" >> $GITHUB_ENV
-            echo "VITE_API_BASE_URL=${{secrets.VITE_API_BASE_URL_CHACHA}}" >> $GITHUB_ENV
+            echo "REACT_ENV=${{secrets.REACT_ENV_CHACHA}}" >> $GITHUB_ENV
           fi
           if [ "${{github.ref}}" == 'refs/heads/deploy-lami' ]; then
             echo "GCP_VM_HOST=${{secrets.GCP_VM_HOST_LAMI}}" >> $GITHUB_ENV
@@ -45,7 +46,7 @@ jobs:
             echo "KEY_EOF" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{secrets.DOCKER_USERNAME_LAMI}}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{secrets.DOCKER_PASSWORD_LAMI}}" >> $GITHUB_ENV
-            echo "VITE_API_BASE_URL=${{secrets.VITE_API_BASE_URL_LAMI}}" >> $GITHUB_ENV
+            echo "REACT_ENV=${{secrets.REACT_ENV_LAMI}}" >> $GITHUB_ENV
           fi
           if [ "${{github.ref}}" == 'refs/heads/deploy-kimgyubi' ]; then
             echo "GCP_VM_HOST=${{secrets.GCP_VM_HOST_KIMGYUBI}}" >> $GITHUB_ENV
@@ -55,7 +56,7 @@ jobs:
             echo "KEY_EOF" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{secrets.DOCKER_USERNAME_KIMGYUBI}}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{secrets.DOCKER_PASSWORD_KIMGYUBI}}" >> $GITHUB_ENV
-            echo "VITE_API_BASE_URL=${{secrets.VITE_API_BASE_URL_KIMGYUBI}}" >> $GITHUB_ENV
+            echo "REACT_ENV=${{secrets.REACT_ENV_KIMGYUBI}}" >> $GITHUB_ENV
           fi
           
       # 원래 여기 있던 "Setup SSH Key"는 ~/.ssh/id_rsa를 만들었지만 아무도 읽지 않았다 —
@@ -64,13 +65,13 @@ jobs:
       # 진짜 원인이 로그에 안 남았다(2026-07-30 GCP-VM-CICD #1·#2: 도커 push까지 성공한 뒤
       # SSH 스텝만 1초 만에 죽음). 값이 비었는지·개인키로 파싱되는지를 여기서 끊는다.
       #
-      # 프론트는 검사 목록에 VITE_API_BASE_URL을 더했다. 이게 비면 빌드가 실패하지 않고
-      # client.js의 개발 기본값(localhost:8080)이 번들에 박혀서, 배포는 초록불인데 브라우저가
-      # 자기 자신에게 API를 쏘는 상태가 된다(#160). 조용히 깨지므로 여기서 끊는 게 맞다.
+      # 프론트는 검사 목록에 REACT_ENV를 더했다. 이게 비면 빌드가 실패하지 않고 레포의
+      # .env.production(팀 공용 도메인)이 그대로 구워져서, 배포는 초록불인데 팀원 프론트가
+      # 리더 백엔드를 호출하는 상태가 된다. 조용히 깨지므로 여기서 끊는 게 맞다.
       - name: 배포 시크릿 검증
         run: |
           missing=""
-          for name in GCP_VM_HOST GCP_VM_USERNAME GCP_VM_SSHKEY DOCKER_USERNAME DOCKER_PASSWORD VITE_API_BASE_URL; do
+          for name in GCP_VM_HOST GCP_VM_USERNAME GCP_VM_SSHKEY DOCKER_USERNAME DOCKER_PASSWORD REACT_ENV; do
             [ -n "${!name}" ] || missing="$missing $name"
           done
           suffix=$(echo "${{ github.ref_name }}" | sed 's/^deploy-//' | tr '[:lower:]' '[:upper:]')
@@ -109,9 +110,26 @@ jobs:
       #
       # 덮어쓰는 건 러너의 임시 체크아웃뿐이고 레포 파일은 그대로다. .env.production 을
       # 커밋으로 개인 도메인으로 바꾸면 다음 팀 배포가 그 개인 서버를 향한다(#170).
+      #
+      # 강사님 원본은 `.env` 에 풀지만 우리 레포에서는 그러면 안 된다. 두 번 무력화된다 —
+      # .dockerignore가 `.env` 를 빌드 컨텍스트에서 빼고, 설령 들어가도 Vite는 모드 파일
+      # (.env.production)을 범용 파일(.env)보다 우선한다. 둘 다 결과가 같다: 팀 도메인이
+      # 그대로 구워지고 워크플로는 초록불이다.
+      #
+      # 값은 시크릿이 아니다 — VITE_* 는 브라우저 번들에 평문으로 박히므로 애초에 시크릿을
+      # 넣으면 안 되는 자리다(.env.example 참고). 그래서 로그에 그대로 찍어 확인할 수 있게 뒀다.
       - name: 환경파일 주입
         run: |
-          echo "VITE_API_BASE_URL=${{env.VITE_API_BASE_URL}}" > .env.production
+          echo "${{env.REACT_ENV}}" | base64 --decode > .env.production
+          # base64가 깨졌거나 엉뚱한 파일을 인코딩했으면 여기서 끊는다. 그냥 두면 빈
+          # .env.production 으로 빌드가 성공하고 localhost:8080 이 번들에 박힌다(#160).
+          if ! grep -q '^VITE_API_BASE_URL=' .env.production; then
+            echo "::error::REACT_ENV_<이름> 을 디코드한 결과에 VITE_API_BASE_URL 줄이 없다."
+            echo "::error::.env.production 내용을 base64로 인코딩한 값을 넣어야 한다:"
+            echo "::error::  echo \"VITE_API_BASE_URL=https://내도메인/api/v1\" | base64 | tr -d '\\n'"
+            echo "::error::줄바꿈 없는 한 줄이어야 한다 — 여러 줄이면 앞의 '환경변수 세팅'에서 먼저 죽는다."
+            exit 1
+          fi
           echo "빌드에 들어갈 .env.production:"
           cat .env.production
 

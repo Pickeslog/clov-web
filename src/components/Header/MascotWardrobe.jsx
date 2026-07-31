@@ -5,7 +5,7 @@ import { getPreferences } from '../../api/user'
 import crobiSprite from '../../assets/mascot/crobi.png'
 import robSprite from '../../assets/mascot/rob.png'
 
-const MASCOT_LABELS = { crobi: '크로비', rob: '로봇' }
+const MASCOT_LABELS = { crobi: '크로비', rob: '롭' }
 
 // 프로필 드롭다운(사용자 설정·로그아웃과 같은 박스) 안 접이식 섹션 — 마스코트 미리보기 +
 // 보유 코스튬 장착/해제. Mascot.jsx와 같은 규칙(장착 아이템에 이미지가 있으면 기본

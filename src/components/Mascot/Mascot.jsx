@@ -15,10 +15,12 @@ import robAngrySprite from '../../assets/mascot/rob-angry.png'
 import robFindSprite from '../../assets/mascot/rob-find.png'
 import robPencilSprite from '../../assets/mascot/rob-pencil.png'
 import burgerOldmanSprite from '../../assets/mascot/burger-oldman.png'
+import burgerBodySprite from '../../assets/mascot/burger-oldman-body.png'
+import burgerArmSprite from '../../assets/mascot/burger-oldman-arm.png'
 
-// 캐릭터별 포즈 스프라이트 — 롭만 이식 원본(test-web-design/02-main/assets/rob)의
-// 8종 포즈를 전부 갖고, 크로비는 3종(default/dizzy/sleepy), 버거노인은 프로토타입에
-// 없던 캐릭터라 기본 포즈 하나로 공통 애니메이션(흔들기·dizzy 등)만 탄다.
+// 캐릭터별 포즈 스프라이트 — 이식 원본(test-web-design/02-main/assets)이 가진 포즈를
+// 그대로 옮겼다. 롭 8종(레지스트리에 없는 예비 스프라이트 smile은 원본도 안 쓴다),
+// 크로비 3종, 버거노인은 포즈가 아니라 몸통·팔 레이어 분리 방식이라 아래에서 따로 쓴다.
 const SPRITES = {
   crobi: { default: crobiSprite, dizzy: crobiDizzySprite, sleepy: crobiSleepySprite },
   rob: {
@@ -31,13 +33,21 @@ const SPRITES = {
     find: robFindSprite,
     pencil: robPencilSprite,
   },
+  // 버거노인은 인사할 때 왼팔만 어깨 기준으로 돌려야 해서 몸통(body)과 팔(wave-arm)이
+  // 따로다 — 합쳐진 idle 스프라이트는 레이어를 못 쓰는 자리(코스튬 장착 등)의 폴백.
   burgerOldman: { default: burgerOldmanSprite },
 }
 
 const CLICK_LINES = {
   crobi: ['안녕!', '오늘도 좋은 하루!', '뭐 하고 있었어?', '같이 추억 쌓아볼까?'],
   rob: ['안녕, 나는 롭이야!', '오늘도 함께해줘서 고마워', '다음 약속은 뭐야?', '추억을 기록해보자'],
-  burgerOldman: ['어서 와!', '오늘도 든든하게 보내자!', '따끈한 하루가 되길!', '버거는 마음까지 든든하게 하지!'],
+  // 버거노인 프로토타입(burger-oldman.html)의 인사·주근깨·응원 문구 그대로.
+  burgerOldman: [
+    '어서 와! 따끈한 하루지?',
+    '반가워! 오늘도 든든하게 보내자.',
+    '나는 참깨 주근깨가 매력이란다.',
+    '버거는 마음까지 든든하게 하지!',
+  ],
 }
 // 방치 중 혼잣말 — 크로비는 프로토타입 전용 대사, 롭·버거노인은 클릭 대사 풀을 그대로 재사용.
 const MUTTER_LINES = {
@@ -63,6 +73,7 @@ const SCARED_HEIGHT_PX = 150
 const ANGRY_AFTER_SCARED_MS = 3000
 const NUDGE_MS = 380
 const ANGRY_END_MS = 1400
+const GREET_MS = 780 // 버거노인 인사(점프+팔 흔들기) 애니메이션 길이
 
 // 마스코트 인터랙션(옛 test-web-design/02-main/js/croby-mascot.js 포트) + 기존 백엔드
 // 교감(#90, +2 XP·하루 3회 제한)을 결합. 클릭 시 로컬 리액션(흔들기·대사·연타 dizzy)은
@@ -308,9 +319,11 @@ export default function Mascot({ roomId }) {
         if (modeRef.current === 'dizzy') setMode('default')
       }, DIZZY_MS)
     } else if (mode === 'default') {
+      // 클릭 리액션 애니메이션 — 같은 클래스를 다시 붙여도 재시작되지 않아 두 벌을 번갈아 쓴다.
+      // 버거노인은 흔들기 대신 점프+팔 흔들기 인사라 유지 시간이 더 길다.
       setNudgeClass((prev) => (prev === 'nudge' ? 'nudge2' : 'nudge'))
       clearTimeout(nudgeTimerRef.current)
-      nudgeTimerRef.current = setTimeout(() => setNudgeClass(''), NUDGE_MS)
+      nudgeTimerRef.current = setTimeout(() => setNudgeClass(''), mascotType === 'burgerOldman' ? GREET_MS : NUDGE_MS)
       const reaction = pickReaction()
       showSay(reaction.text, SAY_MS, reaction.spriteKey)
     }
@@ -428,6 +441,8 @@ export default function Mascot({ roomId }) {
   const sprites = SPRITES[mascotType] || SPRITES.crobi
   const spriteKey = mode === 'default' ? (overrideSpriteKey || 'default') : mode
   const spriteSrc = equippedSprite || sprites[spriteKey] || sprites.default
+  // 코스튬을 장착하면 스프라이트를 통째로 갈아끼우므로 그때는 레이어 분리를 쓸 수 없다.
+  const burgerLayered = mascotType === 'burgerOldman' && !equippedSprite
 
   let modeText = ''
   if (mode === 'sleepy') modeText = 'Zzz…'
@@ -472,8 +487,31 @@ export default function Mascot({ roomId }) {
             ))}
           </span>
         )}
-        <img className="clov-mascot-sprite" src={spriteSrc} alt="" draggable="false" />
+        {burgerLayered ? (
+          <span className="clov-mascot-stage">
+            <i className="clov-mascot-steam one" aria-hidden="true" />
+            <i className="clov-mascot-steam two" aria-hidden="true" />
+            <i className="clov-mascot-steam three" aria-hidden="true" />
+            <img className="clov-mascot-arm" src={burgerArmSprite} alt="" draggable="false" />
+            <img className="clov-mascot-sprite" src={burgerBodySprite} alt="" draggable="false" />
+          </span>
+        ) : (
+          <img className="clov-mascot-sprite" src={spriteSrc} alt="" draggable="false" />
+        )}
       </button>
+      {burgerLayered && (
+        // 종이 오려낸 듯한 미세한 흔들림 — 프로토타입의 feTurbulence 필터 그대로.
+        <svg className="clov-mascot-defs" width="0" height="0" aria-hidden="true">
+          <filter id="clov-mascot-wobble">
+            <feTurbulence type="turbulence" baseFrequency="0.007 0.012" numOctaves="1" seed="8" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.4" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+          <filter id="clov-mascot-steam">
+            <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="3" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="9" />
+          </filter>
+        </svg>
+      )}
       {cursorShatter && (
         <div className="clov-mascot-cursor-shatter" style={{ left: cursorShatter.x, top: cursorShatter.y }} aria-hidden="true">
           {cursorShatter.shards.map((s) => (

@@ -805,7 +805,7 @@ export default function Dashboard() {
 // 공용 훅(useMemoryDetail)으로 그대로 재사용한다.
 function DashboardMemoryDetail({ memoryId, roomId, currentUserId, members, onClose }) {
   const memoryDetail = useMemoryDetail(memoryId, roomId, { onDeleted: onClose })
-  return <MemoryDetailModal {...memoryDetail} currentUserId={currentUserId} members={members} onClose={onClose} />
+  return <MemoryDetailModal {...memoryDetail} roomId={roomId} currentUserId={currentUserId} members={members} onClose={onClose} />
 }
 
 // 친구 초대 모달 — 방의 활성 초대코드를 만들어/보여주고 복사·공유(계약 §7).

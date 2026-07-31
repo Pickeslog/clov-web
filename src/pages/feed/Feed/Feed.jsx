@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import './feed.proto.css'
 import { getMemories, getMemory } from '../../../api/memory'
 import { getRoomMembers } from '../../../api/room'
-import { getPlan, getPlans } from '../../../api/plan'
+import { getPlan, getPlans, getStagePhotos } from '../../../api/plan'
 import { useCreateMemory } from '../../../hooks/useCreateMemory'
 import { useMemoryDetail } from '../../../hooks/useMemoryDetail'
 import { useAuthStore } from '../../../stores/authStore'
@@ -390,6 +390,7 @@ export default function Feed() {
       {selectedMemoryId && (
         <MemoryDetailModal
           {...memoryDetail}
+          roomId={roomId}
           currentUserId={currentUserId}
           members={memberItems}
           onClose={() => setSelectedMemoryId(null)}
@@ -932,11 +933,91 @@ function MemoryReceipt({ planId, plan }) {
   )
 }
 
+// 인생4컷 4단계(계약 §9) — Schedule.jsx의 STAGES와 같은 key·순서·이름. 두 화면이 서로 몰라도
+// 되게 파일마다 이 작은 상수를 따로 둔다(import보다 결합을 줄이는 쪽, 이 파일의 ddayLabel/
+// ddayCaption과 같은 방식). 이름을 새로 짓지 않고 그대로 옮겼다.
+const JOURNEY_STAGES = [
+  { key: 'PROPOSAL', number: 1, name: '제안하기' },
+  { key: 'SCHEDULING', number: 2, name: '일정 맞추기' },
+  { key: 'CONFIRMED', number: 3, name: '약속 확정' },
+  { key: 'MEETING', number: 4, name: '만남' },
+]
+const JOURNEY_STAGE_MESSAGE = { DONE: '인증 완료', ACTIVE: '인증사진을 기다리는 중', LOCKED: '아직 진행 전' }
+
+// ── 약속 여정 보기 모달(#127, 프로토타입 renderScheduleJourney space.js:619) — 추억 상세의
+// 약속 영수증을 누르면 열림. 읽기 전용: 인생4컷 업로드·극장 연출은 Schedule.jsx의 기존 기능
+// 그대로 두고 여기서는 손대지 않는다(범위 밖). 4단계 상태(state)는 서버가 계산해서 주므로
+// 프론트에서 다시 계산하지 않는다. ──
+function ScheduleJourneyModal({ roomId, plan, onClose }) {
+  const navigate = useNavigate()
+  // 모달이 열렸을 때만 마운트되므로(호출부 참고) 조회도 그때만 나간다.
+  const stagesQuery = useQuery({
+    queryKey: ['plan', plan.id, 'stages'],
+    queryFn: () => getStagePhotos(plan.id),
+    enabled: Boolean(plan?.id),
+    retry: false, // R2 미설정 등으로 실패해도 모달이 죽지 않고 전부 잠김으로 보인다(Schedule.jsx 선례)
+  })
+  const stages = stagesQuery.data?.items ?? []
+  const stateOf = (key) => stages.find((s) => s.stage === key)?.state ?? 'LOCKED'
+  const imageOf = (key) => stages.find((s) => s.stage === key)?.imageUrl ?? null
+  const doneCount = JOURNEY_STAGES.filter((st) => stateOf(st.key) === 'DONE').length
+  const isComplete = doneCount === 4
+
+  return (
+    <div className="sj-backdrop open" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="sj-modal" role="dialog" aria-modal="true" aria-label="약속 여정 보기">
+        <div className="sj-head">
+          <div className="sj-kicker">★ 약속 여정 ★</div>
+          <div className="sj-title">{plan.title}</div>
+          <div className="sj-sub">
+            {plan.planDate ? String(plan.planDate).replace(/-/g, '.') : '날짜 미정'} · <b>{ddayLabel(plan.planDate)}</b> · {ddayCaption(plan.planDate)}
+          </div>
+          <button type="button" className="sj-close" onClick={onClose} aria-label="닫기">×</button>
+        </div>
+        <div className={`sj-progress ${isComplete ? 'is-complete' : ''}`}>
+          <span className="sj-progress-label">인생4컷 {doneCount}/4{isComplete ? ' · 완성 🍀' : ''}</span>
+          <span className="sj-progress-bar"><span className="sj-progress-fill" style={{ width: `${Math.round((doneCount / 4) * 100)}%` }} /></span>
+        </div>
+        <div className="sj-stages">
+          {JOURNEY_STAGES.map((st) => {
+            const state = stateOf(st.key)
+            const image = imageOf(st.key)
+            return (
+              <div className={`sj-stage sj-stage--${state.toLowerCase()}`} key={st.key}>
+                {image ? (
+                  <div className="sj-stage-photo has-photo" style={{ backgroundImage: `url('${image}')` }} />
+                ) : (
+                  <div className={`sj-stage-photo ${state === 'ACTIVE' ? 'is-uploadable' : 'is-locked'}`}>
+                    <span className="sj-stage-num">{st.number}</span>
+                    {state === 'LOCKED' && <span className="sj-lock" aria-hidden="true">🔒</span>}
+                  </div>
+                )}
+                <div className="sj-stage-info">
+                  <div className="sj-stage-name">{st.number}. {st.name}</div>
+                  <div className="sj-stage-msg">{JOURNEY_STAGE_MESSAGE[state]}</div>
+                </div>
+                {state === 'DONE' && <span className="sj-stage-badge is-done">완료 ✓</span>}
+                {state === 'ACTIVE' && <span className="sj-stage-badge is-active"><span className="sj-rec-dot" />REC</span>}
+                {state === 'LOCKED' && <span className="sj-stage-badge is-locked">잠김</span>}
+              </div>
+            )
+          })}
+        </div>
+        <div className="sj-actions">
+          <Button variant="secondary" size="sm" onClick={onClose}>닫기</Button>
+          <Button variant="primary" size="sm" onClick={() => navigate(`/rooms/${roomId}/schedule`)}>일정계획에서 열기</Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── 추억 상세 시트 — 보기=여권(CLOV MEMORY PASSPORT), 수정=컬럼 폼(프로토타입 renderMemoryDetailModal) ──
 // 우정공간(대시보드) 증거 카드에서도 재사용 → export(presentational). 데이터/뮤테이션은 호출 측이 공급.
 export function MemoryDetailModal({
   memory,
   isLoading,
+  roomId,
   currentUserId,
   members = [],
   onClose,
@@ -965,6 +1046,7 @@ export function MemoryDetailModal({
   const [photoIndex, setPhotoIndex] = useState(0)
   const [galleryIndex, setGalleryIndex] = useState(-1) // -1 = 닫힘, 그 외 = 전체보기 인덱스
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [journeyOpen, setJourneyOpen] = useState(false)
   const imageInputRef = useRef(null)
 
   // 약속 연결 추억이면 영수증/STATUS에 쓸 약속을 조회(캐시는 일정계획과 공유).
@@ -1263,7 +1345,14 @@ export function MemoryDetailModal({
                 )}
               </div>
               <div className="mp-receipt-col">
-                <MemoryReceipt planId={memory.planId} plan={planQuery.data} />
+                {memory.planId && planQuery.data ? (
+                  <button type="button" className="mp-receipt-btn" onClick={() => setJourneyOpen(true)} aria-label={`${planQuery.data.title} 약속 여정 보기`}>
+                    <MemoryReceipt planId={memory.planId} plan={planQuery.data} />
+                    <span className="mp-receipt-cta">약속 여정 보기 ›</span>
+                  </button>
+                ) : (
+                  <MemoryReceipt planId={memory.planId} plan={planQuery.data} />
+                )}
               </div>
             </div>
 
@@ -1344,6 +1433,11 @@ export function MemoryDetailModal({
             </div>
           )}
         </div>
+      )}
+
+      {/* 약속 영수증 클릭 → 약속 여정 보기(#127). planQuery.data가 있을 때만 열 수 있으므로 여기서도 방어. */}
+      {journeyOpen && planQuery.data && (
+        <ScheduleJourneyModal roomId={roomId} plan={planQuery.data} onClose={() => setJourneyOpen(false)} />
       )}
     </>
   )

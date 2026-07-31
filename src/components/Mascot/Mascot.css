@@ -31,17 +31,23 @@
    가둬 어떤 캐릭터가 와도 점유 면적이 같게 한다 — object-fit: contain이 비율을 지킨다. */
 .clov-mascot-sprite {
   display: block;
-  height: 160px;
+  /* 사용자설정 > 테마 > 마스코트 크기(lib/mascotSize.js)가 :root에 세팅한다.
+     설정을 안 거친 첫 방문·storage 차단 상황을 위해 fallback을 둔다. */
+  height: var(--clov-mascot-size, 180px);
   width: auto;
-  max-width: 160px;
+  max-width: var(--clov-mascot-size, 180px);
   object-fit: contain;
   filter: drop-shadow(0 8px 14px rgba(27, 67, 50, 0.18));
   user-select: none;
 }
 
-/* 모바일에서는 조금 줄인다 — 우측 하단 고정이라 화면이 좁을수록 콘텐츠를 많이 가린다. */
+/* 모바일에서는 0.8배로 줄인다 — 우측 하단 고정이라 화면이 좁을수록 콘텐츠를 많이 가린다.
+   고정값이 아니라 배율이라 사용자가 고른 크기가 모바일에서도 그대로 반영된다. */
 @media (max-width: 640px) {
-  .clov-mascot-sprite { height: 128px; max-width: 128px; }
+  .clov-mascot-sprite {
+    height: calc(var(--clov-mascot-size, 180px) * 0.8);
+    max-width: calc(var(--clov-mascot-size, 180px) * 0.8);
+  }
 }
 
 /* 기본 = 다크(이식 화면 공통값), body.light-mode에서 라이트로 덧입힌다(lib/theme.js). */

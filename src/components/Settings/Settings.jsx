@@ -8,6 +8,7 @@ import {
 } from '../../api/user'
 import { uploadImage } from '../../lib/uploadImage'
 import { APP_BACKGROUNDS, applyAppBackground, applyCustomColor, getAppBackgroundId, getCustomColor } from '../../lib/appBackground'
+import { MASCOT_SIZES, applyMascotSize, getMascotSize } from '../../lib/mascotSize'
 import { applyTheme, getDark } from '../../lib/theme'
 import { useAuthStore } from '../../stores/authStore'
 import { useConfirm } from '../ConfirmDialog/useConfirm'
@@ -69,6 +70,7 @@ function SettingsBody({ me, prefs, onClose }) {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPw, setShowPw] = useState({ cur: false, next: false, conf: false })
   const [bgId, setBgId] = useState(getAppBackgroundId)
+  const [mascotSize, setMascotSize] = useState(getMascotSize)
   const colorRef = useRef(null)
   const [customColor, setCustomColor] = useState(getCustomColor)
   const [pref, setPref] = useState({
@@ -112,6 +114,8 @@ function SettingsBody({ me, prefs, onClose }) {
   const pickBackground = (id) => setBgId(applyAppBackground(id))
   const pickColor = (color) => { setCustomColor(color); setBgId(applyCustomColor(color)) }
   const resetBackground = () => setBgId(applyAppBackground('default'))
+  // CSS 변수만 바꾸면 대시보드 마스코트가 즉시 반응한다(리렌더 불필요) — 배경 테마와 같은 방식.
+  const pickMascotSize = (value) => setMascotSize(applyMascotSize(value))
   const pwMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword
   const canChangePw = currentPassword && newPassword && newPassword === confirmPassword
 
@@ -245,6 +249,9 @@ function SettingsBody({ me, prefs, onClose }) {
               <OptionRow title="우정편지 테마" value={pref.letterTheme} options={LETTER_THEMES} onPick={(v) => setPrefAndSave({ letterTheme: v })} />
               <OptionRow title="참여자별 추억 증거 카드" value={pref.memoryCardTheme} options={MEMORY_THEMES} onPick={(v) => setPrefAndSave({ memoryCardTheme: v })} />
               <OptionRow title="마스코트 캐릭터" value={pref.mascotType} options={MASCOTS} onPick={(v) => setPrefAndSave({ mascotType: v })} />
+              {/* 크기는 서버가 아니라 기기-로컬이다(배경 테마와 같은 취급) — 모니터 크기에
+                  딸린 취향이라 계정보다 기기에 묶는 쪽이 자연스럽다. lib/mascotSize.js 참고. */}
+              <OptionRow title="마스코트 크기" value={mascotSize} options={MASCOT_SIZES} onPick={pickMascotSize} />
             </>
           )}
         </section>

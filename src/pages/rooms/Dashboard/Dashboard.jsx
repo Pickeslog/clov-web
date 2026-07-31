@@ -688,7 +688,7 @@ export default function Dashboard() {
           <span className="section-title-label">참여자별 추억 증거 카드</span>
           <div className="section-actions">
             <Button variant="dashed" size="sm" onClick={() => setComposeMemory(true)}><i className="ti ti-pencil" aria-hidden="true" /> 글쓰기</Button>
-            <Button variant="action" size="sm" onClick={() => go('feed')}>전체 피드 보기</Button>
+            <Button variant="dashed" size="sm" onClick={() => go('feed')}>전체 피드 보기</Button>
           </div>
         </div>
         {memoryItems.length === 0 ? (

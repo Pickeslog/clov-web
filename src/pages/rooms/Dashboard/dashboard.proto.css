@@ -380,28 +380,38 @@
   padding: 6px 12px; border-radius: 16px; border: 1px solid rgba(156,204,101,.25);
 }
 
-/* ===== 섹션 헤더 + 버튼 ===== */
+/* ===== 섹션 헤더 + 버튼 ===== (#174) */
+/* 페이지 배경은 사용자가 고르는 배경 테마(우드부터 네온 도시 사진까지, appBackground.js)라
+   반투명만으로는 어떤 테마에서도 안 읽힌다 — 라벨 하나만 덮던 걸 행 전체로 넓히고,
+   backdrop-filter로 배경 디테일 자체를 흐려서 낮은 불투명도로도 읽히게 한다(다크).
+   라이트는 블러만으론 밝은 배경 위에서 부족해 고스트카드(schedule-banner--ghost)와 같은
+   거의 불투명한 톤을 그대로 쓴다 — 이 파일에서 이미 검증된 해법. */
 .proto-dashboard .section-title {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  font-size: 16px; font-weight: 700; color: var(--text-color); margin: 22px 0 14px;
+  font-size: 16px; font-weight: 700; color: var(--text-color); margin: 16px 0 14px;
+  padding: 6px 12px; border-radius: 12px;
+  /* 테두리는 실선 — 버튼 3개가 전부 점선(크림톤 통일, 아래 참고)이라 행 테두리까지
+     점선이면 "점선 안에 점선"이 겹쳐 산만해진다(리뷰 지적, #174). */
+  /* .35였던 값을 .48로 올림 — 밝고 저채도인 배경 테마(minimal-clover 등)에서 직접
+     확인해보니 블러만으론 행이 배경에 묻혀 카드 경계가 안 보였다(#176 리뷰 지적). */
+  background: rgba(0,0,0,.48); border: 1px solid rgba(27,67,50,.7);
+  backdrop-filter: blur(10px) saturate(120%);
 }
-/* 60% 불투명 카드 + 초록 점선 테두리. 완전 불투명(#1b4332 등)보다 가볍고 clov 톤에 맞지만,
-   투명도가 있는 만큼 글자색만은 배경 테마와 무관하게 확실히 대비되도록 고정한다. */
-.proto-dashboard .section-title-label {
-  padding: 4px 12px; border-radius: 10px;
-  background: rgba(0,0,0,.6); border: 1px dashed rgba(27,67,50,.7); color: #fff;
+body.light-mode .proto-dashboard .section-title {
+  background: rgba(250,246,238,.94); border-color: rgba(82,183,136,.6);
+  /* 라이트는 배경이 이미 94% 불투명이라 블러가 보일 수 없다 — 꺼서 불필요한
+     GPU 합성 레이어를 안 만들고, "라이트에서도 블러가 의미 있다"는 오해도 없앤다. */
+  backdrop-filter: none;
 }
-body.light-mode .proto-dashboard .section-title-label {
-  background: rgba(255,255,255,.6); border-color: rgba(82,183,136,.6); color: #12150a;
-}
+/* .section-title-label — 의도적으로 CSS 규칙이 없다. 라벨이 이제 행 배경 위에
+   얹히므로 자체 배경·테두리 없이 텍스트만 남기고, 색은 위 .section-title의
+   var(--text-color)를 그대로 물려받는다(다크=밝은 글자/라이트=어두운 글자).
+   Dashboard.jsx의 className은 그대로 둔다(요소 식별용) — 규칙이 없다고 실수로
+   되돌리지 말 것. */
 .proto-dashboard .section-actions { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
-/* 섹션 버튼은 공통 <Button variant="dashed|action"> 로 대체.
-   action(텍스트 링크형)은 배경이 없어서(Button.css 공통 스타일) 같은 이유로 대비가 부족했다 —
-   이 화면 안에서만 칩 배경을 덧입힌다(공통 Button.css는 다른 화면에서도 쓰여서 그대로 둠). */
-.proto-dashboard .section-actions .clov-btn--action {
-  background: rgba(156,204,101,.16); border-radius: 16px; padding: 6px 12px;
-}
-body.light-mode .proto-dashboard .section-actions .clov-btn--action { background: rgba(27,67,50,.1); }
+/* "전체 피드 보기"(action)를 "+ 새 D-day 만들기"/"글쓰기"(dashed)와 같은 색으로 통일한다.
+   실제 렌더 색은 481행 .clov-btn--dashed 오버라이드(항상 크림톤 고정, 다크모드 무관)이므로
+   그 선택자에 이 클래스를 같이 묶어 같은 규칙을 공유한다 — 값 중복 없이. */
 
 /* ===== D-day 3열 (schedule-banner) ===== */
 .proto-dashboard .schedule-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -454,9 +464,11 @@ body.light-mode .proto-dashboard .section-actions .clov-btn--action { background
 .proto-dashboard .schedule-banner.schedule-banner--ghost .schedule-date { color: #61766a; }
 /* "+ 새 D-day 만들기" 버튼(Button variant="dashed")도 같은 이유로 다크모드 기본 팔레트(연한 초록,
    반투명)가 항상 밝은 페이지 배경 위에서 흐려 보인다. Button.css는 앱 전체 공용이라 건드리지 않고,
-   대시보드 스코프 안에서만 라이트 모드 색으로 고정한다. */
+   대시보드 스코프 안에서만 라이트 모드 색으로 고정한다.
+   "전체 피드 보기"(#174)는 특례 선택자 대신 dashed variant 자체를 써서 이 규칙에 자동으로 묶인다. */
 .proto-dashboard .clov-btn--dashed {
-  background: #faf6ee; color: #2e5233; border-color: rgba(46,82,51,.45);
+  background: #faf6ee; color: #2e5233;
+  border-width: 1.5px; border-style: dashed; border-color: rgba(46,82,51,.45);
 }
 .proto-dashboard .clov-btn--dashed:not(:disabled):hover { background: #f3efe1; }
 

@@ -23,7 +23,7 @@ const MEMORY_THEMES = [
 ]
 const MASCOTS = [
   { value: 'crobi', label: '크로비' },
-  { value: 'rob', label: '로봇' },
+  { value: 'rob', label: '롭' },
 ]
 
 // 사용자 설정 물감 카드 — 프로토타입 blob 모양(색상은 currentColor).

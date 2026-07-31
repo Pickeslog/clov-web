@@ -14,6 +14,8 @@ import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 
 const WRITE_PHOTO_LIMIT = 15
+const MEMORY_TITLE_LIMIT = 40
+const MEMORY_MESSAGE_LIMIT = 80
 
 // ── 아이콘(프로토타입 인라인 SVG 발췌) ──
 const IconPencil = (props) => (
@@ -760,12 +762,12 @@ export function CreateMemoryModal({ roomId, members, submitting, errorMessage, o
               <input
                 className="wm-input"
                 type="text"
-                maxLength={25}
+                maxLength={MEMORY_TITLE_LIMIT}
                 placeholder="오늘의 추억 제목을 입력하세요"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
-              <span className="wm-char-count">{title.length}/25</span>
+              <span className="wm-char-count">{title.length}/{MEMORY_TITLE_LIMIT}</span>
             </div>
           </div>
 
@@ -1058,7 +1060,7 @@ export function MemoryDetailModal({
               <input
                 className="memory-message-compose-input"
                 value={editMessageDraft}
-                maxLength={255}
+                maxLength={MEMORY_MESSAGE_LIMIT}
                 onChange={(e) => setEditMessageDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') saveEditMessage() }}
               />
@@ -1094,7 +1096,7 @@ export function MemoryDetailModal({
               <input
                 className="memory-message-compose-input"
                 value={newMessageDraft}
-                maxLength={255}
+                maxLength={MEMORY_MESSAGE_LIMIT}
                 placeholder="한 줄 메시지를 남겨보세요"
                 onChange={(e) => setNewMessageDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') submitNewMessage() }}
@@ -1202,7 +1204,7 @@ export function MemoryDetailModal({
                   <input
                     className="memory-detail-edit-title-input"
                     value={title}
-                    maxLength={25}
+                    maxLength={MEMORY_TITLE_LIMIT}
                     onChange={(e) => setTitle(e.target.value)}
                   />
                   <textarea

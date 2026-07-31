@@ -50,58 +50,60 @@ export default function MascotWardrobe({ onNavigateShop }) {
       </button>
 
       {open && (
-        <div className="clov-hdr-wardrobe-panel" role="menu">
-          <div className="clov-hdr-wardrobe-preview">
-            <div className="clov-hdr-wardrobe-stage"><img src={previewSprite} alt="" /></div>
-            <div className="clov-hdr-wardrobe-caption">
-              <span className="clov-hdr-wardrobe-name">{MASCOT_LABELS[mascotType]}</span>
-              <span className="clov-hdr-wardrobe-equipped">
-                {prefs.data?.equippedItem?.name ? `${prefs.data.equippedItem.name} 착용 중` : '기본 모습'}
-              </span>
+        <div className="clov-hdr-wardrobe-panel-wrap">
+          <div className="clov-hdr-wardrobe-panel" role="menu">
+            <div className="clov-hdr-wardrobe-preview">
+              <div className="clov-hdr-wardrobe-stage"><img src={previewSprite} alt="" /></div>
+              <div className="clov-hdr-wardrobe-caption">
+                <span className="clov-hdr-wardrobe-name">{MASCOT_LABELS[mascotType]}</span>
+                <span className="clov-hdr-wardrobe-equipped">
+                  {prefs.data?.equippedItem?.name ? `${prefs.data.equippedItem.name} 착용 중` : '기본 모습'}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div className="clov-hdr-wardrobe-closet">
-            {inventory.isPending ? (
-              <p className="clov-hdr-wardrobe-note">불러오는 중…</p>
-            ) : costumes.length === 0 ? (
-              <>
-                <p className="clov-hdr-wardrobe-note">보유한 코스튬이 없어요.</p>
-                <button type="button" className="clov-hdr-wardrobe-shop-btn" onClick={() => { setOpen(false); onNavigateShop() }}>
-                  상점으로 이동
-                </button>
-              </>
-            ) : (
-              <div className="clov-hdr-wardrobe-grid">
-                {costumes.map((item) => {
-                  const isEquipped = item.id === equippedItemId
-                  const pending = isEquipped
-                    ? unequipMutation.isPending
-                    : (equipMutation.isPending && equipMutation.variables === item.id)
-                  return (
-                    <button
-                      type="button"
-                      key={item.id}
-                      className={`clov-hdr-wardrobe-item${isEquipped ? ' on' : ''}`}
-                      disabled={pending}
-                      onClick={() => (isEquipped ? unequipMutation.mutate() : equipMutation.mutate(item.id))}
-                      title={item.name}
-                    >
-                      <span className="clov-hdr-wardrobe-thumb">
-                        {item.imageUrl ? <img src={item.imageUrl} alt="" /> : (item.name?.trim()?.[0] ?? '?')}
-                      </span>
-                      <span className="clov-hdr-wardrobe-item-name">{item.name}</span>
-                      {isEquipped && <span className="clov-hdr-wardrobe-badge" aria-hidden="true" />}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-            {(equipMutation.isError || unequipMutation.isError) && (
-              <div className="clov-hdr-wardrobe-err">
-                {(equipMutation.error ?? unequipMutation.error)?.message ?? '장착 처리에 실패했어요.'}
-              </div>
-            )}
+            <div className="clov-hdr-wardrobe-closet">
+              {inventory.isPending ? (
+                <p className="clov-hdr-wardrobe-note">불러오는 중…</p>
+              ) : costumes.length === 0 ? (
+                <>
+                  <p className="clov-hdr-wardrobe-note">보유한 코스튬이 없어요.</p>
+                  <button type="button" className="clov-hdr-wardrobe-shop-btn" onClick={() => { setOpen(false); onNavigateShop() }}>
+                    상점으로 이동
+                  </button>
+                </>
+              ) : (
+                <div className="clov-hdr-wardrobe-grid">
+                  {costumes.map((item) => {
+                    const isEquipped = item.id === equippedItemId
+                    const pending = isEquipped
+                      ? unequipMutation.isPending
+                      : (equipMutation.isPending && equipMutation.variables === item.id)
+                    return (
+                      <button
+                        type="button"
+                        key={item.id}
+                        className={`clov-hdr-wardrobe-item${isEquipped ? ' on' : ''}`}
+                        disabled={pending}
+                        onClick={() => (isEquipped ? unequipMutation.mutate() : equipMutation.mutate(item.id))}
+                        title={item.name}
+                      >
+                        <span className="clov-hdr-wardrobe-thumb">
+                          {item.imageUrl ? <img src={item.imageUrl} alt="" /> : (item.name?.trim()?.[0] ?? '?')}
+                        </span>
+                        <span className="clov-hdr-wardrobe-item-name">{item.name}</span>
+                        {isEquipped && <span className="clov-hdr-wardrobe-badge" aria-hidden="true" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+              {(equipMutation.isError || unequipMutation.isError) && (
+                <div className="clov-hdr-wardrobe-err">
+                  {(equipMutation.error ?? unequipMutation.error)?.message ?? '장착 처리에 실패했어요.'}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

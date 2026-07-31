@@ -22,12 +22,20 @@
 .clov-mascot-hit:active:not(:disabled) { transform: scale(0.97); }
 .clov-mascot-hit:disabled { cursor: default; }
 
+/* 스프라이트 원본은 640px 높이(crobi 366x640 · 버거노인 427x640 · rob 900x510)라
+   160px면 4배 오버샘플이다 — 고해상도 화면에서도 흐려지지 않는다.
+   그림자는 크기에 맞춰 같이 키웠다(110px 시절 6/10px 그대로 두면 발밑에 붙어 보인다). */
 .clov-mascot-sprite {
   display: block;
-  height: 110px;
+  height: 160px;
   width: auto;
-  filter: drop-shadow(0 6px 10px rgba(27, 67, 50, 0.18));
+  filter: drop-shadow(0 8px 14px rgba(27, 67, 50, 0.18));
   user-select: none;
+}
+
+/* 모바일에서는 조금 줄인다 — 우측 하단 고정이라 화면이 좁을수록 콘텐츠를 많이 가린다. */
+@media (max-width: 640px) {
+  .clov-mascot-sprite { height: 128px; }
 }
 
 /* 기본 = 다크(이식 화면 공통값), body.light-mode에서 라이트로 덧입힌다(lib/theme.js). */

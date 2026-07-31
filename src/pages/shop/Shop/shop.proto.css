@@ -108,10 +108,17 @@
 
 /* ── 카테고리 탭 ──
    Discord 상점의 상단 탭 내비를 참고했지만 pill이 아니라 밑줄 탭으로 —
-   Clov 톤(--accent)만 강조되고 나머지는 톤 다운되게. */
+   Clov 톤(--accent)만 강조되고 나머지는 톤 다운되게.
+   페이지 배경은 사용자가 고르는 사진 테마(우드 데스크·하늘 엽서 등)라 밝기를
+   예측할 수 없다 — 탭을 배경에 맨 텍스트로 바로 얹으면 사진에 따라 글자가
+   묻힌다(예: 밝은 하늘 사진 위 옅은 --muted). shop-head/shop-section-head와
+   같은 규칙으로 카드 표면 위에 얹어 어떤 배경에서도 --text/--muted/--accent가
+   그대로 읽히게 한다. */
 .proto-shop .shop-tabs {
   display: flex; align-items: center; flex-wrap: wrap;
-  border-bottom: 1px solid var(--border); margin-bottom: 26px;
+  margin-bottom: 26px; padding: 4px 16px;
+  border: 1px solid var(--border); border-radius: 16px;
+  background: var(--card-bg);
 }
 .proto-shop .shop-tab {
   display: inline-flex; align-items: center; gap: 6px;
@@ -122,7 +129,7 @@
 .proto-shop .shop-tab:hover { color: var(--text); }
 .proto-shop .shop-tab.active { color: var(--accent); }
 .proto-shop .shop-tab.active::after {
-  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
   background: var(--accent); border-radius: 2px 2px 0 0;
 }
 .proto-shop .shop-tabs-spacer { flex: 1 1 auto; }

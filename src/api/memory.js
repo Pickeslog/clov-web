@@ -15,8 +15,11 @@ export const createComment = (memoryId, payload) => api.post(`/memories/${memory
 // 한 줄 메시지 수정(작성자 본인). 추억당 작성자 1인 1개라 재작성 대신 이걸로 고친다(계약 §10, clov-api #68).
 export const updateComment = (commentId, payload) => api.patch(`/comments/${commentId}`, payload)
 export const deleteComment = (commentId) => api.delete(`/comments/${commentId}`)
-// 이미지(계약 §10 R2): presign → R2 PUT → commit. 삭제·순서 재정렬.
+// 이미지(계약 §10 R2): presign → R2 PUT → commit. 삭제.
+//
+// 순서 재정렬(PATCH /memories/{id}/images/order)은 여기 없다 — 수정 모달이 목업대로
+// 그리드+개별 ✕로 바뀌면서 ◀/▶ 순서 이동을 뺐고(#181/#192), 부르는 화면이 없어졌다.
+// 서버 엔드포인트는 남아 있으니 순서 UI가 다시 필요해지면 이 줄만 되살리면 된다.
 export const presignMemoryImage = (memoryId, payload) => api.post(`/memories/${memoryId}/images/presign`, payload)
 export const commitMemoryImage = (memoryId, payload) => api.post(`/memories/${memoryId}/images`, payload)
 export const deleteMemoryImage = (imageId) => api.delete(`/memory-images/${imageId}`)
-export const reorderMemoryImages = (memoryId, payload) => api.patch(`/memories/${memoryId}/images/order`, payload)

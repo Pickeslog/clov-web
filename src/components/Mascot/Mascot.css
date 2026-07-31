@@ -1,4 +1,5 @@
-/* 마스코트 기본 교감 위젯 — 대시보드 우측 하단 고정(#90). */
+/* 마스코트 교감 위젯 — 대시보드 우측 하단 고정(#90).
+   상태별 연출은 test-web-design/02-main/css/croby-mascot.css 이식. */
 .clov-mascot {
   position: fixed;
   right: 18px;
@@ -11,24 +12,43 @@
   pointer-events: none;
 }
 .clov-mascot-hit {
+  position: relative; /* .clov-mascot-glitch 절대배치 기준 */
   pointer-events: auto;
   background: none;
   border: 0;
   padding: 0;
   cursor: pointer;
+  touch-action: none; /* 터치 드래그가 스크롤과 충돌하지 않게 */
   transition: transform 0.18s ease;
 }
-.clov-mascot-hit:hover:not(:disabled) { transform: scale(1.07); }
-.clov-mascot-hit:active:not(:disabled) { transform: scale(0.97); }
-.clov-mascot-hit:disabled { cursor: default; }
+.clov-mascot-hit:hover { transform: scale(1.07); }
+.clov-mascot-hit:active { transform: scale(0.97); }
 
 .clov-mascot-sprite {
   display: block;
   height: 110px;
   width: auto;
+  transform-origin: 50% 92%; /* 발끝 기준 회전 */
+  animation: clov-mascot-float 3.2s ease-in-out infinite;
   filter: drop-shadow(0 6px 10px rgba(27, 67, 50, 0.18));
   user-select: none;
 }
+/* 롭 스프라이트는 원본 캔버스가 가로로 넓어 같은 height면 훨씬 커 보인다 — 실루엣
+   면적이 다른 캐릭터와 비슷해지도록 낮춰 보정한다. */
+.clov-mascot[data-character="rob"] .clov-mascot-sprite { height: 90px; }
+
+.clov-mascot--nudge  .clov-mascot-sprite { animation: clov-mascot-nudge 0.35s ease-in-out 1; }
+.clov-mascot--nudge2 .clov-mascot-sprite { animation: clov-mascot-nudge-2 0.35s ease-in-out 1; }
+.clov-mascot--dizzy  .clov-mascot-sprite { animation: clov-mascot-dizzy 1.2s ease-in-out 1; }
+.clov-mascot--sleepy .clov-mascot-sprite { animation: clov-mascot-sleepy 4s ease-in-out infinite alternate; }
+
+/* 롭 전용: 머리 잡고 들어올리기 */
+.clov-mascot--lifted .clov-mascot-hit,
+.clov-mascot--scared .clov-mascot-hit,
+.clov-mascot--angry .clov-mascot-hit { cursor: grabbing; }
+.clov-mascot--lifted .clov-mascot-sprite { animation: clov-mascot-lifted-stretch 0.5s ease-in-out infinite alternate; }
+.clov-mascot--scared .clov-mascot-sprite { animation: clov-mascot-scared-wobble 0.25s ease-in-out infinite; }
+.clov-mascot--angry  .clov-mascot-sprite { animation: clov-mascot-angry-shake 0.5s ease-in-out 1; }
 
 /* 기본 = 다크(이식 화면 공통값), body.light-mode에서 라이트로 덧입힌다(lib/theme.js). */
 .clov-mascot-bubble {
@@ -40,9 +60,165 @@
   padding: 4px 10px;
   max-width: 190px;
   text-align: center;
+  animation: clov-mascot-bubble-pop 0.18s ease;
 }
 body.light-mode .clov-mascot-bubble {
   background: #fff;
   color: #2b2b2b;
   border-color: #2b2b2b;
+}
+
+/* 롭의 말풍선 — 코드 에디터 창처럼 다크 테마 + 모노스페이스 + 신호등 점.
+   테마와 무관하게 항상 다크(캐릭터 컨셉이라 라이트에서 뒤집히면 안 된다). */
+.clov-mascot[data-character="rob"] .clov-mascot-bubble,
+body.light-mode .clov-mascot[data-character="rob"] .clov-mascot-bubble {
+  position: relative;
+  background: #1e1e2e;
+  border: 1px solid #383a4a;
+  border-radius: 8px;
+  padding: 16px 12px 8px;
+  max-width: 230px;
+  text-align: left;
+  font-family: 'Space Mono', 'SFMono-Regular', Consolas, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #7ee787;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+.clov-mascot[data-character="rob"] .clov-mascot-bubble::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff5f56;
+  box-shadow: 12px 0 0 #ffbd2e, 24px 0 0 #27c93f;
+}
+.clov-mascot-type-cursor {
+  display: inline-block;
+  width: 6px;
+  height: 1em;
+  margin-left: 2px;
+  background: #7ee787;
+  vertical-align: text-bottom;
+  animation: clov-mascot-cursor-blink 1s steps(1) infinite;
+}
+@keyframes clov-mascot-cursor-blink {
+  0%, 50%   { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* 롭 전용: 어지러울 때 근처에서 빨간 0/1이 튀는 "오류" 연출 */
+.clov-mascot-glitch {
+  position: absolute;
+  inset: -20px;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 2;
+}
+.clov-mascot-glitch-bit {
+  position: absolute;
+  font-family: 'Space Mono', Consolas, Menlo, monospace;
+  font-weight: 700;
+  color: #ff2d2d;
+  text-shadow: 0 0 6px rgba(255, 0, 0, 0.85), 0 0 2px rgba(255, 255, 255, 0.6);
+  animation: clov-mascot-glitch-pop 0.9s ease-out forwards;
+}
+@keyframes clov-mascot-glitch-pop {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.5); }
+  12%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.15); }
+}
+
+/* 롭이 화나서 뿌리칠 때: 커서가 유리처럼 박살나는 연출(2초간 커서 숨김) */
+.clov-mascot-cursor-hidden, .clov-mascot-cursor-hidden * { cursor: none !important; }
+.clov-mascot-cursor-shatter {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 10050;
+}
+.clov-mascot-cursor-shard {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.7), 0 0 2px rgba(0, 0, 0, 0.25);
+  animation: clov-mascot-shard-burst 0.7s ease-out forwards;
+}
+@keyframes clov-mascot-shard-burst {
+  0%   { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.3); }
+}
+
+/* idle: 둥실둥실 */
+@keyframes clov-mascot-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+/* 단일 클릭: 살짝 좌우 흔들 (재시작을 위해 동일 키프레임 2벌) */
+@keyframes clov-mascot-nudge {
+  0% { transform: rotate(0); } 25% { transform: rotate(-6deg); }
+  55% { transform: rotate(5deg); } 80% { transform: rotate(-2deg); } 100% { transform: rotate(0); }
+}
+@keyframes clov-mascot-nudge-2 {
+  0% { transform: rotate(0); } 25% { transform: rotate(-6deg); }
+  55% { transform: rotate(5deg); } 80% { transform: rotate(-2deg); } 100% { transform: rotate(0); }
+}
+/* dizzy: 1.2초 흔들 + 살짝 튀기 */
+@keyframes clov-mascot-dizzy {
+  0%   { transform: rotate(0) translateY(0); }
+  15%  { transform: rotate(-9deg) translateY(-5px); }
+  30%  { transform: rotate(8deg); }
+  45%  { transform: rotate(-7deg) translateY(-4px); }
+  60%  { transform: rotate(6deg); }
+  75%  { transform: rotate(-4deg) translateY(-2px); }
+  90%  { transform: rotate(3deg); }
+  100% { transform: rotate(0); }
+}
+/* sleepy: 천천히 고개가 떨어졌다 살짝 들리는 움직임 */
+@keyframes clov-mascot-sleepy {
+  0%   { transform: rotate(0) translateY(0); }
+  55%  { transform: rotate(5.5deg) translateY(3px); }
+  70%  { transform: rotate(4deg) translateY(2px); }
+  100% { transform: rotate(6deg) translateY(3px); }
+}
+/* lifted: 머리가 잡혀 늘어나는 듯한 신축 */
+@keyframes clov-mascot-lifted-stretch {
+  0%   { transform: scale(1, 1); }
+  100% { transform: scale(0.94, 1.08); }
+}
+/* scared: 좌우로 버둥거림 */
+@keyframes clov-mascot-scared-wobble {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(-14deg); }
+  75%      { transform: rotate(14deg); }
+}
+/* angry: 뿌리치듯 한 번 세게 흔들기 */
+@keyframes clov-mascot-angry-shake {
+  0%   { transform: translate(0, 0) rotate(0); }
+  20%  { transform: translate(-4px, 0) rotate(-6deg); }
+  40%  { transform: translate(4px, 0) rotate(6deg); }
+  60%  { transform: translate(-3px, 0) rotate(-4deg); }
+  80%  { transform: translate(3px, 0) rotate(4deg); }
+  100% { transform: translate(0, 0) rotate(0); }
+}
+@keyframes clov-mascot-bubble-pop {
+  from { opacity: 0; transform: translateY(4px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 768px) {
+  .clov-mascot-sprite { height: 80px; }
+  .clov-mascot[data-character="rob"] .clov-mascot-sprite { height: 62px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clov-mascot-sprite, .clov-mascot-bubble { animation: none !important; }
 }

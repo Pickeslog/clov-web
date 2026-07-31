@@ -465,14 +465,12 @@ body.light-mode .proto-dashboard .section-title {
 /* "+ 새 D-day 만들기" 버튼(Button variant="dashed")도 같은 이유로 다크모드 기본 팔레트(연한 초록,
    반투명)가 항상 밝은 페이지 배경 위에서 흐려 보인다. Button.css는 앱 전체 공용이라 건드리지 않고,
    대시보드 스코프 안에서만 라이트 모드 색으로 고정한다.
-   "전체 피드 보기"(action, #174)도 같은 선택자로 묶어 색을 통일한다. */
-.proto-dashboard .clov-btn--dashed,
-.proto-dashboard .section-actions .clov-btn--action {
+   "전체 피드 보기"(#174)는 특례 선택자 대신 dashed variant 자체를 써서 이 규칙에 자동으로 묶인다. */
+.proto-dashboard .clov-btn--dashed {
   background: #faf6ee; color: #2e5233;
   border-width: 1.5px; border-style: dashed; border-color: rgba(46,82,51,.45);
 }
-.proto-dashboard .clov-btn--dashed:not(:disabled):hover,
-.proto-dashboard .section-actions .clov-btn--action:not(:disabled):hover { background: #f3efe1; }
+.proto-dashboard .clov-btn--dashed:not(:disabled):hover { background: #f3efe1; }
 
 /* ===== 참여자별 추억 증거 카드 (cline 빨랫줄+집게 캐러셀 + 필름스트립 · 프로토타입 이식) ===== */
 .proto-dashboard .memory-empty {

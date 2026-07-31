@@ -215,10 +215,17 @@ export default function Shop() {
           </div>
           <span className="shop-balance">
             <span className="shop-balance-label">보유 골드</span>
-            <span ref={balanceRef} className={`shop-balance-value${balancePulse ? ' pulse' : ''}`}>
-              <CoinIcon size={19} />
-              {wallet.isPending ? '—' : gold(balance)}
-            </span>
+            {wallet.isError ? (
+              <span className="shop-balance-value err" title="보유 골드를 불러오지 못했습니다.">
+                <AlertIcon size={16} />
+                불러오기 실패
+              </span>
+            ) : (
+              <span ref={balanceRef} className={`shop-balance-value${balancePulse ? ' pulse' : ''}`}>
+                <CoinIcon size={19} />
+                {wallet.isPending ? '—' : gold(balance)}
+              </span>
+            )}
           </span>
         </header>
 

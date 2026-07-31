@@ -74,6 +74,8 @@
   display: inline-flex; align-items: center; gap: 7px;
   color: var(--gold); font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums;
 }
+/* 잔액 조회 실패 — 0으로 보이면 실제로 골드가 없는 것처럼 오해된다(#190). */
+.proto-shop .shop-balance-value.err { color: var(--danger); font-size: 13px; font-weight: 700; }
 /* 구매 성공 시 코인이 도착하는 타이밍에 맞춰 숫자를 한 번 튕겨준다. */
 @keyframes shop-balance-pop { 0% { transform: scale(1); } 40% { transform: scale(1.16); } 100% { transform: scale(1); } }
 .proto-shop .shop-balance-value.pulse { animation: shop-balance-pop .45s ease; }

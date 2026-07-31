@@ -108,14 +108,13 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
           {wallet.data && <span className="clov-hdr-gold"><i aria-hidden="true">G</i>{wallet.data.balance.toLocaleString()}</span>}
         </button>
 
-        <MascotWardrobe onNavigateShop={() => navigate('/shop', { state: roomId ? { fromRoomId: roomId } : undefined })} />
-
         <div className="clov-hdr-avatar-wrap">
           <button type="button" className="clov-hdr-avatar" onClick={() => setMenuOpen((v) => !v)} aria-haspopup="menu" title="내 계정">
             {me.data?.profileImageUrl ? <img src={me.data.profileImageUrl} alt="" /> : initialOf(me.data?.nickname)}
           </button>
           {menuOpen && (
             <ul className="clov-hdr-dropdown" role="menu">
+              <MascotWardrobe onNavigateShop={() => { setMenuOpen(false); navigate('/shop', { state: roomId ? { fromRoomId: roomId } : undefined }) }} />
               <li><button type="button" onClick={() => { setSettingsOpen(true); setMenuOpen(false) }}>⚙️ 사용자 설정</button></li>
               <li><button type="button" onClick={clear}>로그아웃</button></li>
             </ul>

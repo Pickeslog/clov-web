@@ -66,35 +66,26 @@
   font-size: 9px; font-weight: 900; font-style: normal;
 }
 
-/* 마스코트 꾸미기 드롭다운 — 상점 버튼과 아바타 사이. */
-.clov-hdr-wardrobe-wrap { position: relative; }
-.clov-hdr-wardrobe-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 10px; border-radius: 10px; cursor: pointer;
-  border: 1px solid #2a2c1e; background: #22261a;
-  font: inherit; font-size: 13px; font-weight: 700; color: #b7c99a;
-  transition: background .15s, color .15s, border-color .15s;
-}
-.clov-hdr-wardrobe-btn:hover, .clov-hdr-wardrobe-btn.active { background: #2b3020; color: #9ccc65; border-color: #3c4a2a; }
-.clov-hdr-wardrobe-btn svg { display: block; }
+/* 마스코트 꾸미기 — 프로필 드롭다운(사용자 설정·로그아웃과 같은 박스) 안 접이식 섹션. */
+.clov-hdr-dropdown-wardrobe { border-bottom: 1px solid #2a2c1e; margin-bottom: 4px; padding-bottom: 4px; }
+.clov-hdr-dropdown-wardrobe > button[aria-expanded="true"] { background: #2b3020; color: #9ccc65; }
+.clov-hdr-wardrobe-chevron { margin-left: auto; flex-shrink: 0; transition: transform .15s; }
+.clov-hdr-wardrobe-chevron.open { transform: rotate(180deg); }
 
 .clov-hdr-wardrobe-panel {
-  position: absolute; top: calc(100% + 8px); right: 0; width: 280px;
-  background: #1e2016; border: 1px solid #2a2c1e; border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); padding: 14px; z-index: 200;
-  display: flex; flex-direction: column; gap: 14px;
+  display: flex; flex-direction: column; gap: 12px; padding: 8px 10px 4px;
 }
 .clov-hdr-wardrobe-preview { display: flex; align-items: center; gap: 12px; }
 .clov-hdr-wardrobe-stage {
-  width: 64px; height: 64px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
+  width: 56px; height: 56px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
   background: linear-gradient(160deg, #22261a, #2b3020); box-shadow: inset 0 0 0 1px #2a2c1e;
 }
-.clov-hdr-wardrobe-stage img { width: 48px; height: 48px; object-fit: contain; }
+.clov-hdr-wardrobe-stage img { width: 42px; height: 42px; object-fit: contain; }
 .clov-hdr-wardrobe-caption { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .clov-hdr-wardrobe-name { font-size: 13px; font-weight: 900; color: #eef0e2; }
 .clov-hdr-wardrobe-equipped { font-size: 11px; font-weight: 700; color: #b7c99a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.clov-hdr-wardrobe-closet { border-top: 1px solid #2a2c1e; padding-top: 12px; }
+.clov-hdr-wardrobe-closet { border-top: 1px solid #2a2c1e; padding-top: 10px; }
 .clov-hdr-wardrobe-note { margin: 0 0 8px; font-size: 12px; color: #b7c99a; line-height: 1.5; }
 .clov-hdr-wardrobe-shop-btn {
   width: 100%; height: 34px; border-radius: 10px; border: 1.5px solid #3c4a2a; background: #2b3020;
@@ -125,12 +116,6 @@
 }
 .clov-hdr-wardrobe-err { margin-top: 8px; font-size: 11px; font-weight: 700; color: #f87171; }
 
-@media (max-width: 640px) {
-  .clov-hdr-wardrobe-label { display: none; }
-  .clov-hdr-wardrobe-btn { padding: 6px 8px; }
-  .clov-hdr-wardrobe-panel { width: 240px; right: -8px; }
-}
-
 .clov-hdr-avatar-wrap { position: relative; }
 .clov-hdr-avatar {
   width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
@@ -141,17 +126,19 @@
 .clov-hdr-avatar:hover { filter: brightness(1.1); }
 
 .clov-hdr-dropdown {
-  position: absolute; top: calc(100% + 8px); right: 0; min-width: 168px;
+  position: absolute; top: calc(100% + 8px); right: 0; min-width: 260px;
   background: #1e2016; border: 1px solid #2a2c1e; border-radius: 12px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); padding: 6px; z-index: 200; list-style: none; margin: 0;
 }
 .clov-hdr-dropdown li { padding: 0; }
-.clov-hdr-dropdown button {
+/* > 로 스코프 — 꾸미기 섹션 안(코스튬 그리드·상점 이동 버튼)의 중첩 버튼은
+   메뉴 항목 한 줄짜리 스타일을 물려받으면 안 된다. */
+.clov-hdr-dropdown > li > button {
   width: 100%; text-align: left; border: none; background: none; cursor: pointer;
   padding: 9px 12px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; color: #eef0e2;
   display: flex; align-items: center; gap: 8px;
 }
-.clov-hdr-dropdown button:hover { background: #2b3020; color: #9ccc65; }
+.clov-hdr-dropdown > li > button:hover { background: #2b3020; color: #9ccc65; }
 
 @media (max-width: 640px) {
   .clov-hdr-nav .clov-hdr-nav-btn span:last-child { display: none; }
@@ -188,12 +175,11 @@ body.light-mode .clov-hdr-shop:hover, body.light-mode .clov-hdr-shop.active { ba
 body.light-mode .clov-hdr-gold { background: rgba(217, 119, 6, 0.12); color: #a86612; }
 body.light-mode .clov-hdr-avatar { background: #edf4ec; color: #1b4332; }
 body.light-mode .clov-hdr-dropdown { background: #fff; border-color: #eadfd0; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12); }
-body.light-mode .clov-hdr-dropdown button { color: #2c3e35; }
-body.light-mode .clov-hdr-dropdown button:hover { background: #edf4ec; color: #1b4332; }
+body.light-mode .clov-hdr-dropdown > li > button { color: #2c3e35; }
+body.light-mode .clov-hdr-dropdown > li > button:hover { background: #edf4ec; color: #1b4332; }
 
-body.light-mode .clov-hdr-wardrobe-btn { background: #f4f8f2; border-color: #e0ebdc; color: #4a6b58; }
-body.light-mode .clov-hdr-wardrobe-btn:hover, body.light-mode .clov-hdr-wardrobe-btn.active { background: #edf4ec; color: #1b4332; border-color: #cfe3c8; }
-body.light-mode .clov-hdr-wardrobe-panel { background: #fff; border-color: #eadfd0; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12); }
+body.light-mode .clov-hdr-dropdown-wardrobe { border-color: #eadfd0; }
+body.light-mode .clov-hdr-dropdown-wardrobe > button[aria-expanded="true"] { background: #edf4ec; color: #1b4332; }
 body.light-mode .clov-hdr-wardrobe-stage { background: linear-gradient(160deg, #f4f8f2, #edf4ec); box-shadow: inset 0 0 0 1px #e0ebdc; }
 body.light-mode .clov-hdr-wardrobe-name { color: #1e2e26; }
 body.light-mode .clov-hdr-wardrobe-equipped { color: #6a7e73; }

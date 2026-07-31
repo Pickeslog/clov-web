@@ -391,30 +391,21 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); 
   box-shadow: inset 0 0 0 1.5px rgba(82,183,136,.28);
 }
 .proto-feed .memory-detail-photo--empty .memory-image-text { color: #4c5f54; }
-.proto-feed .memory-detail-photo-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.proto-feed .memory-detail-photo-thumb {
-  position: relative; width: 42px; height: 42px; padding: 0; border-radius: 8px;
-  border: 2px solid transparent; overflow: hidden; cursor: pointer; opacity: .6;
-  transition: opacity .15s ease, border-color .15s ease;
+/* 사진 관리(작성자, 목업 space.css:1236-1296 그대로 — 그리드 + 썸네일별 개별 삭제) */
+.proto-feed .memory-edit-photo-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.proto-feed .memory-edit-photo-thumb { position: relative; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; }
+.proto-feed .memory-edit-photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.proto-feed .memory-edit-photo-remove {
+  position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border: none; border-radius: 50%;
+  background: rgba(0,0,0,.6); color: #fff; font-size: 10px; line-height: 1; cursor: pointer;
 }
-.proto-feed .memory-detail-photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.proto-feed .memory-detail-photo-thumb:hover { opacity: .85; }
-.proto-feed .memory-detail-photo-thumb.is-active { opacity: 1; border-color: #52b788; }
-
-/* 사진 관리(작성자) */
-.proto-feed .memory-edit-photo-controls { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
 .proto-feed .memory-edit-photo-add {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 8px 12px; border: 1.5px dashed rgba(198,224,211,.92); border-radius: 10px;
-  background: #f7faf8; color: #6d8075; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+  width: 64px; height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; border: 1.5px dashed rgba(198,224,211,.92); border-radius: 10px;
+  background: #f7faf8; color: #6d8075; font-size: 10px; font-weight: 700; cursor: pointer; font-family: inherit;
 }
+.proto-feed .memory-edit-photo-add span:first-child { font-size: 16px; }
 .proto-feed .memory-edit-photo-add:hover { border-color: #52b788; color: #1b4332; }
-.proto-feed .memory-photo-mini-btn {
-  border: none; background: rgba(232,243,237,.96); color: #1b4332;
-  font-size: 12px; font-weight: 800; border-radius: 8px; padding: 7px 9px; cursor: pointer; font-family: inherit;
-}
-.proto-feed .memory-photo-mini-btn:disabled { opacity: .4; cursor: default; }
-.proto-feed .memory-photo-mini-btn.danger { color: #b23b3b; }
 
 .proto-feed .memory-detail-text-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 .proto-feed .memory-detail-title-lg { color: #1f332a; font-size: 20px; line-height: 1.35; font-weight: 900; }
@@ -469,7 +460,26 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); 
   border-top: 1px solid rgba(216,235,226,.9);
 }
 .proto-feed .memory-detail-actions .spacer { flex: 1; }
-/* 상세/삭제 버튼은 공통 <Button variant="secondary|primary|danger">. */
+/* 상세/삭제 버튼은 공통 <Button variant="secondary|primary|danger">이지만, 여권 시트가
+   테마 무관 고정 색(위 참고)이라 이 안의 버튼도 목업(.btn-sub/.btn-main, space.css:2702-2746)
+   색을 고정으로 덮어쓴다 — 앱 기본 dark/light 팔레트를 따라가면 여권과 색이 어긋난다.
+   danger는 우연히 이미 목업과 같은 값(#b23b3b)이라 덮어쓸 필요 없다. */
+.proto-feed .memory-detail-actions .clov-btn--secondary,
+.proto-feed .memory-detail-edit-actions .clov-btn--secondary {
+  background: #edf4ec; color: #1b4332; border-color: transparent;
+}
+.proto-feed .memory-detail-actions .clov-btn--secondary:not(:disabled):hover,
+.proto-feed .memory-detail-edit-actions .clov-btn--secondary:not(:disabled):hover {
+  background: #dcebda;
+}
+.proto-feed .memory-detail-actions .clov-btn--primary,
+.proto-feed .memory-detail-edit-actions .clov-btn--primary {
+  background: #357a58; border-color: #357a58; color: #fff; flex: 1;
+}
+.proto-feed .memory-detail-actions .clov-btn--primary:not(:disabled):hover,
+.proto-feed .memory-detail-edit-actions .clov-btn--primary:not(:disabled):hover {
+  background: #2c6549; border-color: #2c6549;
+}
 
 @media (max-width: 640px) {
   .proto-feed .memory-detail-columns { flex-direction: column; }

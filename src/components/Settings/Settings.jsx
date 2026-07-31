@@ -239,11 +239,6 @@ function SettingsBody({ me, prefs, onClose }) {
                 <p className="ps-note">기본(우드 &amp; 클로버)은 바로 적용돼요. 사진 배경은 이식된 화면(방 목록 등)에 나타납니다.</p>
               </div>
 
-              <div className="ps-section">
-                <div className="ps-section-title">대표 커버 장식</div>
-                <div className="ps-opts"><button type="button" className="ps-opt-btn" disabled>준비중</button></div>
-              </div>
-
               <OptionRow title="우정편지 테마" value={pref.letterTheme} options={LETTER_THEMES} onPick={(v) => setPrefAndSave({ letterTheme: v })} />
               <OptionRow title="참여자별 추억 증거 카드" value={pref.memoryCardTheme} options={MEMORY_THEMES} onPick={(v) => setPrefAndSave({ memoryCardTheme: v })} />
               <OptionRow title="마스코트 캐릭터" value={pref.mascotType} options={MASCOTS} onPick={(v) => setPrefAndSave({ mascotType: v })} />

@@ -8,6 +8,7 @@ import { useAuthStore } from '../../stores/authStore'
 import clovLogo from '../../assets/clov_logo.png'
 import Settings from '../Settings/Settings'
 import Notifications from '../../pages/notifications/Notifications/Notifications'
+import MascotWardrobe from './MascotWardrobe'
 
 // 방 내부 네비 탭 — 프로토타입 clov-header main 타입.
 const TABS = [
@@ -113,6 +114,7 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
           </button>
           {menuOpen && (
             <ul className="clov-hdr-dropdown" role="menu">
+              <MascotWardrobe onNavigateShop={() => { setMenuOpen(false); navigate('/shop', { state: roomId ? { fromRoomId: roomId } : undefined }) }} />
               <li><button type="button" onClick={() => { setSettingsOpen(true); setMenuOpen(false) }}>⚙️ 사용자 설정</button></li>
               <li><button type="button" onClick={clear}>로그아웃</button></li>
             </ul>

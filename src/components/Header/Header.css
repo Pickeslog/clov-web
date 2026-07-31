@@ -66,6 +66,56 @@
   font-size: 9px; font-weight: 900; font-style: normal;
 }
 
+/* 마스코트 꾸미기 — 프로필 드롭다운(사용자 설정·로그아웃과 같은 박스) 안 접이식 섹션. */
+.clov-hdr-dropdown-wardrobe { border-bottom: 1px solid #2a2c1e; margin-bottom: 4px; padding-bottom: 4px; }
+.clov-hdr-dropdown-wardrobe > button[aria-expanded="true"] { background: #2b3020; color: #9ccc65; }
+.clov-hdr-wardrobe-chevron { margin-left: auto; flex-shrink: 0; transition: transform .15s; }
+.clov-hdr-wardrobe-chevron.open { transform: rotate(180deg); }
+
+.clov-hdr-wardrobe-panel {
+  display: flex; flex-direction: column; gap: 12px; padding: 8px 10px 4px;
+}
+.clov-hdr-wardrobe-preview { display: flex; align-items: center; gap: 12px; }
+.clov-hdr-wardrobe-stage {
+  width: 56px; height: 56px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
+  background: linear-gradient(160deg, #22261a, #2b3020); box-shadow: inset 0 0 0 1px #2a2c1e;
+}
+.clov-hdr-wardrobe-stage img { width: 42px; height: 42px; object-fit: contain; }
+.clov-hdr-wardrobe-caption { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.clov-hdr-wardrobe-name { font-size: 13px; font-weight: 900; color: #eef0e2; }
+.clov-hdr-wardrobe-equipped { font-size: 11px; font-weight: 700; color: #b7c99a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.clov-hdr-wardrobe-closet { border-top: 1px solid #2a2c1e; padding-top: 10px; }
+.clov-hdr-wardrobe-note { margin: 0 0 8px; font-size: 12px; color: #b7c99a; line-height: 1.5; }
+.clov-hdr-wardrobe-shop-btn {
+  width: 100%; height: 34px; border-radius: 10px; border: 1.5px solid #3c4a2a; background: #2b3020;
+  color: #eef0e2; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.clov-hdr-wardrobe-shop-btn:hover { border-color: #9ccc65; color: #9ccc65; }
+
+.clov-hdr-wardrobe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 220px; overflow-y: auto; }
+.clov-hdr-wardrobe-item {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 8px 4px; border-radius: 12px; border: 1.5px solid #2a2c1e; background: #191a12;
+  cursor: pointer; font: inherit; transition: border-color .15s, background .15s;
+}
+.clov-hdr-wardrobe-item:hover:not(:disabled) { border-color: #9ccc65; }
+.clov-hdr-wardrobe-item.on { border-color: #9ccc65; background: #2b3020; }
+.clov-hdr-wardrobe-item:disabled { opacity: .55; cursor: default; }
+.clov-hdr-wardrobe-thumb {
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; overflow: hidden;
+  background: linear-gradient(135deg, #9ccc65, #5a7a3e); color: #fff; font-weight: 900; font-size: 13px;
+}
+.clov-hdr-wardrobe-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.clov-hdr-wardrobe-item-name {
+  font-size: 10px; font-weight: 700; color: #eef0e2; text-align: center; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.clov-hdr-wardrobe-badge {
+  position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 50%; background: #9ccc65;
+}
+.clov-hdr-wardrobe-err { margin-top: 8px; font-size: 11px; font-weight: 700; color: #f87171; }
+
 .clov-hdr-avatar-wrap { position: relative; }
 .clov-hdr-avatar {
   width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
@@ -76,17 +126,19 @@
 .clov-hdr-avatar:hover { filter: brightness(1.1); }
 
 .clov-hdr-dropdown {
-  position: absolute; top: calc(100% + 8px); right: 0; min-width: 168px;
+  position: absolute; top: calc(100% + 8px); right: 0; min-width: 260px;
   background: #1e2016; border: 1px solid #2a2c1e; border-radius: 12px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); padding: 6px; z-index: 200; list-style: none; margin: 0;
 }
 .clov-hdr-dropdown li { padding: 0; }
-.clov-hdr-dropdown button {
+/* > 로 스코프 — 꾸미기 섹션 안(코스튬 그리드·상점 이동 버튼)의 중첩 버튼은
+   메뉴 항목 한 줄짜리 스타일을 물려받으면 안 된다. */
+.clov-hdr-dropdown > li > button {
   width: 100%; text-align: left; border: none; background: none; cursor: pointer;
   padding: 9px 12px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; color: #eef0e2;
   display: flex; align-items: center; gap: 8px;
 }
-.clov-hdr-dropdown button:hover { background: #2b3020; color: #9ccc65; }
+.clov-hdr-dropdown > li > button:hover { background: #2b3020; color: #9ccc65; }
 
 @media (max-width: 640px) {
   .clov-hdr-nav .clov-hdr-nav-btn span:last-child { display: none; }
@@ -123,5 +175,19 @@ body.light-mode .clov-hdr-shop:hover, body.light-mode .clov-hdr-shop.active { ba
 body.light-mode .clov-hdr-gold { background: rgba(217, 119, 6, 0.12); color: #a86612; }
 body.light-mode .clov-hdr-avatar { background: #edf4ec; color: #1b4332; }
 body.light-mode .clov-hdr-dropdown { background: #fff; border-color: #eadfd0; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12); }
-body.light-mode .clov-hdr-dropdown button { color: #2c3e35; }
-body.light-mode .clov-hdr-dropdown button:hover { background: #edf4ec; color: #1b4332; }
+body.light-mode .clov-hdr-dropdown > li > button { color: #2c3e35; }
+body.light-mode .clov-hdr-dropdown > li > button:hover { background: #edf4ec; color: #1b4332; }
+
+body.light-mode .clov-hdr-dropdown-wardrobe { border-color: #eadfd0; }
+body.light-mode .clov-hdr-dropdown-wardrobe > button[aria-expanded="true"] { background: #edf4ec; color: #1b4332; }
+body.light-mode .clov-hdr-wardrobe-stage { background: linear-gradient(160deg, #f4f8f2, #edf4ec); box-shadow: inset 0 0 0 1px #e0ebdc; }
+body.light-mode .clov-hdr-wardrobe-name { color: #1e2e26; }
+body.light-mode .clov-hdr-wardrobe-equipped { color: #6a7e73; }
+body.light-mode .clov-hdr-wardrobe-closet { border-color: #eadfd0; }
+body.light-mode .clov-hdr-wardrobe-note { color: #6a7e73; }
+body.light-mode .clov-hdr-wardrobe-shop-btn { background: #edf4ec; border-color: #cfe3c8; color: #1e2e26; }
+body.light-mode .clov-hdr-wardrobe-shop-btn:hover { border-color: #52b788; color: #1b4332; }
+body.light-mode .clov-hdr-wardrobe-item { background: #fafcf9; border-color: #eadfd0; }
+body.light-mode .clov-hdr-wardrobe-item.on { border-color: #52b788; background: #edf4ec; }
+body.light-mode .clov-hdr-wardrobe-item:hover:not(:disabled) { border-color: #52b788; }
+body.light-mode .clov-hdr-wardrobe-item-name { color: #1e2e26; }

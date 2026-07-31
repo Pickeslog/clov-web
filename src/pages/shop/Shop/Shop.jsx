@@ -33,6 +33,7 @@ const AlertIcon = (p) => <Icon {...p}><circle cx="12" cy="12" r="9" /><path d="M
 const ShirtIcon = (p) => <Icon {...p}><path d="M9 3 4 6l2 4 2-1v11h8V9l2 1 2-4-5-3a3 3 0 0 1-6 0z" /></Icon>
 const PaletteIcon = (p) => <Icon {...p}><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 1.6-3.2 2 2 0 0 1 1.6-3.2H18a3 3 0 0 0 3-3 9 9 0 0 0-9-8.6z" /><circle cx="7.5" cy="11" r="1" /><circle cx="12" cy="7.5" r="1" /><circle cx="16.5" cy="11" r="1" /></Icon>
 const GiftIcon = (p) => <Icon {...p}><path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2 8h20v4H2zM12 8v13" /><path d="M12 8S9.5 3 7.5 4.5 9 8 12 8zM12 8s2.5-5 4.5-3.5S15 8 12 8z" /></Icon>
+const ChevronIcon = (p) => <Icon {...p}><path d="m6 9 6 6 6-6" /></Icon>
 
 // 금화 — 이모지 대신 그린 SVG(금색은 고정값: 재화 식별이 테마에 흔들리면 안 된다).
 // 그라디언트 id는 인스턴스마다 고유해야 한다 — 카드가 여러 장 그려지면 같은 id의
@@ -326,14 +327,51 @@ export default function Shop() {
   )
 }
 
+// 네이티브 select는 닫힌 상태만 스타일이 먹고 펼친 옵션 목록은 OS 기본 UI라
+// Clov 톤을 못 입힌다 — 버튼 + 커스텀 리스트박스로 교체.
 function SortSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef(null)
+  const current = SORTS.find((s) => s.key === value) ?? SORTS[0]
+
+  useEffect(() => {
+    if (!open) return undefined
+    const onDoc = (e) => { if (!wrapRef.current?.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
   return (
-    <label className="shop-sort">
-      정렬
-      <select value={value} onChange={(e) => onChange(e.target.value)}>
-        {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-      </select>
-    </label>
+    <div className="shop-sort" ref={wrapRef}>
+      <span className="shop-sort-label">정렬</span>
+      <button
+        type="button"
+        className="shop-sort-btn"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        {current.label}
+        <ChevronIcon size={13} className={`shop-sort-chevron${open ? ' open' : ''}`} />
+      </button>
+      {open && (
+        <ul className="shop-sort-menu" role="listbox">
+          {SORTS.map((s) => (
+            <li key={s.key}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={s.key === value}
+                className={`shop-sort-option${s.key === value ? ' active' : ''}`}
+                onClick={() => { onChange(s.key); setOpen(false) }}
+              >
+                {s.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
 

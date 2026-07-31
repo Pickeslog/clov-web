@@ -95,16 +95,37 @@
   opacity: 0;
 }
 
-/* ── 정렬 셀렉트 ── */
+/* ── 정렬 셀렉트 ──
+   네이티브 select는 펼친 옵션 목록에 OS 기본 UI를 써서 앱 톤을 못 입힌다
+   (하얀 배경·파란 하이라이트로 튄다) — 버튼 + 커스텀 리스트박스로 대체. */
 .proto-shop .shop-sort {
+  position: relative;
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 700; color: var(--muted);
 }
-.proto-shop .shop-sort select {
+.proto-shop .shop-sort-btn {
+  display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border);
   background: var(--chip-bg); color: var(--text); font: inherit; font-size: 12px; font-weight: 700;
-  cursor: pointer;
+  cursor: pointer; transition: border-color .15s, color .15s;
 }
+.proto-shop .shop-sort-btn:hover { border-color: var(--primary); color: var(--accent); }
+.proto-shop .shop-sort-chevron { flex-shrink: 0; transition: transform .15s; }
+.proto-shop .shop-sort-chevron.open { transform: rotate(180deg); }
+.proto-shop .shop-sort-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; min-width: 140px;
+  list-style: none; margin: 0; padding: 6px;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .35);
+}
+.proto-shop .shop-sort-option {
+  display: block; width: 100%; text-align: left;
+  padding: 8px 10px; border: none; border-radius: 8px; background: none; cursor: pointer;
+  font: inherit; font-size: 13px; font-weight: 700; color: var(--muted);
+  transition: background .15s, color .15s;
+}
+.proto-shop .shop-sort-option:hover { background: var(--active-bg); color: var(--text); }
+.proto-shop .shop-sort-option.active { color: var(--accent); }
 
 /* ── 카테고리 탭 ──
    Discord 상점의 상단 탭 내비를 참고했지만 pill이 아니라 밑줄 탭으로 —
@@ -294,5 +315,6 @@ body.light-mode .proto-shop .shop-chip.active { background: #1b4332; border-colo
 body.light-mode .proto-shop .shop-balance { background: rgba(217, 119, 6, .1); border-color: rgba(217, 119, 6, .28); }
 body.light-mode .proto-shop .shop-badge { color: #fff; }
 body.light-mode .proto-shop .shop-card:hover { box-shadow: 0 10px 28px rgba(8, 28, 22, .1); }
+body.light-mode .proto-shop .shop-sort-menu { box-shadow: 0 10px 28px rgba(8, 28, 22, .12); }
 body.light-mode .proto-shop .shop-buy:hover:not(:disabled) { background: #1b4332; color: #fff; }
 body.light-mode .proto-shop .shop-art { background: linear-gradient(155deg, var(--rarity-soft), transparent 70%), #f7faf6; }

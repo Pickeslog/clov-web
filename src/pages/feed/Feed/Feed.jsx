@@ -13,7 +13,9 @@ import { ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 
-const WRITE_PHOTO_LIMIT = 15
+// 작성·수정 공통 (screen-spec-source/03-memory-feed-screen.md §입력 제약) — 프로토타입은 30이지만
+// 리더 결정으로 8. R2 실제 업로드 비용·저장 쿼터 도달 속도 때문에 목업 값을 의도적으로 안 따른다.
+const MEMORY_PHOTO_LIMIT = 8
 const MEMORY_TITLE_LIMIT = 40
 const MEMORY_MESSAGE_LIMIT = 80
 
@@ -679,7 +681,7 @@ export function CreateMemoryModal({ roomId, members, submitting, errorMessage, o
   const addPhotos = (fileList) => {
     const files = [...(fileList || [])].filter((f) => f.type.startsWith('image/'))
     if (!files.length) return
-    const remaining = WRITE_PHOTO_LIMIT - photos.length
+    const remaining = MEMORY_PHOTO_LIMIT - photos.length
     const next = files.slice(0, remaining).map((file) => ({ file, url: URL.createObjectURL(file) }))
     setPhotos((prev) => [...prev, ...next])
   }
@@ -732,7 +734,7 @@ export function CreateMemoryModal({ roomId, members, submitting, errorMessage, o
         </div>
         <div className="wm-body">
           <div className="wm-field">
-            <span className="wm-label">사진 (선택, 최대 {WRITE_PHOTO_LIMIT}장)</span>
+            <span className="wm-label">사진 (선택, 최대 {MEMORY_PHOTO_LIMIT}장)</span>
             <div className="wm-photo-strip">
               {photos.map((p, index) => (
                 <div className="wm-photo-thumb" key={p.url}>
@@ -740,7 +742,7 @@ export function CreateMemoryModal({ roomId, members, submitting, errorMessage, o
                   <button type="button" className="wm-img-remove" onClick={() => removePhoto(index)}>✕</button>
                 </div>
               ))}
-              {photos.length < WRITE_PHOTO_LIMIT && (
+              {photos.length < MEMORY_PHOTO_LIMIT && (
                 <button type="button" className="wm-photo-add" onClick={() => fileRef.current?.click()}>
                   <span style={{ fontSize: '20px' }}>＋</span><span>추가</span>
                 </button>
@@ -953,7 +955,6 @@ export function MemoryDetailModal({
   uploadingImage,
   uploadImageError,
   onDeleteImage,
-  onReorderImages,
 }) {
   const [isEditing, setEditing] = useState(false)
   const [title, setTitle] = useState('')
@@ -989,15 +990,6 @@ export function MemoryDetailModal({
   const photoNav = (dir) => {
     if (photoCount < 2) return
     setPhotoIndex((i) => (i + dir + photoCount) % photoCount)
-  }
-
-  const moveImage = (from, to) => {
-    if (to < 0 || to >= photoCount) return
-    const ids = images.map((img) => img.id)
-    const [moved] = ids.splice(from, 1)
-    ids.splice(to, 0, moved)
-    onReorderImages(ids)
-    setPhotoIndex(to)
   }
 
   const startEdit = () => {
@@ -1149,53 +1141,40 @@ export function MemoryDetailModal({
 
             <div className="memory-detail-columns">
               <div className="memory-detail-photo-col">
-                {activeImage ? (
-                  <img className="memory-detail-photo" src={activeImage.imageUrl} alt="추억 사진" />
-                ) : (
+                {photoCount === 0 && (
                   <div className="memory-detail-photo memory-detail-photo--empty">
                     <i className="ti ti-clover memory-clover-placeholder" aria-hidden="true" />
                     <span className="memory-image-text">사진이 없는 추억은<br />클로버로 보관됩니다</span>
                   </div>
                 )}
 
-                {photoCount > 1 && (
-                  <div className="memory-detail-photo-strip">
-                    {images.map((img, index) => (
-                      <button
-                        key={img.id}
-                        type="button"
-                        className={`memory-detail-photo-thumb ${index === activeIndex ? 'is-active' : ''}`}
-                        onClick={() => setPhotoIndex(index)}
-                      >
-                        <img src={img.imageUrl} alt="" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                <div className="memory-edit-photo-controls">
-                  <button type="button" className="memory-edit-photo-add" disabled={uploadingImage} onClick={() => imageInputRef.current?.click()}>
-                    <span>＋</span> {uploadingImage ? '업로드 중…' : '사진 추가'}
-                  </button>
-                  {activeImage && (
-                    <>
-                      <button type="button" className="memory-photo-mini-btn" disabled={activeIndex === 0} onClick={() => moveImage(activeIndex, activeIndex - 1)} aria-label="왼쪽으로">◀</button>
-                      <button type="button" className="memory-photo-mini-btn" disabled={activeIndex === photoCount - 1} onClick={() => moveImage(activeIndex, activeIndex + 1)} aria-label="오른쪽으로">▶</button>
-                      <button type="button" className="memory-photo-mini-btn danger" onClick={() => onDeleteImage(activeImage.id)} aria-label="사진 삭제">삭제</button>
-                    </>
+                {/* 목업(space.js:132-147) 그대로 — 그리드 + 썸네일별 개별 삭제. 개수만 8장(리더 결정,
+                    목업은 30) 다르다. 순서 이동(◀/▶)은 목업에 없는 기능이라 뺐다 — 삭제는 각 썸네일의
+                    ✕로 그대로 가능해 삭제 경로가 끊기지 않는다. */}
+                <div className="memory-edit-photo-strip">
+                  {images.map((img) => (
+                    <div className="memory-edit-photo-thumb" key={img.id}>
+                      <img src={img.imageUrl} alt="" />
+                      <button type="button" className="memory-edit-photo-remove" onClick={() => onDeleteImage(img.id)} aria-label="사진 삭제">✕</button>
+                    </div>
+                  ))}
+                  {photoCount < MEMORY_PHOTO_LIMIT && (
+                    <button type="button" className="memory-edit-photo-add" disabled={uploadingImage} onClick={() => imageInputRef.current?.click()}>
+                      <span>＋</span><span>{uploadingImage ? '업로드 중…' : '추가'}</span>
+                    </button>
                   )}
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) onUploadImage(file)
-                      e.target.value = ''
-                    }}
-                  />
                 </div>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) onUploadImage(file)
+                    e.target.value = ''
+                  }}
+                />
                 {uploadImageError && <div className="wm-error" role="alert">{uploadImageError}</div>}
               </div>
 
@@ -1331,10 +1310,9 @@ export function MemoryDetailModal({
                 {isWriter && (
                   <>
                     <Button variant="secondary" size="sm" onClick={startEdit}>수정</Button>
-                    <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(true)}>삭제</Button>
+                    <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)}>삭제</Button>
                   </>
                 )}
-                <span className="spacer" />
                 <Button variant="primary" size="sm" onClick={onClose}>닫기</Button>
               </div>
             )}

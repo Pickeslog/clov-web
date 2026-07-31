@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   getMemory, getComments, updateMemory, deleteMemory,
   createComment, updateComment, deleteComment,
-  presignMemoryImage, commitMemoryImage, deleteMemoryImage, reorderMemoryImages,
+  presignMemoryImage, commitMemoryImage, deleteMemoryImage,
 } from '../api/memory'
 import { uploadImage } from '../lib/uploadImage'
 
@@ -52,7 +52,6 @@ export function useMemoryDetail(memoryId, roomId, { onDeleted } = {}) {
     onSuccess: () => { invalidateBoth(); queryClient.invalidateQueries({ queryKey: ['room', roomId] }) },
   })
   const deleteImageMutation = useMutation({ mutationFn: (imageId) => deleteMemoryImage(imageId), onSuccess: invalidateBoth })
-  const reorderImageMutation = useMutation({ mutationFn: (imageIds) => reorderMemoryImages(memoryId, { imageIds }), onSuccess: invalidateMemory })
 
   return {
     memory: detail.data,
@@ -74,6 +73,5 @@ export function useMemoryDetail(memoryId, roomId, { onDeleted } = {}) {
     uploadingImage: uploadImageMutation.isPending,
     uploadImageError: uploadImageMutation.error?.message,
     onDeleteImage: (imageId) => deleteImageMutation.mutate(imageId),
-    onReorderImages: (imageIds) => reorderImageMutation.mutate(imageIds),
   }
 }

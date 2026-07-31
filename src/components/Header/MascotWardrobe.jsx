@@ -4,8 +4,24 @@ import { equipItem, getInventory, unequipItem } from '../../api/shop'
 import { getPreferences } from '../../api/user'
 import crobiSprite from '../../assets/mascot/crobi.png'
 import robSprite from '../../assets/mascot/rob.png'
+import burgerOldmanSprite from '../../assets/mascot/burger-oldman.png'
+import takoGunSprite from '../../assets/mascot/tako-gun.png'
+import kimCheolsuSprite from '../../assets/mascot/kim-cheolsu.png'
 
-const MASCOT_LABELS = { crobi: '크로비', rob: '롭' }
+const MASCOT_SPRITES = {
+  crobi: crobiSprite,
+  rob: robSprite,
+  burgerOldman: burgerOldmanSprite,
+  takoGun: takoGunSprite,
+  kimCheolsu: kimCheolsuSprite,
+}
+const MASCOT_LABELS = {
+  crobi: '크로비',
+  rob: '롭',
+  burgerOldman: '버거노인',
+  takoGun: '타코군',
+  kimCheolsu: '김철수',
+}
 
 // 프로필 드롭다운(사용자 설정·로그아웃과 같은 박스) 안 접이식 섹션 — 마스코트 미리보기 +
 // 보유 코스튬 장착/해제. Mascot.jsx와 같은 규칙(장착 아이템에 이미지가 있으면 기본
@@ -26,8 +42,11 @@ export default function MascotWardrobe({ onNavigateShop }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['preferences'] }),
   })
 
-  const mascotType = prefs.data?.mascotType === 'rob' ? 'rob' : 'crobi'
-  const baseSprite = mascotType === 'rob' ? robSprite : crobiSprite
+  // Mascot.jsx와 같은 규칙 — 아는 값만 통과, 'robot'은 옛 이름이라 rob으로.
+  // hasOwn을 쓰는 이유도 같다(MASCOT_SPRITES['constructor']가 truthy).
+  const storedMascotType = prefs.data?.mascotType === 'robot' ? 'rob' : prefs.data?.mascotType
+  const mascotType = Object.hasOwn(MASCOT_SPRITES, storedMascotType ?? '') ? storedMascotType : 'crobi'
+  const baseSprite = MASCOT_SPRITES[mascotType]
   const previewSprite = prefs.data?.equippedItem?.imageUrl || baseSprite
   const equippedItemId = prefs.data?.equippedItem?.itemId ?? null
   const costumes = (inventory.data?.items ?? []).filter((item) => item.category === 'COSTUME')

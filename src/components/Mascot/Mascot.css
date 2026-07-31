@@ -22,20 +22,26 @@
 .clov-mascot-hit:active:not(:disabled) { transform: scale(0.97); }
 .clov-mascot-hit:disabled { cursor: default; }
 
-/* 스프라이트 원본은 640px 높이(crobi 366x640 · 버거노인 427x640 · rob 900x510)라
-   160px면 4배 오버샘플이다 — 고해상도 화면에서도 흐려지지 않는다.
-   그림자는 크기에 맞춰 같이 키웠다(110px 시절 6/10px 그대로 두면 발밑에 붙어 보인다). */
+/* 스프라이트 원본은 대부분 640px 높이(crobi 366x640 · 버거노인 427x640 · 타코군/김철수
+   640x640)라 160px면 4배 오버샘플이다 — 고해상도 화면에서도 흐려지지 않는다.
+   그림자는 크기에 맞춰 같이 키웠다(110px 시절 6/10px 그대로 두면 발밑에 붙어 보인다).
+
+   ★ height만 고정하면 가로가 캐릭터 비율대로 제각각이 된다. rob(900x510)은 160px 높이에서
+   가로 282px까지 벌어져 대시보드 버튼 두 개를 덮었다(crobi 92px의 3배). 정사각 상자에
+   가둬 어떤 캐릭터가 와도 점유 면적이 같게 한다 — object-fit: contain이 비율을 지킨다. */
 .clov-mascot-sprite {
   display: block;
   height: 160px;
   width: auto;
+  max-width: 160px;
+  object-fit: contain;
   filter: drop-shadow(0 8px 14px rgba(27, 67, 50, 0.18));
   user-select: none;
 }
 
 /* 모바일에서는 조금 줄인다 — 우측 하단 고정이라 화면이 좁을수록 콘텐츠를 많이 가린다. */
 @media (max-width: 640px) {
-  .clov-mascot-sprite { height: 128px; }
+  .clov-mascot-sprite { height: 128px; max-width: 128px; }
 }
 
 /* 기본 = 다크(이식 화면 공통값), body.light-mode에서 라이트로 덧입힌다(lib/theme.js). */

@@ -772,8 +772,11 @@ body.light-mode .proto-dashboard .section-title {
 .proto-dashboard .cline-avatars { display: flex; align-items: center; }
 .proto-dashboard .cline-avatar {
   width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
-  font-size: 9px; font-weight: 900; color: #fff; border: 1.5px solid #fff; margin-left: -6px; flex-shrink: 0;
+  font-size: 9px; line-height: 1; font-weight: 900; color: #fff; border: 1.5px solid #fff; margin-left: -6px; flex-shrink: 0;
+  position: relative; overflow: hidden; background: #52b788;
 }
+.proto-dashboard .cline-avatar.is-friend { background: #ff9f7f; }
+.proto-dashboard .cline-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .proto-dashboard .cline-avatars .cline-avatar:first-child { margin-left: 0; }
 .proto-dashboard .cline-header-date { font-size: 9px; font-weight: 700; color: #aaa; letter-spacing: .02em; }
 .proto-dashboard .cline-photo {

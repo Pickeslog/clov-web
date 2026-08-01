@@ -205,7 +205,7 @@ const daysTogether = (createdAt) => {
 }
 const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
 // 뱃지 색상 구분(프로토타입 getDdayAccent 이식) — 지남=회색, 오늘=장미, 7일 이내=주황, 그 외=초록.
-// 'past'(회색)는 D-day 칸을 지난 약속으로 채우기 시작하면서 실제로 렌더된다(#112).
+// 'past'(회색)는 D-day 3칸에서는 안 쓰인다(#206) — 다가오는 약속만 채우고 지난 약속으로 채우지 않는다.
 const ddayUrgency = (n) => (n == null ? 'far' : n < 0 ? 'past' : n === 0 ? 'today' : n <= 7 ? 'soon' : 'far')
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
 // 상태 메시지 가중 길이(한글 2, 그 외 1) — 프로토타입 "한글 20자 / 영어 40자".
@@ -492,8 +492,8 @@ export default function Dashboard() {
   const days = daysTogether(data.createdAt)
   const track = (memories.data?.items ?? []).length || 1
 
-  // D-day 3칸 = 다가오는 약속 먼저, 남는 칸은 지난 약속으로 채운다(정본 js/schedule.js:216의
-  // `[...futureSchedules, ...pastSchedules].slice(0, 3)`). 미래 1개·과거 5개인 방이면 미래1+과거2.
+  // D-day 3칸 = 다가오는 약속만(#108/#112). 지난 일정으로 채우지 않는다 — 못 채운 칸은
+  // 렌더링 쪽에서 고스트 카드("새로운 약속 만들기")로 채워진다.
   // ddayDiff는 읽을 수 없는 날짜에 null을 준다. null >= 0 은 true라서 명시적으로 걸러야 한다.
   const planItems = plans.data?.items ?? []
   const futurePlans = planItems
@@ -501,12 +501,7 @@ export default function Dashboard() {
     .filter((p) => p.status === 'SCHEDULED')
     .filter((p) => { const d = ddayDiff(p.planDate); return d !== null && d >= 0 })
     .sort((a, b) => a.planDate.localeCompare(b.planDate))
-  const pastPlans = planItems
-    // 지난 칸은 완료된 약속과 완료 처리 안 한 채 지나간 약속 둘 다. 취소된 약속은 뺀다.
-    .filter((p) => p.status !== 'CANCELED')
-    .filter((p) => { const d = ddayDiff(p.planDate); return d !== null && d < 0 })
-    .sort((a, b) => b.planDate.localeCompare(a.planDate)) // 최근에 지난 것부터
-  const ddaySlots = [...futurePlans, ...pastPlans].slice(0, 3)
+  const ddaySlots = futurePlans.slice(0, 3)
   const memoryItems = (memories.data?.items ?? []).slice(0, 24)
 
   const savedStatus = data.myStatusMessage ?? ''
@@ -1019,10 +1014,18 @@ function Clothespin() {
   )
 }
 
+// 카드 아바타 = 작성자(대표) + 나머지 참여자, 중복 제외(Feed.jsx cardAvatars와 동일 규칙, #206).
+const memoryAvatars = (memory) => {
+  const author = memory.writer
+  const others = (memory.participants ?? []).filter((p) => String(p.id) !== String(author?.id))
+  return [author, ...others].filter(Boolean)
+}
+
 // cline 폴라로이드(빨랫줄 카드).
 function ClinePolaroid({ memory, isActive, onOpen }) {
   const dateText = (memory.memoryDate || '').slice(5) // MM-DD
   const tags = (memory.tags ?? []).slice(0, 3)
+  const avatars = memoryAvatars(memory)
   return (
     <article
       className={`cline-polaroid ${isActive ? 'is-active' : ''}`}
@@ -1030,7 +1033,11 @@ function ClinePolaroid({ memory, isActive, onOpen }) {
     >
       <div className="cline-card-header">
         <div className="cline-avatars">
-          <span className="cline-avatar" style={{ background: '#52b788' }}>{initialOf(memory.writer?.nickname)}</span>
+          {avatars.map((p, idx) => (
+            <span key={p.id ?? idx} className={`cline-avatar ${idx === 0 ? '' : 'is-friend'}`} title={p.nickname}>
+              {p.profileImageUrl ? <img src={p.profileImageUrl} alt="" /> : initialOf(p.nickname)}
+            </span>
+          ))}
         </div>
         <span className="cline-header-date">{dateText}</span>
       </div>

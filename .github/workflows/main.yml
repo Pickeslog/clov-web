@@ -65,13 +65,14 @@ jobs:
       # 진짜 원인이 로그에 안 남았다(2026-07-30 GCP-VM-CICD #1·#2: 도커 push까지 성공한 뒤
       # SSH 스텝만 1초 만에 죽음). 값이 비었는지·개인키로 파싱되는지를 여기서 끊는다.
       #
-      # 프론트는 검사 목록에 REACT_ENV를 더했다. 이게 비면 빌드가 실패하지 않고 레포의
-      # .env.production(팀 공용 도메인)이 그대로 구워져서, 배포는 초록불인데 팀원 프론트가
-      # 리더 백엔드를 호출하는 상태가 된다. 조용히 깨지므로 여기서 끊는 게 맞다.
+      # REACT_ENV는 일부러 필수에서 뺐다. 없으면 레포의 .env.production(팀 공용 도메인)으로
+      # 빌드되는데, 팀 공용 서버로 배포하는 사람에게는 그게 정답이라 등록을 강제할 이유가 없다.
+      # 다만 개인 서버로 띄우는데 빠뜨리면 내 프론트가 남의 백엔드를 호출하게 되므로,
+      # 없을 때 '환경파일 주입' 스텝이 ::warning:: 과 함께 실제 구워질 도메인을 찍는다.
       - name: 배포 시크릿 검증
         run: |
           missing=""
-          for name in GCP_VM_HOST GCP_VM_USERNAME GCP_VM_SSHKEY DOCKER_USERNAME DOCKER_PASSWORD REACT_ENV; do
+          for name in GCP_VM_HOST GCP_VM_USERNAME GCP_VM_SSHKEY DOCKER_USERNAME DOCKER_PASSWORD; do
             [ -n "${!name}" ] || missing="$missing $name"
           done
           suffix=$(echo "${{ github.ref_name }}" | sed 's/^deploy-//' | tr '[:lower:]' '[:upper:]')
@@ -90,7 +91,7 @@ jobs:
             exit 1
           fi
           rm -f "$keyfile"
-          echo "시크릿 6종 확인·개인키 파싱 OK (suffix=${suffix})"
+          echo "필수 시크릿 5종 확인·개인키 파싱 OK (suffix=${suffix})"
 
       - name: Checkout
         uses: actions/checkout@v6.0.2
@@ -120,15 +121,23 @@ jobs:
       # 넣으면 안 되는 자리다(.env.example 참고). 그래서 로그에 그대로 찍어 확인할 수 있게 뒀다.
       - name: 환경파일 주입
         run: |
-          echo "${{env.REACT_ENV}}" | base64 --decode > .env.production
-          # base64가 깨졌거나 엉뚱한 파일을 인코딩했으면 여기서 끊는다. 그냥 두면 빈
-          # .env.production 으로 빌드가 성공하고 localhost:8080 이 번들에 박힌다(#160).
-          if ! grep -q '^VITE_API_BASE_URL=' .env.production; then
-            echo "::error::REACT_ENV_<이름> 을 디코드한 결과에 VITE_API_BASE_URL 줄이 없다."
-            echo "::error::.env.production 내용을 base64로 인코딩한 값을 넣어야 한다:"
-            echo "::error::  echo \"VITE_API_BASE_URL=https://내도메인/api/v1\" | base64 | tr -d '\\n'"
-            echo "::error::줄바꿈 없는 한 줄이어야 한다 — 여러 줄이면 앞의 '환경변수 세팅'에서 먼저 죽는다."
-            exit 1
+          if [ -n "${{env.REACT_ENV}}" ]; then
+            echo "${{env.REACT_ENV}}" | base64 --decode > .env.production
+            # base64가 깨졌거나 엉뚱한 파일을 인코딩했으면 여기서 끊는다. 그냥 두면 빈
+            # .env.production 으로 빌드가 성공하고 localhost:8080 이 번들에 박힌다(#160).
+            if ! grep -q '^VITE_API_BASE_URL=' .env.production; then
+              echo "::error::REACT_ENV_<이름> 을 디코드한 결과에 VITE_API_BASE_URL 줄이 없다."
+              echo "::error::.env.production 내용을 base64로 인코딩한 값을 넣어야 한다:"
+              echo "::error::  echo \"VITE_API_BASE_URL=https://내도메인/api/v1\" | base64 | tr -d '\\n'"
+              echo "::error::줄바꿈 없는 한 줄이어야 한다 — 여러 줄이면 앞의 '환경변수 세팅'에서 먼저 죽는다."
+              exit 1
+            fi
+            echo "REACT_ENV_<이름> 으로 .env.production 을 덮어썼다."
+          else
+            # 시크릿이 없으면 레포 파일을 그대로 쓴다 — 팀 공용 서버로 배포하는 경우엔 이게 맞다.
+            # 개인 서버로 띄우는 중이라면 이 경고를 놓치면 안 된다. 아래 cat 출력으로 실제
+            # 구워질 도메인을 반드시 확인할 것.
+            echo "::warning::REACT_ENV_${{ github.ref_name }} 시크릿이 없어 레포의 .env.production 을 그대로 쓴다. 개인 서버로 배포 중이라면 아래 도메인이 맞는지 확인할 것."
           fi
           echo "빌드에 들어갈 .env.production:"
           cat .env.production
@@ -176,4 +185,20 @@ jobs:
             # 인증서 갱신 루프까지 끊는다. pull로 이미지가 바뀌면 up -d가 알아서 재생성한다.
             sudo docker compose -f web-docker-compose.yaml up -d
             sudo docker compose -f web-docker-compose.yaml ps
+            # up -d가 돌아왔다고 서비스가 뜬 건 아니다. 여기서 확인하지 않으면 워크플로는
+            # 초록불인데 사이트는 502인 상태가 "성공한 배포"로 남는다(가이드 21 §4 — api에서
+            # 실제로 겪었다. docker ps가 Up이어도 아직 안 뜬 것이다).
+            # 프론트는 nginx 정적 서빙이라 api(200초+)보다 훨씬 빠르지만, 이미지 pull 직후
+            # 재생성이 겹치면 몇십 초 걸린다. 120초까지 기다린다.
+            ok=""
+            for i in $(seq 1 30); do
+              if curl -sfo /dev/null --max-time 5 http://localhost/; then ok="yes"; break; fi
+              sleep 4
+            done
+            if [ -z "$ok" ]; then
+              echo "120초 동안 http://localhost/ 가 응답하지 않는다. 최근 로그:"
+              sudo docker compose -f web-docker-compose.yaml logs --tail 50
+              exit 1
+            fi
+            echo "웹 응답 확인 OK (${i}회차)"
 

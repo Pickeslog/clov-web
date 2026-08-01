@@ -1,5 +1,6 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import ProtectedRoute from './routes/ProtectedRoute'
+import RouteErrorScreen from './components/ErrorBoundary/RouteErrorScreen'
 import Login from './pages/auth/Login/Login'
 import Signup from './pages/auth/Signup/Signup'
 import OAuthRedirect from './pages/auth/OAuthRedirect/OAuthRedirect'
@@ -15,27 +16,37 @@ import Schedule from './pages/schedule/Schedule/Schedule'
 import Shop from './pages/shop/Shop/Shop'
 
 // 라우팅 골격. 보호 라우트는 ProtectedRoute 하위에 둔다.
+//
+// 최상위는 경로 없는 래퍼 라우트다. 화면을 하나 더 끼우려는 게 아니라 errorElement를
+// 걸 자리를 만들려는 것 — 여기 하나면 아래 모든 화면의 렌더 예외가 잡힌다. 라우트마다
+// errorElement를 달면 새 라우트를 추가하는 사람이 빠뜨리기 쉽다.
 export const router = createBrowserRouter([
-  { path: '/login', element: <Login /> },
-  { path: '/signup', element: <Signup /> },
-  { path: '/oauth2/redirect', element: <OAuthRedirect /> },
-  // 비밀번호 재설정(계약 §4-4) — 비로그인 상태로 들어오는 화면이라 보호 라우트 밖이다.
-  { path: '/forgot-password', element: <ForgotPassword /> },
-  { path: '/reset-password', element: <ResetPassword /> },
   {
-    element: <ProtectedRoute />,
+    element: <Outlet />,
+    errorElement: <RouteErrorScreen />,
     children: [
-      { path: '/', element: <RoomList /> },
-      { path: '/join', element: <JoinRoom /> },
-      { path: '/join/:code', element: <JoinRoom /> },
-      // 상점은 재화가 사용자 단위라 방에 속하지 않는다 — 방 안/밖 어디서든 같은 경로.
-      { path: '/shop', element: <Shop /> },
-      { path: '/rooms/:roomId', element: <Dashboard /> },
-      { path: '/rooms/:roomId/feed', element: <Feed /> },
-      { path: '/rooms/:roomId/letters', element: <Letters /> },
-      { path: '/rooms/:roomId/schedule', element: <Schedule /> },
-      { path: '/rooms/:roomId/notifications', element: <Notifications /> },
+      { path: '/login', element: <Login /> },
+      { path: '/signup', element: <Signup /> },
+      { path: '/oauth2/redirect', element: <OAuthRedirect /> },
+      // 비밀번호 재설정(계약 §4-4) — 비로그인 상태로 들어오는 화면이라 보호 라우트 밖이다.
+      { path: '/forgot-password', element: <ForgotPassword /> },
+      { path: '/reset-password', element: <ResetPassword /> },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          { path: '/', element: <RoomList /> },
+          { path: '/join', element: <JoinRoom /> },
+          { path: '/join/:code', element: <JoinRoom /> },
+          // 상점은 재화가 사용자 단위라 방에 속하지 않는다 — 방 안/밖 어디서든 같은 경로.
+          { path: '/shop', element: <Shop /> },
+          { path: '/rooms/:roomId', element: <Dashboard /> },
+          { path: '/rooms/:roomId/feed', element: <Feed /> },
+          { path: '/rooms/:roomId/letters', element: <Letters /> },
+          { path: '/rooms/:roomId/schedule', element: <Schedule /> },
+          { path: '/rooms/:roomId/notifications', element: <Notifications /> },
+        ],
+      },
+      { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
-  { path: '*', element: <Navigate to="/" replace /> },
 ])

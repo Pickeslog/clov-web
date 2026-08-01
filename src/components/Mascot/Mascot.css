@@ -17,10 +17,37 @@
   padding: 0;
   cursor: pointer;
   transition: transform 0.18s ease;
+  /* 롭 드래그(#155)가 window pointermove로 따라가므로, 터치에서 브라우저가 이 버튼을
+     스크롤/줌 제스처로 가로채지 않게 막는다. */
+  touch-action: none;
 }
 .clov-mascot-hit:hover:not(:disabled) { transform: scale(1.07); }
 .clov-mascot-hit:active:not(:disabled) { transform: scale(0.97); }
 .clov-mascot-hit:disabled { cursor: default; }
+
+/* ── 롭 전용 이스터에그 연출(#155, 목업 croby-mascot.js 상태머신 이식) ──
+   lifted/scared는 JS가 .clov-mascot(래퍼)에 pointer 추적 transform(translate)을 직접 건다 —
+   그 transform과 안 겹치게, 흔들림 연출은 자식 .clov-mascot-sprite에만 건다. */
+@keyframes clov-mascot-shiver {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-4deg); }
+  75% { transform: rotate(4deg); }
+}
+@keyframes clov-mascot-wobble {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(-10deg) scale(0.96); }
+  40% { transform: rotate(8deg) scale(0.96); }
+  60% { transform: rotate(-6deg) scale(0.98); }
+  80% { transform: rotate(4deg) scale(0.98); }
+}
+.clov-mascot--scared .clov-mascot-sprite { animation: clov-mascot-shiver 0.22s ease-in-out infinite; }
+.clov-mascot--angry .clov-mascot-sprite { filter: drop-shadow(0 8px 14px rgba(27, 67, 50, 0.18)) saturate(1.6) brightness(0.92); }
+.clov-mascot--dizzy .clov-mascot-sprite { animation: clov-mascot-wobble 0.5s ease-in-out; }
+.clov-mascot--lifted .clov-mascot-sprite,
+.clov-mascot--scared .clov-mascot-sprite,
+.clov-mascot--angry .clov-mascot-sprite {
+  cursor: grabbing;
+}
 
 /* 스프라이트 원본은 대부분 640px 높이(crobi 366x640 · 버거노인 427x640 · 타코군/김철수
    640x640)라 160px면 4배 오버샘플이다 — 고해상도 화면에서도 흐려지지 않는다.

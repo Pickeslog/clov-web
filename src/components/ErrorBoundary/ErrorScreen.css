@@ -1,0 +1,104 @@
+/* 크래시 화면. 색은 전부 tokens.css 변수라 라이트/다크가 자동으로 따라온다.
+   앱 셸(헤더·배경)이 이미 죽은 상태에서도 혼자 성립해야 하므로 배경까지 직접 깐다. */
+.clov-err {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background: var(--page-bg, #fffdf3);
+  color: var(--text, #0e2d1d);
+}
+
+.clov-err-card {
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  padding: 32px 28px;
+  text-align: center;
+  background: var(--card-bg, rgba(255, 255, 255, 0.85));
+  border: 1px solid var(--line, rgba(22, 135, 75, 0.18));
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.clov-err-mark {
+  font-size: 40px;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
+.clov-err-title {
+  margin: 0 0 10px;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--forest, #073b24);
+}
+
+.clov-err-desc {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--muted, #638772);
+}
+
+.clov-err-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.clov-err-btn {
+  padding: 10px 18px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid var(--line, rgba(22, 135, 75, 0.18));
+  background: transparent;
+  color: var(--forest, #073b24);
+  transition: background .15s ease, transform .15s ease;
+}
+
+.clov-err-btn:hover {
+  background: var(--glow, rgba(80, 217, 144, 0.22));
+  transform: translateY(-1px);
+}
+
+/* 글자색을 흰색으로 박으면 안 된다 — 다크에서 --leaf가 연녹색(#6fe3a3)으로 뒤집혀
+   흰 글자 대비가 1.59까지 떨어진다(실측). --paper는 --leaf와 반대로 뒤집히는 토큰이라
+   (라이트 #ffffff / 다크 #202b22) 양쪽 다 AA를 넘긴다 — 실측 4.56 / 9.23.
+   (--cream도 방향은 같지만 라이트값이 #f7fbf6이라 4.36으로 AA에 살짝 못 미친다) */
+.clov-err-btn.is-primary {
+  background: var(--leaf, #16874b);
+  border-color: var(--leaf, #16874b);
+  color: var(--paper, #ffffff);
+}
+
+.clov-err-btn.is-primary:hover {
+  background: var(--forest, #073b24);
+  border-color: var(--forest, #073b24);
+}
+
+.clov-err-detail {
+  margin: 20px 0 0;
+  padding: 12px;
+  max-height: 180px;
+  overflow: auto;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-radius: 10px;
+  border: 1px solid var(--line, rgba(22, 135, 75, 0.18));
+  background: var(--cream, #f7fbf6);
+  color: var(--muted, #638772);
+}
+
+@media (max-width: 480px) {
+  .clov-err-card { padding: 26px 20px; }
+  .clov-err-actions .clov-err-btn { flex: 1 1 auto; }
+}

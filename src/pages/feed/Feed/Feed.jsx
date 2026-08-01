@@ -1022,6 +1022,7 @@ export function MemoryDetailModal({
   members = [],
   onClose,
   onSave,
+  savingError,
   onDelete,
   saving,
   deleting,
@@ -1040,6 +1041,8 @@ export function MemoryDetailModal({
   const [isEditing, setEditing] = useState(false)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [linkedPlanId, setLinkedPlanId] = useState(null) // 약속 연결 변경/해제(#200, clov-api#98). null = 자유 기록
+  const [planPickerOpen, setPlanPickerOpen] = useState(false)
   const [newMessageDraft, setNewMessageDraft] = useState('')
   const [editingCommentId, setEditingCommentId] = useState(null)
   const [editMessageDraft, setEditMessageDraft] = useState('')
@@ -1055,6 +1058,22 @@ export function MemoryDetailModal({
     queryFn: () => getPlan(memory.planId),
     enabled: Boolean(memory?.planId),
   })
+
+  // 약속 연결 변경/해제(#200, clov-api#98) — 후보는 작성 모달과 동일 기준(완료 + 미스킵)만.
+  // 편집 중일 때만 조회한다(보기 모드에서 매번 방의 약속 전체를 받아올 필요 없음).
+  const plansQuery = useQuery({
+    queryKey: ['plans', roomId],
+    queryFn: () => getPlans(roomId),
+    enabled: Boolean(roomId) && isEditing,
+  })
+  const linkablePlans = (plansQuery.data?.items ?? []).filter(
+    (p) => p.status === 'COMPLETED' && p.memoryStatus !== 'SKIPPED',
+  )
+  // 원래 연결된 약속이 후보 목록 필터에 안 걸리는 예외적인 경우에도(방금 스킵된 직후 등) 칩이
+  // 안 깨지도록, 상세 조회 때 이미 받아온 planQuery.data를 폴백으로 쓴다.
+  const linkedPlan =
+    linkablePlans.find((p) => String(p.id) === String(linkedPlanId)) ??
+    (linkedPlanId && String(linkedPlanId) === String(memory?.planId) ? planQuery.data : null)
 
   const isWriter = memory && String(memory.writer?.id) === String(currentUserId)
   const images = memory?.images ?? []
@@ -1077,6 +1096,8 @@ export function MemoryDetailModal({
   const startEdit = () => {
     setTitle(memory.title)
     setContent(memory.content ?? '')
+    setLinkedPlanId(memory.planId ?? null)
+    setPlanPickerOpen(false)
     setEditing(true)
   }
 
@@ -1275,6 +1296,67 @@ export function MemoryDetailModal({
                     onChange={(e) => setContent(e.target.value)}
                   />
                   <span className="memory-detail-edit-body-count">{content.length}/100</span>
+
+                  {/* 약속 연결 변경/해제(#200) — 작성 모달(wm-schedule-field, mp-connect 계열, mp-sched 계열)과
+                      같은 패턴 재사용. 후보는 완료+미스킵 약속만(linkablePlans, 위에서 계산). */}
+                  <div className="wm-field wm-schedule-field">
+                    <span className="wm-label">약속 연결 <em>(선택 · 일정계획)</em></span>
+                    <div className="wm-schedule-connect">
+                      {linkedPlan && !planPickerOpen ? (
+                        <div className="mp-connect-chip">
+                          <span className="mp-connect-dday">{ddayLabel(linkedPlan.planDate)}</span>
+                          <span className="mp-connect-title">{linkedPlan.title} <b>· 연결됨</b></span>
+                          <button type="button" className="mp-connect-btn" onClick={() => setPlanPickerOpen(true)}>변경</button>
+                          <button type="button" className="mp-connect-btn mp-connect-btn--detach" onClick={() => { setLinkedPlanId(null); setPlanPickerOpen(false) }}>해제</button>
+                        </div>
+                      ) : planPickerOpen ? (
+                        <>
+                          <div className="mp-sched-list">
+                            {plansQuery.isPending ? (
+                              <div className="mp-sched-empty">약속을 불러오는 중…</div>
+                            ) : linkablePlans.length === 0 ? (
+                              <div className="mp-sched-empty">연결할 완료된 약속이 없어요.<br />일정계획에서 약속을 완료하면 여기에 나타나요.</div>
+                            ) : (
+                              linkablePlans.map((p) => {
+                                const isSelected = String(linkedPlanId) === String(p.id)
+                                return (
+                                  <button
+                                    type="button"
+                                    key={p.id}
+                                    className={`mp-sched-item ${isSelected ? 'is-selected' : ''}`}
+                                    onClick={() => { setLinkedPlanId(p.id); setPlanPickerOpen(false) }}
+                                  >
+                                    <span className="mp-sched-dday">{ddayLabel(p.planDate)}</span>
+                                    <span className="mp-sched-info">
+                                      <span className="mp-sched-title">{p.title}</span>
+                                      <span className={`mp-sched-4cut ${p.memoryStatus === 'WRITTEN' ? 'is-done' : ''}`}>
+                                        {p.planDate || '날짜 미정'}{p.memoryStatus === 'WRITTEN' ? ' · 추억 작성됨' : ''}
+                                      </span>
+                                    </span>
+                                    {isSelected && <span className="mp-sched-check">✓</span>}
+                                  </button>
+                                )
+                              })
+                            )}
+                          </div>
+                          <button type="button" className="mp-connect-cancel" onClick={() => setPlanPickerOpen(false)}>목록 닫기</button>
+                        </>
+                      ) : (
+                        <>
+                          <button type="button" className="mp-connect-open" onClick={() => setPlanPickerOpen(true)}>
+                            <i className="ti ti-calendar" aria-hidden="true" /> 일정계획에서 약속 가져오기
+                          </button>
+                          <div className="mp-connect-hint">연결 안 하면 <b>자유 기록(FREE MEMORY)</b>으로 저장돼요</div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 저장 실패(예: 이미 다른 곳에서 그 약속에 추억을 쓴 경우 409
+                      MEMORY_ALREADY_WRITTEN)를 조용히 삼키지 않는다 — 편집 폼을 그대로 두고
+                      에러를 보여준다. 성공했을 때만 편집 모드를 닫는다. */}
+                  {savingError && <div className="wm-error" role="alert">{savingError}</div>}
+
                   <div className="memory-detail-edit-actions">
                     <Button variant="secondary" size="sm" onClick={() => setEditing(false)}>취소</Button>
                     <Button
@@ -1282,8 +1364,14 @@ export function MemoryDetailModal({
                       size="sm"
                       disabled={saving}
                       onClick={() => {
-                        onSave({ title: title.trim(), content: content.trim() || null })
-                        setEditing(false)
+                        const payload = { title: title.trim(), content: content.trim() || null }
+                        // 안 바꿨으면 아예 안 보낸다(providedFields로 "미변경"과 "해제(null)"를
+                        // 구분하는 서버 계약, clov-api#98) — 매번 같은 값을 보내도 서버는 no-op
+                        // 처리하지만 의도를 명확히 하려고 변경분만 싣는다.
+                        if (String(linkedPlanId ?? '') !== String(memory.planId ?? '')) {
+                          payload.planId = linkedPlanId ? String(linkedPlanId) : null
+                        }
+                        onSave(payload, { onSuccess: () => setEditing(false) })
                       }}
                     >
                       {saving ? '저장 중…' : '저장'}

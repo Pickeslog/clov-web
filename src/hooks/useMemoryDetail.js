@@ -29,7 +29,18 @@ export function useMemoryDetail(memoryId, roomId, { onDeleted } = {}) {
   const invalidateMemory = () => queryClient.invalidateQueries({ queryKey: ['memory', memoryId] })
   const invalidateBoth = () => { invalidateMemory(); invalidateFeed() }
 
-  const updateMutation = useMutation({ mutationFn: (payload) => updateMemory(memoryId, payload), onSuccess: invalidateBoth })
+  const updateMutation = useMutation({
+    mutationFn: (payload) => updateMemory(memoryId, payload),
+    onSuccess: (_data, payload) => {
+      invalidateBoth()
+      // 약속 연결 변경/해제(clov-api#98, #200)도 plan memory_status(CANDIDATE⇄WRITTEN)를
+      // 바꾼다 — useCreateMemory.js가 이미 같은 이유로 하는 무효화와 대칭(일정계획 목록이
+      // 안 바뀐 것처럼 보이는 걸 막는다). planId를 안 보낸 저장(제목/본문만)에는 불필요.
+      if (Object.prototype.hasOwnProperty.call(payload, 'planId')) {
+        queryClient.invalidateQueries({ queryKey: ['plans', roomId] })
+      }
+    },
+  })
   const deleteMutation = useMutation({ mutationFn: () => deleteMemory(memoryId), onSuccess: () => { invalidateFeed(); onDeleted?.() } })
   const addCommentMutation = useMutation({
     mutationFn: (content) => createComment(memoryId, { content }),
@@ -56,7 +67,10 @@ export function useMemoryDetail(memoryId, roomId, { onDeleted } = {}) {
   return {
     memory: detail.data,
     isLoading: detail.isPending,
-    onSave: (payload) => updateMutation.mutate(payload),
+    // options를 그대로 넘겨 호출부가 성공 시점을 잡을 수 있게 한다(#200 — 약속 연결 저장 실패 시
+    // 편집 모드를 계속 열어두고 에러를 보여주려면 무조건 닫으면 안 된다).
+    onSave: (payload, options) => updateMutation.mutate(payload, options),
+    savingError: updateMutation.error?.message,
     onDelete: () => deleteMutation.mutate(),
     saving: updateMutation.isPending,
     deleting: deleteMutation.isPending,

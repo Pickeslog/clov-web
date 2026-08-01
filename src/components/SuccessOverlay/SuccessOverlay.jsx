@@ -9,13 +9,12 @@ const WELCOME_LINES = [
   () => 'Clov. 에서 기록의 재미를 느껴봐요!',
 ]
 
-// 롭 인터랙션(드래그·연타·롱홀드)이 아직 프로덕션에 없어서 이스터에그 힌트는 감춰둔다.
-// croby-mascot.js 이식(#155)이 끝나면 아래 EASTER_EGGS와 JSX 블록의 주석을 해제한다.
-// const EASTER_EGGS = [
-//   '롭의 머리를 잡고 위로 들어올려보세요',
-//   '롭을 빠르게 세 번 클릭해보세요',
-//   '롭을 너무 오래 들고 있으면 화를 낼지도 몰라요',
-// ]
+// 롭 인터랙션(드래그·연타·롱홀드)이 Mascot.jsx에 이식됐다(#155) — 문구는 실제 동작과 일치.
+const EASTER_EGGS = [
+  '롭의 머리를 잡고 위로 들어올려보세요',
+  '롭을 빠르게 세 번 클릭해보세요',
+  '롭을 너무 오래 들고 있으면 화를 낼지도 몰라요',
+]
 
 const LEAVES = [
   { left: '6%', size: 8, duration: 4.6, delay: 0 },
@@ -95,12 +94,10 @@ export default function SuccessOverlay({ nickname, durationMs = 3000, onDone }) 
           </svg>
         </div>
         <div className="clov-success-text">{line}</div>
-        {/* 이스터에그 힌트 — #155(롭 인터랙션 이식) 완료 전까지 감춰둔다.
         <div className="clov-success-egg-hint">
           <span className="clov-success-egg-label">이스터에그</span>
           <span className="clov-success-egg-text">{pickRandom(EASTER_EGGS)}</span>
         </div>
-        */}
       </div>
     </div>,
     document.body,

@@ -180,6 +180,57 @@
   .clov-hdr-nav-btn { flex-shrink: 0; }
 }
 
+/* ── 방 변경하기 모달 ── */
+.clov-rs-backdrop {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.clov-rs-modal {
+  width: 100%; max-width: 360px; max-height: 80vh; overflow-y: auto;
+  background: #1e2016; border: 1px solid #2a2c1e; border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45); padding: 18px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
+}
+.clov-rs-modal *, .clov-rs-modal *::before, .clov-rs-modal *::after { box-sizing: border-box; }
+.clov-rs-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 16px; font-weight: 800; color: #eef0e2;
+}
+.clov-rs-close {
+  border: none; background: none; cursor: pointer; color: #b7c99a;
+  font-size: 20px; line-height: 1; width: 28px; height: 28px; border-radius: 8px;
+}
+.clov-rs-close:hover { background: #2b3020; color: #9ccc65; }
+.clov-rs-sub { margin: 6px 0 14px; font-size: 13px; color: #9aa88a; }
+.clov-rs-state { padding: 20px 4px; text-align: center; font-size: 13px; color: #9aa88a; }
+.clov-rs-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.clov-rs-item {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  border: none; background: none; cursor: pointer; border-radius: 10px;
+  padding: 9px 10px; font: inherit; font-size: 14px; font-weight: 600; color: #eef0e2;
+}
+.clov-rs-item:hover:not(:disabled) { background: #2b3020; color: #9ccc65; }
+.clov-rs-item:disabled { cursor: default; opacity: 0.6; }
+.clov-rs-avatar {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+  background: #2b3020; color: #9ccc65; font-size: 13px; font-weight: 800;
+  display: grid; place-items: center;
+}
+.clov-rs-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.clov-rs-badge {
+  flex-shrink: 0; padding: 2px 8px; border-radius: 999px;
+  background: rgba(156, 204, 101, 0.16); color: #9ccc65; font-size: 11px; font-weight: 800;
+}
+.clov-rs-empty { padding: 16px 4px 4px; text-align: center; }
+.clov-rs-empty p { margin: 0 0 10px; font-size: 13px; color: #9aa88a; }
+.clov-rs-cta {
+  border: 1px solid #2a2c1e; background: #22261a; color: #9ccc65; cursor: pointer;
+  border-radius: 10px; padding: 9px 14px; font: inherit; font-size: 13px; font-weight: 700;
+}
+.clov-rs-cta:hover { background: #2b3020; }
+
 /* ── 라이트 모드 ── */
 body.light-mode .clov-hdr { background: rgba(255, 255, 255, 0.88); border-color: #eadfd0; }
 body.light-mode .clov-hdr-back { color: #61766a; }
@@ -208,3 +259,15 @@ body.light-mode .clov-hdr-wardrobe-item { background: #fafcf9; border-color: #ea
 body.light-mode .clov-hdr-wardrobe-item.on { border-color: #52b788; background: #edf4ec; }
 body.light-mode .clov-hdr-wardrobe-item:hover:not(:disabled) { border-color: #52b788; }
 body.light-mode .clov-hdr-wardrobe-item-name { color: #1e2e26; }
+
+body.light-mode .clov-rs-modal { background: #fff; border-color: #eadfd0; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15); }
+body.light-mode .clov-rs-head { color: #2c3e35; }
+body.light-mode .clov-rs-close { color: #61766a; }
+body.light-mode .clov-rs-close:hover { background: #edf4ec; color: #1b4332; }
+body.light-mode .clov-rs-sub, body.light-mode .clov-rs-state, body.light-mode .clov-rs-empty p { color: #6a7a70; }
+body.light-mode .clov-rs-item { color: #2c3e35; }
+body.light-mode .clov-rs-item:hover:not(:disabled) { background: #edf4ec; color: #1b4332; }
+body.light-mode .clov-rs-avatar { background: #edf4ec; color: #1b4332; }
+body.light-mode .clov-rs-badge { background: rgba(27, 67, 50, 0.1); color: #1b4332; }
+body.light-mode .clov-rs-cta { background: #f4f8f2; border-color: #e0ebdc; color: #1b4332; }
+body.light-mode .clov-rs-cta:hover { background: #edf4ec; }

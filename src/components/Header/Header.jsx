@@ -9,6 +9,7 @@ import clovLogo from '../../assets/clov_logo.png'
 import Settings from '../Settings/Settings'
 import Notifications from '../../pages/notifications/Notifications/Notifications'
 import MascotWardrobe from './MascotWardrobe'
+import RoomSwitcher from './RoomSwitcher'
 
 // 방 내부 네비 탭 — 프로토타입 clov-header main 타입.
 const TABS = [
@@ -41,6 +42,7 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [switcherOpen, setSwitcherOpen] = useState(false)
 
   useEffect(() => {
     if (!menuOpen) return undefined
@@ -115,6 +117,9 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
           {menuOpen && (
             <ul className="clov-hdr-dropdown" role="menu">
               <MascotWardrobe onNavigateShop={() => { setMenuOpen(false); navigate('/shop', { state: roomId ? { fromRoomId: roomId } : undefined }) }} />
+              {variant === 'room' && (
+                <li><button type="button" onClick={() => { setSwitcherOpen(true); setMenuOpen(false) }}>🔁 방 변경하기</button></li>
+              )}
               <li><button type="button" onClick={() => { setSettingsOpen(true); setMenuOpen(false) }}>⚙️ 사용자 설정</button></li>
               <li><button type="button" onClick={clear}>로그아웃</button></li>
             </ul>
@@ -127,6 +132,7 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
         컨테이닝 블록이 되어 모달이 56px 헤더 안에 갇히는 오버플로우를 방지. */}
     {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
     {notificationsOpen && <Notifications onClose={() => setNotificationsOpen(false)} />}
+    {switcherOpen && <RoomSwitcher currentRoomId={roomId} onClose={() => setSwitcherOpen(false)} />}
     </>
   )
 }

@@ -70,7 +70,17 @@ api.interceptors.response.use(
   },
 )
 
-// 성공 봉투에서 data만 꺼낸다. 봉투가 아니면 그대로 반환.
+// 성공 봉투에서 data만 꺼낸다.
+//
+// 봉투가 아니면 그대로 반환하지 않고 던진다(#209). 이 인스턴스를 지나는 응답은 계약상
+// 전부 봉투다 — 컨트롤러는 모두 ApiResponse를 반환하고(DELETE 10개도 200 + success(null)),
+// 예외는 GlobalExceptionHandler가 봉투로 감싸며, R2 PUT은 lib/uploadImage.js가 순수
+// fetch로 우회한다. 그래서 봉투가 아닌 200은 서버가 아니라 앞단이 답한 것이다.
+// nginx가 /api/* 에 index.html을 돌려주는 경우가 대표적이다.
+//
+// 그대로 통과시키면 TanStack Query가 그 HTML 문자열을 정상 데이터로 캐시하고, 화면은
+// 한참 뒤 .map이나 .balance에서 죽는다. 네트워크 탭은 전부 200 초록인데 화면만 깨져
+// 원인까지 매번 되짚어야 한다. 실패 지점을 원인 지점으로 끌어온다.
 function unwrap(body) {
   if (body && typeof body === 'object' && 'success' in body) {
     if (body.success) {
@@ -78,7 +88,7 @@ function unwrap(body) {
     }
     throw normalizeError({ response: { data: body } })
   }
-  return body
+  throw new Error('서버 응답 형식이 올바르지 않습니다. 잠시 후 다시 시도해 주세요.')
 }
 
 // 계약 error.code/message를 Error에 실어 상위에서 code로 분기할 수 있게 한다.

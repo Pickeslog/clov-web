@@ -107,7 +107,8 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
         >
           <NavIcon><path d="M4 8h16l-1.2 10a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8L4 8zM8.5 8V6a3.5 3.5 0 0 1 7 0v2" /></NavIcon>
           <span className="clov-hdr-shop-label">상점</span>
-          {wallet.data && <span className="clov-hdr-gold"><i aria-hidden="true">G</i>{wallet.data.balance.toLocaleString()}</span>}
+          {/* balance가 비면 헤더가 통째로 죽는다 — Shop.jsx도 같은 이유로 ?? 0을 쓴다(#208). */}
+          {wallet.data && <span className="clov-hdr-gold"><i aria-hidden="true">G</i>{(wallet.data.balance ?? 0).toLocaleString()}</span>}
         </button>
 
         <div className="clov-hdr-avatar-wrap">

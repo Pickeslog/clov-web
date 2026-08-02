@@ -86,12 +86,28 @@ function SettingsBody({ me, prefs, onClose }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['me'] }),
   })
   // 환경설정(테마) — 프로토타입처럼 바꾸는 즉시 저장(테마 패널 푸터는 '닫기'만).
+  //
+  // 화면을 먼저 바꾸고 저장하는 낙관적 갱신이라 실패하면 반드시 되돌려야 한다. 안 되돌리면
+  // 화면은 바뀐 채로 남고 새로고침해야 이전 값이 드러나서, 사용자에겐 저장 실패가 아니라
+  // "설정이 이유 없이 되돌아간다"로 보인다(#208).
+  //
+  // 되돌림 기준은 그 저장을 시작한 시점의 값 하나뿐이다. 실패하는 동안 다른 항목을 또 바꿨다면
+  // 그 선택까지 같이 되돌아갈 수 있다. 대신 아래 푸터에 실패가 보이니 다시 고르면 된다.
   const prefMutation = useMutation({
-    mutationFn: updatePreferences,
+    mutationFn: ({ next }) => updatePreferences(next),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['preferences'] }),
+    onError: (_error, { previous }) => {
+      setPref(previous)
+      applyTheme(previous.darkMode) // body 클래스도 같이 되돌린다 — state만 되돌리면 테마가 남는다
+    },
   })
+  // mutate를 setState 업데이터 안에서 부르지 않는다. 업데이터는 순수해야 하고 StrictMode에서
+  // 두 번 실행돼 개발 모드에서 저장 요청이 2번 나갔다.
   const setPrefAndSave = (patch) => {
-    setPref((p) => { const next = { ...p, ...patch }; prefMutation.mutate(next); return next })
+    const previous = pref
+    const next = { ...pref, ...patch }
+    setPref(next)
+    prefMutation.mutate({ next, previous })
   }
   // 라이트/다크 — 즉시 적용(body 클래스) + 저장.
   const setTheme = (dark) => { applyTheme(dark); setPrefAndSave({ darkMode: dark }) }
@@ -260,12 +276,14 @@ function SettingsBody({ me, prefs, onClose }) {
       <div className="ps-actions">
         {pane === 'account' ? (
           <div className="ps-actions-row">
-            <div className="ps-action-group">
+            <div className="ps-action-group" style={{ alignItems: 'center' }}>
               <button type="button" className="ps-btn danger"
                 disabled={deleteMutation.isPending}
                 onClick={async () => { if (await confirm('정말 탈퇴하시겠어요? 되돌릴 수 없습니다.', { confirmText: '탈퇴', variant: 'danger' })) deleteMutation.mutate() }}>
                 {deleteMutation.isPending ? '처리 중…' : '계정 탈퇴'}
               </button>
+              {/* 실패해도 버튼이 '처리 중…'에서 원래대로 돌아올 뿐이라 눌렸는지조차 알 수 없었다. */}
+              {deleteMutation.isError && <span className="ps-err">{deleteMutation.error?.message}</span>}
             </div>
             <div className="ps-action-group" style={{ alignItems: 'center' }}>
               {profileSave.isSuccess && <span className="ps-ok">저장됨</span>}
@@ -278,6 +296,11 @@ function SettingsBody({ me, prefs, onClose }) {
           </div>
         ) : (
           <div className="ps-actions-row" style={{ justifyContent: 'flex-end' }}>
+            {/* 테마 패널은 즉시 저장이라 '저장하기'가 없다. 실패를 알릴 자리가 여기밖에 없다.
+                푸터는 스크롤되는 ps-body 바깥이라 어느 항목을 바꿔도 항상 보인다. */}
+            {prefMutation.isError && (
+              <span className="ps-err">{prefMutation.error?.message ?? '설정을 저장하지 못했어요.'}</span>
+            )}
             <button type="button" className="ps-btn primary" onClick={onClose}>닫기</button>
           </div>
         )}

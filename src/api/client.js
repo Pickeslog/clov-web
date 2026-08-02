@@ -90,5 +90,15 @@ function normalizeError(error) {
     normalized.details = apiError.details ?? null
     return normalized
   }
-  return error instanceof Error ? error : new Error('네트워크 오류가 발생했습니다.')
+
+  // 여기부터는 계약 봉투가 아니다. 예전에는 axios 오류를 그대로 돌려줬는데(AxiosError도
+  // Error의 인스턴스라 삼항의 앞쪽으로 빠졌다), 화면들이 error.message를 그대로 렌더하므로
+  // 사용자에게 "Network Error"·"Request failed with status code 502" 같은 영어 원문이
+  // 그대로 나갔다(#212). 준비해 둔 한국어 문구는 사실상 도달하지 않는 코드였다.
+  //
+  // 원본은 cause에 남긴다 — 콘솔에서 원래 원인을 볼 수 있어야 한다.
+  const message = error?.response
+    ? '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.' // 응답은 왔는데 봉투가 아니다(프록시 5xx 등)
+    : '서버에 연결하지 못했습니다. 네트워크 상태를 확인해 주세요.' // 응답 자체가 없다(연결 실패·CORS 차단)
+  return new Error(message, { cause: error })
 }

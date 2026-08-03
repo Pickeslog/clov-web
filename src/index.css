@@ -1,3 +1,63 @@
+@font-face {
+  font-family: 'Cafe24DongdongRegular';
+  src: url('./assets/fonts/Cafe24DongdongRegular.woff2') format('woff2'),
+       url('./assets/fonts/Cafe24DongdongRegular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'OwnglyphBerryryeowon';
+  src: url('./assets/fonts/OwnglyphBerryryeowon.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'OwnglyphNewbohyeon';
+  src: url('./assets/fonts/OwnglyphNewbohyeon.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'OwnglyphNewbohyeon';
+  src: url('./assets/fonts/OwnglyphNewbohyeonBold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Clov 전체 기본 폰트 = DongdongRegular. 아래 5곳만 예외(각 목록은 서로 겹치지 않아 우선순위 충돌이 없다).
+   아이콘 폰트(tabler-icons)는 글자가 아니라 예외로 둔다. */
+body, body *:not(.ti) {
+  font-family: 'Cafe24DongdongRegular', system-ui, 'Segoe UI', Roboto, sans-serif !important;
+}
+body :is(.clov-hdr, .clov-hdr *):not(.ti) {
+  font-family: 'OwnglyphBerryryeowon' !important;
+}
+/* 헤더 로고("Clov.")와 골드 배지(원형 G)만 기본 폰트로 되돌림 — 위 헤더 규칙보다 뒤에 와야 이긴다(동일 특이도, 소스 순서) */
+body :is(.clov-hdr-logo, .clov-hdr-logo *, .clov-hdr-gold, .clov-hdr-gold *):not(.ti) {
+  font-family: 'Cafe24DongdongRegular', system-ui, 'Segoe UI', Roboto, sans-serif !important;
+}
+body :is(.v5-photo-chip-text, .lv-badge-name, .noti-modal, .noti-modal *):not(.ti) {
+  font-family: 'OwnglyphNewbohyeon' !important;
+}
+body :is(.dashboard-hero-action-btn, .feed-write-btn, .btn-schedule-new, .growth-card-rail, .growth-card-rail *):not(.ti) {
+  font-family: 'OwnglyphNewbohyeon' !important;
+  font-weight: 700 !important;
+}
+/* 모든 폰트 20px 고정(아이콘 제외). 배너 D+day(.hud-dday)는 60px 별도 고정이라 여기서 제외 —
+   자식(.hud-dday span)은 컴포넌트 자체 .5em 규칙으로 60px에 비례해 자동 계산된다.
+   골드 배지(.clov-hdr-gold)는 13px 원형 안에 8px 글자로 딱 맞게 짜여 있어 20px을 넣으면
+   원 밖으로 넘쳐 안 보이게 된다 — 폰트만이 아니라 크기도 원래 값 그대로 둔다. */
+body *:not(.ti):not(.hud-dday):not(.hud-dday *):not(.clov-hdr-gold):not(.clov-hdr-gold *) {
+  font-size: 20px !important;
+}
+body .hud-dday {
+  font-size: 60px !important;
+}
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -11,11 +71,11 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Cafe24DongdongRegular', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'Cafe24DongdongRegular', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
+  font: 20px/145% var(--sans);
   letter-spacing: 0.18px;
   color-scheme: light dark;
   color: var(--text);

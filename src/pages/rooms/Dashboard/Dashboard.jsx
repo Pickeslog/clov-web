@@ -652,7 +652,7 @@ export default function Dashboard() {
         <div className="section-title">
           <span className="section-title-label">다가오는 D-day</span>
           <div className="section-actions">
-            <Button variant="dashed" size="sm" onClick={() => setComposeSchedule(true)}>+ 새 D-day 만들기</Button>
+            <Button variant="dashed" size="sm" className="dashboard-hero-action-btn" onClick={() => setComposeSchedule(true)}>+ 새 D-day 만들기</Button>
           </div>
         </div>
         {/* 항상 3칸 — 다가오는 약속 → 지난 약속 → 그래도 남으면 "새로운 약속 만들기" 고스트 카드
@@ -688,8 +688,8 @@ export default function Dashboard() {
         <div className="section-title">
           <span className="section-title-label">참여자별 추억 증거 카드</span>
           <div className="section-actions">
-            <Button variant="dashed" size="sm" onClick={() => setComposeMemory(true)}><i className="ti ti-pencil" aria-hidden="true" /> 글쓰기</Button>
-            <Button variant="dashed" size="sm" onClick={() => go('feed')}>전체 피드 보기</Button>
+            <Button variant="dashed" size="sm" className="dashboard-hero-action-btn" onClick={() => setComposeMemory(true)}><i className="ti ti-pencil" aria-hidden="true" /> 글쓰기</Button>
+            <Button variant="dashed" size="sm" className="dashboard-hero-action-btn" onClick={() => go('feed')}>전체 피드 보기</Button>
           </div>
         </div>
         {memoryItems.length === 0 ? (

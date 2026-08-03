@@ -7,12 +7,13 @@ import { getPreferences } from '../../../api/user'
 import Header from '../../../components/Header/Header'
 
 // 서버 enum ↔ 화면 문구. 등급색은 다크/라이트 공통(등급 식별이 테마에 흔들리면 안 된다).
+// desc는 상세 모달에서 등급이 무엇을 뜻하는지 보여주는 짧은 설명(#197).
 const RARITY = {
-  COMMON: { label: '일반', color: '#9aa39b', soft: 'rgba(154, 163, 155, .22)' },
-  UNCOMMON: { label: '고급', color: '#3fae6d', soft: 'rgba(63, 174, 109, .22)' },
-  RARE: { label: '희귀', color: '#4a90e2', soft: 'rgba(74, 144, 226, .22)' },
-  EPIC: { label: '영웅', color: '#a678e2', soft: 'rgba(166, 120, 226, .22)' },
-  LEGENDARY: { label: '전설', color: '#e0993a', soft: 'rgba(224, 153, 58, .24)' },
+  COMMON: { label: '일반', color: '#9aa39b', soft: 'rgba(154, 163, 155, .22)', desc: '누구나 쉽게 만날 수 있는 기본 아이템이에요.' },
+  UNCOMMON: { label: '고급', color: '#3fae6d', soft: 'rgba(63, 174, 109, .22)', desc: '기본보다 한 걸음 더 신경 쓴 디자인의 아이템이에요.' },
+  RARE: { label: '희귀', color: '#4a90e2', soft: 'rgba(74, 144, 226, .22)', desc: '자주 만나기 힘든, 희귀한 아이템이에요.' },
+  EPIC: { label: '영웅', color: '#a678e2', soft: 'rgba(166, 120, 226, .22)', desc: '소수만 보유할 수 있는 특별한 아이템이에요.' },
+  LEGENDARY: { label: '전설', color: '#e0993a', soft: 'rgba(224, 153, 58, .24)', desc: '단 하나뿐인 전설 등급의 아이템이에요.' },
 }
 const RARITY_ORDER = ['COMMON', 'UNCOMMON', 'RARE', 'EPIC', 'LEGENDARY']
 
@@ -33,6 +34,7 @@ const AlertIcon = (p) => <Icon {...p}><circle cx="12" cy="12" r="9" /><path d="M
 const ShirtIcon = (p) => <Icon {...p}><path d="M9 3 4 6l2 4 2-1v11h8V9l2 1 2-4-5-3a3 3 0 0 1-6 0z" /></Icon>
 const PaletteIcon = (p) => <Icon {...p}><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 1.6-3.2 2 2 0 0 1 1.6-3.2H18a3 3 0 0 0 3-3 9 9 0 0 0-9-8.6z" /><circle cx="7.5" cy="11" r="1" /><circle cx="12" cy="7.5" r="1" /><circle cx="16.5" cy="11" r="1" /></Icon>
 const GiftIcon = (p) => <Icon {...p}><path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2 8h20v4H2zM12 8v13" /><path d="M12 8S9.5 3 7.5 4.5 9 8 12 8zM12 8s2.5-5 4.5-3.5S15 8 12 8z" /></Icon>
+const CloseIcon = (p) => <Icon {...p}><path d="M18 6 6 18M6 6l12 12" /></Icon>
 
 // 금화 — 이모지 대신 그린 SVG(금색은 고정값: 재화 식별이 테마에 흔들리면 안 된다).
 // 그라디언트 id는 인스턴스마다 고유해야 한다 — 카드가 여러 장 그려지면 같은 id의
@@ -108,6 +110,7 @@ export default function Shop() {
   const [owned, setOwned] = useState(false) // 보유함 탭
   const [sort, setSort] = useState('default')
   const [message, setMessage] = useState(null) // { tone: 'ok' | 'err', text }
+  const [detailItem, setDetailItem] = useState(null) // 카드 클릭 시 여는 상세 모달(#197)
 
   // 구매 마이크로 인터랙션 — 클릭한 구매 버튼에서 보유 골드 표시까지 코인이 날아간다.
   const [flyingCoins, setFlyingCoins] = useState([])
@@ -196,6 +199,7 @@ export default function Shop() {
       unequipPending={unequip.isPending}
       onEquip={() => { setMessage(null); equip.mutate(item.id) }}
       onUnequip={() => { setMessage(null); unequip.mutate() }}
+      onOpenDetail={() => setDetailItem(item)}
     />
   )
 
@@ -322,6 +326,21 @@ export default function Shop() {
           ))}
         </div>
       )}
+
+      {detailItem && (
+        <ItemDetailModal
+          item={detailItem}
+          balance={balance}
+          pending={purchase.isPending && purchase.variables === detailItem.id}
+          onBuy={() => { setMessage(null); lastBuyRectRef.current = null; purchase.mutate(detailItem.id) }}
+          equipped={detailItem.id === equippedItemId}
+          equipPending={equip.isPending && equip.variables === detailItem.id}
+          unequipPending={unequip.isPending}
+          onEquip={() => { setMessage(null); equip.mutate(detailItem.id) }}
+          onUnequip={() => { setMessage(null); unequip.mutate() }}
+          onClose={() => setDetailItem(null)}
+        />
+      )}
     </main>
   )
 }
@@ -358,7 +377,7 @@ function FlyingCoin({ coin, onDone }) {
   )
 }
 
-function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequipPending, onEquip, onUnequip }) {
+function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequipPending, onEquip, onUnequip, onOpenDetail }) {
   const meta = rarityOf(item.rarity)
   const discounted = item.discountRate > 0
   const affordable = balance >= item.finalPrice
@@ -367,7 +386,14 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
   const FallbackIcon = CATEGORY_FALLBACK[item.category] ?? SparkIcon
 
   return (
-    <article className={`shop-card${item.owned ? ' owned' : ''}`} style={{ '--rarity': meta.color, '--rarity-soft': meta.soft }}>
+    <article
+      className={`shop-card${item.owned ? ' owned' : ''}`}
+      style={{ '--rarity': meta.color, '--rarity-soft': meta.soft }}
+      onClick={onOpenDetail}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenDetail() } }}
+    >
       <div className="shop-art">
         {discounted && !item.owned && <span className="shop-badge">-{item.discountRate}%</span>}
         {item.owned && (
@@ -400,12 +426,12 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
               type="button"
               className={`shop-buy${equipped ? ' equipped' : ''}`}
               disabled={equipPending || unequipPending}
-              onClick={equipped ? onUnequip : onEquip}
+              onClick={(e) => { e.stopPropagation(); (equipped ? onUnequip : onEquip)() }}
             >
               {equipped ? (unequipPending ? '해제 중…' : '장착 해제') : (equipPending ? '장착 중…' : '장착하기')}
             </button>
           ) : (
-            <button type="button" className="shop-buy" disabled>
+            <button type="button" className="shop-buy" disabled onClick={(e) => e.stopPropagation()}>
               <CheckIcon size={14} />
               보유 중
             </button>
@@ -415,7 +441,7 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
             type="button"
             className={`shop-buy${affordable ? '' : ' poor'}`}
             disabled={pending || !affordable}
-            onClick={onBuy}
+            onClick={(e) => { e.stopPropagation(); onBuy(e) }}
           >
             {!pending && affordable && <BagIcon size={14} />}
             {pending ? '구매 중…' : affordable ? '구매하기' : '골드 부족'}
@@ -423,5 +449,88 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
         )}
       </div>
     </article>
+  )
+}
+
+// 카드 클릭 시 여는 상세 모달 — 큰 이미지 + 등급이 무엇을 뜻하는지 설명(#197).
+// 구매/장착 버튼은 카드와 동일 로직을 그대로 재사용한다(별도 상태 없음).
+function ItemDetailModal({ item, balance, pending, onBuy, equipped, equipPending, unequipPending, onEquip, onUnequip, onClose }) {
+  const meta = rarityOf(item.rarity)
+  const discounted = item.discountRate > 0
+  const affordable = balance >= item.finalPrice
+  const equippable = item.category === 'COSTUME'
+  const FallbackIcon = CATEGORY_FALLBACK[item.category] ?? SparkIcon
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return (
+    <div className="shop-detail-overlay" onClick={onClose}>
+      <div
+        className="shop-detail-modal"
+        style={{ '--rarity': meta.color, '--rarity-soft': meta.soft }}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={item.name}
+      >
+        <button type="button" className="shop-detail-close" onClick={onClose} aria-label="닫기">
+          <CloseIcon size={18} />
+        </button>
+
+        <div className="shop-detail-art">
+          {discounted && !item.owned && <span className="shop-badge">-{item.discountRate}%</span>}
+          {item.imageUrl
+            ? <img src={item.imageUrl} alt="" />
+            : <span className="shop-art-fallback"><FallbackIcon size={72} /></span>}
+        </div>
+
+        <div className="shop-detail-body">
+          <span className="shop-rarity">{meta.label}</span>
+          <h3 className="shop-name">{item.name}</h3>
+          <p className="shop-detail-rarity-desc">{meta.desc}</p>
+          {item.description && <p className="shop-desc shop-detail-desc">{item.description}</p>}
+
+          <div className="shop-price">
+            {discounted && <span className="shop-price-was">{gold(item.price)}</span>}
+            <span className={`shop-price-now${discounted ? ' discounted' : ''}`}>
+              <CoinIcon />
+              {gold(item.finalPrice)}
+            </span>
+          </div>
+
+          {item.owned ? (
+            equippable ? (
+              <button
+                type="button"
+                className={`shop-buy${equipped ? ' equipped' : ''}`}
+                disabled={equipPending || unequipPending}
+                onClick={equipped ? onUnequip : onEquip}
+              >
+                {equipped ? (unequipPending ? '해제 중…' : '장착 해제') : (equipPending ? '장착 중…' : '장착하기')}
+              </button>
+            ) : (
+              <button type="button" className="shop-buy" disabled>
+                <CheckIcon size={14} />
+                보유 중
+              </button>
+            )
+          ) : (
+            <button
+              type="button"
+              className={`shop-buy${affordable ? '' : ' poor'}`}
+              disabled={pending || !affordable}
+              onClick={onBuy}
+            >
+              {!pending && affordable && <BagIcon size={14} />}
+              {pending ? '구매 중…' : affordable ? '구매하기' : '골드 부족'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }

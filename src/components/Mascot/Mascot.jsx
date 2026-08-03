@@ -135,6 +135,7 @@ const EQUIPPED_SKIN_STATE_SPRITES = [
   '/shop/skins/rob/last-signal-epic',
   '/shop/skins/kim-cheolsu/steel-frame-safety-uncommon',
   '/shop/skins/tako-gun/rov-pilot-rare',
+  '/shop/skins/crobi/ocean-rescue-champion-epic',
 ].map((root) => ({
   defaultPath: `${root}/default.png`,
   states: skinStateSprites(root),

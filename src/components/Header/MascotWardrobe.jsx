@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { equipItem, getInventory, unequipItem } from '../../api/shop'
 import { getPreferences } from '../../api/user'
-import crobiSprite from '../../assets/mascot/crobi.png'
-import robSprite from '../../assets/mascot/rob.png'
-import burgerOldmanSprite from '../../assets/mascot/burger-oldman.png'
-import takoGunSprite from '../../assets/mascot/tako-gun.png'
-import kimCheolsuSprite from '../../assets/mascot/kim-cheolsu.png'
+import crobiSprite from '../../assets/mascot/crobi/default.png'
+import robSprite from '../../assets/mascot/rob/idle.png'
+import burgerOldmanSprite from '../../assets/mascot/burger-oldman/default.png'
+import takoGunSprite from '../../assets/mascot/tako-gun/default.png'
+import kimCheolsuSprite from '../../assets/mascot/kim-cheolsu/default.png'
 
 const MASCOT_SPRITES = {
   crobi: crobiSprite,

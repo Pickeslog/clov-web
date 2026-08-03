@@ -40,6 +40,27 @@
   60% { transform: rotate(-6deg) scale(0.98); }
   80% { transform: rotate(4deg) scale(0.98); }
 }
+/* 연타 콤보 중간 클릭의 흔들림 — 목업 croby-mascot.css의 croby-nudge 그대로.
+   ★ 키프레임이 2벌인 건 실수가 아니다. 같은 클래스를 다시 붙여도 CSS 애니메이션은
+   재시작하지 않아서, 연타 중 두 번째 클릭부터 아무 반응이 없어진다. 목업도 같은 이유로
+   2벌을 번갈아 건다(JS 쪽 nudgeFlipRef). */
+@keyframes clov-mascot-nudge {
+  0% { transform: rotate(0); }
+  25% { transform: rotate(-6deg); }
+  55% { transform: rotate(5deg); }
+  80% { transform: rotate(-2deg); }
+  100% { transform: rotate(0); }
+}
+@keyframes clov-mascot-nudge-2 {
+  0% { transform: rotate(0); }
+  25% { transform: rotate(-6deg); }
+  55% { transform: rotate(5deg); }
+  80% { transform: rotate(-2deg); }
+  100% { transform: rotate(0); }
+}
+.clov-mascot--nudge .clov-mascot-sprite { animation: clov-mascot-nudge 0.35s ease-in-out 1; }
+.clov-mascot--nudge2 .clov-mascot-sprite { animation: clov-mascot-nudge-2 0.35s ease-in-out 1; }
+
 .clov-mascot--scared .clov-mascot-sprite { animation: clov-mascot-shiver 0.22s ease-in-out infinite; }
 .clov-mascot--angry .clov-mascot-sprite { filter: drop-shadow(0 8px 14px rgba(27, 67, 50, 0.18)) saturate(1.6) brightness(0.92); }
 .clov-mascot--dizzy .clov-mascot-sprite { animation: clov-mascot-wobble 0.5s ease-in-out; }

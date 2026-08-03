@@ -76,7 +76,7 @@ function SettingsBody({ me, prefs, onClose }) {
   const [customColor, setCustomColor] = useState(getCustomColor)
   const [pref, setPref] = useState({
     darkMode: getDark(),
-    letterTheme: prefs.letterTheme ?? 'giftbox',
+    letterTheme: prefs.letterTheme ?? 'postbox',
     memoryCardTheme: prefs.memoryCardTheme ?? 'stack',
     mascotType: prefs.mascotType ?? 'crobi',
   })

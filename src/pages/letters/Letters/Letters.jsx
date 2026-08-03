@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './letters.proto.css'
 import { getLetters, markRead, sendLetter, toggleFavorite } from '../../../api/letter'
 import { getRoomMembers } from '../../../api/room'
+import { getPreferences } from '../../../api/user'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 
@@ -72,6 +73,8 @@ export default function Letters() {
   const box = boxOfTab(tab)
   const letters = useQuery({ queryKey: ['letters', roomId, box], queryFn: () => getLetters(roomId, box) })
   const members = useQuery({ queryKey: ['room', roomId, 'members'], queryFn: () => getRoomMembers(roomId), enabled: composing })
+  const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
+  const isPostboxTheme = (prefs.data?.letterTheme ?? 'postbox') === 'postbox'
   const invalidateLetters = () => queryClient.invalidateQueries({ queryKey: ['letters', roomId] })
 
   const items = letters.data?.items ?? []
@@ -141,11 +144,16 @@ export default function Letters() {
           </div>
           <button
             type="button"
-            className={`letter-box-trigger theme-mailbox${hasMail ? ' has-mail' : ''}${opening ? ' is-opening' : ''}`}
+            className={`letter-box-trigger${isPostboxTheme ? ' theme-mailbox' : ''}${hasMail ? ' has-mail' : ''}${opening ? ' is-opening' : ''}`}
             onClick={openInbox}
             aria-label="받은 편지함 열기"
           >
             <span className="letter-box-ground-shadow" aria-hidden="true" />
+            <span className="letter-box-visual letter-box-visual-giftbox" aria-hidden="true">
+              <GiftboxSvg />
+              <span className="letter-box-lid" />
+              <span className="letter-box-body" />
+            </span>
             <span className="letter-box-visual letter-box-visual-mailbox" aria-hidden="true">
               <MailboxSvg />
             </span>
@@ -357,6 +365,35 @@ function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, se
         <Button variant="primary" size="md" disabled={sending} onClick={onSend}>{sending ? '발송 중…' : '편지 발송!'}</Button>
       </div>
     </section>
+  )
+}
+
+// ── 선물상자 리본 SVG(프로토타입 letter-page.js:13-39) ──
+function GiftboxSvg() {
+  return (
+    <span className="gift-bow" aria-hidden="true">
+      <svg className="gift-bow-svg" viewBox="0 0 250 120">
+        <defs>
+          <linearGradient id="dtRibL" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#ffd6e4" /><stop offset="1" stopColor="#ff8fb3" />
+          </linearGradient>
+          <linearGradient id="dtRibR" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#ffd6e4" /><stop offset="1" stopColor="#ff8fb3" />
+          </linearGradient>
+          <linearGradient id="dtKnot" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#ffe3ec" /><stop offset="1" stopColor="#ff8fb3" />
+          </linearGradient>
+        </defs>
+        <path d="M120 52 C 108 74, 92 92, 78 112 L 96 116 C 108 96, 118 78, 125 60 Z" fill="url(#dtRibL)" />
+        <path d="M130 52 C 142 74, 158 92, 172 112 L 154 116 C 142 96, 132 78, 125 60 Z" fill="url(#dtRibR)" />
+        <path d="M125 54 C 96 26, 44 18, 40 50 C 37 74, 84 74, 125 62 Z" fill="url(#dtRibL)" />
+        <path d="M125 54 C 154 26, 206 18, 210 50 C 213 74, 166 74, 125 62 Z" fill="url(#dtRibR)" />
+        <path d="M118 58 C 92 42, 58 40, 52 54 C 62 62, 92 62, 118 58 Z" fill="#e0567f" opacity="0.28" />
+        <path d="M132 58 C 158 42, 192 40, 198 54 C 188 62, 158 62, 132 58 Z" fill="#e0567f" opacity="0.28" />
+        <rect x="108" y="44" width="34" height="32" rx="9" fill="url(#dtKnot)" />
+        <rect x="112" y="47" width="10" height="26" rx="5" fill="#ffc2d6" opacity="0.5" />
+      </svg>
+    </span>
   )
 }
 

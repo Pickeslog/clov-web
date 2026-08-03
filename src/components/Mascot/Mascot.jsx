@@ -119,6 +119,25 @@ const MASCOT_STATE_SPRITES = {
     smile: onyxSmileSprite,
   },
 }
+const ARCADE_BOSS_SKIN_ROOT = '/shop/skins/rob/arcade-boss-legendary'
+const EQUIPPED_SKIN_STATE_SPRITES = [{
+  defaultPath: `${ARCADE_BOSS_SKIN_ROOT}/default.png`,
+  states: {
+    default: `${ARCADE_BOSS_SKIN_ROOT}/default.png`,
+    lifted: `${ARCADE_BOSS_SKIN_ROOT}/pulled.png`,
+    scared: `${ARCADE_BOSS_SKIN_ROOT}/scared.png`,
+    angry: `${ARCADE_BOSS_SKIN_ROOT}/angry.png`,
+    dizzy: `${ARCADE_BOSS_SKIN_ROOT}/dizzy.png`,
+    sleepy: `${ARCADE_BOSS_SKIN_ROOT}/sleepy.png`,
+    find: `${ARCADE_BOSS_SKIN_ROOT}/find.png`,
+    pencil: `${ARCADE_BOSS_SKIN_ROOT}/pencil.png`,
+    smile: `${ARCADE_BOSS_SKIN_ROOT}/smile.png`,
+  },
+}]
+const equippedSkinStates = (imageUrl) => {
+  const path = imageUrl?.split(/[?#]/, 1)[0]
+  return EQUIPPED_SKIN_STATE_SPRITES.find(({ defaultPath }) => path?.endsWith(defaultPath))?.states
+}
 const LINES = {
   crobi: ['안녕!', '오늘도 좋은 하루!', '뭐 하고 있었어?', '같이 추억 쌓아볼까?'],
   rob: ['안녕, 나는 롭이야!', '오늘도 함께해줘서 고마워', '다음 약속은 뭐야?', '추억을 기록해보자'],
@@ -234,12 +253,12 @@ export default function Mascot({ roomId }) {
   //    SPRITES[stored]로 판정하면 src에 함수가 들어가 이미지가 깨진다(실제로 재현됨).
   const stored = prefs.data?.mascotType === 'robot' ? 'rob' : prefs.data?.mascotType
   const mascotType = Object.hasOwn(SPRITES, stored ?? '') ? stored : 'crobi'
-  const stateSprites = MASCOT_STATE_SPRITES[mascotType] || { default: SPRITES[mascotType] }
-  const hasFullStateSet = INTERACTIVE_STATES.every((state) => Boolean(stateSprites[state]))
-  // 장착한 코스튬이 있으면 기본 스프라이트 대신 코스튬 이미지로 완전히 교체한다(이스터에그
-  // 상태 스프라이트보다도 우선 — 코스튬엔 상태별 변형이 없어서 상태 스프라이트로 바꿔봐야
-  // 의미가 없다).
   const equippedSprite = prefs.data?.equippedItem?.imageUrl
+  const equippedStateSprites = equippedSkinStates(equippedSprite)
+  const stateSprites = equippedStateSprites || MASCOT_STATE_SPRITES[mascotType] || { default: SPRITES[mascotType] }
+  const hasFullStateSet = INTERACTIVE_STATES.every((state) => Boolean(stateSprites[state]))
+  // 9개 상태를 가진 스킨은 현재 상태에 맞는 스킨 이미지를 쓰고, 단일 이미지 코스튬은 기존처럼
+  // 장착 이미지 한 장이 모든 상태보다 우선한다.
   // 롭만 코드창 말풍선을 쓴다 — '> ' 프롬프트 + 한 글자씩 타이핑(#216, 목업 TEXT.robot).
   const isRob = mascotType === 'rob'
   const withPrompt = (text) => (isRob ? `> ${text}` : text)
@@ -247,7 +266,9 @@ export default function Mascot({ roomId }) {
   // 상태 세트가 아예 없는 캐릭터(버거노인)와, 세트는 있는데 그 상태만 빠진 경우를 둘 다
   // 받아야 한다. 어느 쪽이든 stateSprites.default → SPRITES[mascotType] 순으로 내려간다.
   const activeState = eggMode !== 'default' ? eggMode : reactionMode
-  const spriteSrc = equippedSprite || stateSprites[activeState] || stateSprites.default || SPRITES[mascotType]
+  const spriteSrc = equippedStateSprites
+    ? stateSprites[activeState] || stateSprites.default
+    : equippedSprite || stateSprites[activeState] || stateSprites.default || SPRITES[mascotType]
 
   const showBubble = (text) => {
     setBubble(text)

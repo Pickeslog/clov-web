@@ -128,10 +128,15 @@ const Icon = ({ size = 16, children, ...rest }) => (
 
 ```
 public/shop/{category}-{name}.svg
+public/shop/skins/<mascot-id>/<skin-id>/default.png
 ```
 
 `costume-` / `skin-` / `event-` 접두사를 쓴다. `public/` 아래라 `/shop/...` 절대경로로 어디서든 로드된다.
 DB `shop_items.image_url`이 이 경로를 가리킨다.
+
+마스코트에 직접 장착되는 신규 스킨은 다른 상점 아트와 분리해
+`public/shop/skins/<mascot-id>/<skin-id>/` 폴더에 둔다. 세부 규칙은
+`public/shop/skins/_template/README.md`를 따른다.
 
 ### 스펙
 

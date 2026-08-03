@@ -181,7 +181,10 @@
      같은 색을 반복해 색맹이어도 라벨 텍스트로 식별 가능하다. */
   border-top: 4px solid var(--rarity);
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  /* 카드 전체가 상세 모달(#197)을 여는 버튼이라 포인터 커서로 클릭 가능함을 알린다. */
+  cursor: pointer;
 }
+.proto-shop .shop-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* border-color 단축 대신 좌·우·하만 지정 — 안 그러면 등급 스트라이프(위쪽)까지
    덮어써서 hover·보유 상태에서 등급색이 사라진다. */
 .proto-shop .shop-card:hover {
@@ -268,6 +271,44 @@
   border: 1px dashed var(--border); border-radius: 18px; background: var(--card-bg);
 }
 .proto-shop .shop-empty svg { display: block; opacity: .55; }
+
+/* ── 아이템 상세 모달 (#197) ──
+   카드 클릭 시 큰 이미지 + 등급이 무엇을 뜻하는지 설명을 보여준다. 팔레트는
+   var() 기반이라 카드와 동일하게 다크/라이트가 자동으로 맞는다(ConfirmDialog와
+   달리 별도 light-mode 오버라이드가 필요 없음). */
+.proto-shop .shop-detail-overlay {
+  position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px);
+  animation: shopDetailFadeIn .15s ease;
+}
+.proto-shop .shop-detail-modal {
+  position: relative; width: min(420px, 100%); max-height: 90vh; overflow-y: auto;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px;
+  border-top: 4px solid var(--rarity);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  animation: shopDetailSlideUp .18s cubic-bezier(.34, 1.56, .64, 1);
+}
+.proto-shop .shop-detail-close {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  width: 32px; height: 32px; display: grid; place-items: center;
+  border: none; border-radius: 50%; cursor: pointer;
+  background: rgba(0, 0, 0, 0.4); color: #fff;
+}
+.proto-shop .shop-detail-close:hover { background: rgba(0, 0, 0, 0.6); }
+.proto-shop .shop-detail-art {
+  position: relative; aspect-ratio: 4 / 3; display: grid; place-items: center; overflow: hidden;
+  background: linear-gradient(155deg, var(--rarity-soft), transparent 70%), var(--chip-bg);
+  border-bottom: 1px solid var(--border);
+}
+.proto-shop .shop-detail-art img { width: 100%; height: 100%; object-fit: contain; }
+.proto-shop .shop-detail-body { display: flex; flex-direction: column; gap: 8px; padding: 18px 20px 22px; }
+.proto-shop .shop-detail-body .shop-name { font-size: 19px; }
+.proto-shop .shop-detail-rarity-desc { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--rarity); font-weight: 700; }
+.proto-shop .shop-detail-desc { -webkit-line-clamp: unset; line-clamp: unset; font-size: 13px; }
+.proto-shop .shop-detail-body .shop-price { padding-top: 10px; }
+
+@keyframes shopDetailFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes shopDetailSlideUp { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 @media (max-width: 640px) {
   .proto-shop .shop-wrap { padding: 4px 14px 48px; }

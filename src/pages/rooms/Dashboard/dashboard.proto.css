@@ -808,17 +808,25 @@ body.light-mode .proto-dashboard .section-title {
 }
 .proto-dashboard .cline-film-frames:active { cursor: grabbing; }
 .proto-dashboard .cline-film-frames::-webkit-scrollbar { display: none; width: 0; height: 0; }
+/* 스프로킷 홀 — 실제 펀치 구멍처럼 보이도록 타원 두 겹(어두운 구멍 + 얇은 하이라이트 테두리)으로 그린다.
+   기존엔 #2b2b2b 줄무늬가 #101010 배경과 대비가 거의 없어 필름이 아니라 그냥 긴 종이띠로 보였다. */
 .proto-dashboard .cline-film-frames::before,
 .proto-dashboard .cline-film-frames::after {
-  content: ''; position: absolute; left: 6px; right: 6px; height: 5px; pointer-events: none; border-radius: 1px;
-  background: repeating-linear-gradient(90deg, transparent 0 5px, #2b2b2b 5px 10px, transparent 10px 15px);
+  content: ''; position: absolute; left: 4px; right: 4px; height: 9px; pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 2.8px 3.8px at center, rgba(0,0,0,.9) 62%, transparent 66%),
+    radial-gradient(ellipse 3.8px 4.8px at center, rgba(255,255,255,.07) 62%, transparent 68%);
+  background-repeat: repeat-x;
+  background-size: 13px 9px;
+  background-position: 2px center;
 }
-.proto-dashboard .cline-film-frames::before { top: 3px; }
-.proto-dashboard .cline-film-frames::after { bottom: 3px; }
+.proto-dashboard .cline-film-frames::before { top: 4px; }
+.proto-dashboard .cline-film-frames::after { bottom: 4px; }
 .proto-dashboard .cline-film-track { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; width: max-content; margin: 0 auto; }
 .proto-dashboard .cline-film-frame {
   flex-shrink: 0; width: 68px; height: 64px; border: 1.5px solid rgba(255,255,255,.08); background: #222; cursor: pointer;
   overflow: hidden; border-radius: 2px; margin: 0 2px; padding: 0; transition: border-color .15s, transform .15s, box-shadow .15s;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.5);
 }
 .proto-dashboard .cline-film-frame.is-current { border-color: #52b788; box-shadow: 0 0 0 1px #52b788, 0 0 8px rgba(82,183,136,.4); transform: scaleY(1.12); z-index: 2; }
 .proto-dashboard .cline-film-frame:hover:not(.is-current) { border-color: rgba(255,255,255,.28); transform: scaleY(1.05); }

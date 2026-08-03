@@ -40,10 +40,20 @@ const relTime = (v) => {
 
 const FEED_META = {
   FRIEND: { cls: 'letter', icon: 'ti-mail', tail: '님의 행운편지', fallback: '새 편지가 도착했어요' },
-  JOIN: { cls: 'join', icon: 'ti-user-plus', tail: '님이 합류했어요', fallback: '새 가입 신청이 있어요' },
   NOTICE: { cls: 'sched', icon: 'ti-calendar-heart', tail: '님의 공지', fallback: '새 공지가 등록됐어요' },
 }
-const metaFor = (type) => FEED_META[type] ?? { cls: 'member', icon: 'ti-bell', tail: '님의 새 소식', fallback: '새 소식이 있어요' }
+// JOIN은 type 하나로 두 가지 다른 사건(MEMBER_JOINED=합류자가 actor / JOIN_ACCEPTED=수락자가 actor)을
+// 겸하므로 subType까지 봐야 한다 — type만 보면 "{수락자}님이 합류했어요"처럼 엉뚱한 사람이 나온다(clov-api #113).
+const JOIN_SUBTYPE_META = {
+  MEMBER_JOINED: { cls: 'join', icon: 'ti-user-plus', tail: '님이 합류했어요', fallback: '새 멤버가 합류했어요' },
+  JOIN_ACCEPTED: { cls: 'join', icon: 'ti-user-plus', tail: '님이 가입을 수락했어요', fallback: '가입 신청이 수락됐어요' },
+}
+const metaFor = (n) => {
+  if (n.type === 'JOIN') {
+    return JOIN_SUBTYPE_META[n.subType] ?? { cls: 'join', icon: 'ti-user-plus', tail: '님이 합류했어요', fallback: '새 가입 신청이 있어요' }
+  }
+  return FEED_META[n.type] ?? { cls: 'member', icon: 'ti-bell', tail: '님의 새 소식', fallback: '새 소식이 있어요' }
+}
 const initialOf = (name) => (name === '나' ? '나' : (name?.slice(-2, -1) || name?.slice(0, 1) || '?'))
 const asList = (data) => (Array.isArray(data) ? data : (data?.items ?? []))
 
@@ -144,7 +154,7 @@ function MainView({ r, level, memberList, memberCount, feed, feedPending, onInvi
       ) : (
         <div className="rp-feed">
           {feed.slice(0, 3).map((n) => {
-            const meta = metaFor(n.type)
+            const meta = metaFor(n)
             const who = n.actor?.nickname
             return (
               <div key={n.id} className={`rp-fi${!n.isRead ? ' unread' : ''}`}>

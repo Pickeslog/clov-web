@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { equipItem, getInventory, unequipItem } from '../../api/shop'
 import { getPreferences } from '../../api/user'
-import crobiSprite from '../../assets/mascot/crobi.png'
-import robSprite from '../../assets/mascot/rob.png'
-import burgerOldmanSprite from '../../assets/mascot/burger-oldman.png'
-import takoGunSprite from '../../assets/mascot/tako-gun.png'
-import kimCheolsuSprite from '../../assets/mascot/kim-cheolsu.png'
+import crobiSprite from '../../assets/mascot/crobi/default.png'
+import robSprite from '../../assets/mascot/rob/idle.png'
+import burgerOldmanSprite from '../../assets/mascot/burger-oldman/default.png'
+import takoGunSprite from '../../assets/mascot/tako-gun/default.png'
+import kimCheolsuSprite from '../../assets/mascot/kim-cheolsu/default.png'
+import onyxSprite from '../../assets/mascot/onyx/default.png'
 
 const MASCOT_SPRITES = {
   crobi: crobiSprite,
@@ -14,6 +15,7 @@ const MASCOT_SPRITES = {
   burgerOldman: burgerOldmanSprite,
   takoGun: takoGunSprite,
   kimCheolsu: kimCheolsuSprite,
+  onyx: onyxSprite,
 }
 const MASCOT_LABELS = {
   crobi: '크로비',
@@ -21,6 +23,7 @@ const MASCOT_LABELS = {
   burgerOldman: '버거노인',
   takoGun: '타코군',
   kimCheolsu: '김철수',
+  onyx: '오닉스',
 }
 
 // 프로필 드롭다운(사용자 설정·로그아웃과 같은 박스) 안 접이식 섹션 — 마스코트 미리보기 +

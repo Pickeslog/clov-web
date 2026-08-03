@@ -90,6 +90,7 @@ jobs:
             echo "::error::공개키(.pub)를 넣었거나 줄바꿈이 사라진 경우가 대부분이다 — BEGIN/END 줄을 포함한 파일 전체를 그대로 붙여넣어야 한다."
             exit 1
           fi
+          echo "CI가 쓰는 키 지문: $(ssh-keygen -lf "$keyfile")"
           rm -f "$keyfile"
           echo "필수 시크릿 5종 확인·개인키 파싱 OK (suffix=${suffix})"
 

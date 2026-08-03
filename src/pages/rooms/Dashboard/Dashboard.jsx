@@ -488,7 +488,13 @@ export default function Dashboard() {
   const tier = tierFor(levelNum)
   const progress = progressFromLevel(lv)
   const isFull = progress >= 100 && levelNum < MAX_LEVEL
+  // GET /members는 LEFT 멤버도 함께 반환한다(계약 §6). 두 목록이 쓰이는 곳이 다르다.
+  // - activeMemberItems: 지금 방에 있는 사람을 보여주거나 고르는 자리(명단·아바타·참여자 선택).
+  //   헤더 숫자 data.memberCount가 서버에서 ACTIVE만 세므로 이걸 써야 숫자와 행 수가 맞는다.
+  // - memberItems(LEFT 포함): 지난 기록에서 이름을 되찾는 자리(추억 상세). 여기서 거르면
+  //   나간 사람이 남긴 한 줄 메시지가 통째로 사라진다(Feed.jsx formerComments).
   const memberItems = members.data?.items ?? []
+  const activeMemberItems = memberItems.filter((m) => m.status === 'ACTIVE')
   const days = daysTogether(data.createdAt)
   const track = (memories.data?.items ?? []).length || 1
 
@@ -625,7 +631,7 @@ export default function Dashboard() {
               <div className="member-highlight-card" onClick={() => setMembersOpen(true)} title="참여 멤버 보기">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div className="member-mini-avatars">
-                    {memberItems.slice(0, 4).map((m, i) => (
+                    {activeMemberItems.slice(0, 4).map((m, i) => (
                       <span key={m.membershipId ?? m.userId} className="mini-av" style={{ background: MINI_AV_COLORS[i % MINI_AV_COLORS.length] }}>
                         {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
                       </span>
@@ -703,7 +709,7 @@ export default function Dashboard() {
             <button type="button" className="member-invite-btn" onClick={() => { setMembersOpen(false); setInviteOpen(true) }}>
               ＋ 친구 초대 (초대코드 보내기)
             </button>
-            {memberItems.map((m, i) => (
+            {activeMemberItems.map((m, i) => (
               <div className="member-row" key={m.membershipId ?? m.userId}>
                 <span className="member-row-av" style={{ background: MINI_AV_COLORS[i % MINI_AV_COLORS.length] }}>
                   {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
@@ -773,7 +779,7 @@ export default function Dashboard() {
       <div className="proto-feed" style={{ minHeight: 0 }}>
         <CreateMemoryModal
           roomId={roomId}
-          members={memberItems.filter((m) => String(m.userId) !== String(currentUserId))}
+          members={activeMemberItems.filter((m) => String(m.userId) !== String(currentUserId))}
           submitting={createMemoryMutation.isPending}
           errorMessage={createMemoryMutation.error?.message}
           onCancel={() => setComposeMemory(false)}

@@ -212,7 +212,11 @@ export default function Feed() {
   const memoryDetail = useMemoryDetail(selectedMemoryId, roomId, { onDeleted: () => setSelectedMemoryId(null) })
 
   const allItems = feed.data?.items ?? []
+  // GET /members는 LEFT 멤버도 함께 반환한다(계약 §6).
+  // 참여자를 고르는 자리에는 지금 방에 있는 사람만 넘기고, 추억 상세에는 LEFT까지 넘긴다 —
+  // 나간 사람이 남긴 한 줄 메시지를 formerComments로 따로 보여줘야 해서다(MemoryDetailModal).
   const memberItems = members.data?.items ?? []
+  const activeMemberItems = memberItems.filter((m) => m.status === 'ACTIVE')
 
   // 작성자 필터 적용
   const byWriter = allItems.filter((item) => {
@@ -379,7 +383,7 @@ export default function Feed() {
       {isCreateOpen && (
         <CreateMemoryModal
           roomId={roomId}
-          members={memberItems.filter((m) => String(m.userId) !== String(currentUserId))}
+          members={activeMemberItems.filter((m) => String(m.userId) !== String(currentUserId))}
           submitting={createMutation.isPending}
           errorMessage={createMutation.error?.message}
           onCancel={() => setCreateOpen(false)}

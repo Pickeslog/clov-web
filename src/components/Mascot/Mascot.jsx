@@ -119,21 +119,24 @@ const MASCOT_STATE_SPRITES = {
     smile: onyxSmileSprite,
   },
 }
-const ARCADE_BOSS_SKIN_ROOT = '/shop/skins/rob/arcade-boss-legendary'
-const EQUIPPED_SKIN_STATE_SPRITES = [{
-  defaultPath: `${ARCADE_BOSS_SKIN_ROOT}/default.png`,
-  states: {
-    default: `${ARCADE_BOSS_SKIN_ROOT}/default.png`,
-    lifted: `${ARCADE_BOSS_SKIN_ROOT}/pulled.png`,
-    scared: `${ARCADE_BOSS_SKIN_ROOT}/scared.png`,
-    angry: `${ARCADE_BOSS_SKIN_ROOT}/angry.png`,
-    dizzy: `${ARCADE_BOSS_SKIN_ROOT}/dizzy.png`,
-    sleepy: `${ARCADE_BOSS_SKIN_ROOT}/sleepy.png`,
-    find: `${ARCADE_BOSS_SKIN_ROOT}/find.png`,
-    pencil: `${ARCADE_BOSS_SKIN_ROOT}/pencil.png`,
-    smile: `${ARCADE_BOSS_SKIN_ROOT}/smile.png`,
-  },
-}]
+const skinStateSprites = (root) => ({
+  default: `${root}/default.png`,
+  lifted: `${root}/pulled.png`,
+  scared: `${root}/scared.png`,
+  angry: `${root}/angry.png`,
+  dizzy: `${root}/dizzy.png`,
+  sleepy: `${root}/sleepy.png`,
+  find: `${root}/find.png`,
+  pencil: `${root}/pencil.png`,
+  smile: `${root}/smile.png`,
+})
+const EQUIPPED_SKIN_STATE_SPRITES = [
+  '/shop/skins/rob/arcade-boss-legendary',
+  '/shop/skins/kim-cheolsu/steel-frame-safety-uncommon',
+].map((root) => ({
+  defaultPath: `${root}/default.png`,
+  states: skinStateSprites(root),
+}))
 const equippedSkinStates = (imageUrl) => {
   const path = imageUrl?.split(/[?#]/, 1)[0]
   return EQUIPPED_SKIN_STATE_SPRITES.find(({ defaultPath }) => path?.endsWith(defaultPath))?.states

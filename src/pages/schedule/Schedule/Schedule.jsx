@@ -341,7 +341,7 @@ function ReceiptCard({
         <div className="receipt-zigzag" />
         <div className="receipt-head">
           <div className="receipt-brand">CLOV. MEMORIES</div>
-          <div className="receipt-sub">★  약 속 메 모  ★</div>
+          <div className="receipt-sub">★ 약속 메모 ★</div>
         </div>
         <div className="receipt-stamp-wrap">
           <div className="receipt-stamp">

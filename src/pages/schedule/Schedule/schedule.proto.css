@@ -159,7 +159,9 @@
     border-bottom: 1px dashed rgba(28, 26, 23, 0.3);
   }
   .receipt-brand { font-size: 16px; font-weight: 700; letter-spacing: 3.5px; }
-  .receipt-sub { font-size: 9.5px; color: rgba(28, 26, 23, 0.5); margin-top: 4px; letter-spacing: 1px; }
+  /* 한글은 Gothic A1로 — receipt-paper의 Space Mono(라틴 전용)를 그대로 물려받으면
+     한글 글리프가 시스템 폰트로 폴백되면서 letter-spacing만 남아 음절 사이가 벌어져 보인다. */
+  .receipt-sub { font-family: 'Gothic A1', sans-serif; font-size: 9.5px; color: rgba(28, 26, 23, 0.5); margin-top: 4px; letter-spacing: 0.5px; }
 
   .receipt-stamp-wrap { display: flex; justify-content: center; padding: 18px 0 12px; }
   .receipt-stamp {

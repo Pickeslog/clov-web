@@ -36,6 +36,8 @@ const messageFor = (notification) => {
     case 'PLAN_COMPLETE': return `${actor?.nickname}님이 약속을 완료했어요`
     case 'ROOM_UPDATE': return `${actor?.nickname}님이 우정공간 정보를 바꿨어요`
     case 'LEVEL_UP': return `우정공간이 Lv.${payload?.level}이 됐어요! 🎉`
+    case 'MEMBER_JOINED': return `${actor?.nickname}님이 합류했어요`
+    case 'JOIN_ACCEPTED': return `${actor?.nickname}님이 가입을 수락했어요`
     default: return actor?.nickname ? `${actor.nickname}님의 새로운 활동이 있습니다.` : '새로운 알림이 있습니다.'
   }
 }

@@ -28,6 +28,7 @@ const MASCOTS = [
   { value: 'burgerOldman', label: '버거노인' },
   { value: 'takoGun', label: '타코군' },
   { value: 'kimCheolsu', label: '김철수' },
+  { value: 'onyx', label: '오닉스' },
 ]
 
 // 사용자 설정 물감 카드 — 프로토타입 blob 모양(색상은 currentColor).

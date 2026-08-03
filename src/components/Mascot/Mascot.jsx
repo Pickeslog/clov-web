@@ -37,6 +37,8 @@ const LINES = {
 }
 const LIMIT_MESSAGE = '오늘은 여기까지!'
 const SAY_MS = 1800
+// 롭 전용 코드창 말풍선 타이핑 속도(글자당 ms) — 목업 CONFIG.typeMs 그대로(#155, #216).
+const TYPE_MS = 55
 
 // 롭 전용 이스터에그 타이밍/문구 — 목업 CONFIG·DRAG_LINES·TEXT.robot.dizzy 그대로(#155).
 const CLICK_WINDOW_MS = 900
@@ -66,6 +68,9 @@ export default function Mascot({ roomId }) {
   const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
   const [bubble, setBubble] = useState('')
   const bubbleTimer = useRef(null)
+  // 롭 전용 타이핑 효과 진행 길이 — 다른 캐릭터는 항상 전체 길이로 즉시 표시된다.
+  const [typedLen, setTypedLen] = useState(0)
+  const typeTimerRef = useRef(null)
 
   // eggMode: 'default' | 'lifted' | 'scared' | 'angry' | 'dizzy' — 롭 전용, 렌더링(스프라이트·CSS
   // 클래스·말풍선 문구)에 쓰는 state. 실제 판정 로직은 eggModeRef(항상 최신)로 한다 — window에 붙는
@@ -91,6 +96,7 @@ export default function Mascot({ roomId }) {
     clearTimeout(dizzyTimerRef.current)
     clearTimeout(angryTimerRef.current)
     clearTimeout(angryEndTimerRef.current)
+    clearInterval(typeTimerRef.current)
   }, [])
 
   // 아는 값만 통과시키고 나머지는 크로비로 떨어뜨린다 — 백엔드에 mascotType 검증이 없어서
@@ -111,6 +117,23 @@ export default function Mascot({ roomId }) {
     setBubble(text)
     clearTimeout(bubbleTimer.current)
     bubbleTimer.current = setTimeout(() => setBubble(''), SAY_MS)
+    // 롭은 한 글자씩 타이핑되는 코드창 연출(#155, 목업 typeBubble 그대로) — 다른 캐릭터는
+    // 즉시 전체 표시라 타이핑 진행 길이를 곧장 끝까지 채운다.
+    clearInterval(typeTimerRef.current)
+    if (isRob) {
+      setTypedLen(0)
+      typeTimerRef.current = setInterval(() => {
+        setTypedLen((len) => {
+          if (len + 1 >= text.length) {
+            clearInterval(typeTimerRef.current)
+            return text.length
+          }
+          return len + 1
+        })
+      }, TYPE_MS)
+    } else {
+      setTypedLen(text.length)
+    }
   }
   const pickLine = () => {
     const pool = LINES[mascotType]
@@ -248,12 +271,15 @@ export default function Mascot({ roomId }) {
 
   if (prefs.isPending || prefs.isError) return null
 
+  // 롭은 이스터에그 상태(들어올림/무서움/화남/어지러움)든 기본 대사든 '> ' 프롬프트를 붙인다
+  // (#155, 목업 그대로). 기본 대사만 타이핑 진행 중 커서를 보여준다.
+  const isTypingBubble = eggMode === 'default' && isRob && bubble
   const eggBubbleText =
-    eggMode === 'lifted' ? DRAG_LINES.lifted
-    : eggMode === 'scared' ? DRAG_LINES.scared
-    : eggMode === 'angry' ? `날 내려놔, ${me.data?.nickname || '사용자'}!`
-    : eggMode === 'dizzy' ? DIZZY_LINE
-    : bubble
+    eggMode === 'lifted' ? `> ${DRAG_LINES.lifted}`
+    : eggMode === 'scared' ? `> ${DRAG_LINES.scared}`
+    : eggMode === 'angry' ? `> 날 내려놔, ${me.data?.nickname || '사용자'}!`
+    : eggMode === 'dizzy' ? `> ${DIZZY_LINE}`
+    : isRob && bubble ? `> ${bubble.slice(0, typedLen)}` : bubble
 
   return (
     <div
@@ -261,7 +287,12 @@ export default function Mascot({ roomId }) {
       data-character={mascotType}
       ref={rootRef}
     >
-      {eggBubbleText && <div className="clov-mascot-bubble">{eggBubbleText}</div>}
+      {eggBubbleText && (
+        <div className="clov-mascot-bubble">
+          {eggBubbleText}
+          {isTypingBubble && <span className="clov-mascot-type-cursor" />}
+        </div>
+      )}
       <button
         type="button"
         className="clov-mascot-hit"

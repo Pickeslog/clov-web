@@ -132,6 +132,7 @@ const skinStateSprites = (root) => ({
 })
 const EQUIPPED_SKIN_STATE_SPRITES = [
   '/shop/skins/rob/arcade-boss-legendary',
+  '/shop/skins/rob/last-signal-epic',
   '/shop/skins/kim-cheolsu/steel-frame-safety-uncommon',
 ].map((root) => ({
   defaultPath: `${root}/default.png`,

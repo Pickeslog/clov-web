@@ -30,7 +30,8 @@ export function useCreateMemory(roomId, { onSuccess } = {}) {
       // 추억 작성은 XP도 준다(MEMORY_WRITE, 계약 §12) — ['room', roomId] 프리픽스로 무효화하면
       // level·exp-logs·members·room 상세가 한 번에 갱신된다(저장소 기존 관례, Notifications.jsx 참고).
       queryClient.invalidateQueries({ queryKey: ['room', roomId] })
-      // 추억 등록은 골드도 지급한다(제한 없음) — 헤더 골드 배지 즉시 갱신.
+      // 추억 등록도 골드를 지급한다(약속 연결 추억만, 하루 총 상한 500 — 계약 §15-4).
+      // FREE MEMORY나 상한 도달로 지급이 안 된 경우에도 무효화는 무해하다(잔액 그대로 재조회).
       queryClient.invalidateQueries({ queryKey: ['wallet'] })
       onSuccess?.()
     },

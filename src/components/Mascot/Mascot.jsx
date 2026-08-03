@@ -37,9 +37,6 @@ const LINES = {
 }
 const LIMIT_MESSAGE = '오늘은 여기까지!'
 const SAY_MS = 1800
-// 교감 1회당 지급 골드 — 서버(MascotService.INTERACTION_GOLD)와 값을 맞춰 둔다.
-// 응답 DTO엔 없어 실제 지급액은 ['wallet'] 재조회로 확정되고, 이 값은 말풍선 표시용이다.
-const INTERACTION_GOLD = 100
 
 // 롭 전용 이스터에그 타이밍/문구 — 목업 CONFIG·DRAG_LINES·TEXT.robot.dizzy 그대로(#155).
 const CLICK_WINDOW_MS = 900
@@ -122,11 +119,14 @@ export default function Mascot({ roomId }) {
 
   const interactMutation = useMutation({
     mutationFn: () => interactMascot(roomId),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['room', roomId, 'level'] })
       // 헤더 골드 배지도 즉시 갱신 — 상점(Shop.jsx)의 구매 성공 시와 동일한 무효화 키.
       queryClient.invalidateQueries({ queryKey: ['wallet'] })
-      showBubble(`${pickLine()} (+${INTERACTION_GOLD}G)`)
+      // 하루 3회 제한(교감)과 별개로 하루 총 골드 상한(§15-4, 500)에 걸리면 서버가 조용히
+      // 0을 지급한다 — 응답의 실지급액(earnedGold)을 그대로 보여줘야 화면이 거짓말하지 않는다.
+      const gold = data?.earnedGold ?? 0
+      showBubble(gold > 0 ? `${pickLine()} (+${gold}G)` : pickLine())
     },
     onError: (err) => {
       showBubble(err.code === 'MASCOT_INTERACTION_LIMIT_REACHED' ? LIMIT_MESSAGE : (err.message || '잠시 후 다시 시도해 주세요.'))

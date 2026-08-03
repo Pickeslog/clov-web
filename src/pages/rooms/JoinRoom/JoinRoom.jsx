@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
-import * as S from './JoinRoom.style'
+import './joinroom.proto.css'
 import { requestJoin } from '../../../api/invite'
 import { describeInviteError, extractJoinedRoomId } from '../../../lib/inviteError'
 
@@ -40,46 +40,47 @@ export default function JoinRoom() {
   }
 
   return (
-    <S.Page>
-      <S.TopBar>
+    <main className="proto-joinroom">
+      <header className="joinroom-topbar">
         <Link to="/" style={{ textDecoration: 'none' }}>
-          <S.Brand>Clov.</S.Brand>
+          <div className="joinroom-brand">Clov.</div>
         </Link>
-      </S.TopBar>
+      </header>
 
-      <S.Body>
-        <S.Card>
-          <S.Title>초대 코드로 참여하기</S.Title>
-          <S.Desc>친구에게 받은 초대 코드를 입력하면 가입 신청이 접수됩니다.</S.Desc>
+      <section className="joinroom-body">
+        <div className="joinroom-card">
+          <h1 className="joinroom-title">초대 코드로 참여하기</h1>
+          <p className="joinroom-desc">친구에게 받은 초대 코드를 입력하면 가입 신청이 접수됩니다.</p>
 
           {isSuccess ? (
-            <S.SuccessBox>
+            <div className="joinroom-success">
               가입 신청이 접수되었습니다! 공간 멤버가 수락하면 참여가 확정됩니다.
               <div style={{ marginTop: 10 }}>
-                <S.BackLink as={Link} to="/">
+                <Link className="joinroom-back-link" to="/">
                   우정공간 목록으로
-                </S.BackLink>
+                </Link>
               </div>
-            </S.SuccessBox>
+            </div>
           ) : (
             <>
-              <S.Field>
-                <S.Label htmlFor="invite-code">초대 코드</S.Label>
-                <S.Input
+              <div className="joinroom-field">
+                <label className="joinroom-label" htmlFor="invite-code">초대 코드</label>
+                <input
                   id="invite-code"
+                  className="joinroom-input"
                   value={inviteCode}
                   placeholder="CLV-JOIN-XXXXXX"
                   onChange={(event) => setInviteCode(event.target.value)}
                 />
-              </S.Field>
-              <S.SubmitBtn type="button" onClick={handleSubmit} disabled={isPending}>
+              </div>
+              <button type="button" className="joinroom-submit" onClick={handleSubmit} disabled={isPending}>
                 {isPending ? '신청하는 중…' : '가입 신청하기'}
-              </S.SubmitBtn>
-              {message && <S.Message role="alert">{message}</S.Message>}
+              </button>
+              {message && <div className="joinroom-message" role="alert">{message}</div>}
             </>
           )}
-        </S.Card>
-      </S.Body>
-    </S.Page>
+        </div>
+      </section>
+    </main>
   )
 }

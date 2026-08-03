@@ -48,11 +48,14 @@ const JOIN_SUBTYPE_META = {
   MEMBER_JOINED: { cls: 'join', icon: 'ti-user-plus', tail: '님이 합류했어요', fallback: '새 멤버가 합류했어요' },
   JOIN_ACCEPTED: { cls: 'join', icon: 'ti-user-plus', tail: '님이 가입을 수락했어요', fallback: '가입 신청이 수락됐어요' },
 }
+const DEFAULT_META = { cls: 'member', icon: 'ti-bell', tail: '님의 새 소식', fallback: '새 소식이 있어요' }
 const metaFor = (n) => {
   if (n.type === 'JOIN') {
-    return JOIN_SUBTYPE_META[n.subType] ?? { cls: 'join', icon: 'ti-user-plus', tail: '님이 합류했어요', fallback: '새 가입 신청이 있어요' }
+    // 옛 데이터(sub_type='JOIN_REQUEST', #90 이전)는 actor가 수락자로 잘못 박혀 있다.
+    // "님이 합류했어요"로 단정하면 확신 있게 틀린 이름이 뜨므로, 모르는 subType은 모호한 기본 문구로 떨어뜨린다.
+    return JOIN_SUBTYPE_META[n.subType] ?? DEFAULT_META
   }
-  return FEED_META[n.type] ?? { cls: 'member', icon: 'ti-bell', tail: '님의 새 소식', fallback: '새 소식이 있어요' }
+  return FEED_META[n.type] ?? DEFAULT_META
 }
 const initialOf = (name) => (name === '나' ? '나' : (name?.slice(-2, -1) || name?.slice(0, 1) || '?'))
 const asList = (data) => (Array.isArray(data) ? data : (data?.items ?? []))

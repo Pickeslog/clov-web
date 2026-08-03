@@ -42,6 +42,15 @@ import kimCheolsuSleepySprite from '../../assets/mascot/kim-cheolsu/sleepy.png'
 import kimCheolsuFindSprite from '../../assets/mascot/kim-cheolsu/find.png'
 import kimCheolsuPencilSprite from '../../assets/mascot/kim-cheolsu/pencil.png'
 import kimCheolsuSmileSprite from '../../assets/mascot/kim-cheolsu/smile.png'
+import onyxSprite from '../../assets/mascot/onyx/default.png'
+import onyxPulledSprite from '../../assets/mascot/onyx/pulled.png'
+import onyxScaredSprite from '../../assets/mascot/onyx/scared.png'
+import onyxAngrySprite from '../../assets/mascot/onyx/angry.png'
+import onyxDizzySprite from '../../assets/mascot/onyx/dizzy.png'
+import onyxSleepySprite from '../../assets/mascot/onyx/sleepy.png'
+import onyxFindSprite from '../../assets/mascot/onyx/find.png'
+import onyxPencilSprite from '../../assets/mascot/onyx/pencil.png'
+import onyxSmileSprite from '../../assets/mascot/onyx/smile.png'
 
 const SPRITES = {
   crobi: crobiSprite,
@@ -49,6 +58,7 @@ const SPRITES = {
   burgerOldman: burgerOldmanSprite,
   takoGun: takoGunSprite,
   kimCheolsu: kimCheolsuSprite,
+  onyx: onyxSprite,
 }
 // 9개 상태 스프라이트를 모두 가진 캐릭터는 같은 클릭·수면·드래그 상태 머신을 공유한다.
 // 버거노인처럼 default만 있는 캐릭터는 기존 기본 교감만 유지한다.
@@ -97,6 +107,17 @@ const MASCOT_STATE_SPRITES = {
     pencil: kimCheolsuPencilSprite,
     smile: kimCheolsuSmileSprite,
   },
+  onyx: {
+    default: onyxSprite,
+    lifted: onyxPulledSprite,
+    scared: onyxScaredSprite,
+    angry: onyxAngrySprite,
+    dizzy: onyxDizzySprite,
+    sleepy: onyxSleepySprite,
+    find: onyxFindSprite,
+    pencil: onyxPencilSprite,
+    smile: onyxSmileSprite,
+  },
 }
 const LINES = {
   crobi: ['안녕!', '오늘도 좋은 하루!', '뭐 하고 있었어?', '같이 추억 쌓아볼까?'],
@@ -104,6 +125,7 @@ const LINES = {
   burgerOldman: ['어서 와!', '오늘도 든든하게 보내자!', '따끈한 하루가 되길!', '버거는 마음까지 든든하게 하지!'],
   takoGun: ['타코군 등장!', '오늘도 신나게 가보자!', '재밌는 일이 생길 것 같아!', '같이 추억을 휘감아볼까?'],
   kimCheolsu: ['안녕, 김철수야!', '오늘도 차근차근 만들어보자!', '좋은 추억은 오래가는 법이지!', '필요하면 내가 뚝딱 해줄게!'],
+  onyx: ['안녕, 오닉스야!', '빛나는 추억을 세공해볼까?', '작은 순간도 보석처럼 소중해!', '오늘의 추억은 어떤 빛일까?'],
 }
 const LIMIT_MESSAGE = '오늘은 여기까지!'
 const SAY_MS = 1800

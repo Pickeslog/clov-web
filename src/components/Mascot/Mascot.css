@@ -114,3 +114,46 @@ body.light-mode .clov-mascot-bubble {
   color: #2b2b2b;
   border-color: #2b2b2b;
 }
+
+/* 롭 전용 — 코드 에디터 창처럼 보이는 말풍선(#155, 목업 croby-mascot.css 그대로, #216).
+   캐릭터 고유 연출이라 라이트 모드에서도 유지한다 — 위 body.light-mode 규칙보다
+   뒤에 와서 우선한다. */
+.clov-mascot[data-character="rob"] .clov-mascot-bubble,
+body.light-mode .clov-mascot[data-character="rob"] .clov-mascot-bubble {
+  position: relative;
+  background: #1e1e2e;
+  border: 1px solid #383a4a;
+  border-radius: 8px;
+  padding: 16px 12px 8px;
+  max-width: 230px;
+  text-align: left;
+  font-family: 'Space Mono', 'SFMono-Regular', Consolas, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #7ee787;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+.clov-mascot[data-character="rob"] .clov-mascot-bubble::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff5f56;
+  box-shadow: 12px 0 0 #ffbd2e, 24px 0 0 #27c93f;
+}
+.clov-mascot-type-cursor {
+  display: inline-block;
+  width: 6px;
+  height: 1em;
+  margin-left: 2px;
+  background: #7ee787;
+  vertical-align: text-bottom;
+  animation: clov-mascot-cursor-blink 1s steps(1) infinite;
+}
+@keyframes clov-mascot-cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}

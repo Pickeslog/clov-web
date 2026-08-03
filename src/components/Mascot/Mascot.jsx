@@ -114,6 +114,8 @@ const CLICK_EXTRAS = [
   { spriteKey: 'pencil', text: '추억을 남기는 습관은 좋은 거야' },
   { spriteKey: 'smile', text: '오늘도 좋은 추억을 만들어 보자!' },
 ]
+// 롭 전용 코드창 말풍선 타이핑 속도(글자당 ms) — 목업 CONFIG.typeMs 그대로(#155, #216).
+const TYPE_MS = 55
 
 // 공통 마스코트 상태 머신 타이밍. 롭의 기존 이스터에그 동작값을 모든 완성 세트에 재사용한다.
 //
@@ -157,6 +159,9 @@ export default function Mascot({ roomId }) {
   const [reactionMode, setReactionMode] = useState('default')
   const reactionModeRef = useRef('default')
   const setReaction = (next) => { reactionModeRef.current = next; setReactionMode(next) }
+  // 롭 전용 타이핑 효과 진행 길이 — 다른 캐릭터는 항상 전체 길이로 즉시 표시된다.
+  const [typedLen, setTypedLen] = useState(0)
+  const typeTimerRef = useRef(null)
 
   // eggMode: 'default' | 'lifted' | 'scared' | 'angry' | 'dizzy' | 'sleepy' — 렌더링(스프라이트·CSS
   // 클래스·말풍선 문구)에 쓰는 state. 실제 판정 로직은 eggModeRef(항상 최신)로 한다 — window에 붙는
@@ -197,6 +202,7 @@ export default function Mascot({ roomId }) {
     clearTimeout(angryEndTimerRef.current)
     clearTimeout(idleTimerRef.current)
     clearTimeout(reactionTimerRef.current)
+    clearInterval(typeTimerRef.current)
   }, [])
 
   // 아는 값만 통과시키고 나머지는 크로비로 떨어뜨린다 — 백엔드에 mascotType 검증이 없어서
@@ -212,9 +218,12 @@ export default function Mascot({ roomId }) {
   // 상태 스프라이트보다도 우선 — 코스튬엔 상태별 변형이 없어서 상태 스프라이트로 바꿔봐야
   // 의미가 없다).
   const equippedSprite = prefs.data?.equippedItem?.imageUrl
+  // 롭만 코드창 말풍선을 쓴다 — '> ' 프롬프트 + 한 글자씩 타이핑(#216, 목업 TEXT.robot).
+  const isRob = mascotType === 'rob'
+  const withPrompt = (text) => (isRob ? `> ${text}` : text)
   // 상태 스프라이트가 있는 캐릭터만 상태별로 갈아끼우고, 없으면 기본 스프라이트로 떨어진다.
-  // ?. 두 번인 이유 — 상태 세트가 아예 없는 캐릭터(버거노인·김철수)와, 세트는 있는데 그 상태만
-  // 빠진 경우를 둘 다 받아야 한다. 어느 쪽이든 SPRITES[mascotType]으로 안전하게 내려간다.
+  // 상태 세트가 아예 없는 캐릭터(버거노인)와, 세트는 있는데 그 상태만 빠진 경우를 둘 다
+  // 받아야 한다. 어느 쪽이든 stateSprites.default → SPRITES[mascotType] 순으로 내려간다.
   const activeState = eggMode !== 'default' ? eggMode : reactionMode
   const spriteSrc = equippedSprite || stateSprites[activeState] || stateSprites.default || SPRITES[mascotType]
 
@@ -222,6 +231,23 @@ export default function Mascot({ roomId }) {
     setBubble(text)
     clearTimeout(bubbleTimer.current)
     bubbleTimer.current = setTimeout(() => setBubble(''), SAY_MS)
+    // 롭은 한 글자씩 타이핑되는 코드창 연출(#155, 목업 typeBubble 그대로) — 다른 캐릭터는
+    // 즉시 전체 표시라 타이핑 진행 길이를 곧장 끝까지 채운다.
+    clearInterval(typeTimerRef.current)
+    if (isRob) {
+      setTypedLen(0)
+      typeTimerRef.current = setInterval(() => {
+        setTypedLen((len) => {
+          if (len + 1 >= text.length) {
+            clearInterval(typeTimerRef.current)
+            return text.length
+          }
+          return len + 1
+        })
+      }, TYPE_MS)
+    } else {
+      setTypedLen(text.length)
+    }
   }
   const pickLine = () => {
     const pool = LINES[mascotType]
@@ -438,13 +464,18 @@ export default function Mascot({ roomId }) {
 
   if (prefs.isPending || prefs.isError) return null
 
+  // 롭은 상태 문구(들어올림/무서움/화남/어지러움/수면)든 기본 대사든 '> ' 프롬프트를 붙인다
+  // (#155·#216, 목업 그대로 — 목업도 robot이면 모든 말풍선에 '> '를 붙인다).
+  // 기본 대사만 타이핑 진행 중 커서를 보여준다.
+  const isTypingBubble = eggMode === 'default' && isRob && bubble
   const eggBubbleText =
-    eggMode === 'lifted' ? DRAG_LINES.lifted
-    : eggMode === 'scared' ? DRAG_LINES.scared
-    : eggMode === 'angry' ? `날 내려놔, ${me.data?.nickname || '사용자'}!`
-    : eggMode === 'dizzy' ? (mascotType === 'rob' ? DIZZY_LINE : '어지러워…!')
-    : eggMode === 'sleepy' ? 'Zzz…'
-    : bubble
+    eggMode === 'lifted' ? withPrompt(DRAG_LINES.lifted)
+    : eggMode === 'scared' ? withPrompt(DRAG_LINES.scared)
+    : eggMode === 'angry' ? withPrompt(`날 내려놔, ${me.data?.nickname || '사용자'}!`)
+    // 어지러움 문구는 캐릭터를 탄다 — 목업 TEXT.robot.dizzy는 2진수, TEXT.croby.dizzy는 평문이다.
+    : eggMode === 'dizzy' ? withPrompt(isRob ? DIZZY_LINE : '어지러워…!')
+    : eggMode === 'sleepy' ? withPrompt('Zzz…')
+    : isRob && bubble ? `> ${bubble.slice(0, typedLen)}` : bubble
 
   return (
     <div
@@ -458,7 +489,12 @@ export default function Mascot({ roomId }) {
       data-character={mascotType}
       ref={rootRef}
     >
-      {eggBubbleText && <div className="clov-mascot-bubble">{eggBubbleText}</div>}
+      {eggBubbleText && (
+        <div className="clov-mascot-bubble">
+          {eggBubbleText}
+          {isTypingBubble && <span className="clov-mascot-type-cursor" />}
+        </div>
+      )}
       <button
         type="button"
         className="clov-mascot-hit"

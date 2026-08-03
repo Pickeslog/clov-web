@@ -1,0 +1,148 @@
+/* =====================================================================
+   JoinRoom — @emotion/styled(JoinRoom.style.js)를 .proto.css 패턴으로 이관(#230).
+   이 화면은 목업(test-web-design/03-rooms/join_room.html)과 색 토큰 체계가 다르다
+   (그쪽은 화면별 로컬 --accent-green 등, 이 화면은 Login과 같은 전역 src/styles/tokens.css).
+   리더 확인: 정본은 현재 코드 — 값은 전역 토큰(var(--forest) 등) 그대로 쓰고
+   로컬로 재정의하지 않는다(목업 색은 참고하지 않음, 구조/레이아웃만 참고).
+   따라서 Login과 달리 다크모드에서도 tokens.css의 다크 오버라이드를 그대로 따른다
+   (color-scheme 고정 없음 — 지금도 그렇다).
+   의도적으로 안 한 것: box-sizing:border-box 로컬 리셋 — 지금 이 화면은 리셋이
+   없는 상태(content-box)로 이미 정상 렌더링되고 있어서, 리셋을 넣으면 오히려
+   레이아웃이 달라진다(#150에서 겪은 것과 같은 함정 — 이번엔 반대 방향으로 피함).
+   ===================================================================== */
+.proto-joinroom {
+  min-height: 100vh;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  background: linear-gradient(135deg, #fffdf3 0%, #fffaf0 48%, #fdf6e3 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.proto-joinroom .joinroom-topbar {
+  display: flex;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.proto-joinroom .joinroom-brand {
+  font-weight: 900;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+  color: var(--forest);
+}
+
+.proto-joinroom .joinroom-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.proto-joinroom .joinroom-card {
+  width: min(420px, 100%);
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 18px 44px rgba(7, 59, 36, 0.08);
+  display: grid;
+  gap: 16px;
+}
+
+/* font-family를 일부러 지정하지 않는다 — 지금도 전역 index.css의 h1 리셋(system-ui)이
+   먹은 채로 렌더링되고 있고(Title이 원래 font-family를 안 정했다), 여기서 새로 지정하면
+   "전과 똑같이"가 깨진다. (team-guides/19 §8의 반대 사례 — 알고 안 고친 것.) */
+.proto-joinroom .joinroom-title {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--forest);
+}
+
+.proto-joinroom .joinroom-desc {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.proto-joinroom .joinroom-field {
+  display: grid;
+  gap: 8px;
+}
+
+.proto-joinroom .joinroom-label {
+  color: var(--forest);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.proto-joinroom .joinroom-input {
+  height: 50px;
+  padding: 0 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.proto-joinroom .joinroom-input:focus {
+  border-color: var(--mint);
+  background: #fff;
+  box-shadow: 0 0 0 5px var(--glow);
+}
+
+.proto-joinroom .joinroom-submit {
+  height: 50px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #093d26, #16874b 56%, #50d990);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.proto-joinroom .joinroom-submit:hover {
+  transform: translateY(-2px);
+}
+.proto-joinroom .joinroom-submit:disabled {
+  opacity: 0.7;
+  cursor: default;
+  transform: none;
+}
+
+.proto-joinroom .joinroom-message {
+  color: var(--warn);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.proto-joinroom .joinroom-success {
+  padding: 16px 18px;
+  border: 1px dashed var(--mint);
+  border-radius: 16px;
+  background: var(--glow);
+  color: var(--forest);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.proto-joinroom .joinroom-back-link {
+  color: var(--leaf);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.proto-joinroom .joinroom-back-link:hover {
+  text-decoration: underline;
+}

@@ -56,14 +56,15 @@
 .clov-hdr-shop svg { display: block; }
 .clov-hdr-gold {
   display: inline-flex; align-items: center; gap: 4px;
-  padding: 2px 8px 2px 4px; border-radius: 999px;
-  background: rgba(251, 191, 36, 0.14); color: #f5c451;
+  padding-left: 8px; margin-left: 2px;
+  border-left: 1px solid #3c4a2a;
+  color: #f5c451;
   font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums;
 }
 .clov-hdr-gold i {
-  width: 14px; height: 14px; border-radius: 50%; display: grid; place-items: center;
+  width: 13px; height: 13px; border-radius: 50%; display: grid; place-items: center;
   background: linear-gradient(150deg, #fbbf24, #d97706); color: #4a2c00;
-  font-size: 9px; font-weight: 900; font-style: normal;
+  font-size: 8px; font-weight: 900; font-style: normal;
 }
 
 /* 마스코트 꾸미기 — 프로필 드롭다운(사용자 설정·로그아웃과 같은 박스) 안 접이식 섹션. */
@@ -240,7 +241,7 @@ body.light-mode .clov-hdr-nav-btn { color: #79ad90; }
 body.light-mode .clov-hdr-nav-btn:hover, body.light-mode .clov-hdr-nav-btn.active { background: #edf4ec; color: #1b4332; }
 body.light-mode .clov-hdr-shop { background: #f4f8f2; border-color: #e0ebdc; color: #4a6b58; }
 body.light-mode .clov-hdr-shop:hover, body.light-mode .clov-hdr-shop.active { background: #edf4ec; color: #1b4332; border-color: #cfe3c8; }
-body.light-mode .clov-hdr-gold { background: rgba(217, 119, 6, 0.12); color: #a86612; }
+body.light-mode .clov-hdr-gold { border-left-color: #cfe3c8; color: #a86612; }
 body.light-mode .clov-hdr-avatar { background: #edf4ec; color: #1b4332; }
 body.light-mode .clov-hdr-dropdown { background: #fff; border-color: #eadfd0; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12); }
 body.light-mode .clov-hdr-dropdown > li > button { color: #2c3e35; }

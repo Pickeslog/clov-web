@@ -1154,7 +1154,7 @@ export function MemoryDetailModal({
         if (comment && editingCommentId === comment.id) {
           return (
             <div className="memory-message-row" key={member.userId}>
-              <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+              <span className="memory-message-avatar">{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
               <span className="memory-message-name">{member.nickname}</span>
               <input
                 className="memory-message-compose-input"
@@ -1174,7 +1174,7 @@ export function MemoryDetailModal({
         if (comment) {
           return (
             <div className="memory-message-row" key={member.userId}>
-              <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+              <span className="memory-message-avatar">{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
               <span className="memory-message-name">{member.nickname}</span>
               <span className="memory-message-text">{comment.content}</span>
               {isSelf && (
@@ -1190,7 +1190,7 @@ export function MemoryDetailModal({
         if (isSelf) {
           return (
             <div className="memory-message-row" key={member.userId}>
-              <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+              <span className="memory-message-avatar">{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
               <span className="memory-message-name">{member.nickname}</span>
               <input
                 className="memory-message-compose-input"
@@ -1209,7 +1209,7 @@ export function MemoryDetailModal({
 
         return (
           <div className="memory-message-row" key={member.userId}>
-            <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+            <span className="memory-message-avatar">{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
             <span className="memory-message-name">{member.nickname}</span>
             <span className="memory-message-empty-text">아직 메시지 없음</span>
           </div>
@@ -1220,7 +1220,7 @@ export function MemoryDetailModal({
           <div className="memory-detail-messages-former-title">이전 멤버</div>
           {formerComments.map((comment) => (
             <div className="memory-message-row" key={comment.id}>
-              <span className="memory-message-avatar">{initialOf(comment.writer?.nickname)}</span>
+              <span className="memory-message-avatar">{comment.writer?.profileImageUrl ? <img src={comment.writer.profileImageUrl} alt="" /> : initialOf(comment.writer?.nickname)}</span>
               <span className="memory-message-name">{comment.writer?.nickname}</span>
               <span className="memory-message-text">{comment.content}</span>
             </div>

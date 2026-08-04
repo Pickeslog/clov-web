@@ -434,7 +434,9 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); 
 .proto-feed .memory-message-avatar {
   width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
   background: #52b788; color: #fff; font-size: 11px; font-weight: 800; flex-shrink: 0;
+  overflow: hidden; position: relative;
 }
+.proto-feed .memory-message-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .proto-feed .memory-message-name { font-size: 12px; font-weight: 700; color: #24382f; flex-shrink: 0; min-width: 32px; }
 .proto-feed .memory-message-text { flex: 1; font-size: 13px; color: #24382f; }
 .proto-feed .memory-message-empty-text { flex: 1; font-size: 12px; font-style: italic; color: #607568; }

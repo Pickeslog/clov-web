@@ -237,7 +237,7 @@ export default function Schedule() {
 
         {items.length > 0 && (
           <section className="growth-shell">
-            <ReceiptCard
+            <TicketCard
               plan={selectedPlan}
               loading={detail.isPending}
               currentUserId={currentUserId}
@@ -302,13 +302,26 @@ export default function Schedule() {
   )
 }
 
-// ── 약속 상세 영수증(선택 약속) ──────────────────────────────────────
-function ReceiptCard({
+// 약속 id·날짜로 티켓 번호/발권번호를 만든다(장식용 — 실제 데이터만 사용, 새 필드 없음).
+function ticketNoOf(plan) {
+  return String(plan.id ?? '').padStart(4, '0').slice(-4)
+}
+function ticketSerialOf(plan) {
+  const [y, m, d] = String(plan.planDate ?? '').split('-')
+  if (!y || !m || !d) return `SER. ----·${ticketNoOf(plan)}`
+  return `SER. ${y}-${m}${d}-${ticketNoOf(plan)}`
+}
+
+// ── 약속 티켓(선택 약속) — 앞면(티켓)은 정보 요약 + 입체감/찢기 연출,
+//    뒷면(슬립)은 기존 영수증 메모·체크리스트·상태 전환·수정/삭제를 그대로 담는다.
+function TicketCard({
   plan, loading, currentUserId, busy,
   onEdit, onDelete, onComplete, onCancel, onSkip,
   onAddCheck, onToggleCheck, onDeleteCheck,
 }) {
   const [checkItem, setCheckItem] = useState('')
+  const [torn, setTorn] = useState(false)
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 30, hover: false })
 
   if (loading || !plan) {
     return (
@@ -320,7 +333,7 @@ function ReceiptCard({
 
   const diff = ddayDiff(plan.planDate)
   const ddayText = calculateDday(plan.planDate)
-  const stampColor = diff !== null && diff < 0 ? '#2e5233' : '#c0392b'
+  const isPast = diff !== null && diff < 0
   const ddayPhrase = diff === null
     ? '함께할 그날까지'
     : diff < 0 ? '함께 보낸 그날로부터' : diff === 0 ? '바로 오늘, 약속의 날!' : '함께할 그날까지'
@@ -335,26 +348,74 @@ function ReceiptCard({
     setCheckItem('')
   }
 
+  const onTiltMove = (e) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    const px = (e.clientX - r.left) / r.width
+    const py = (e.clientY - r.top) / r.height
+    setTilt({ rx: -(py - 0.5) * 6, ry: (px - 0.5) * 9, mx: px * 100, my: py * 100, hover: true })
+  }
+  const onTiltLeave = () => setTilt((s) => ({ ...s, rx: 0, ry: 0, hover: false }))
+
   return (
-    <div className="growth-detail" style={{ '--stamp': stampColor }}>
-      <div className="receipt-paper">
-        <div className="receipt-zigzag" />
-        <div className="receipt-head">
-          <div className="receipt-brand">CLOV. MEMORIES</div>
-          <div className="receipt-sub">★  약 속 메 모  ★</div>
-        </div>
-        <div className="receipt-stamp-wrap">
-          <div className="receipt-stamp">
-            <span className="receipt-stamp-label">{ddayPhrase}</span>
-            <span className="receipt-stamp-dday">{ddayText}</span>
+    <div className="growth-detail" style={{ '--stamp': isPast ? '#2e5233' : '#c0392b' }}>
+      <div className="ticket-stage">
+        <div
+          className="ticket-tilt"
+          style={{
+            transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
+            transition: tilt.hover ? 'transform .1s linear' : 'transform .55s cubic-bezier(.2,.8,.2,1)',
+          }}
+        >
+          <div
+            className={`ticket-card${torn ? ' is-torn' : ''}`}
+            role="button"
+            tabIndex={0}
+            title={torn ? '다시 클릭하면 붙습니다' : '클릭하면 D-day 스텁이 뜯어집니다'}
+            onMouseMove={onTiltMove}
+            onMouseLeave={onTiltLeave}
+            onClick={() => setTorn((v) => !v)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTorn((v) => !v) } }}
+          >
+            <div className="ticket-main">
+              <div className="ticket-holo" />
+              <div className="ticket-side-label"><span>ADMIT ONE · 약속 티켓</span></div>
+              <div className="ticket-content">
+                <div className="ticket-toprow">
+                  <span className="ticket-brand">🍀 CLOV. MEMORIES</span>
+                  <span className="ticket-admit">ADMIT ONE · No. {ticketNoOf(plan)}</span>
+                </div>
+                <div className="ticket-titlewrap">
+                  <div className="ticket-title">{plan.title}</div>
+                  <div className="ticket-kicker">PROMISE JOURNEY · {plan.planDate?.slice(0, 4) ?? '----'}</div>
+                </div>
+                <div className="ticket-meta">
+                  <div><span>DATE</span><b>{formatFriendlyDate(plan.planDate)}</b></div>
+                  <div><span>D-DAY</span><b>{ddayText}</b></div>
+                </div>
+                <div className="ticket-foot">
+                  <span>NON-TRANSFERABLE · KEEP UNTIL THE DAY</span>
+                  <span className="ticket-serial">{ticketSerialOf(plan)}</span>
+                </div>
+              </div>
+            </div>
+            <div className={`ticket-stub${torn ? ' is-off' : ''}`}>
+              <div className="ticket-holo" />
+              <span className="ticket-stub-side">KEEP THIS STUB</span>
+              <div className="ticket-stub-mid">
+                <span className="ticket-stub-kicker">{ddayPhrase}</span>
+                <span className="ticket-stub-dday">{ddayText}</span>
+                <div className="ticket-stub-barcode" />
+                <span className="ticket-stub-no">{ticketNoOf(plan)}</span>
+              </div>
+            </div>
+            <div className="ticket-glare" style={{ opacity: tilt.hover ? 1 : 0, background: `radial-gradient(360px circle at ${tilt.mx}% ${tilt.my}%, rgba(255,248,224,.16), rgba(255,248,224,0) 62%)` }} />
           </div>
         </div>
-        <div className="receipt-title">{plan.title}</div>
-        <div className="receipt-meta">
-          <div><span>DATE</span><span>{formatFriendlyDate(plan.planDate)}</span></div>
-          <div><span>D-DAY</span><span>{ddayText}</span></div>
-        </div>
+        <div className="ticket-hint"><span className="ticket-hint-dot" />{torn ? '다시 클릭하면 스텁이 붙습니다' : '티켓을 클릭하면 D-day 스텁이 뜯어집니다'}</div>
+      </div>
 
+      <div className="receipt-paper ticket-slip">
+        <div className="receipt-zigzag" />
         <div className="receipt-memo-label">— MEMO ————————————</div>
         <div className="receipt-memo">
           {plan.description && <p className="receipt-memo-desc">{plan.description}</p>}
@@ -515,12 +576,7 @@ export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, o
     const d = new Date()
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   })()
-  const diff = ddayDiff(planDate)
   const ddayText = calculateDday(planDate)
-  const stampColor = diff !== null && diff < 0 ? '#2e5233' : '#c0392b'
-  const ddayPhrase = diff === null
-    ? '함께할 그날까지'
-    : diff < 0 ? '함께 보낸 그날로부터' : diff === 0 ? '바로 오늘, 약속의 날!' : '함께할 그날까지'
 
   const canSubmit = title.trim() && planDate && !submitting
   const submit = () => {
@@ -531,45 +587,49 @@ export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, o
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box schedule-editor" onClick={(e) => e.stopPropagation()}>
-        <div className="growth-detail" style={{ '--stamp': stampColor }}>
-          <div className="receipt-paper">
-            <div className="receipt-head">
-              <div className="receipt-brand">CLOV. MEMORIES</div>
-              <div className="receipt-sub">{plan ? '★  약속 수정하기  ★' : '★  새 D-day 만들기  ★'}</div>
-            </div>
-            <div className="receipt-stamp-wrap">
-              <div className="receipt-stamp">
-                <span className="receipt-stamp-label">{ddayPhrase}</span>
-                <span className="receipt-stamp-dday">{ddayText}</span>
+        <div className="growth-detail">
+          <div className="ticket-card ticket-card--edit">
+            <div className="ticket-main">
+              <div className="ticket-holo" />
+              <div className="ticket-side-label"><span>ADMIT ONE · 약속 티켓</span></div>
+              <div className="ticket-content">
+                <div className="ticket-toprow">
+                  <span className="ticket-brand">🍀 CLOV. MEMORIES</span>
+                  <span className="ticket-admit">{plan ? '약속 수정하기' : '새 D-day 만들기'}</span>
+                </div>
+                <input
+                  className="ticket-title-input"
+                  value={title}
+                  maxLength={100}
+                  placeholder="약속 제목"
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+                <div className="ticket-meta">
+                  <div>
+                    <span>DATE</span>
+                    <b className="ticket-date-cell">
+                      <span className={planDate ? '' : 'is-empty'}>{planDate ? formatFriendlyDate(planDate) : '연도-월-일'}</span>
+                      <input
+                        className="ticket-date-input"
+                        type="date"
+                        value={planDate}
+                        min={today}
+                        onChange={(e) => setPlanDate(e.target.value)}
+                        // 투명 date 입력은 텍스트 클릭만으론 피커가 안 열림(달력 아이콘만) →
+                        // 클릭 시 showPicker()로 강제로 연다(미지원/비제스처 시 무시).
+                        onClick={(e) => { try { e.currentTarget.showPicker?.() } catch { /* 미지원/비제스처 */ } }}
+                        aria-label="약속 날짜"
+                      />
+                    </b>
+                  </div>
+                  <div><span>D-DAY</span><b>{ddayText}</b></div>
+                </div>
               </div>
             </div>
-            <input
-              className="receipt-title-input"
-              value={title}
-              maxLength={100}
-              placeholder="약속 제목"
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <div className="receipt-meta">
-              <div>
-                <span>DATE</span>
-                <span className="receipt-date-cell">
-                  <span className={planDate ? '' : 'is-empty'}>{planDate ? formatFriendlyDate(planDate) : '연도-월-일'}</span>
-                  <input
-                    className="receipt-date-input"
-                    type="date"
-                    value={planDate}
-                    min={today}
-                    onChange={(e) => setPlanDate(e.target.value)}
-                    // 투명 date 입력은 텍스트 클릭만으론 피커가 안 열림(달력 아이콘만) →
-                    // 클릭 시 showPicker()로 강제로 연다(미지원/비제스처 시 무시).
-                    onClick={(e) => { try { e.currentTarget.showPicker?.() } catch { /* 미지원/비제스처 */ } }}
-                    aria-label="약속 날짜"
-                  />
-                </span>
-              </div>
-              <div><span>D-DAY</span><span>{ddayText}</span></div>
-            </div>
+          </div>
+
+          <div className="receipt-paper ticket-slip">
+            <div className="receipt-zigzag" />
             <div className="receipt-memo-label">— MEMO ————————————</div>
             <textarea
               className="receipt-memo-input"

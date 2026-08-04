@@ -41,7 +41,7 @@
   .journey-section-title {
     max-width: 660px;
     margin: 0 auto 14px;
-    align-items: flex-end;
+    align-items: center;
   }
   .journey-heading {
     display: flex;
@@ -74,8 +74,8 @@
     gap: 6px;
     min-height: 34px;
     padding: 0 16px;
-    border-radius: 7px;
-    border: 1.5px dashed rgba(46, 82, 51, 0.45);
+    border-radius: 999px;
+    border: none;
     background: #faf6ee;
     color: #2e5233;
     font-family: 'Space Mono', 'Courier New', monospace;
@@ -84,12 +84,13 @@
     letter-spacing: 0.4px;
     cursor: pointer;
     white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(28, 26, 23, 0.16);
     transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
   }
   .btn-schedule-new:hover {
     background: #f3efe1;
     transform: translateY(-1px);
-    box-shadow: 0 8px 16px rgba(46, 82, 51, 0.18);
+    box-shadow: 0 6px 14px rgba(28, 26, 23, 0.2);
   }
 
   /* ── 여정 셸 ── */
@@ -99,12 +100,13 @@
     position: relative;
   }
 
-  /* ══════════ 약속 상세 영수증 (세이지 앨범 마운트 + 크림 영수증) ══════════ */
+  /* ══════════ 약속 상세 (세이지 앨범 마운트) ══════════
+     마운트(growth-detail)를 내용물보다 넉넉히 넓게 잡아 사방에 초록 프레임이 보이게 한다. */
   .growth-detail {
     position: relative;
-    max-width: 660px;
+    max-width: 520px;
     margin: 0 auto;
-    padding: 34px 22px 30px;
+    padding: 28px 24px 24px;
     border-radius: 18px;
     color: #1c1a17;
     background:
@@ -116,13 +118,238 @@
     overflow: hidden;
   }
 
+  /* ══════════ 약속 티켓(앞면) — 입장권 미감. 아래 .ticket-slip(뒷면)에
+     기존 영수증 메모·체크리스트·상태 전환·수정/삭제를 그대로 담는다. ══════════ */
+  .ticket-stage { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 18px; perspective: 1200px; }
+  .ticket-tilt { transform-style: preserve-3d; }
+
+  .ticket-card {
+    position: relative;
+    display: flex;
+    width: 100%;
+    max-width: 440px;
+    min-height: 168px;
+    cursor: pointer;
+    outline: none;
+  }
+  .ticket-card--edit { max-width: 100%; cursor: default; min-height: 0; }
+
+  .ticket-main {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    background: linear-gradient(150deg, #33402f 0%, #26301f 55%, #2c3a26 100%);
+    border-radius: 14px 3px 3px 14px;
+    box-shadow: 0 1.5px 2px rgba(30, 38, 28, 0.28), 0 8px 16px rgba(30, 38, 28, 0.24), inset 0 1px 0 rgba(240, 232, 207, 0.18), inset 0 0 0 1px rgba(226, 214, 176, 0.14);
+    overflow: hidden;
+  }
+  .ticket-card--edit .ticket-main { border-radius: 14px; }
+  .ticket-holo {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 34%, rgba(196, 231, 214, 0.16) 44%, rgba(226, 214, 176, 0.22) 50%, rgba(214, 186, 196, 0.16) 56%, transparent 66%);
+    background-size: 220% 100%;
+    animation: clovHolo 9s linear infinite;
+    pointer-events: none;
+  }
+  .ticket-side-label {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px dashed rgba(226, 214, 176, 0.22);
+  }
+  .ticket-side-label span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 8px;
+    letter-spacing: 0.3em;
+    color: rgba(226, 214, 176, 0.55);
+    white-space: nowrap;
+  }
+  .ticket-card--edit .ticket-side-label { display: none; }
+
+  .ticket-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 14px 16px 12px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+    color: #f4f2e8;
+  }
+  .ticket-card--edit .ticket-content { padding-left: 18px; gap: 10px; }
+
+  .ticket-toprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .ticket-brand {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    background: linear-gradient(100deg, #f4ecd2, #c9a961 55%, #f4ecd2);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    white-space: nowrap;
+  }
+  .ticket-admit {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: rgba(244, 242, 232, 0.58);
+    white-space: nowrap;
+  }
+
+  /* 한글은 시스템 폰트 스택으로 — 프로젝트에 실제 로드된 적 없는 웹폰트(예: 'Gothic A1')를
+     쓰면 한글 글리프만 조용히 시스템 폰트로 폴백되면서 letter-spacing이 어긋나 보인다. */
+  .ticket-title {
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .ticket-kicker {
+    margin-top: 4px;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: rgba(226, 214, 176, 0.68);
+  }
+
+  .ticket-title-input {
+    display: block;
+    width: 100%;
+    border: none;
+    border-bottom: 1px dashed rgba(226, 214, 176, 0.4);
+    background: transparent;
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    font-size: 19px;
+    font-weight: 900;
+    color: #f4f2e8;
+    padding: 2px 2px 6px;
+    outline: none;
+  }
+  .ticket-title-input::placeholder { color: rgba(244, 242, 232, 0.45); font-weight: 700; }
+
+  .ticket-meta {
+    display: flex;
+    gap: 18px;
+    border-top: 1px solid rgba(226, 214, 176, 0.22);
+    padding-top: 8px;
+    font-family: 'Space Mono', 'Courier New', monospace;
+  }
+  .ticket-meta > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .ticket-meta > div > span:first-child { font-size: 8.5px; letter-spacing: 0.2em; color: rgba(244, 242, 232, 0.55); }
+  .ticket-meta > div > b { font-size: 13px; font-weight: 600; white-space: nowrap; }
+
+  .ticket-date-cell { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
+  .ticket-date-cell .is-empty { color: rgba(244, 242, 232, 0.5); font-weight: 400; }
+  .ticket-date-input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: none; opacity: 0; cursor: pointer; }
+
+  .ticket-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .ticket-foot span:first-child {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 7.5px;
+    letter-spacing: 0.16em;
+    color: rgba(244, 242, 232, 0.4);
+  }
+  .ticket-serial {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #e0756a;
+  }
+
+  /* ── 스텁(오른쪽, 뜯어지는 조각) ── */
+  .ticket-stub {
+    position: relative;
+    flex: 0 0 118px;
+    width: 118px;
+    background: linear-gradient(165deg, #242d1e, #1d251a);
+    border-left: 1px dashed rgba(226, 214, 176, 0.42);
+    border-radius: 3px 14px 14px 3px;
+    box-shadow: 0 1.5px 2px rgba(30, 38, 28, 0.3), 0 8px 16px rgba(30, 38, 28, 0.26), inset 0 1px 0 rgba(240, 232, 207, 0.16);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 14px 8px;
+    gap: 4px;
+    transform-origin: left center;
+    will-change: transform, opacity;
+    animation: clovTearBack 0.34s cubic-bezier(.3,.8,.4,1) forwards;
+  }
+  .ticket-stub.is-off { animation: clovTearOff 0.62s steps(2, end) forwards; }
+  .ticket-stub-side {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 7.5px;
+    letter-spacing: 0.24em;
+    color: rgba(226, 214, 176, 0.45);
+  }
+  .ticket-stub-mid { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; }
+  .ticket-stub-kicker { font-size: 8px; letter-spacing: 0.06em; color: rgba(244, 242, 232, 0.62); }
+  .ticket-stub-dday {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-weight: 700;
+    font-size: 26px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    background: linear-gradient(100deg, #ffd9c9, var(--stamp, #e0756a) 50%, #ffcfbd);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .ticket-stub-barcode {
+    width: 100%;
+    height: 22px;
+    opacity: 0.85;
+    background-image: repeating-linear-gradient(90deg, #f4f2e8 0 1px, transparent 1px 3px, #f4f2e8 3px 4px, transparent 4px 7px, #f4f2e8 7px 8px, transparent 8px 10px);
+  }
+  .ticket-stub-no { font-family: 'Space Mono', 'Courier New', monospace; font-size: 8px; letter-spacing: 0.14em; color: rgba(226, 214, 176, 0.42); }
+
+  .ticket-glare { position: absolute; inset: 0; border-radius: 14px; pointer-events: none; z-index: 6; transition: opacity 0.3s ease; }
+
+  .ticket-hint {
+    display: flex; align-items: center; gap: 7px;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 10px; letter-spacing: 0.1em;
+    color: rgba(28, 26, 23, 0.55);
+  }
+  .ticket-hint-dot { width: 5px; height: 5px; border-radius: 50%; background: #c0392b; display: block; flex-shrink: 0; }
+
+  @keyframes clovHolo { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+  @keyframes clovTearOff {
+    0% { transform: none; opacity: 1; }
+    10% { transform: translate(1px, 1px) rotate(0.4deg); }
+    30% { transform: translate(4px, 3px) rotate(1.4deg); }
+    50% { transform: translate(9px, 7px) rotate(2.6deg); }
+    70% { transform: translate(18px, 14px) rotate(4.2deg); }
+    100% { transform: translate(70px, 46px) rotate(11deg); opacity: 0; }
+  }
+  @keyframes clovTearBack {
+    0% { transform: translate(70px, 46px) rotate(11deg); opacity: 0; }
+    55% { transform: translate(9px, 5px) rotate(3deg); opacity: 0.9; }
+    82% { transform: translate(-2px, -1px) rotate(-0.6deg); opacity: 1; }
+    100% { transform: none; opacity: 1; }
+  }
+
+  /* ══════════ 티켓 아래 슬립 — 메모/체크리스트/상태 전환/수정·삭제(크림 영수증 톤 재사용) ══════════ */
+  .ticket-slip { margin-top: 4px; }
+
   .receipt-paper {
     position: relative;
-    width: 600px;
+    width: 380px;
     max-width: 100%;
     margin: 0 auto;
     background: #faf6ee;
-    padding: 28px 40px 36px;
+    padding: 18px 22px 24px;
     box-shadow: 0 10px 24px rgba(28, 26, 23, 0.2);
     font-family: 'Space Mono', 'Courier New', monospace;
     color: #1c1a17;
@@ -153,60 +380,18 @@
     background-repeat: repeat-x;
   }
 
-  .receipt-head {
-    text-align: center;
-    padding-bottom: 14px;
-    border-bottom: 1px dashed rgba(28, 26, 23, 0.3);
-  }
-  .receipt-brand { font-size: 16px; font-weight: 700; letter-spacing: 3.5px; }
-  .receipt-sub { font-size: 9.5px; color: rgba(28, 26, 23, 0.5); margin-top: 4px; letter-spacing: 1px; }
-
-  .receipt-stamp-wrap { display: flex; justify-content: center; padding: 18px 0 12px; }
-  .receipt-stamp {
-    transform: rotate(-4deg);
-    border: 3px solid var(--stamp, #c0392b);
-    color: var(--stamp, #c0392b);
-    padding: 7px 24px;
-    border-radius: 8px;
-    text-align: center;
-    box-shadow: 0 0 0 3px #faf6ee, 0 0 0 4px color-mix(in srgb, var(--stamp, #c0392b) 25%, transparent);
-  }
-  .receipt-stamp-label { display: block; font-size: 9px; letter-spacing: 1.5px; font-weight: 700; }
-  .receipt-stamp-dday { display: block; font-size: 42px; font-weight: 700; line-height: 1; letter-spacing: -1px; }
-
-  .receipt-title {
-    font-family: 'Gothic A1', sans-serif;
-    text-align: center;
-    font-size: 24px;
-    font-weight: 900;
-    line-height: 1.3;
-    margin-bottom: 16px;
-    color: #1c1a17;
-  }
-
-  .receipt-meta {
-    font-size: 12.5px;
-    line-height: 2.3;
-    border-top: 1px dashed rgba(28, 26, 23, 0.3);
-    border-bottom: 1px dashed rgba(28, 26, 23, 0.3);
-    padding: 9px 0;
-  }
-  .receipt-meta > div { display: flex; justify-content: space-between; gap: 10px; }
-  .receipt-meta > div > span:first-child { color: rgba(28, 26, 23, 0.5); }
-  .receipt-meta > div > span:last-child { letter-spacing: .5px; text-align: right; }
-
   .receipt-memo-label {
     font-size: 9px;
     color: rgba(28, 26, 23, 0.45);
     letter-spacing: 1.5px;
-    margin: 14px 0 8px;
+    margin: 0 0 8px;
     overflow: hidden;
     white-space: nowrap;
   }
   .receipt-memo {
-    font-family: 'Gothic A1', sans-serif;
-    font-size: 14px;
-    line-height: 1.9;
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
     color: #1c1a17;
   }
   .receipt-memo-desc { margin: 0 0 6px; white-space: pre-wrap; }
@@ -250,18 +435,18 @@
   .receipt-check-add {
     display: flex;
     gap: 6px;
-    margin-top: 10px;
-    padding-top: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
     border-top: 1px dashed rgba(28, 26, 23, 0.18);
   }
   .receipt-check-add input {
     flex: 1;
     min-width: 0;
-    border: 1px dashed rgba(28, 26, 23, 0.28);
+    border: 1px solid rgba(28, 26, 23, 0.28);
     border-radius: 7px;
     padding: 8px 10px;
     background: rgba(255, 255, 255, 0.5);
-    font-family: 'Gothic A1', sans-serif;
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
     font-size: 13px;
     color: #1c1a17;
     outline: none;
@@ -282,8 +467,8 @@
   .receipt-check-add button:disabled { opacity: 0.5; cursor: default; }
 
   .receipt-barcode {
-    height: 24px;
-    margin: 16px 0 14px;
+    height: 18px;
+    margin: 12px 0 10px;
     background-image: repeating-linear-gradient(90deg, #1c1a17 0 2px, transparent 2px 4px, #1c1a17 4px 5px, transparent 5px 9px);
   }
 
@@ -297,7 +482,7 @@
     font-family: 'Space Mono', 'Courier New', monospace;
   }
   .receipt-status-btn {
-    border: 1px dashed rgba(46, 82, 51, 0.5);
+    border: 1px solid rgba(46, 82, 51, 0.5);
     background: transparent;
     color: #2e5233;
     border-radius: 6px;
@@ -526,7 +711,7 @@
     color: #f4f1e8;
     border: none;
     box-shadow: none;
-    font-family: 'Gothic A1', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     transition: transform 0.22s ease, box-shadow 0.22s ease;
   }
   .growth-card.four-cut:hover { transform: translateY(-3px); }
@@ -780,7 +965,7 @@
     50% { opacity: 0.25; }
   }
 
-  /* ══════════ 새/수정 영수증 모달 ══════════ */
+  /* ══════════ 새/수정 티켓 모달 ══════════ */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -800,7 +985,7 @@
     position: relative;
     z-index: 1;
     width: 100%;
-    max-width: 680px;
+    max-width: 560px;
     background: #faf6ee;
     padding: 0;
     overflow: hidden;
@@ -813,68 +998,28 @@
   @keyframes scheduleOverlayIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes scheduleBoxIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
 
-  /* 모달 안의 영수증(약속 여정 영수증 재사용, 초록 액자 제거) */
+  /* 모달 안의 마운트(초록 액자 제거) — 티켓 헤더 + 크림 슬립을 세로로 쌓는다 */
   .schedule-editor .growth-detail {
     max-width: 100%;
     margin: 0;
-    padding: 0;
+    padding: 20px 22px 0;
     border-radius: 0;
     background: none;
     box-shadow: none;
     overflow: visible;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
+  .schedule-editor .ticket-card--edit { max-width: 100%; }
   .schedule-editor .receipt-paper {
     width: 100%;
-    padding: 14px 30px 22px;
+    padding: 14px 8px 22px;
     box-shadow: none;
   }
   .schedule-editor .receipt-paper::before,
   .schedule-editor .receipt-paper::after { display: none; }
-  .schedule-editor .receipt-brand { font-size: 15px; letter-spacing: 3px; }
-  .schedule-editor .receipt-stamp-wrap { padding: 14px 0 10px; }
-  .schedule-editor .receipt-stamp-dday { font-size: 36px; }
   .schedule-editor .receipt-barcode { margin: 14px 0 2px; }
-
-  .receipt-title-input {
-    display: block;
-    width: 100%;
-    border: none;
-    background: transparent;
-    text-align: center;
-    font-family: 'Gothic A1', sans-serif;
-    font-size: 21px;
-    font-weight: 900;
-    line-height: 1.3;
-    color: #1c1a17;
-    margin-bottom: 14px;
-    padding: 2px 4px;
-    outline: none;
-    border-bottom: 1px dashed transparent;
-    transition: border-color .15s;
-  }
-  .receipt-title-input::placeholder { color: rgba(28, 26, 23, 0.42); font-weight: 700; }
-  .receipt-title-input:focus { border-bottom-color: rgba(28, 26, 23, 0.28); }
-
-  .receipt-date-cell {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    border-bottom: 1px dashed rgba(28, 26, 23, 0.4);
-    cursor: pointer;
-    padding: 0 2px 1px;
-  }
-  .receipt-date-cell .is-empty { color: rgba(28, 26, 23, 0.5); }
-  .receipt-date-cell::after { content: "📅"; font-size: 11px; opacity: .6; line-height: 1; }
-  .receipt-date-input {
-    position: absolute;
-    inset: 0;
-    width: 100%; height: 100%;
-    margin: 0; padding: 0;
-    border: none;
-    opacity: 0;
-    cursor: pointer;
-  }
 
   .schedule-editor .receipt-memo-label { display: block; color: rgba(28, 26, 23, 0.55); }
   .receipt-memo-input {
@@ -883,7 +1028,7 @@
     border-radius: 8px;
     padding: 11px 13px;
     background: rgba(255, 255, 255, 0.4);
-    font-family: 'Gothic A1', sans-serif;
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
     font-size: 14px;
     line-height: 1.7;
     color: #1c1a17;
@@ -899,7 +1044,7 @@
   .schedule-modal-buttons {
     display: flex;
     gap: 10px;
-    padding: 6px 30px 22px;
+    padding: 6px 22px 22px;
   }
   .schedule-modal-buttons button {
     flex: 1;
@@ -916,7 +1061,7 @@
   .schedule-modal-buttons .btn-main:disabled { opacity: 0.55; cursor: default; }
   .schedule-modal-buttons .btn-sub { background: #e7f0ea; color: #2e5233; }
   .schedule-modal-error {
-    padding: 0 30px 4px;
+    padding: 0 22px 4px;
     color: #c0392b;
     font-size: 12px;
     font-weight: 700;
@@ -938,8 +1083,21 @@
       padding: 10px 10px 12px;
     }
     .growth-detail { padding: 24px 14px 22px; border-radius: 16px; }
+    .ticket-card { max-width: 100%; min-height: 0; flex-direction: column; }
+    .ticket-main { border-radius: 14px 14px 0 0; }
+    .ticket-stub {
+      flex: 0 0 auto;
+      width: 100%;
+      border-left: none;
+      border-top: 1px dashed rgba(226, 214, 176, 0.42);
+      border-radius: 0 0 14px 14px;
+      flex-direction: row;
+      padding: 10px 14px;
+    }
+    .ticket-stub-side { display: none; }
+    .ticket-stub-mid { flex-direction: row; gap: 10px; }
+    .ticket-stub-barcode { width: 60px; height: 30px; }
+    .ticket-title { font-size: 18px; }
     .receipt-paper { width: 100%; padding: 22px 20px 30px; }
-    .receipt-title { font-size: 19px; }
-    .receipt-stamp-dday { font-size: 34px; }
   }
 }

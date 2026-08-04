@@ -41,33 +41,29 @@ const relTime = (v) => {
 const FEED_META = {
   NOTICE: { cls: 'sched', icon: 'ti-calendar-heart', tail: '님의 공지', fallback: '새 공지가 등록됐어요' },
 }
-// JOIN은 type 하나로 두 가지 다른 사건(MEMBER_JOINED=합류자가 actor / JOIN_ACCEPTED=수락자가 actor)을
-// 겸하므로 subType까지 봐야 한다 — type만 보면 "{수락자}님이 합류했어요"처럼 엉뚱한 사람이 나온다(clov-api #113).
-const JOIN_SUBTYPE_META = {
-  MEMBER_JOINED: { cls: 'join', icon: 'ti-user-plus', tail: '님이 합류했어요', fallback: '새 멤버가 합류했어요' },
-  JOIN_ACCEPTED: { cls: 'join', icon: 'ti-user-plus', tail: '님이 가입을 수락했어요', fallback: '가입 신청이 수락됐어요' },
-}
-// FRIEND도 마찬가지로 type 하나가 계약 §13 subType 6개(LETTER_RECEIVE는 생산자가 아직 없어 실제로는 5개)를
-// 겸하고 있었다 — type만 보면 전부 "행운편지"로 나온다(#239). LEVEL_UP은 계약상 actor가 null이라
-// tail이 아니라 fallback으로 보내고, payload.level을 보간해야 해서 fallback을 함수로 둔다
-// (Notifications.jsx messageFor의 LEVEL_UP 문구와 맞춤).
+// FRIEND 하나가 계약 §13 subType 8개(LETTER_RECEIVE는 생산자가 아직 없어 실제로는 7개)를 겸한다 —
+// type만 보면 전부 "행운편지"로 나온다(#239). MEMBER_JOINED·JOIN_ACCEPTED는 원래 JOIN 탭이었는데,
+// JOIN 탭이 알림 테이블을 조회하지 않아(Notifications.jsx) 안 보이는 문제 때문에 FRIEND로 옮겨왔다
+// (web-design-repository#51) — JOIN 분기는 더 이상 없다. MEMBER_LEFT는 clov-api #124에서 신설.
+// LEVEL_UP은 계약상 actor가 null이라 tail이 아니라 fallback으로 보내고, payload.level을 보간해야
+// 해서 fallback을 함수로 둔다(Notifications.jsx messageFor의 LEVEL_UP 문구와 맞춤).
 const FRIEND_SUBTYPE_META = {
   MEMORY_WRITE: { cls: 'letter', icon: 'ti-pencil', tail: '님이 추억을 남겼어요', fallback: '새 추억이 등록됐어요' },
   PLAN_CREATE: { cls: 'letter', icon: 'ti-calendar', tail: '님이 새 약속을 만들었어요', fallback: '새 약속이 등록됐어요' },
   PLAN_COMPLETE: { cls: 'letter', icon: 'ti-calendar', tail: '님이 약속을 완료했어요', fallback: '약속이 완료됐어요' },
   ROOM_UPDATE: { cls: 'letter', icon: 'ti-settings', tail: '님이 우정공간 정보를 바꿨어요', fallback: '우정공간 정보가 바뀌었어요' },
   LEVEL_UP: { cls: 'letter', icon: 'ti-award', tail: null, fallback: (n) => `우정공간이 Lv.${n.payload?.level}이 됐어요! 🎉` },
+  MEMBER_JOINED: { cls: 'join', icon: 'ti-user-plus', tail: '님이 합류했어요', fallback: '새 멤버가 합류했어요' },
+  JOIN_ACCEPTED: { cls: 'join', icon: 'ti-user-plus', tail: '님이 가입을 수락했어요', fallback: '가입 신청이 수락됐어요' },
+  MEMBER_LEFT: { cls: 'join', icon: 'ti-user-minus', tail: '님이 나갔어요', fallback: '멤버가 나갔어요' },
 }
 const DEFAULT_META = { cls: 'member', icon: 'ti-bell', tail: '님의 새 소식', fallback: '새 소식이 있어요' }
 const metaFor = (n) => {
-  if (n.type === 'JOIN') {
-    // 옛 데이터(sub_type='JOIN_REQUEST', #90 이전)는 actor가 수락자로 잘못 박혀 있다.
-    // "님이 합류했어요"로 단정하면 확신 있게 틀린 이름이 뜨므로, 모르는 subType은 모호한 기본 문구로 떨어뜨린다.
-    return JOIN_SUBTYPE_META[n.subType] ?? DEFAULT_META
-  }
   if (n.type === 'FRIEND') {
     // LETTER_RECEIVE는 계약엔 있지만 생산자가 아직 없다(존재하지 않는 subType이 아니라 미구현) —
     // 지금은 DEFAULT_META로 모호하게 떨어지고, 생산자가 생기면 그때 케이스를 추가한다.
+    // 옛 JOIN 데이터(sub_type='JOIN_REQUEST', #90 이전, actor가 수락자로 잘못 박혀 있음)도
+    // 같은 이유로 모호한 기본 문구로 떨어진다.
     return FRIEND_SUBTYPE_META[n.subType] ?? DEFAULT_META
   }
   return FEED_META[n.type] ?? DEFAULT_META

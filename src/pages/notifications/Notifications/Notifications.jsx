@@ -38,6 +38,7 @@ const messageFor = (notification) => {
     case 'LEVEL_UP': return `우정공간이 Lv.${payload?.level}이 됐어요! 🎉`
     case 'MEMBER_JOINED': return `${actor?.nickname}님이 합류했어요`
     case 'JOIN_ACCEPTED': return `${actor?.nickname}님이 가입을 수락했어요`
+    case 'MEMBER_LEFT': return `${actor?.nickname}님이 나갔어요`
     default: return actor?.nickname ? `${actor.nickname}님의 새로운 활동이 있습니다.` : '새로운 알림이 있습니다.'
   }
 }

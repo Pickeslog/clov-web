@@ -266,87 +266,6 @@
   .ticket-date-trigger::after { content: "📅"; font-size: 10px; opacity: .7; }
   .ticket-date-trigger .is-empty { color: rgba(244, 242, 232, 0.5); font-weight: 400; }
 
-  /* ── 티켓 톤 커스텀 달력 팝오버(브라우저 기본 date picker 대체) ── */
-  .ticket-cal {
-    position: fixed;
-    z-index: 2000;
-    width: 248px;
-    padding: 12px;
-    border-radius: 12px;
-    background: linear-gradient(150deg, #33402f 0%, #26301f 55%, #2c3a26 100%);
-    box-shadow: 0 1.5px 2px rgba(30, 38, 28, 0.3), 0 16px 32px rgba(8, 28, 22, 0.4), inset 0 1px 0 rgba(240, 232, 207, 0.16), inset 0 0 0 1px rgba(226, 214, 176, 0.16);
-    color: #f4f2e8;
-    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  }
-  .ticket-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .ticket-cal-head button {
-    width: 22px; height: 22px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border: none;
-    border-radius: 50%;
-    background: rgba(244, 242, 232, 0.1);
-    color: #f4f2e8;
-    font-size: 13px;
-    cursor: pointer;
-  }
-  .ticket-cal-head button:hover { background: rgba(244, 242, 232, 0.2); }
-  .ticket-cal-title {
-    font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 11.5px;
-    letter-spacing: 0.06em;
-    background: linear-gradient(100deg, #f4ecd2, #c9a961 55%, #f4ecd2);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  .ticket-cal-week {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    margin-bottom: 4px;
-  }
-  .ticket-cal-week span {
-    text-align: center;
-    font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 9.5px;
-    color: rgba(244, 242, 232, 0.5);
-  }
-  .ticket-cal-week span.is-sun { color: #e0756a; }
-  .ticket-cal-week span.is-sat { color: #8fc7b0; }
-  .ticket-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-  .ticket-cal-grid button {
-    width: 100%;
-    aspect-ratio: 1;
-    border: none;
-    border-radius: 8px;
-    background: transparent;
-    color: #f4f2e8;
-    font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 11.5px;
-    cursor: pointer;
-  }
-  .ticket-cal-grid button:hover:not(:disabled) { background: rgba(244, 242, 232, 0.12); }
-  .ticket-cal-grid button.is-muted { color: rgba(244, 242, 232, 0.3); }
-  .ticket-cal-grid button.is-disabled { color: rgba(244, 242, 232, 0.18); cursor: not-allowed; }
-  .ticket-cal-grid button.is-today { box-shadow: inset 0 0 0 1px rgba(226, 214, 176, 0.5); }
-  .ticket-cal-grid button.is-selected {
-    background: linear-gradient(100deg, #f4ecd2, #c9a961 55%, #f4ecd2);
-    color: #26301f;
-    font-weight: 700;
-  }
-  .ticket-cal-foot { display: flex; justify-content: flex-end; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(226, 214, 176, 0.18); }
-  .ticket-cal-today {
-    border: none;
-    background: transparent;
-    color: #c9a961;
-    font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    padding: 2px 4px;
-  }
-  .ticket-cal-today:hover { color: #f4ecd2; }
-
   .ticket-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .ticket-foot span:first-child {
     font-family: 'Space Mono', 'Courier New', monospace;
@@ -1224,3 +1143,86 @@
     .receipt-paper { width: 100%; padding: 22px 20px 30px; }
   }
 }
+
+/* ── 티켓 톤 커스텀 달력 팝오버(브라우저 기본 date picker 대체) ──
+   document.body에 포탈되므로 @scope(.proto-schedule) 밖의 전역 규칙이어야 한다. */
+.ticket-cal {
+  position: fixed;
+  z-index: 2000;
+  width: 248px;
+  padding: 12px;
+  border-radius: 12px;
+  background: linear-gradient(150deg, #33402f 0%, #26301f 55%, #2c3a26 100%);
+  box-shadow: 0 1.5px 2px rgba(30, 38, 28, 0.3), 0 16px 32px rgba(8, 28, 22, 0.4), inset 0 1px 0 rgba(240, 232, 207, 0.16), inset 0 0 0 1px rgba(226, 214, 176, 0.16);
+  color: #f4f2e8;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
+}
+.ticket-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.ticket-cal-head button {
+  width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(244, 242, 232, 0.1);
+  color: #f4f2e8;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ticket-cal-head button:hover { background: rgba(244, 242, 232, 0.2); }
+.ticket-cal-title {
+  font-family: 'Space Mono', 'Courier New', monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  background: linear-gradient(100deg, #f4ecd2, #c9a961 55%, #f4ecd2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ticket-cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+.ticket-cal-week span {
+  text-align: center;
+  font-family: 'Space Mono', 'Courier New', monospace;
+  font-size: 9.5px;
+  color: rgba(244, 242, 232, 0.5);
+}
+.ticket-cal-week span.is-sun { color: #e0756a; }
+.ticket-cal-week span.is-sat { color: #8fc7b0; }
+.ticket-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.ticket-cal-grid button {
+  width: 100%;
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #f4f2e8;
+  font-family: 'Space Mono', 'Courier New', monospace;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.ticket-cal-grid button:hover:not(:disabled) { background: rgba(244, 242, 232, 0.12); }
+.ticket-cal-grid button.is-muted { color: rgba(244, 242, 232, 0.3); }
+.ticket-cal-grid button.is-disabled { color: rgba(244, 242, 232, 0.18); cursor: not-allowed; }
+.ticket-cal-grid button.is-today { box-shadow: inset 0 0 0 1px rgba(226, 214, 176, 0.5); }
+.ticket-cal-grid button.is-selected {
+  background: linear-gradient(100deg, #f4ecd2, #c9a961 55%, #f4ecd2);
+  color: #26301f;
+  font-weight: 700;
+}
+.ticket-cal-foot { display: flex; justify-content: flex-end; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(226, 214, 176, 0.18); }
+.ticket-cal-today {
+  border: none;
+  background: transparent;
+  color: #c9a961;
+  font-family: 'Space Mono', 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.ticket-cal-today:hover { color: #f4ecd2; }

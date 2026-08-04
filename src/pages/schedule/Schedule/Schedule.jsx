@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import './schedule.proto.css'
@@ -378,7 +379,9 @@ function TicketDatePicker({ value, onChange, min }) {
       <button type="button" ref={triggerRef} className="ticket-date-trigger" onClick={openPanel}>
         <span className={value ? '' : 'is-empty'}>{value ? formatFriendlyDate(value) : '연도-월-일'}</span>
       </button>
-      {open && (
+      {open && createPortal(
+        // document.body에 포탈 — 모달의 backdrop-filter/애니메이션 transform이
+        // position:fixed 자손의 컨테이닝 블록이 되어버려 좌표가 어긋나는 걸 원천 차단한다.
         <div className="ticket-cal" ref={panelRef} style={{ top: pos.top, left: pos.left }} role="dialog" aria-label="날짜 선택">
           <div className="ticket-cal-head">
             <button type="button" aria-label="이전 달" onClick={() => shiftMonth(-1)}>‹</button>
@@ -410,7 +413,8 @@ function TicketDatePicker({ value, onChange, min }) {
           <div className="ticket-cal-foot">
             <button type="button" className="ticket-cal-today" onClick={() => pick(new Date())}>오늘</button>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   )

@@ -13,7 +13,7 @@
 .proto-joinroom {
   min-height: 100vh;
   color: var(--text);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   background: linear-gradient(135deg, #fffdf3 0%, #fffaf0 48%, #fdf6e3 100%);
   display: flex;
   flex-direction: column;
@@ -55,7 +55,7 @@
 .proto-joinroom .joinroom-title {
   /* 전역 index.css의 h1{font-family:var(--heading);color:var(--text-h)} 리셋 무력화(team-guides/19 §8) —
      컨테이너(.proto-joinroom)의 'Outfit'은 상속이라 h1에 직접 걸리는 전역 규칙에 밀린다(#238). */
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   font-size: 1.4rem;
   font-weight: 900;
   color: var(--forest);

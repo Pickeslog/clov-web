@@ -923,7 +923,7 @@ function ExpHistoryModal({ roomId, onClose }) {
         )}
         {logsQuery.isSuccess && groupedItems.map((log) => (
           <div className="exp-history-row" key={log.id}>
-            <span className="member-row-av exp-history-av">{initialOf(log.triggeredBy?.nickname)}</span>
+            <span className="member-row-av exp-history-av">{log.triggeredBy?.profileImageUrl ? <img src={log.triggeredBy.profileImageUrl} alt="" /> : initialOf(log.triggeredBy?.nickname)}</span>
             <div className="exp-history-main">
               <div className="exp-history-label">
                 {log.triggeredBy?.nickname ?? '알 수 없음'}님 · {expActionLabel(log.actionType)}{log.count > 1 ? ` ×${log.count}` : ''}

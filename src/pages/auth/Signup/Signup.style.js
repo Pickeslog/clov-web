@@ -28,7 +28,7 @@ export const Page = styled.main`
   --glow: rgba(80, 217, 144, 0.22);
   --warn: #b45309;
 
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -201,7 +201,7 @@ export const Input = styled.input`
   border: 1.5px solid var(--line);
   border-radius: 18px;
   font-size: 0.96rem;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   font-weight: 600;
   color: var(--text);
   background: var(--cream);
@@ -471,7 +471,7 @@ export const BtnPrimary = styled.button`
   border-radius: 18px;
   font-size: 1rem;
   font-weight: 900;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   color: #fff;
   cursor: pointer;
   background: linear-gradient(135deg, #093d26, #16874b 56%, #50d990);
@@ -503,7 +503,7 @@ export const BtnSecondary = styled.button`
   border-radius: 16px;
   font-size: 0.88rem;
   font-weight: 700;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   color: var(--muted);
   cursor: pointer;
   background: transparent;
@@ -727,7 +727,7 @@ export const BirthWheel = styled.div`
     border-radius: 8px;
     background: #fff;
     color: var(--text);
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--sans);
     font-size: 0.95rem;
     font-weight: 700;
     text-align: center;

@@ -217,10 +217,6 @@ function SettingsBody({ me, prefs, onClose }) {
                   <input className="ps-input" id="set-email" type="email" value={me.email ?? ''} readOnly />
                 </div>
                 <div className="ps-field">
-                  <label className="ps-label" htmlFor="set-code">내 초대코드</label>
-                  <input className="ps-input" id="set-code" value={me.personalInviteCode ?? ''} readOnly />
-                </div>
-                <div className="ps-field">
                   <label className="ps-label" htmlFor="set-birth">생년월일</label>
                   <input className="ps-input" id="set-birth" type="date" value={birthdate ?? ''} onChange={(e) => setBirthdate(e.target.value)} />
                 </div>

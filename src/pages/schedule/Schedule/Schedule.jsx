@@ -219,10 +219,6 @@ export default function Schedule() {
 
       <div className="schedule-wrap">
         <div className="section-title journey-section-title">
-          <div className="journey-heading">
-            <span className="journey-page-kicker">PROMISE JOURNEY</span>
-            <span className="journey-page-title">약속 여정</span>
-          </div>
           <button type="button" className="btn-schedule-new" onClick={() => setEditing('new')}>
             ＋ 새 D-day 만들기
           </button>
@@ -255,13 +251,6 @@ export default function Schedule() {
             />
 
             <div className="growth-hero">
-              <div>
-                <span className="growth-kicker">LIFE FOUR CUT</span>
-                <span className="growth-title">전체 약속 보기</span>
-                <span className="growth-subtitle">
-                  제안하기부터 만남까지, 네 장의 인증사진이 모이면 인생4컷처럼 완성됩니다.
-                </span>
-              </div>
               <div className="growth-density" aria-label="일정 필터">
                 {DENSITY.map((d) => (
                   <button key={d.key} type="button" className={density === d.key ? 'active' : ''} onClick={() => setDensity(d.key)}>
@@ -486,22 +475,16 @@ function TicketCard({
               <div className="ticket-holo" />
               <div className="ticket-side-label"><span>ADMIT ONE · 약속 티켓</span></div>
               <div className="ticket-content">
-                <div className="ticket-toprow">
-                  <span className="ticket-brand">🍀 CLOV. MEMORIES</span>
-                  <span className="ticket-admit">ADMIT ONE · No. {ticketNoOf(plan)}</span>
+                <span className="ticket-brand">🍀 Clov</span>
+                <div className="ticket-title">{plan.title}</div>
+                <div className="ticket-dateline">
+                  <span className="ticket-date-big">{formatFriendlyDate(plan.planDate)}</span>
+                  <span className="ticket-dday-big">{ddayText}</span>
                 </div>
-                <div className="ticket-titlewrap">
-                  <div className="ticket-title">{plan.title}</div>
-                  <div className="ticket-kicker">PROMISE JOURNEY · {plan.planDate?.slice(0, 4) ?? '----'}</div>
-                </div>
-                <div className="ticket-meta">
-                  <div><span>DATE</span><b>{formatFriendlyDate(plan.planDate)}</b></div>
-                  <div><span>D-DAY</span><b>{ddayText}</b></div>
-                </div>
-                <div className="ticket-foot">
-                  <span>NON-TRANSFERABLE · KEEP UNTIL THE DAY</span>
-                  <span className="ticket-serial">{ticketSerialOf(plan)}</span>
-                </div>
+              </div>
+              <div className="ticket-corner-meta">
+                <div className="ticket-mini-barcode" />
+                <span className="ticket-mini-serial">{ticketSerialOf(plan)}</span>
               </div>
             </div>
             <div className={`ticket-stub${torn ? ' is-off' : ''}`}>
@@ -747,10 +730,8 @@ export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, o
               <div className="ticket-holo" />
               <div className="ticket-side-label"><span>ADMIT ONE · 약속 티켓</span></div>
               <div className="ticket-content">
-                <div className="ticket-toprow">
-                  <span className="ticket-brand">🍀 CLOV. MEMORIES</span>
-                  <span className="ticket-admit">{plan ? '약속 수정하기' : '새 D-day 만들기'}</span>
-                </div>
+                <span className="ticket-brand">🍀 Clov</span>
+                <span className="ticket-admit">{plan ? '약속 수정하기' : '새 D-day 만들기'}</span>
                 <input
                   className="ticket-title-input"
                   value={title}
@@ -758,12 +739,9 @@ export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, o
                   placeholder="약속 제목"
                   onChange={(e) => setTitle(e.target.value)}
                 />
-                <div className="ticket-meta">
-                  <div>
-                    <span>DATE</span>
-                    <TicketDatePicker value={planDate} onChange={setPlanDate} min={today} />
-                  </div>
-                  <div><span>D-DAY</span><b>{ddayText}</b></div>
+                <div className="ticket-dateline">
+                  <TicketDatePicker value={planDate} onChange={setPlanDate} min={today} />
+                  <span className="ticket-dday-big">{ddayText}</span>
                 </div>
               </div>
             </div>

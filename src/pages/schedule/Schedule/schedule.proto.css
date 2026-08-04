@@ -42,29 +42,7 @@
     max-width: 660px;
     margin: 0 auto 14px;
     align-items: center;
-  }
-  .journey-heading {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    /* 카드 배경 없이 페이지 배경에 바로 노출되던 텍스트라 대비가 부족했다 — 배경 박스로 보정.
-       이 화면은 라이트 팔레트로 고정이라(다크모드 미대응) 라이트용 배경만 있으면 된다. */
-    background: rgba(255,255,255,.6);
-    padding: 6px 12px;
-    border-radius: 10px;
-  }
-  .journey-page-kicker {
-    font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    color: #2e5233;
-  }
-  .journey-page-title {
-    font-size: 19px;
-    font-weight: 900;
-    line-height: 1.25;
-    color: var(--text-color);
+    justify-content: flex-end;
   }
 
   .btn-schedule-new {
@@ -74,7 +52,7 @@
     gap: 6px;
     min-height: 34px;
     padding: 0 16px;
-    border-radius: 999px;
+    border-radius: 12px;
     border: none;
     background: #faf6ee;
     color: #2e5233;
@@ -109,12 +87,9 @@
     padding: 28px 24px 24px;
     border-radius: 18px;
     color: #1c1a17;
-    background:
-      radial-gradient(circle at 88% 12%, rgba(244, 241, 232, 0.14), transparent 34%),
-      repeating-linear-gradient(135deg, rgba(28, 26, 23, 0.03) 0 3px, transparent 3px 7px),
-      #8a9a82;
+    background: #8a9a82;
     border: none;
-    box-shadow: 0 18px 40px rgba(46, 82, 51, 0.26);
+    box-shadow: 0 6px 16px rgba(46, 82, 51, 0.14);
     overflow: hidden;
   }
 
@@ -176,25 +151,23 @@
     position: relative;
     z-index: 2;
     height: 100%;
-    padding: 14px 16px 12px 30px;
+    padding: 26px 30px 30px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 14px;
     color: #f4f2e8;
   }
-  .ticket-card--edit .ticket-content { padding-left: 18px; gap: 10px; }
+  .ticket-card--edit .ticket-content { padding: 22px 22px 26px 30px; gap: 14px; }
 
-  .ticket-toprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   .ticket-brand {
     font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.22em;
-    background: linear-gradient(100deg, #f4ecd2, #c9a961 55%, #f4ecd2);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #f4f2e8;
     white-space: nowrap;
   }
   .ticket-admit {
@@ -209,44 +182,55 @@
      쓰면 한글 글리프만 조용히 시스템 폰트로 폴백되면서 letter-spacing이 어긋나 보인다. */
   .ticket-title {
     font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-    font-size: 20px;
-    font-weight: 900;
-    line-height: 1.2;
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.25;
     letter-spacing: -0.01em;
-  }
-  .ticket-kicker {
-    margin-top: 4px;
-    font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    color: rgba(226, 214, 176, 0.68);
+    color: rgba(244, 242, 232, 0.92);
   }
 
   .ticket-title-input {
     display: block;
     width: 100%;
+    max-width: 260px;
     border: none;
     border-bottom: 1px dashed rgba(226, 214, 176, 0.4);
     background: transparent;
     font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-    font-size: 19px;
-    font-weight: 900;
+    font-size: 17px;
+    font-weight: 800;
     color: #f4f2e8;
     padding: 2px 2px 6px;
     outline: none;
+    text-align: center;
   }
   .ticket-title-input::placeholder { color: rgba(244, 242, 232, 0.45); font-weight: 700; }
 
-  .ticket-meta {
+  /* 날짜 + D-DAY — 티켓의 시각적 중심(카운트다운이 한눈에 보이도록 크게). */
+  .ticket-dateline {
     display: flex;
-    gap: 18px;
-    border-top: 1px solid rgba(226, 214, 176, 0.22);
-    padding-top: 8px;
-    font-family: 'Space Mono', 'Courier New', monospace;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
   }
-  .ticket-meta > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-  .ticket-meta > div > span:first-child { font-size: 8.5px; letter-spacing: 0.2em; color: rgba(244, 242, 232, 0.55); }
-  .ticket-meta > div > b { font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .ticket-date-big {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #f4f2e8;
+  }
+  .ticket-dday-big {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 46px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    background: linear-gradient(100deg, #ffd9c9, #e0756a 50%, #ffcfbd);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 
   /* 날짜 선택 트리거 — 실제 달력 팝오버는 .ticket-cal(아래) */
   .ticket-date-trigger {
@@ -257,26 +241,38 @@
     background: transparent;
     padding: 0;
     font: inherit;
-    font-size: 13px;
-    font-weight: 600;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     color: #f4f2e8;
     cursor: pointer;
     border-bottom: 1px dashed rgba(226, 214, 176, 0.4);
   }
   .ticket-date-trigger .is-empty { color: rgba(244, 242, 232, 0.5); font-weight: 400; }
 
-  .ticket-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .ticket-foot span:first-child {
+  /* 발권번호 · 바코드를 카드 우하단 구석으로 — 눈에 띄지 않게 작게. */
+  .ticket-corner-meta {
+    position: absolute;
+    right: 12px;
+    bottom: 10px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    opacity: 0.55;
+  }
+  .ticket-mini-barcode {
+    width: 46px;
+    height: 10px;
+    background-image: repeating-linear-gradient(90deg, #f4f2e8 0 1px, transparent 1px 3px, #f4f2e8 3px 4px, transparent 4px 7px);
+  }
+  .ticket-mini-serial {
     font-family: 'Space Mono', 'Courier New', monospace;
     font-size: 7.5px;
-    letter-spacing: 0.16em;
-    color: rgba(244, 242, 232, 0.4);
-  }
-  .ticket-serial {
-    font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    color: #e0756a;
+    letter-spacing: 0.08em;
+    color: rgba(244, 242, 232, 0.6);
   }
 
   /* ── 스텁(오른쪽, 뜯어지는 조각) ── */
@@ -307,7 +303,7 @@
     color: rgba(226, 214, 176, 0.45);
   }
   .ticket-stub-mid { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; }
-  .ticket-stub-kicker { font-size: 8px; letter-spacing: 0.06em; color: rgba(244, 242, 232, 0.62); }
+  .ticket-stub-kicker { font-size: 7px; font-weight: 400; letter-spacing: 0.05em; color: rgba(244, 242, 232, 0.5); }
   .ticket-stub-dday {
     font-family: 'Space Mono', 'Courier New', monospace;
     font-weight: 700;
@@ -572,53 +568,13 @@
   }
   .receipt-actions button.danger:hover { background: rgba(192, 57, 43, 0.1); }
 
-  /* ══════════ LIFE FOUR CUT 히어로 + 필터 ══════════ */
+  /* ══════════ 일정 필터 탭 — 상단 버튼과 동일한 모서리 반경·색 체계로 통일 ══════════ */
   .growth-hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-    align-items: start;
+    display: flex;
+    justify-content: center;
     padding: 18px 0 14px;
     background: transparent;
     border-bottom: 1px solid rgba(82, 183, 136, 0.2);
-  }
-  .growth-hero > div:first-child {
-    background-color: rgba(255, 255, 255, 0.95);
-    padding: 14px 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
-    border: 1px solid rgba(82, 183, 136, 0.25);
-    width: fit-content;
-    max-width: 100%;
-    margin-bottom: 4px;
-  }
-  .growth-kicker {
-    display: inline-flex;
-    width: fit-content;
-    min-height: 24px;
-    align-items: center;
-    background: transparent;
-    color: var(--primary-green);
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 9px;
-  }
-  .growth-title {
-    display: block;
-    color: var(--text-color);
-    font-size: 19px;
-    font-weight: 900;
-    line-height: 1.25;
-    margin-bottom: 5px;
-  }
-  .growth-subtitle {
-    display: block;
-    color: var(--text-muted);
-    font-size: 12.5px;
-    font-weight: 700;
-    line-height: 1.45;
   }
 
   .growth-density {
@@ -628,14 +584,14 @@
     width: fit-content;
     max-width: 100%;
     padding: 5px;
-    border-radius: 999px;
+    border-radius: 12px;
     background: rgba(255, 255, 255, 0.86);
   }
   .growth-density button {
     min-height: 34px;
     padding: 0 12px;
     border: 0;
-    border-radius: 999px;
+    border-radius: 8px;
     background: transparent;
     color: var(--primary-green);
     font-size: 11px;

@@ -74,36 +74,31 @@
   /* ── 여정 셸 ── */
   .growth-shell {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
     position: relative;
   }
 
-  /* ══════════ 약속 상세 (세이지 앨범 마운트) ══════════
-     마운트(growth-detail)를 내용물보다 넉넉히 넓게 잡아 사방에 초록 프레임이 보이게 한다. */
+  /* ══════════ 약속 상세 ══════════
+     별도 마운트 배경 없이 페이지 배경 위에 티켓만 바로 떠 있게 한다. */
   .growth-detail {
     position: relative;
-    max-width: 520px;
+    width: 100%;
+    max-width: 640px;
     margin: 0 auto;
-    padding: 28px 24px 24px;
-    border-radius: 18px;
-    color: #1c1a17;
-    background: #8a9a82;
-    border: none;
-    box-shadow: 0 6px 16px rgba(46, 82, 51, 0.14);
-    overflow: hidden;
   }
 
   /* ══════════ 약속 티켓(앞면) — 입장권 미감. 아래 .ticket-slip(뒷면)에
      기존 영수증 메모·체크리스트·상태 전환·수정/삭제를 그대로 담는다. ══════════ */
   .ticket-stage { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 18px; perspective: 1200px; }
-  .ticket-tilt { transform-style: preserve-3d; }
+  .ticket-tilt { width: 100%; transform-style: preserve-3d; }
 
   .ticket-card {
     position: relative;
     display: flex;
     width: 100%;
-    max-width: 440px;
-    min-height: 168px;
+    max-width: 640px;
+    min-height: 148px;
     cursor: pointer;
     outline: none;
   }
@@ -1079,7 +1074,6 @@
       width: var(--mb-carousel-card-w, 150px);
       padding: 10px 10px 12px;
     }
-    .growth-detail { padding: 24px 14px 22px; border-radius: 16px; }
     .ticket-card { max-width: 100%; min-height: 0; flex-direction: column; }
     .ticket-main { border-radius: 14px 14px 0 0; }
     .ticket-stub {

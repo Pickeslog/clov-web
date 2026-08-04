@@ -141,6 +141,7 @@ const EQUIPPED_SKIN_STATE_SPRITES = [
   '/shop/skins/tako-gun/watermelon-rind-hat-common',
   '/shop/skins/crobi/ocean-rescue-champion-epic',
   '/shop/skins/crobi/magic-school-student-common',
+  '/shop/skins/crobi/senior-developer-uncommon',
   '/shop/skins/onyx/blackstar-atelier-uncommon',
 ].map((root) => ({
   defaultPath: `${root}/default.png`,

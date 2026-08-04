@@ -342,10 +342,10 @@ export default function Feed() {
                           </span>
                         )}
                         {!item.thumbnailUrl && (
-                          <>
-                            <i className="ti ti-clover memory-clover-placeholder" aria-hidden="true" />
-                            <span className="memory-image-text">사진이 없는 추억은<br />클로버로 보관됩니다</span>
-                          </>
+                          <div className="cline-no-photo">
+                            <i className="ti ti-photo-off cline-no-photo-icon" aria-hidden="true" />
+                            <span className="cline-no-photo-text">사진 없음</span>
+                          </div>
                         )}
                       </div>
                       <div className="polaroid-caption">
@@ -1252,8 +1252,10 @@ export function MemoryDetailModal({
               <div className="memory-detail-photo-col">
                 {photoCount === 0 && (
                   <div className="memory-detail-photo memory-detail-photo--empty">
-                    <i className="ti ti-clover memory-clover-placeholder" aria-hidden="true" />
-                    <span className="memory-image-text">사진이 없는 추억은<br />클로버로 보관됩니다</span>
+                    <div className="cline-no-photo">
+                      <i className="ti ti-photo-off cline-no-photo-icon" aria-hidden="true" />
+                      <span className="cline-no-photo-text">사진 없음</span>
+                    </div>
                   </div>
                 )}
 

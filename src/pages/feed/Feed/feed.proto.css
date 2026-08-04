@@ -273,16 +273,6 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); 
 }
 .proto-feed .polaroid-card.friend .author-badge { color: #9b3f28; }
 
-.proto-feed .memory-clover-placeholder {
-  width: 58px; height: 58px; display: grid; place-items: center; border-radius: 22px;
-  background:
-    radial-gradient(circle at 35% 30%, rgba(255,255,255,.95), transparent 34%),
-    linear-gradient(145deg, rgba(82,183,136,.95), rgba(27,67,50,.96));
-  color: #fff; font-size: 34px;
-  box-shadow: 0 14px 28px rgba(27,67,50,.18), inset 0 1px 0 rgba(255,255,255,.5);
-}
-.proto-feed .memory-image-text { font-size: 12.5px; font-weight: 600; color: #61766a; max-width: 220px; line-height: 1.4; }
-
 /* 참여자 칩 행 */
 .proto-feed .polaroid-presence-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .proto-feed .polaroid-presence-row .presence-tile {
@@ -390,7 +380,6 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); 
     repeating-linear-gradient(135deg, rgba(82,183,136,.08) 0px, rgba(82,183,136,.08) 2px, transparent 2px, transparent 14px);
   box-shadow: inset 0 0 0 1.5px rgba(82,183,136,.28);
 }
-.proto-feed .memory-detail-photo--empty .memory-image-text { color: #4c5f54; }
 /* 사진 관리(작성자, 목업 space.css:1236-1296 그대로 — 그리드 + 썸네일별 개별 삭제) */
 .proto-feed .memory-edit-photo-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .proto-feed .memory-edit-photo-thumb { position: relative; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; }

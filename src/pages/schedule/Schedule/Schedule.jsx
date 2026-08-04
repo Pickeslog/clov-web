@@ -14,6 +14,7 @@ import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import { ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
+import Mascot from '../../../components/Mascot/Mascot'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
 import { SCHEDULE_LIGHT_PALETTE } from './palette'
 
@@ -216,6 +217,7 @@ export default function Schedule() {
   return (
     <main className="proto-schedule" style={SCHEDULE_LIGHT_PALETTE}>
       <Header variant="room" roomId={roomId} activeTab="schedule" />
+      <Mascot roomId={roomId} />
 
       <div className="schedule-wrap">
         <div className="section-title journey-section-title">

@@ -17,9 +17,11 @@
 - 보라색 별 충격파와 소수의 청록색 보석 파편
 - 기존 마스코트처럼 단순한 페이퍼 컷아웃 실루엣
 
-## 다음 작업
+## 구현 상태
 
-- 현재는 디자인 선택까지만 완료했다.
-- 다음 작업에서 기본 동작을 포함한 9개 상태 PNG를 제작한다.
-- `public/shop/skins/onyx/blackstar-atelier-uncommon` 경로로 투명 자산과 `metadata.json`을 구성한다.
-- `src/components/Mascot/Mascot.jsx`에 스킨 상태 전환 경로를 연결한다.
+- 2026-08-04 기본 동작을 포함한 9개 상태 PNG 제작 완료
+- `public/shop/skins/onyx/blackstar-atelier-uncommon`에 투명 자산과 `metadata.json` 구성 완료
+- `src/components/Mascot/Mascot.jsx`에 스킨 상태 전환 경로 연결 완료
+- 상점 가격 **1,500골드** 확정 — 철골 작업반 김철수와 등급(UNCOMMON)·내용(상태 9종)이 같아 같은 값을 쓴다
+- `shop_items` 등록 SQL은 `clov-api/db/manual-migrations/2026-08-04-shop-onyx-blackstar-atelier-skin.sql`
+- 남은 것: 에셋 배포 후 SQL 실행(순서가 반대면 상점에 이름만 뜨고 그림이 깨진다)

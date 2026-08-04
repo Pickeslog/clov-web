@@ -266,7 +266,8 @@ export default function RoomList() {
                 const gone = r.roomStatus !== 'ACTIVE'
                 const kind = gone ? 'vanished' : r.status === 'REJECTED' ? 'rejected' : 'pending'
                 const label = gone ? '사라진 방' : r.status === 'REJECTED' ? '거절됨' : '수락 대기 중'
-                const statusIcon = gone ? 'ti-bubble' : r.status === 'REJECTED' ? 'ti-x' : 'ti-clock'
+                // ti-bubble은 Tabler 2.47.0에 없어 빈 네모로 떴다 — 형제 아이콘과 같은 중립 계열로 교체.
+                const statusIcon = gone ? 'ti-circle-off' : r.status === 'REJECTED' ? 'ti-x' : 'ti-clock'
                 return (
                   <div className={`req-card ${kind}`} key={r.id}>
                     <span className={`req-status ${kind}`}><Icon name={statusIcon} /> {label}</span>

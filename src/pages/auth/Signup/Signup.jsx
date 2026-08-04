@@ -121,6 +121,11 @@ export default function Signup() {
   }
   const toggleOne = (key) => setAgreements((prev) => ({ ...prev, [key]: !prev[key] }))
   const togglePanel = (kind) => setOpenPanel((prev) => (prev === kind ? null : kind))
+  const handleTermsKey = (event, action) => {
+    if (event.key !== ' ' && event.key !== 'Enter') return
+    event.preventDefault()
+    action()
+  }
 
   const startSocialLogin = (provider) => {
     window.location.assign(oauthAuthorizeUrl(provider))
@@ -208,14 +213,14 @@ export default function Signup() {
             <S.FormTitle>거의 다 왔어요!</S.FormTitle>
             <S.FormDesc>아래 약관에 동의하시면<br />Clov. 여정이 시작됩니다.</S.FormDesc>
             <S.TermsBox $shake={termsShake} onAnimationEnd={() => setTermsShake(false)}>
-              <S.TermsRow role="checkbox" aria-checked={allAgreed} tabIndex={0} onClick={toggleAll}>
+              <S.TermsRow role="checkbox" aria-checked={allAgreed} tabIndex={0} onClick={toggleAll} onKeyDown={(e) => handleTermsKey(e, toggleAll)}>
                 <S.TermsCheck $checked={allAgreed}>✓</S.TermsCheck>
                 <S.TermsLabel $strong><strong>전체 동의</strong> (필수 + 선택 포함)</S.TermsLabel>
               </S.TermsRow>
               <S.TermsDivider />
 
               <S.TermsItem>
-                <S.TermsRow role="checkbox" aria-checked={agreements.service} tabIndex={0} onClick={() => toggleOne('service')}>
+                <S.TermsRow role="checkbox" aria-checked={agreements.service} tabIndex={0} onClick={() => toggleOne('service')} onKeyDown={(e) => handleTermsKey(e, () => toggleOne('service'))}>
                   <S.TermsCheck $checked={agreements.service}>✓</S.TermsCheck>
                   <S.TermsLabel><strong>[필수]</strong> 서비스 이용약관 동의</S.TermsLabel>
                   <S.TermsToggle type="button" $open={openPanel === 'service'} aria-expanded={openPanel === 'service'} aria-label="서비스 이용약관 내용 보기" onClick={(e) => { e.stopPropagation(); togglePanel('service') }}>
@@ -228,7 +233,7 @@ export default function Signup() {
               </S.TermsItem>
 
               <S.TermsItem>
-                <S.TermsRow role="checkbox" aria-checked={agreements.privacy} tabIndex={0} onClick={() => toggleOne('privacy')}>
+                <S.TermsRow role="checkbox" aria-checked={agreements.privacy} tabIndex={0} onClick={() => toggleOne('privacy')} onKeyDown={(e) => handleTermsKey(e, () => toggleOne('privacy'))}>
                   <S.TermsCheck $checked={agreements.privacy}>✓</S.TermsCheck>
                   <S.TermsLabel><strong>[필수]</strong> 개인정보 처리방침 동의</S.TermsLabel>
                   <S.TermsToggle type="button" $open={openPanel === 'privacy'} aria-expanded={openPanel === 'privacy'} aria-label="개인정보 처리방침 내용 보기" onClick={(e) => { e.stopPropagation(); togglePanel('privacy') }}>
@@ -240,7 +245,7 @@ export default function Signup() {
                 </S.TermsPanel>
               </S.TermsItem>
 
-              <S.TermsRow role="checkbox" aria-checked={agreements.marketing} tabIndex={0} onClick={() => toggleOne('marketing')} style={{ marginTop: 8 }}>
+              <S.TermsRow role="checkbox" aria-checked={agreements.marketing} tabIndex={0} onClick={() => toggleOne('marketing')} onKeyDown={(e) => handleTermsKey(e, () => toggleOne('marketing'))} style={{ marginTop: 8 }}>
                 <S.TermsCheck $checked={agreements.marketing}>✓</S.TermsCheck>
                 <S.TermsLabel><strong>[선택]</strong> 마케팅 정보 수신 동의</S.TermsLabel>
               </S.TermsRow>

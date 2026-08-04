@@ -34,6 +34,7 @@ const AlertIcon = (p) => <Icon {...p}><circle cx="12" cy="12" r="9" /><path d="M
 const ShirtIcon = (p) => <Icon {...p}><path d="M9 3 4 6l2 4 2-1v11h8V9l2 1 2-4-5-3a3 3 0 0 1-6 0z" /></Icon>
 const PaletteIcon = (p) => <Icon {...p}><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 1.6-3.2 2 2 0 0 1 1.6-3.2H18a3 3 0 0 0 3-3 9 9 0 0 0-9-8.6z" /><circle cx="7.5" cy="11" r="1" /><circle cx="12" cy="7.5" r="1" /><circle cx="16.5" cy="11" r="1" /></Icon>
 const GiftIcon = (p) => <Icon {...p}><path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2 8h20v4H2zM12 8v13" /><path d="M12 8S9.5 3 7.5 4.5 9 8 12 8zM12 8s2.5-5 4.5-3.5S15 8 12 8z" /></Icon>
+const ImageIcon = (p) => <Icon {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" /><path d="m3.5 16.5 4-4a2 2 0 0 1 2.8 0l3.2 3.2" /><path d="m13 14 1.6-1.6a2 2 0 0 1 2.8 0l3.1 3.1" /></Icon>
 const CloseIcon = (p) => <Icon {...p}><path d="M18 6 6 18M6 6l12 12" /></Icon>
 
 // 금화 — 이모지 대신 그린 SVG(금색은 고정값: 재화 식별이 테마에 흔들리면 안 된다).
@@ -57,14 +58,18 @@ const CoinIcon = ({ size = 15 }) => {
   )
 }
 
+// BACKGROUND는 마스코트에 입히는 게 아니라 사용자설정 > 바탕화면에서 고르는 물건이다.
+// 비어 있던 SKIN 탭을 재활용하지 않고 값을 새로 만들었다 — 코드가 '스킨'이라 부르고
+// 실물이 배경이면, 나중에 진짜 마스코트 스킨을 SKIN으로 넣는 순간 한 탭에서 섞인다.
 const CATEGORIES = [
   { key: 'all', label: '전체', Icon: SparkIcon },
   { key: 'COSTUME', label: '코스튬', Icon: ShirtIcon },
+  { key: 'BACKGROUND', label: '배경', Icon: ImageIcon },
   { key: 'SKIN', label: '스킨', Icon: PaletteIcon },
   { key: 'EVENT', label: '이벤트·한정', Icon: GiftIcon },
 ]
 // 아트가 아직 없는 아이템의 폴백 아이콘(텍스트 플레이스홀더 대체).
-const CATEGORY_FALLBACK = { COSTUME: ShirtIcon, SKIN: PaletteIcon, EVENT: GiftIcon }
+const CATEGORY_FALLBACK = { COSTUME: ShirtIcon, BACKGROUND: ImageIcon, SKIN: PaletteIcon, EVENT: GiftIcon }
 
 // 서버 에러코드 → 사용자 문구. 계약 §15의 구매 실패 3종만 따로 풀어 쓴다.
 const PURCHASE_ERRORS = {
@@ -381,8 +386,11 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
   const meta = rarityOf(item.rarity)
   const discounted = item.discountRate > 0
   const affordable = balance >= item.finalPrice
-  // 오늘 범위: COSTUME만 마스코트에 장착 가능(서버도 동일하게 검증). SKIN/EVENT는 보유만.
+  // COSTUME만 마스코트에 장착 가능(서버도 동일하게 검증). SKIN/EVENT/BACKGROUND는 보유만.
   const equippable = item.category === 'COSTUME'
+  // 배경은 상점에서 장착하는 물건이 아니다 — 사는 건 여기서, 고르는 건 사용자설정이다.
+  // 이 안내가 없으면 사고 나서 "보유 중" 버튼만 남아 어디서 쓰는지 알 길이 없다.
+  const isBackground = item.category === 'BACKGROUND'
   const FallbackIcon = CATEGORY_FALLBACK[item.category] ?? SparkIcon
 
   return (
@@ -433,7 +441,7 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
           ) : (
             <button type="button" className="shop-buy" disabled onClick={(e) => e.stopPropagation()}>
               <CheckIcon size={14} />
-              보유 중
+              {isBackground ? '설정에서 적용' : '보유 중'}
             </button>
           )
         ) : (
@@ -459,6 +467,7 @@ function ItemDetailModal({ item, balance, pending, onBuy, equipped, equipPending
   const discounted = item.discountRate > 0
   const affordable = balance >= item.finalPrice
   const equippable = item.category === 'COSTUME'
+  const isBackground = item.category === 'BACKGROUND'
   const FallbackIcon = CATEGORY_FALLBACK[item.category] ?? SparkIcon
 
   useEffect(() => {
@@ -515,7 +524,7 @@ function ItemDetailModal({ item, balance, pending, onBuy, equipped, equipPending
             ) : (
               <button type="button" className="shop-buy" disabled>
                 <CheckIcon size={14} />
-                보유 중
+                {isBackground ? '보유 중 — 설정 > 바탕화면에서 적용' : '보유 중'}
               </button>
             )
           ) : (

@@ -45,31 +45,14 @@
     justify-content: flex-end;
   }
 
-  .btn-schedule-new {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-height: 34px;
-    padding: 0 16px;
-    border-radius: 12px;
-    border: none;
-    background: #faf6ee;
-    color: #2e5233;
-    font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    cursor: pointer;
-    white-space: nowrap;
-    box-shadow: 0 2px 6px rgba(28, 26, 23, 0.16);
-    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  /* 우정공간(Dashboard) .section-actions/.clov-btn--dashed 오버라이드와 동일하게 맞춘다(#258) —
+     이 화면 전용 버튼(.btn-schedule-new)을 쓰지 않고 공용 Button 컴포넌트를 그대로 재사용한다. */
+  .section-actions { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .clov-btn--dashed {
+    background: #faf6ee; color: #2e5233;
+    border-width: 1.5px; border-style: dashed; border-color: rgba(46,82,51,.45);
   }
-  .btn-schedule-new:hover {
-    background: #f3efe1;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(28, 26, 23, 0.2);
-  }
+  .clov-btn--dashed:not(:disabled):hover { background: #f3efe1; }
 
   /* ── 여정 셸 ── */
   .growth-shell {
@@ -134,7 +117,7 @@
   .ticket-side-label span {
     writing-mode: vertical-rl;
     transform: rotate(180deg);
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 8px;
     letter-spacing: 0.3em;
     color: rgba(226, 214, 176, 0.55);
@@ -157,7 +140,7 @@
 
   .ticket-toprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   .ticket-brand {
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.22em;
@@ -168,17 +151,19 @@
     white-space: nowrap;
   }
   .ticket-admit {
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 9px;
     letter-spacing: 0.16em;
     color: rgba(244, 242, 232, 0.58);
     white-space: nowrap;
   }
 
-  /* 한글은 시스템 폰트 스택으로 — 프로젝트에 실제 로드된 적 없는 웹폰트(예: 'Gothic A1')를
-     쓰면 한글 글리프만 조용히 시스템 폰트로 폴백되면서 letter-spacing이 어긋나 보인다. */
+  /* 사이트 전역 폰트(--sans, 엄마까투리체)로 통일(#258) — 예전엔 실제 로드된 적 없는 웹폰트
+     (예: 'Gothic A1')를 지정했다가 한글 글리프만 조용히 시스템 폰트로 폴백되면서
+     letter-spacing이 어긋난 적이 있어서 시스템 폰트로 굳혀뒀었다. 이제 --sans가 실제
+     로드되는 폰트라 같은 문제는 재발하지 않는다. */
   .ticket-title {
-    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--sans);
     font-size: 22px;
     font-weight: 900;
     line-height: 1.2;
@@ -186,7 +171,7 @@
   }
   .ticket-kicker {
     margin-top: 4px;
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 9px;
     letter-spacing: 0.2em;
     color: rgba(226, 214, 176, 0.68);
@@ -198,7 +183,7 @@
     border: none;
     border-bottom: 1px dashed rgba(226, 214, 176, 0.4);
     background: transparent;
-    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--sans);
     font-size: 21px;
     font-weight: 900;
     color: #f4f2e8;
@@ -212,7 +197,7 @@
     gap: 30px;
     border-top: 1px solid rgba(226, 214, 176, 0.22);
     padding-top: 9px;
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
   }
   .ticket-meta > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .ticket-meta > div > span:first-child { font-size: 8.5px; letter-spacing: 0.2em; color: rgba(244, 242, 232, 0.55); }
@@ -237,13 +222,13 @@
 
   .ticket-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .ticket-foot span:first-child {
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 7.5px;
     letter-spacing: 0.16em;
     color: rgba(244, 242, 232, 0.4);
   }
   .ticket-serial {
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 10px;
     letter-spacing: 0.1em;
     color: #e0756a;
@@ -271,7 +256,7 @@
   .ticket-stub-side {
     writing-mode: vertical-rl;
     transform: rotate(180deg);
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 7.5px;
     letter-spacing: 0.24em;
     color: rgba(226, 214, 176, 0.45);
@@ -279,7 +264,7 @@
   .ticket-stub-mid { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; }
   .ticket-stub-kicker { font-size: 8px; letter-spacing: 0.06em; color: rgba(244, 242, 232, 0.62); }
   .ticket-stub-dday {
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-weight: 700;
     font-size: 26px;
     line-height: 1;
@@ -301,7 +286,7 @@
 
   .ticket-hint {
     display: flex; align-items: center; gap: 7px;
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 10px; letter-spacing: 0.1em;
     color: rgba(28, 26, 23, 0.55);
   }
@@ -329,13 +314,13 @@
   .ticket-detail-head { text-align: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px dashed rgba(28, 26, 23, 0.3); }
   .ticket-detail-head h3 {
     margin: 0 0 4px;
-    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--sans);
     font-size: 19px;
     font-weight: 900;
     color: #1c1a17;
   }
   .ticket-detail-head span {
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 11px;
     letter-spacing: 0.06em;
     color: rgba(28, 26, 23, 0.55);
@@ -362,7 +347,7 @@
     background: #faf6ee;
     padding: 18px 22px 24px;
     box-shadow: 0 10px 24px rgba(28, 26, 23, 0.2);
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     color: #1c1a17;
   }
   .receipt-paper::before,
@@ -400,7 +385,7 @@
     white-space: nowrap;
   }
   .receipt-memo {
-    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--sans);
     font-size: 13px;
     line-height: 1.7;
     color: #1c1a17;
@@ -457,7 +442,7 @@
     border-radius: 7px;
     padding: 8px 10px;
     background: rgba(255, 255, 255, 0.5);
-    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--sans);
     font-size: 13px;
     color: #1c1a17;
     outline: none;
@@ -470,7 +455,7 @@
     padding: 0 14px;
     background: #2e5233;
     color: #f4f1e8;
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 11px;
     font-weight: 700;
     cursor: pointer;
@@ -490,7 +475,7 @@
     align-items: center;
     gap: 8px;
     margin: 0 0 12px;
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
   }
   .receipt-status-btn {
     border: 1px solid rgba(46, 82, 51, 0.5);
@@ -522,7 +507,7 @@
   .receipt-actions { display: flex; gap: 10px; }
   .receipt-actions button {
     flex: 1;
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 1px;
@@ -682,7 +667,7 @@
     color: #f4f1e8;
     border: none;
     box-shadow: none;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--sans);
     transition: transform 0.22s ease, box-shadow 0.22s ease;
   }
   .growth-card.four-cut:hover { transform: translateY(-3px); }
@@ -704,7 +689,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 8.5px;
     font-weight: 700;
     letter-spacing: 0.6px;
@@ -737,7 +722,7 @@
     justify-content: center;
     padding: 0 7px;
     border-radius: 999px;
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 9px;
     font-weight: 900;
     flex-shrink: 0;
@@ -913,14 +898,14 @@
     text-align: center;
   }
   .strip-footer-brand {
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 8.5px;
     font-weight: 700;
     letter-spacing: 0.3px;
     color: rgba(244, 241, 232, 0.6);
   }
   .strip-footer-count {
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 9.5px;
     font-weight: 700;
     color: #f4f1e8;
@@ -999,7 +984,7 @@
     border-radius: 8px;
     padding: 11px 13px;
     background: rgba(255, 255, 255, 0.4);
-    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--sans);
     font-size: 14px;
     line-height: 1.7;
     color: #1c1a17;
@@ -1021,7 +1006,7 @@
     flex: 1;
     border-radius: 8px;
     padding: 12px 0;
-    font-family: 'Space Mono', 'Courier New', monospace;
+    font-family: var(--sans);
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.6px;
@@ -1083,7 +1068,7 @@
   background: linear-gradient(150deg, #33402f 0%, #26301f 55%, #2c3a26 100%);
   box-shadow: 0 1.5px 2px rgba(30, 38, 28, 0.3), 0 16px 32px rgba(8, 28, 22, 0.4), inset 0 1px 0 rgba(240, 232, 207, 0.16), inset 0 0 0 1px rgba(226, 214, 176, 0.16);
   color: #f4f2e8;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--sans);
   box-sizing: border-box;
 }
 .ticket-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }

@@ -30,7 +30,7 @@ export default function RoomSwitcher({ currentRoomId, onClose }) {
     <div className="clov-rs-backdrop" onClick={onClose}>
       <div className="clov-rs-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
         <div className="clov-rs-head">
-          <span>🔁 방 변경하기</span>
+          <span><i className="ti ti-repeat" aria-hidden="true" /> 방 변경하기</span>
           <button type="button" className="clov-rs-close" onClick={onClose} aria-label="닫기">×</button>
         </div>
         <p className="clov-rs-sub">내가 가지고 있는 우정공간 중 들어갈 방을 선택하세요.</p>

@@ -23,7 +23,7 @@
 
   min-height: 100vh;
   color: var(--text-color);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--sans);
   text-align: left;
   background: transparent;
 }
@@ -140,12 +140,12 @@
   padding: 16px 22px 15px; pointer-events: none;
 }
 .proto-dashboard .hud-eyebrow {
-  font-size: 11px; font-weight: 700; color: rgba(255,255,255,.82);
+  font-size: 18px; font-weight: 700; color: rgba(255,255,255,.82);
   text-shadow: 0 1px 5px rgba(0,0,0,.45); letter-spacing: .3px;
 }
 .proto-dashboard .hud-dday {
-  font-size: clamp(28px, 5vw, 50px); font-weight: 900; color: #fff;
-  letter-spacing: -1.5px; line-height: 1; text-shadow: 0 2px 16px rgba(0,0,0,.28); margin-top: 2px;
+  font-size: clamp(28px, 8vw, 80px); font-weight: 900; color: #fff;
+  letter-spacing: -1.5px; line-height: 1; text-shadow: 0 2px 16px rgba(0,0,0,.28); margin-top: 10px;
 }
 .proto-dashboard .hud-dday span { font-size: .5em; font-weight: 800; margin-left: 4px; }
 .proto-dashboard .hud-bottom { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }

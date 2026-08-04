@@ -14,6 +14,7 @@ import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import { ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
+import Button from '../../../components/Button/Button'
 import Mascot from '../../../components/Mascot/Mascot'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
 import { SCHEDULE_LIGHT_PALETTE } from './palette'
@@ -221,9 +222,9 @@ export default function Schedule() {
 
       <div className="schedule-wrap">
         <div className="section-title journey-section-title">
-          <button type="button" className="btn-schedule-new" onClick={() => setEditing('new')}>
-            ＋ 새 D-day 만들기
-          </button>
+          <div className="section-actions">
+            <Button variant="dashed" size="sm" onClick={() => setEditing('new')}>+ 새 D-day 만들기</Button>
+          </div>
         </div>
 
         {plans.isPending && <div className="schedule-state">불러오는 중…</div>}

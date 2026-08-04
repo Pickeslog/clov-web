@@ -146,23 +146,25 @@
     position: relative;
     z-index: 2;
     height: 100%;
-    padding: 26px 30px 30px;
+    padding: 16px 20px 14px 34px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 14px;
+    justify-content: space-between;
+    gap: 10px;
     color: #f4f2e8;
   }
-  .ticket-card--edit .ticket-content { padding: 22px 22px 26px 30px; gap: 14px; }
+  .ticket-card--edit .ticket-content { padding-left: 22px; gap: 12px; }
 
+  .ticket-toprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   .ticket-brand {
     font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    color: #f4f2e8;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    background: linear-gradient(100deg, #f4ecd2, #c9a961 55%, #f4ecd2);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
     white-space: nowrap;
   }
   .ticket-admit {
@@ -177,55 +179,44 @@
      쓰면 한글 글리프만 조용히 시스템 폰트로 폴백되면서 letter-spacing이 어긋나 보인다. */
   .ticket-title {
     font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-    font-size: 17px;
-    font-weight: 800;
-    line-height: 1.25;
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.2;
     letter-spacing: -0.01em;
-    color: rgba(244, 242, 232, 0.92);
+  }
+  .ticket-kicker {
+    margin-top: 4px;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: rgba(226, 214, 176, 0.68);
   }
 
   .ticket-title-input {
     display: block;
     width: 100%;
-    max-width: 260px;
     border: none;
     border-bottom: 1px dashed rgba(226, 214, 176, 0.4);
     background: transparent;
     font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-    font-size: 17px;
-    font-weight: 800;
+    font-size: 21px;
+    font-weight: 900;
     color: #f4f2e8;
     padding: 2px 2px 6px;
     outline: none;
-    text-align: center;
   }
   .ticket-title-input::placeholder { color: rgba(244, 242, 232, 0.45); font-weight: 700; }
 
-  /* 날짜 + D-DAY — 티켓의 시각적 중심(카운트다운이 한눈에 보이도록 크게). */
-  .ticket-dateline {
+  .ticket-meta {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-  }
-  .ticket-date-big {
+    gap: 30px;
+    border-top: 1px solid rgba(226, 214, 176, 0.22);
+    padding-top: 9px;
     font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: #f4f2e8;
   }
-  .ticket-dday-big {
-    font-family: 'Space Mono', 'Courier New', monospace;
-    font-size: 46px;
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: -0.01em;
-    background: linear-gradient(100deg, #ffd9c9, #e0756a 50%, #ffcfbd);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
+  .ticket-meta > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .ticket-meta > div > span:first-child { font-size: 8.5px; letter-spacing: 0.2em; color: rgba(244, 242, 232, 0.55); }
+  .ticket-meta > div > b { font-size: 14px; font-weight: 600; white-space: nowrap; }
 
   /* 날짜 선택 트리거 — 실제 달력 팝오버는 .ticket-cal(아래) */
   .ticket-date-trigger {
@@ -236,38 +227,26 @@
     background: transparent;
     padding: 0;
     font: inherit;
-    font-family: 'Space Mono', 'Courier New', monospace;
     font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    font-weight: 600;
     color: #f4f2e8;
     cursor: pointer;
     border-bottom: 1px dashed rgba(226, 214, 176, 0.4);
   }
   .ticket-date-trigger .is-empty { color: rgba(244, 242, 232, 0.5); font-weight: 400; }
 
-  /* 발권번호 · 바코드를 카드 우하단 구석으로 — 눈에 띄지 않게 작게. */
-  .ticket-corner-meta {
-    position: absolute;
-    right: 12px;
-    bottom: 10px;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 3px;
-    opacity: 0.55;
-  }
-  .ticket-mini-barcode {
-    width: 46px;
-    height: 10px;
-    background-image: repeating-linear-gradient(90deg, #f4f2e8 0 1px, transparent 1px 3px, #f4f2e8 3px 4px, transparent 4px 7px);
-  }
-  .ticket-mini-serial {
+  .ticket-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .ticket-foot span:first-child {
     font-family: 'Space Mono', 'Courier New', monospace;
     font-size: 7.5px;
-    letter-spacing: 0.08em;
-    color: rgba(244, 242, 232, 0.6);
+    letter-spacing: 0.16em;
+    color: rgba(244, 242, 232, 0.4);
+  }
+  .ticket-serial {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #e0756a;
   }
 
   /* ── 스텁(오른쪽, 뜯어지는 조각) ── */
@@ -298,7 +277,7 @@
     color: rgba(226, 214, 176, 0.45);
   }
   .ticket-stub-mid { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; }
-  .ticket-stub-kicker { font-size: 7px; font-weight: 400; letter-spacing: 0.05em; color: rgba(244, 242, 232, 0.5); }
+  .ticket-stub-kicker { font-size: 8px; letter-spacing: 0.06em; color: rgba(244, 242, 232, 0.62); }
   .ticket-stub-dday {
     font-family: 'Space Mono', 'Courier New', monospace;
     font-weight: 700;

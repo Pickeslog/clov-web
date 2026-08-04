@@ -1,0 +1,19 @@
+{
+  "skinId": "magic-school-student-common",
+  "mascotId": "crobi",
+  "displayName": "마법학교 학생 크로비",
+  "rarity": "COMMON",
+  "shopCategory": "COSTUME",
+  "assetUrl": "/shop/skins/crobi/magic-school-student-common/default.png",
+  "states": {
+    "default": "default.png",
+    "angry": "angry.png",
+    "dizzy": "dizzy.png",
+    "find": "find.png",
+    "pencil": "pencil.png",
+    "pulled": "pulled.png",
+    "scared": "scared.png",
+    "sleepy": "sleepy.png",
+    "smile": "smile.png"
+  }
+}

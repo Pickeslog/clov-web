@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import './feed.proto.css'
 import { getMemories, getMemory } from '../../../api/memory'
@@ -185,6 +185,8 @@ const todayStr = () => {
 
 export default function Feed() {
   const { roomId } = useParams()
+  const navigate = useNavigate()
+  const location = useLocation()
   const accessToken = useAuthStore((state) => state.accessToken)
   const currentUserId = currentUserIdFromToken(accessToken)
 
@@ -194,7 +196,14 @@ export default function Feed() {
   const [sort, setSort] = useState('new') // new(최신순) | old(오래된순)
   const [isGalleryOpen, setGalleryOpen] = useState(false) // 사진 모아보기 오버레이
   const [selectedMemoryId, setSelectedMemoryId] = useState(null)
-  const [isCreateOpen, setCreateOpen] = useState(false)
+  // 일정에서 "약속 완료" 직후 넘어온 경우 — 그 약속이 바로 연결된 채로 글쓰기 모달을 연다.
+  const [linkPlanId, setLinkPlanId] = useState(() => location.state?.linkPlanId ?? null)
+  const [isCreateOpen, setCreateOpen] = useState(() => Boolean(location.state?.linkPlanId))
+
+  // 뒤로가기·새로고침에서 같은 state로 다시 열리지 않도록 한 번 쓰고 지운다(setState 없음, navigate만).
+  useEffect(() => {
+    if (location.state?.linkPlanId) navigate(location.pathname, { replace: true, state: null })
+  }, [location.state, location.pathname, navigate])
 
   // 월별 아카이브를 클라이언트에서 구성하려고 방의 추억을 한 번에 받아온다.
   const feed = useQuery({
@@ -208,7 +217,7 @@ export default function Feed() {
   })
 
   // 추억 생성(본문+사진 순차 업로드)은 우정공간과 공유하는 공용 훅으로 처리.
-  const createMutation = useCreateMemory(roomId, { onSuccess: () => setCreateOpen(false) })
+  const createMutation = useCreateMemory(roomId, { onSuccess: () => { setCreateOpen(false); setLinkPlanId(null) } })
   // 추억 상세(여권) 모달의 데이터·뮤테이션도 우정공간과 공유하는 공용 훅으로 처리.
   const memoryDetail = useMemoryDetail(selectedMemoryId, roomId, { onDeleted: () => setSelectedMemoryId(null) })
 
@@ -388,7 +397,8 @@ export default function Feed() {
           members={activeMemberItems.filter((m) => String(m.userId) !== String(currentUserId))}
           submitting={createMutation.isPending}
           errorMessage={createMutation.error?.message}
-          onCancel={() => setCreateOpen(false)}
+          initialPlanId={linkPlanId}
+          onCancel={() => { setCreateOpen(false); setLinkPlanId(null) }}
           onSubmit={(planId, payload, files) => createMutation.mutate({ planId, payload, files })}
         />
       )}
@@ -659,13 +669,14 @@ function SpacePhotoGallery({ memories, onClose, onOpenMemory }) {
 // ── 글쓰기 모달(프로토타입 wm-*) ──
 // 우정공간(대시보드)에서도 재사용 → export. 대시보드는 <div className="proto-feed">로 감싸
 // 스코프·팔레트를 공급한다(약속 목록은 이 모달이 roomId로 자체 조회).
-export function CreateMemoryModal({ roomId, members, submitting, errorMessage, onCancel, onSubmit }) {
+export function CreateMemoryModal({ roomId, members, submitting, errorMessage, initialPlanId = null, onCancel, onSubmit }) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [tagsInput, setTagsInput] = useState('')
   const [participantUserIds, setParticipantUserIds] = useState(() => members.map((m) => m.userId))
   const [photos, setPhotos] = useState([]) // { file, url }
-  const [linkedPlanId, setLinkedPlanId] = useState(null) // null = 자유 기록(FREE MEMORY)
+  // 일정에서 "약속 완료" 직후 넘어온 경우 그 약속으로 미리 연결해둔다. null = 자유 기록(FREE MEMORY)
+  const [linkedPlanId, setLinkedPlanId] = useState(initialPlanId)
   const [pickerOpen, setPickerOpen] = useState(false)
   const fileRef = useRef(null)
 

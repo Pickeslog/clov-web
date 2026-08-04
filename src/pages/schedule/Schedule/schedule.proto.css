@@ -105,38 +105,22 @@
     animation: clovHolo 9s linear infinite;
     pointer-events: none;
   }
-  .ticket-side-label {
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-right: 1px dashed rgba(226, 214, 176, 0.22);
-  }
-  .ticket-side-label span {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    font-family: var(--sans);
-    font-size: 8px;
-    letter-spacing: 0.3em;
-    color: rgba(226, 214, 176, 0.55);
-    white-space: nowrap;
-  }
-  .ticket-card--edit .ticket-side-label { display: none; }
-
   .ticket-content {
     position: relative;
     z-index: 2;
     height: 100%;
-    padding: 16px 20px 14px 34px;
+    padding: 16px 20px 14px 22px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     gap: 10px;
     color: #f4f2e8;
+    /* 앞면의 포인트 컬러 축 — 제목·D-DAY가 전부 여기서 파생돼 하나로 묶인다.
+       --stamp(지난 약속=그린/예정=코랄) 자체를 텍스트에 바로 쓰면 배경과 겹쳐 안 보이니
+       밝은 베이스에 섞어서 항상 읽히게 한다. */
+    --ticket-accent: color-mix(in srgb, var(--stamp, #e0756a) 42%, #ffe9d6);
   }
-  .ticket-card--edit .ticket-content { padding-left: 22px; gap: 12px; }
+  .ticket-card--edit .ticket-content { gap: 12px; }
 
   .ticket-toprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   .ticket-brand {
@@ -169,6 +153,23 @@
     line-height: 1.2;
     letter-spacing: -0.01em;
   }
+  /* 제목(약속 이름)만 장식용 모노스페이스 텍스트(브랜드/발권번호 등)와 뚜렷이 구분되게 —
+     색은 --ticket-accent 하나로 D-DAY·스텁과 같은 축에서 나온다(포인트 컬러 통일). */
+  .ticket-title--highlight {
+    position: relative;
+    display: inline-block;
+    color: var(--ticket-accent);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 0 26px color-mix(in srgb, var(--ticket-accent) 45%, transparent);
+  }
+  .ticket-title--highlight::after {
+    content: "";
+    position: absolute;
+    left: 1px; right: 1px; bottom: -3px;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--ticket-accent) 18%, var(--ticket-accent) 82%, transparent);
+    opacity: 0.85;
+  }
   .ticket-kicker {
     margin-top: 4px;
     font-family: var(--sans);
@@ -200,8 +201,16 @@
     font-family: var(--sans);
   }
   .ticket-meta > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-  .ticket-meta > div > span:first-child { font-size: 8.5px; letter-spacing: 0.2em; color: rgba(244, 242, 232, 0.55); }
+  .ticket-meta > div > span:first-child { font-size: 9px; letter-spacing: 0.2em; color: rgba(244, 242, 232, 0.55); }
   .ticket-meta > div > b { font-size: 14px; font-weight: 600; white-space: nowrap; }
+  /* D-DAY는 앞면에 안 보여준다 — 스텁(뜯으면 나오는 쪽)에만 있어야 "뜯는" 행동에 의미가 생긴다. */
+  .ticket-meta > div > b.ticket-meta-teaser {
+    font-size: 11px;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--ticket-accent);
+    white-space: nowrap;
+  }
 
   /* 날짜 선택 트리거 — 실제 달력 팝오버는 .ticket-cal(아래) */
   .ticket-date-trigger {
@@ -223,7 +232,7 @@
   .ticket-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .ticket-foot span:first-child {
     font-family: var(--sans);
-    font-size: 7.5px;
+    font-size: 9px;
     letter-spacing: 0.16em;
     color: rgba(244, 242, 232, 0.4);
   }
@@ -250,26 +259,37 @@
     gap: 4px;
     transform-origin: left center;
     will-change: transform, opacity;
-    animation: clovTearBack 0.34s cubic-bezier(.3,.8,.4,1) forwards;
+    animation: clovTearBack 0.22s cubic-bezier(.3,.8,.4,1) forwards;
   }
-  .ticket-stub.is-off { animation: clovTearOff 0.62s steps(2, end) forwards; }
+  .ticket-stub.is-off { animation: clovTearOff 0.4s steps(2, end) forwards; }
   .ticket-stub-side {
     writing-mode: vertical-rl;
     transform: rotate(180deg);
     font-family: var(--sans);
-    font-size: 7.5px;
+    font-size: 9px;
     letter-spacing: 0.24em;
     color: rgba(226, 214, 176, 0.45);
   }
-  .ticket-stub-mid { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; }
-  .ticket-stub-kicker { font-size: 8px; letter-spacing: 0.06em; color: rgba(244, 242, 232, 0.62); }
+  .ticket-stub-mid {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-align: center;
+  }
+  .ticket-stub-kicker { font-size: 9px; letter-spacing: 0.06em; color: rgba(244, 242, 232, 0.62); }
   .ticket-stub-dday {
     font-family: var(--sans);
     font-weight: 700;
     font-size: 26px;
     line-height: 1;
     letter-spacing: -0.02em;
-    background: linear-gradient(100deg, #ffd9c9, var(--stamp, #e0756a) 50%, #ffcfbd);
+    /* raw --stamp를 중간 stop에 바로 쓰면 지난 약속(짙은 그린)에서 스텁 배경과 겹쳐 숫자
+       가운데가 안 보인다 — color-mix로 밝은 베이스에 섞어 항상 밝게 유지한다. */
+    background: linear-gradient(100deg, #ffd9c9, color-mix(in srgb, var(--stamp, #e0756a) 42%, #ffd9c9) 50%, #ffcfbd);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -280,17 +300,9 @@
     opacity: 0.85;
     background-image: repeating-linear-gradient(90deg, #f4f2e8 0 1px, transparent 1px 3px, #f4f2e8 3px 4px, transparent 4px 7px, #f4f2e8 7px 8px, transparent 8px 10px);
   }
-  .ticket-stub-no { font-family: var(--sans); font-size: 8px; letter-spacing: 0.14em; color: rgba(226, 214, 176, 0.42); }
+  .ticket-stub-no { font-family: var(--sans); font-size: 9px; letter-spacing: 0.14em; color: rgba(226, 214, 176, 0.42); }
 
   .ticket-glare { position: absolute; inset: 0; border-radius: 14px; pointer-events: none; z-index: 6; transition: opacity 0.3s ease; }
-
-  .ticket-hint {
-    display: flex; align-items: center; gap: 7px;
-    font-family: var(--sans);
-    font-size: 10px; letter-spacing: 0.1em;
-    color: rgba(28, 26, 23, 0.55);
-  }
-  .ticket-hint-dot { width: 5px; height: 5px; border-radius: 50%; background: #c0392b; display: block; flex-shrink: 0; }
 
   @keyframes clovHolo { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
   @keyframes clovTearOff {
@@ -309,8 +321,8 @@
   }
 
   /* ══════════ 티켓 상세 모달 — 메모/체크리스트/상태 전환/수정·삭제(크림 영수증 톤 재사용) ══════════ */
-  .modal-box.ticket-detail { max-width: 460px; background: transparent; box-shadow: none; border: none; overflow: visible; padding: 20px; }
-  .ticket-detail .receipt-paper { padding-top: 24px; }
+  .modal-box.ticket-detail { max-width: 540px; background: transparent; box-shadow: none; border: none; overflow: visible; padding: 24px; }
+  .ticket-detail .receipt-paper { width: 460px; padding: 28px 30px 28px; }
   .ticket-detail-head { text-align: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px dashed rgba(28, 26, 23, 0.3); }
   .ticket-detail-head h3 {
     margin: 0 0 4px;
@@ -338,6 +350,141 @@
     cursor: pointer;
   }
   .ticket-detail-close:hover { background: rgba(28, 26, 23, 0.16); }
+
+  /* 상세 모달은 크림 영수증이 아니라 "뜯어서 연 스텁 안쪽"처럼 티켓 톤을 그대로 이어받는다. */
+  .ticket-detail .receipt-paper {
+    background: linear-gradient(150deg, #33402f 0%, #26301f 55%, #2c3a26 100%);
+    color: #f4f2e8;
+    border-radius: 14px;
+    box-shadow: 0 1.5px 2px rgba(30, 38, 28, 0.3), 0 16px 34px rgba(18, 24, 16, 0.4), inset 0 1px 0 rgba(240, 232, 207, 0.16), inset 0 0 0 1px rgba(226, 214, 176, 0.16);
+    overflow: hidden;
+  }
+  .ticket-detail .receipt-paper::before,
+  .ticket-detail .receipt-paper::after {
+    content: "";
+    top: 0;
+    width: auto;
+    height: 1px;
+    background: none;
+    border: none;
+    box-shadow: none;
+    transform: none;
+  }
+  .ticket-detail .receipt-paper::before {
+    left: 16px; right: 16px;
+    border-top: 2px dashed rgba(226, 214, 176, 0.3);
+  }
+  .ticket-detail .receipt-paper::after { content: none; }
+  .ticket-detail .receipt-zigzag { display: none; }
+
+  .ticket-detail-brandrow {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 6px;
+  }
+  .ticket-detail-stub-tag {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: rgba(244, 242, 232, 0.58);
+    white-space: nowrap;
+  }
+
+  .ticket-detail .ticket-detail-head {
+    position: relative;
+    z-index: 1;
+    border-bottom-color: rgba(226, 214, 176, 0.24);
+  }
+  .ticket-detail .ticket-detail-head h3 {
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    color: #f4f2e8;
+  }
+  .ticket-detail .ticket-detail-head span {
+    color: rgba(244, 242, 232, 0.62);
+  }
+  .ticket-detail .ticket-detail-close {
+    background: rgba(244, 242, 232, 0.18);
+    color: #f4f2e8;
+  }
+  .ticket-detail .ticket-detail-close:hover { background: rgba(244, 242, 232, 0.3); }
+
+  /* 완료/취소/수정/삭제는 티켓 앞면의 D-day 스탬프색(--stamp, 지난 약속=그린)을 그대로 쓰면
+     이 어두운 배경 위에서 배경과 거의 같은 색이 돼 버튼이 안 보인다(#지난 약속에서 실제로 발생) —
+     그래서 모달 액션 버튼은 --stamp와 분리된 고정 골드 악센트를 쓴다. */
+  .ticket-detail { --action-accent-strong: #d9a95c; }
+
+  .ticket-detail .receipt-memo,
+  .ticket-detail .receipt-memo-empty {
+    position: relative;
+    z-index: 1;
+    color: #f4f2e8;
+  }
+  .ticket-detail .receipt-memo-desc { color: #f4f2e8; }
+  .ticket-detail .receipt-memo-empty { color: rgba(244, 242, 232, 0.55); }
+  .ticket-detail .receipt-check-text.is-done { color: rgba(244, 242, 232, 0.45); }
+
+  .ticket-detail .receipt-barcode {
+    position: relative;
+    z-index: 1;
+    opacity: 0.85;
+    background-image: repeating-linear-gradient(90deg, #f4f2e8 0 1px, transparent 1px 3px, #f4f2e8 3px 4px, transparent 4px 7px, #f4f2e8 7px 8px, transparent 8px 10px);
+  }
+
+  .ticket-detail .receipt-status { position: relative; z-index: 1; gap: 10px; margin: 2px 0 18px; }
+  .ticket-detail .receipt-status-btn {
+    border: 1.5px solid rgba(244, 242, 232, 0.65);
+    background: rgba(244, 242, 232, 0.08);
+    color: #f4f2e8;
+    font-weight: 800;
+    padding: 8px 16px;
+    font-size: 11.5px;
+  }
+  .ticket-detail .receipt-status-btn:hover:not(:disabled) {
+    background: rgba(244, 242, 232, 0.18);
+    border-color: rgba(244, 242, 232, 0.75);
+  }
+  .ticket-detail .receipt-status-btn.is-primary {
+    background: linear-gradient(135deg, #f4ecd2, var(--action-accent-strong) 60%, #f4ecd2);
+    color: #2a2013;
+    font-weight: 900;
+    border-style: solid;
+    border-color: transparent;
+  }
+  .ticket-detail .receipt-status-btn.is-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #f4ecd2, var(--action-accent-strong) 60%, #f4ecd2);
+    filter: brightness(1.06);
+    border-color: transparent;
+  }
+
+  .ticket-detail .receipt-actions {
+    position: relative;
+    z-index: 1;
+    gap: 12px;
+  }
+  .ticket-detail .receipt-actions button {
+    background: rgba(244, 242, 232, 0.14);
+    border: 1.5px solid rgba(244, 242, 232, 0.58);
+    color: #f4f2e8;
+    font-weight: 800;
+  }
+  .ticket-detail .receipt-actions button:hover {
+    background: rgba(244, 242, 232, 0.24);
+    border-color: rgba(244, 242, 232, 0.65);
+    filter: none;
+  }
+  .ticket-detail .receipt-actions button.danger {
+    background: transparent;
+    color: #ffb3a3;
+    border-color: rgba(255, 157, 143, 0.7);
+  }
+  .ticket-detail .receipt-actions button.danger:hover {
+    background: rgba(255, 107, 90, 0.16);
+    border-color: #ff9d8f;
+  }
 
   .receipt-paper {
     position: relative;
@@ -398,69 +545,9 @@
     padding: 4px 0;
   }
 
-  /* 체크리스트 = 영수증 메모의 항목들 */
-  .receipt-check-list { list-style: none; margin: 8px 0 0; padding: 0; }
-  .receipt-check {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-  .receipt-check input[type="checkbox"] {
-    margin-top: 4px;
-    width: 15px;
-    height: 15px;
-    accent-color: #2e5233;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
+  /* 취소된 약속 라벨(receipt-status)이 재사용하는 취소선 텍스트 스타일 */
   .receipt-check-text { flex: 1; }
   .receipt-check-text.is-done { text-decoration: line-through; color: rgba(28, 26, 23, 0.45); }
-  .receipt-check-remove {
-    border: none;
-    background: none;
-    color: rgba(28, 26, 23, 0.4);
-    font-size: 13px;
-    line-height: 1;
-    cursor: pointer;
-    padding: 2px 4px;
-  }
-  .receipt-check-remove:hover { color: #c0392b; }
-  .receipt-check-remove:disabled { opacity: 0.4; cursor: default; }
-
-  .receipt-check-add {
-    display: flex;
-    gap: 6px;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px dashed rgba(28, 26, 23, 0.18);
-  }
-  .receipt-check-add input {
-    flex: 1;
-    min-width: 0;
-    border: 1px solid rgba(28, 26, 23, 0.28);
-    border-radius: 7px;
-    padding: 8px 10px;
-    background: rgba(255, 255, 255, 0.5);
-    font-family: var(--sans);
-    font-size: 13px;
-    color: #1c1a17;
-    outline: none;
-  }
-  .receipt-check-add input:focus { border-color: rgba(46, 82, 51, 0.55); }
-  .receipt-check-add button {
-    flex-shrink: 0;
-    border: none;
-    border-radius: 7px;
-    padding: 0 14px;
-    background: #2e5233;
-    color: #f4f1e8;
-    font-family: var(--sans);
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .receipt-check-add button:disabled { opacity: 0.5; cursor: default; }
 
   .receipt-barcode {
     height: 18px;
@@ -468,7 +555,7 @@
     background-image: repeating-linear-gradient(90deg, #1c1a17 0 2px, transparent 2px 4px, #1c1a17 4px 5px, transparent 5px 9px);
   }
 
-  /* 상태 전환 라인(완료/취소/추억 스킵 + memoryStatus 배지) — 영수증 톤 텍스트 버튼 */
+  /* 상태 전환 라인(완료/취소) — 영수증 톤 텍스트 버튼 */
   .receipt-status {
     display: flex;
     flex-wrap: wrap;
@@ -493,16 +580,6 @@
   .receipt-status-btn.is-primary { background: #2e5233; color: #f4f1e8; border-style: solid; }
   .receipt-status-btn.is-danger { color: #c0392b; border-color: rgba(192, 57, 43, 0.5); }
   .receipt-status-btn:disabled { opacity: 0.5; cursor: default; }
-  .receipt-memory-tag {
-    margin-left: auto;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    color: #2e5233;
-    background: rgba(46, 82, 51, 0.1);
-    border-radius: 999px;
-    padding: 4px 10px;
-  }
 
   .receipt-actions { display: flex; gap: 10px; }
   .receipt-actions button {
@@ -1000,7 +1077,9 @@
   .schedule-modal-buttons {
     display: flex;
     gap: 10px;
-    padding: 6px 22px 22px;
+    /* 위 memo 카드의 receipt-zigzag(스캘럽 절취선)가 자기 카드 아래로 8px 삐져나오는데,
+       여기 padding-top이 그보다 작으면 버튼 위쪽이 그 무늬에 살짝 파묻혀 보인다. */
+    padding: 16px 22px 22px;
   }
   .schedule-modal-buttons button {
     flex: 1;
@@ -1053,7 +1132,16 @@
     .ticket-stub-mid { flex-direction: row; gap: 10px; }
     .ticket-stub-barcode { width: 60px; height: 30px; }
     .ticket-title { font-size: 18px; }
+    .ticket-meta { gap: 16px; flex-wrap: wrap; }
     .receipt-paper { width: 100%; padding: 22px 20px 30px; }
+
+    /* 티켓 상세 모달도 좁은 화면에선 패딩/폭이 줄어야 한다 — 버튼 가독성 작업 때
+       고정 460px·28px 패딩으로 늘렸던 게 .ticket-detail 쪽 detail selector라 위
+       .receipt-paper 모바일 규칙보다 우선해서 그대로 남아있었다. */
+    .modal-box.ticket-detail { padding: 14px; }
+    .ticket-detail .receipt-paper { width: 100%; padding: 22px 18px 26px; }
+    .ticket-detail .receipt-status { gap: 8px; }
+    .ticket-detail .receipt-status-btn { flex: 1 1 auto; }
   }
 }
 

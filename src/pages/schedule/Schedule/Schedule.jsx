@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import './schedule.proto.css'
 import {
   getPlans, getPlan, createPlan, updatePlan, deletePlan,
-  completePlan, cancelPlan, skipPlanMemory,
-  addChecklist, updateChecklist, deleteChecklist,
+  completePlan, cancelPlan,
   getStagePhotos, presignStagePhoto, commitStagePhoto,
 } from '../../../api/plan'
 import { uploadImage } from '../../../lib/uploadImage'
@@ -18,9 +17,6 @@ import Button from '../../../components/Button/Button'
 import Mascot from '../../../components/Mascot/Mascot'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
 import { SCHEDULE_LIGHT_PALETTE } from './palette'
-
-// 계약 §8: status/memoryStatus.
-const MEMORY_LABEL = { NONE: '', CANDIDATE: '추억 후보', WRITTEN: '추억 작성됨', SKIPPED: '추억 스킵' }
 // 인생4컷 4단계(계약 §9, 순서·잠김·상태는 서버 계산). 라벨은 프로토타입 필름스트립과 동일.
 const STAGES = [
   { key: 'PROPOSAL', number: 1, name: '제안하기' },
@@ -70,6 +66,7 @@ const StripUploadIcon = () => (
 // 일정계획(약속 여정) 화면 — 프로토타입 룩 이식. 인생4컷 극장(입장하기)은 후속 PR.
 export default function Schedule() {
   const { roomId } = useParams()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const accessToken = useAuthStore((state) => state.accessToken)
   const currentUserId = currentUserIdFromToken(accessToken)
@@ -139,17 +136,18 @@ export default function Schedule() {
     mutationFn: ({ id, payload }) => updatePlan(id, payload),
     onSuccess: () => { invalidateList(); invalidateDetail(); setEditing(null) },
   })
-  // 약속 완료는 XP도 준다(PLAN_COMPLETE, 계약 §12) — 다른 detailMutation류(취소/스킵/체크리스트)는
+  // 약속 완료는 XP도 준다(PLAN_COMPLETE, 계약 §12) — 다른 detailMutation류(취소)는
   // XP가 없어서 공용 헬퍼를 안 쓰고 이것만 따로 room 프리픽스 무효화를 추가한다.
+  // 완료 직후 바로 피드 글쓰기로 보내 그 자리에서 추억을 남기게 한다 — "나중에 후보에서
+  // 골라 쓰기"였던 예전 흐름 대신, 완료 시점에 바로 연결(사용자 결정, #237 후속).
   const completeMutation = useMutation({
     mutationFn: () => completePlan(effectiveId),
-    onSuccess: () => { invalidateList(); invalidateDetail(); queryClient.invalidateQueries({ queryKey: ['room', roomId] }) },
+    onSuccess: () => {
+      invalidateList(); invalidateDetail(); queryClient.invalidateQueries({ queryKey: ['room', roomId] })
+      navigate(`/rooms/${roomId}/feed`, { state: { linkPlanId: effectiveId } })
+    },
   })
   const cancelMutation = useMutation(detailMutation(() => cancelPlan(effectiveId)))
-  const skipMutation = useMutation(detailMutation(() => skipPlanMemory(effectiveId)))
-  const addCheckMutation = useMutation(detailMutation((content) => addChecklist(effectiveId, { content })))
-  const toggleCheckMutation = useMutation(detailMutation(({ id, checked }) => updateChecklist(id, { checked })))
-  const deleteCheckMutation = useMutation(detailMutation((id) => deleteChecklist(id)))
   const deleteMutation = useMutation({
     mutationFn: () => deletePlan(effectiveId),
     onSuccess: () => { invalidateList(); setSelectedPlanId(null) },
@@ -173,9 +171,7 @@ export default function Schedule() {
     : null
 
   const detailBusy =
-    completeMutation.isPending || cancelMutation.isPending || skipMutation.isPending ||
-    deleteMutation.isPending || addCheckMutation.isPending ||
-    toggleCheckMutation.isPending || deleteCheckMutation.isPending
+    completeMutation.isPending || cancelMutation.isPending || deleteMutation.isPending
 
   // 밀도 필터 + 정렬(가까운 순).
   const passesDensity = (p) => {
@@ -247,10 +243,6 @@ export default function Schedule() {
               onDelete={async () => { if (await confirm('정말 이 약속을 삭제하시겠어요?', { confirmText: '삭제', variant: 'danger' })) deleteMutation.mutate() }}
               onComplete={() => completeMutation.mutate()}
               onCancel={() => cancelMutation.mutate()}
-              onSkip={() => skipMutation.mutate()}
-              onAddCheck={(c) => addCheckMutation.mutate(c)}
-              onToggleCheck={(id, checked) => toggleCheckMutation.mutate({ id, checked })}
-              onDeleteCheck={(id) => deleteCheckMutation.mutate(id)}
             />
 
             <div className="growth-hero">
@@ -413,11 +405,10 @@ function TicketDatePicker({ value, onChange, min }) {
 }
 
 // ── 약속 티켓(선택 약속) — 티켓만 상시 노출하고, 클릭해 스텁을 뜯으면
-//    상세 모달(TicketDetailModal)에서 기존 메모·체크리스트·상태 전환·수정/삭제를 연다.
+//    상세 모달(TicketDetailModal)에서 기존 메모·상태 전환·수정/삭제를 연다.
 function TicketCard({
   plan, loading, currentUserId, busy,
-  onEdit, onDelete, onComplete, onCancel, onSkip,
-  onAddCheck, onToggleCheck, onDeleteCheck,
+  onEdit, onDelete, onComplete, onCancel,
 }) {
   const [torn, setTorn] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -450,7 +441,7 @@ function TicketCard({
   const openTicket = () => {
     if (detailOpen) return
     setTorn(true)
-    window.setTimeout(() => setDetailOpen(true), 520)
+    window.setTimeout(() => setDetailOpen(true), 340)
   }
   const closeDetail = () => { setDetailOpen(false); setTorn(false) }
 
@@ -476,19 +467,18 @@ function TicketCard({
           >
             <div className="ticket-main">
               <div className="ticket-holo" />
-              <div className="ticket-side-label"><span>ADMIT ONE · 약속 티켓</span></div>
               <div className="ticket-content">
                 <div className="ticket-toprow">
                   <span className="ticket-brand">🍀 CLOV. MEMORIES</span>
                   <span className="ticket-admit">ADMIT ONE · No. {ticketNoOf(plan)}</span>
                 </div>
                 <div className="ticket-titlewrap">
-                  <div className="ticket-title">{plan.title}</div>
+                  <div className="ticket-title ticket-title--highlight">{plan.title}</div>
                   <div className="ticket-kicker">PROMISE JOURNEY · {plan.planDate?.slice(0, 4) ?? '----'}</div>
                 </div>
                 <div className="ticket-meta">
                   <div><span>DATE</span><b>{formatFriendlyDate(plan.planDate)}</b></div>
-                  <div><span>D-DAY</span><b>{ddayText}</b></div>
+                  <div><span>D-DAY</span><b className="ticket-meta-teaser">스텁을 뜯어보세요</b></div>
                 </div>
                 <div className="ticket-foot">
                   <span>NON-TRANSFERABLE · KEEP UNTIL THE DAY</span>
@@ -497,7 +487,6 @@ function TicketCard({
               </div>
             </div>
             <div className={`ticket-stub${torn ? ' is-off' : ''}`}>
-              <div className="ticket-holo" />
               <span className="ticket-stub-side">KEEP THIS STUB</span>
               <div className="ticket-stub-mid">
                 <span className="ticket-stub-kicker">{ddayPhrase}</span>
@@ -509,7 +498,6 @@ function TicketCard({
             <div className="ticket-glare" style={{ opacity: tilt.hover ? 1 : 0, background: `radial-gradient(360px circle at ${tilt.mx}% ${tilt.my}%, rgba(255,248,224,.16), rgba(255,248,224,0) 62%)` }} />
           </div>
         </div>
-        <div className="ticket-hint"><span className="ticket-hint-dot" />티켓을 클릭하면 약속 상세가 열립니다</div>
       </div>
 
       {detailOpen && (
@@ -522,77 +510,36 @@ function TicketCard({
           onDelete={onDelete}
           onComplete={onComplete}
           onCancel={onCancel}
-          onSkip={onSkip}
-          onAddCheck={onAddCheck}
-          onToggleCheck={onToggleCheck}
-          onDeleteCheck={onDeleteCheck}
         />
       )}
     </div>
   )
 }
 
-// ── 티켓 상세 모달 — 기존 영수증의 메모·체크리스트·상태 전환·수정/삭제를 그대로 담는다.
+// ── 티켓 상세 모달 — 기존 영수증의 메모·상태 전환·수정/삭제를 그대로 담는다.
 function TicketDetailModal({
   plan, currentUserId, busy, onClose,
-  onEdit, onDelete, onComplete, onCancel, onSkip,
-  onAddCheck, onToggleCheck, onDeleteCheck,
+  onEdit, onDelete, onComplete, onCancel,
 }) {
-  const [checkItem, setCheckItem] = useState('')
   const ddayText = calculateDday(plan.planDate)
   const isWriter = String(plan.writer?.id) === String(currentUserId)
-  const checklists = plan.checklists ?? []
-  const memoEmpty = !plan.description && checklists.length === 0
-
-  const submitCheck = () => {
-    const v = checkItem.trim()
-    if (!v) return
-    onAddCheck(v)
-    setCheckItem('')
-  }
+  const memoEmpty = !plan.description
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box ticket-detail" onClick={(e) => e.stopPropagation()}>
         <div className="receipt-paper">
-          <div className="receipt-zigzag" />
+          <div className="ticket-detail-brandrow">
+            <span className="ticket-brand">🍀 CLOV. MEMORIES</span>
+            <span className="ticket-detail-stub-tag">STUB · No. {ticketNoOf(plan)}</span>
+          </div>
           <div className="ticket-detail-head">
             <h3>{plan.title}</h3>
             <span>{formatFriendlyDate(plan.planDate)} · {ddayText}</span>
           </div>
-          <div className="receipt-memo-label">— MEMO ————————————</div>
           <div className="receipt-memo">
             {plan.description && <p className="receipt-memo-desc">{plan.description}</p>}
-            {checklists.length > 0 && (
-              <ul className="receipt-check-list">
-                {checklists.map((c) => (
-                  <li key={c.id} className="receipt-check">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(c.checked)}
-                      disabled={busy}
-                      onChange={() => onToggleCheck(c.id, !c.checked)}
-                      aria-label={c.content}
-                    />
-                    <span className={`receipt-check-text${c.checked ? ' is-done' : ''}`}>{c.content}</span>
-                    <button type="button" className="receipt-check-remove" disabled={busy} onClick={() => onDeleteCheck(c.id)} aria-label="항목 삭제">✕</button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {memoEmpty && <div className="receipt-memo-empty">✎ 아래에서 약속 준비 항목을 추가해 보세요</div>}
-            {plan.status === 'SCHEDULED' && (
-              <div className="receipt-check-add">
-                <input
-                  value={checkItem}
-                  maxLength={255}
-                  placeholder="준비 항목 추가"
-                  onChange={(e) => setCheckItem(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && submitCheck()}
-                />
-                <button type="button" disabled={!checkItem.trim() || busy} onClick={submitCheck}>추가</button>
-              </div>
-            )}
+            {memoEmpty && <div className="receipt-memo-empty">✎ 아직 남긴 메모가 없어요</div>}
           </div>
 
           <div className="receipt-barcode" />
@@ -604,11 +551,7 @@ function TicketDetailModal({
             {plan.status === 'SCHEDULED' && isWriter && (
               <button type="button" className="receipt-status-btn" disabled={busy} onClick={onCancel}>약속 취소</button>
             )}
-            {plan.status === 'COMPLETED' && plan.memoryStatus === 'CANDIDATE' && (
-              <button type="button" className="receipt-status-btn" disabled={busy} onClick={onSkip}>추억 스킵</button>
-            )}
             {plan.status === 'CANCELED' && <span className="receipt-check-text is-done">취소된 약속</span>}
-            {MEMORY_LABEL[plan.memoryStatus] && <span className="receipt-memory-tag">{MEMORY_LABEL[plan.memoryStatus]}</span>}
           </div>
 
           {isWriter && (
@@ -737,7 +680,6 @@ export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, o
           <div className="ticket-card ticket-card--edit">
             <div className="ticket-main">
               <div className="ticket-holo" />
-              <div className="ticket-side-label"><span>ADMIT ONE · 약속 티켓</span></div>
               <div className="ticket-content">
                 <div className="ticket-toprow">
                   <span className="ticket-brand">🍀 CLOV. MEMORIES</span>
@@ -777,7 +719,7 @@ export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, o
         <div className="schedule-modal-buttons">
           <button type="button" className="btn-sub" onClick={onClose}>취소</button>
           <button type="button" className="btn-main" disabled={!canSubmit} onClick={submit}>
-            {submitting ? '저장 중…' : plan ? '수정 저장' : '만들기'}
+            {submitting ? '저장 중…' : plan ? '수정' : '만들기'}
           </button>
         </div>
       </div>

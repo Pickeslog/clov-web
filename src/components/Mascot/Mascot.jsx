@@ -136,6 +136,7 @@ const EQUIPPED_SKIN_STATE_SPRITES = [
   '/shop/skins/rob/yellow-crew-common',
   '/shop/skins/kim-cheolsu/steel-frame-safety-uncommon',
   '/shop/skins/tako-gun/rov-pilot-rare',
+  '/shop/skins/tako-gun/watermelon-rind-hat-common',
   '/shop/skins/crobi/ocean-rescue-champion-epic',
   '/shop/skins/onyx/blackstar-atelier-uncommon',
 ].map((root) => ({

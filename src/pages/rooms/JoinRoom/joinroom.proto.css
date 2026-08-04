@@ -52,10 +52,10 @@
   gap: 16px;
 }
 
-/* font-family를 일부러 지정하지 않는다 — 지금도 전역 index.css의 h1 리셋(system-ui)이
-   먹은 채로 렌더링되고 있고(Title이 원래 font-family를 안 정했다), 여기서 새로 지정하면
-   "전과 똑같이"가 깨진다. (team-guides/19 §8의 반대 사례 — 알고 안 고친 것.) */
 .proto-joinroom .joinroom-title {
+  /* 전역 index.css의 h1{font-family:var(--heading);color:var(--text-h)} 리셋 무력화(team-guides/19 §8) —
+     컨테이너(.proto-joinroom)의 'Outfit'은 상속이라 h1에 직접 걸리는 전역 규칙에 밀린다(#238). */
+  font-family: 'Outfit', sans-serif;
   font-size: 1.4rem;
   font-weight: 900;
   color: var(--forest);

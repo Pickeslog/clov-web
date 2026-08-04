@@ -73,15 +73,21 @@ export default function Signup() {
   // 값이 안 바뀌어(true → true) 클래스도 안 바뀌고, 브라우저는 진행 중인 애니메이션을 그대로
   // 이어갈 뿐 재시작하지 않는다(0.4s 안에 연속 실패 시 두 번째 shake가 무시됨, #262).
   // false로 먼저 커밋해 애니메이션을 실제로 제거한 뒤 다음 프레임에 true로 다시 커밋해
-  // 재생을 강제한다.
+  // 재생을 강제한다. 단일 rAF는 "false 커밋"과 "다음 프레임"이 브라우저 스타일 재계산
+  // 한 번으로 합쳐질 위험이 있어(#269), 바깥쪽 rAF로 false가 실제로 반영된 뒤임을
+  // 보장하고 안쪽 rAF에서 true를 커밋하는 중첩(double) rAF를 쓴다.
   const triggerShake = (field) => {
     setShake((prev) => ({ ...prev, [field]: false }))
-    requestAnimationFrame(() => setShake((prev) => ({ ...prev, [field]: true })))
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setShake((prev) => ({ ...prev, [field]: true })))
+    })
   }
 
   const triggerTermsShake = () => {
     setTermsShake(false)
-    requestAnimationFrame(() => setTermsShake(true))
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setTermsShake(true))
+    })
   }
 
   const handleEnter = (event, submit) => {

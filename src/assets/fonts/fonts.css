@@ -1,0 +1,71 @@
+/* 폰트 비교 테스트용 @font-face (test/font-comparison-panel 브랜치 — 스크래치, 결정 전까지만 존재) */
+@font-face {
+  font-family: 'Griun Cocochoitoon';
+  src: url('./Griun_Cocochoitoon-Rg.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Griun Mongtori';
+  src: url('./Griun_Mongtori-Rg.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'KCC-Ganpan';
+  src: url('./KCC-Ganpan.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'KCC-Murukmuruk';
+  src: url('./KCC-Murukmuruk.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Onglip New Bohyun';
+  src: url('./OnglipNewBohyun.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Onglip New Bohyun Bold';
+  src: url('./OnglipNewBohyunBold.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Onglip Berryryeowon';
+  src: url('./OnglipBerryryeowon.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Onglip Hwanseung';
+  src: url('./OnglipHwanseung.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Griun Cherry1Spoon';
+  src: url('./Griun_Cherry1Spoon-Rg.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Griun SolyFont';
+  src: url('./Griun_SolyFont-Rg.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

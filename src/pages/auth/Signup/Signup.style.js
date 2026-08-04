@@ -1,5 +1,5 @@
 import styled from '@emotion/styled'
-import { keyframes } from '@emotion/react'
+import { css, keyframes } from '@emotion/react'
 
 const rise = keyframes`from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); }`
 const shakeInput = keyframes`
@@ -207,7 +207,7 @@ export const Input = styled.input`
   background: var(--cream);
   outline: none;
   transition: border-color 0.22s, box-shadow 0.22s, background-color 0.22s, transform 0.22s;
-  animation: ${(props) => (props.$shake ? `${shakeInput} 0.4s ease` : 'none')};
+  animation: ${(props) => (props.$shake ? css`${shakeInput} 0.4s ease` : 'none')};
   cursor: ${(props) => (props.readOnly ? 'pointer' : 'text')};
 
   &:focus {
@@ -319,7 +319,7 @@ export const TermsBox = styled.div`
   border-radius: 14px;
   padding: 16px;
   margin: 20px 0 24px;
-  animation: ${(props) => (props.$shake ? `${shakeBox} 0.4s ease` : 'none')};
+  animation: ${(props) => (props.$shake ? css`${shakeBox} 0.4s ease` : 'none')};
 `
 
 export const TermsRow = styled.div`

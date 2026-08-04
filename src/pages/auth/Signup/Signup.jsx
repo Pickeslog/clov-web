@@ -122,6 +122,7 @@ export default function Signup() {
   const toggleOne = (key) => setAgreements((prev) => ({ ...prev, [key]: !prev[key] }))
   const togglePanel = (kind) => setOpenPanel((prev) => (prev === kind ? null : kind))
   const handleTermsKey = (event, action) => {
+    if (event.target !== event.currentTarget) return
     if (event.key !== ' ' && event.key !== 'Enter') return
     event.preventDefault()
     action()

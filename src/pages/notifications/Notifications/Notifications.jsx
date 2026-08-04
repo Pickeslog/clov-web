@@ -12,9 +12,9 @@ import {
 import { parseUtc, formatDate, formatTime } from '../../../lib/datetime'
 
 const TABS = [
-  { id: 'NOTICE', label: '관리진 공지', icon: '📣' },
-  { id: 'FRIEND', label: '친구들 알림', icon: '♧' },
-  { id: 'JOIN', label: '가입 신청', icon: '♧' },
+  { id: 'NOTICE', label: '관리진 공지', icon: 'ti-speakerphone' },
+  { id: 'FRIEND', label: '친구들 알림', icon: 'ti-users' },
+  { id: 'JOIN', label: '가입 신청', icon: 'ti-user-plus' },
 ]
 
 const describeError = (error) => {
@@ -127,7 +127,7 @@ export default function Notifications({ onClose }) {
           <nav className="noti-tabs" aria-label="알림 분류">
             {TABS.map((tab) => (
               <button key={tab.id} className={`noti-tab${activeTab === tab.id ? ' on' : ''}`} type="button" onClick={() => { setMessage(''); setActiveTab(tab.id) }}>
-                <span aria-hidden="true">{tab.icon} </span>{tab.label}
+                <i className={`ti ${tab.icon}`} aria-hidden="true" /> {tab.label}
                 {tab.id === 'JOIN' && pendingRequests.length > 0 && <span className="noti-count">{pendingRequests.length}</span>}
               </button>
             ))}

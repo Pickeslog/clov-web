@@ -1,0 +1,17 @@
+/* 사이트 전체 폰트(엄마까투리체/KCC간판체)·헤더 전용 폰트(몽토리체) — #258.
+   font-display: swap — 폰트 로딩 중엔 폴백(시스템 폰트)으로 먼저 보여주고 전환해
+   텍스트가 안 보이는 시간(FOIT)이 없게 한다. */
+@font-face {
+  font-family: 'KCC-Ganpan';
+  src: url('./KCC-Ganpan.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Griun Mongtori';
+  src: url('./Griun_Mongtori-Rg.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

@@ -11,13 +11,16 @@
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   border-bottom: 1px solid #2a2c1e;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Griun Mongtori', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 /* line-height도 리셋한다 — 안 하면 전역 html(18px/26.1px)의 큰 줄높이가 헤더의
    12~13px 텍스트에 그대로 상속돼 상점 칩·골드 배지가 실제 글자보다 훨씬 두꺼워지고
    내부 요소끼리 정렬이 어긋나 보인다. */
 .clov-hdr *, .clov-hdr *::before, .clov-hdr *::after { box-sizing: border-box; line-height: 1.2; }
 .clov-hdr-left, .clov-hdr-right { display: flex; align-items: center; gap: 8px; }
+/* 골드 배지 안 "G" 아이콘(.clov-hdr-gold i)은 8px로 이미 더 구체적인 선택자라 아래 값에
+   안 덮인다(#258) — 그대로 유지된다. */
+.clov-hdr-right { font-size: 16px; }
 
 .clov-hdr-back {
   display: inline-flex; align-items: center; justify-content: center;
@@ -43,6 +46,10 @@
 .clov-hdr-nav-btn:hover, .clov-hdr-nav-btn.active { background: #2b3020; color: #9ccc65; }
 .clov-hdr-nav-icon-btn { padding: 7px 9px; }
 .clov-hdr-nav-btn svg { display: block; }
+/* 몽토리체는 폰트 박스 안 실제 잉크가 위로 치우쳐 있어(descent 여백이 큼) align-items:center로
+   맞춰도 아이콘보다 글자가 시각적으로 더 높아 보인다(#258, 캔버스 measureText로 실측:
+   actualBoundingBoxDescent 3px vs fontBoundingBoxDescent 5px). 라벨만 1px 내려서 보정한다. */
+.clov-hdr-nav-btn span:last-child { transform: translateY(1px); }
 
 /* 상점 버튼 — 네비 탭과 같은 톤이되 골드 잔액 칩이 붙어 한 덩어리로 보인다. */
 .clov-hdr-shop {
@@ -191,7 +198,8 @@
   width: 100%; max-width: 360px; max-height: 80vh; overflow-y: auto;
   background: #1e2016; border: 1px solid #2a2c1e; border-radius: 16px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45); padding: 18px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* .clov-hdr(헤더)만 몽토리체 예외 — 이 모달은 헤더 바깥(형제 엘리먼트)이라 전역 폰트를 그대로 쓴다(#258). */
+  font-family: var(--sans);
   box-sizing: border-box;
 }
 .clov-rs-modal *, .clov-rs-modal *::before, .clov-rs-modal *::after { box-sizing: border-box; }

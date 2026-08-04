@@ -3,8 +3,12 @@
    인증 화면 4개(Login #150 · JoinRoom #230 · OAuthRedirect #251 · Signup) 중 마지막.
 
    프로토타입 원본은 test-web-design/01-auth/signup.html(단일 인라인 <style>,
-   정본 분기 없음) — 값(--forest 등 팔레트, px 크기)이 현재 Signup.style.js와
+   정본 분기 없음) — 팔레트(--forest 등)·px 크기는 현재 Signup.style.js와
    이미 동일하다(대조 완료, JoinRoom #230 같은 목업/코드 어긋남 없음).
+   단, font-family는 프로토타입의 'Outfit'이 아니라 var(--sans)를 쓴다 —
+   이 브랜치를 딴 뒤 #273이 Login/Signup/JoinRoom의 하드코딩된 'Outfit'을
+   팀 전역 폰트 토큰(var(--sans), 지금은 KCC-Ganpan)으로 통일했다. 이관
+   중 그 변경과 충돌해서 여기서도 같은 값(var(--sans))으로 맞췄다.
 
    Login처럼 항상 라이트("크림 종이") 화면으로 고정한다 — 전역 tokens.css의
    다크 오버라이드와 index.css의 color-scheme:light dark를 이 서브트리에서
@@ -63,7 +67,7 @@
   --glow: rgba(80, 217, 144, 0.22);
   --warn: #b45309;
 
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -152,7 +156,7 @@
   border: 1.5px solid var(--line);
   border-radius: 18px;
   font-size: 0.96rem;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   font-weight: 600;
   color: var(--text);
   background: var(--cream);
@@ -331,7 +335,7 @@
   border-radius: 18px;
   font-size: 1rem;
   font-weight: 900;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   color: #fff;
   cursor: pointer;
   background: linear-gradient(135deg, #093d26, #16874b 56%, #50d990);
@@ -351,7 +355,7 @@
   border-radius: 16px;
   font-size: 0.88rem;
   font-weight: 700;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   color: var(--muted);
   cursor: pointer;
   background: transparent;
@@ -501,7 +505,7 @@
   border-radius: 8px;
   background: #fff;
   color: var(--text);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   font-size: 0.95rem;
   font-weight: 700;
   text-align: center;

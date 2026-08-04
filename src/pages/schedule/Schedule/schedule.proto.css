@@ -340,8 +340,36 @@
     100% { transform: none; opacity: 1; }
   }
 
-  /* ══════════ 티켓 아래 슬립 — 메모/체크리스트/상태 전환/수정·삭제(크림 영수증 톤 재사용) ══════════ */
-  .ticket-slip { margin-top: 4px; }
+  /* ══════════ 티켓 상세 모달 — 메모/체크리스트/상태 전환/수정·삭제(크림 영수증 톤 재사용) ══════════ */
+  .modal-box.ticket-detail { max-width: 460px; background: transparent; box-shadow: none; border: none; overflow: visible; padding: 20px; }
+  .ticket-detail .receipt-paper { padding-top: 24px; }
+  .ticket-detail-head { text-align: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px dashed rgba(28, 26, 23, 0.3); }
+  .ticket-detail-head h3 {
+    margin: 0 0 4px;
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    font-size: 19px;
+    font-weight: 900;
+    color: #1c1a17;
+  }
+  .ticket-detail-head span {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: rgba(28, 26, 23, 0.55);
+  }
+  .ticket-detail-close {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(28, 26, 23, 0.08);
+    color: #1c1a17;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .ticket-detail-close:hover { background: rgba(28, 26, 23, 0.16); }
 
   .receipt-paper {
     position: relative;

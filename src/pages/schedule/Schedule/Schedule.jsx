@@ -238,6 +238,7 @@ export default function Schedule() {
         {items.length > 0 && (
           <section className="growth-shell">
             <TicketCard
+              key={effectiveId}
               plan={selectedPlan}
               loading={detail.isPending}
               currentUserId={currentUserId}
@@ -312,15 +313,15 @@ function ticketSerialOf(plan) {
   return `SER. ${y}-${m}${d}-${ticketNoOf(plan)}`
 }
 
-// ── 약속 티켓(선택 약속) — 앞면(티켓)은 정보 요약 + 입체감/찢기 연출,
-//    뒷면(슬립)은 기존 영수증 메모·체크리스트·상태 전환·수정/삭제를 그대로 담는다.
+// ── 약속 티켓(선택 약속) — 티켓만 상시 노출하고, 클릭해 스텁을 뜯으면
+//    상세 모달(TicketDetailModal)에서 기존 메모·체크리스트·상태 전환·수정/삭제를 연다.
 function TicketCard({
   plan, loading, currentUserId, busy,
   onEdit, onDelete, onComplete, onCancel, onSkip,
   onAddCheck, onToggleCheck, onDeleteCheck,
 }) {
-  const [checkItem, setCheckItem] = useState('')
   const [torn, setTorn] = useState(false)
+  const [detailOpen, setDetailOpen] = useState(false)
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 30, hover: false })
 
   if (loading || !plan) {
@@ -337,16 +338,6 @@ function TicketCard({
   const ddayPhrase = diff === null
     ? '함께할 그날까지'
     : diff < 0 ? '함께 보낸 그날로부터' : diff === 0 ? '바로 오늘, 약속의 날!' : '함께할 그날까지'
-  const isWriter = String(plan.writer?.id) === String(currentUserId)
-  const checklists = plan.checklists ?? []
-  const memoEmpty = !plan.description && checklists.length === 0
-
-  const submitCheck = () => {
-    const v = checkItem.trim()
-    if (!v) return
-    onAddCheck(v)
-    setCheckItem('')
-  }
 
   const onTiltMove = (e) => {
     const r = e.currentTarget.getBoundingClientRect()
@@ -355,6 +346,14 @@ function TicketCard({
     setTilt({ rx: -(py - 0.5) * 6, ry: (px - 0.5) * 9, mx: px * 100, my: py * 100, hover: true })
   }
   const onTiltLeave = () => setTilt((s) => ({ ...s, rx: 0, ry: 0, hover: false }))
+
+  // 클릭 → 스텁이 뜯어지는 연출 → 살짝 뒤에 상세 모달 오픈.
+  const openTicket = () => {
+    if (detailOpen) return
+    setTorn(true)
+    window.setTimeout(() => setDetailOpen(true), 520)
+  }
+  const closeDetail = () => { setDetailOpen(false); setTorn(false) }
 
   return (
     <div className="growth-detail" style={{ '--stamp': isPast ? '#2e5233' : '#c0392b' }}>
@@ -370,11 +369,11 @@ function TicketCard({
             className={`ticket-card${torn ? ' is-torn' : ''}`}
             role="button"
             tabIndex={0}
-            title={torn ? '다시 클릭하면 붙습니다' : '클릭하면 D-day 스텁이 뜯어집니다'}
+            title="클릭하면 약속 상세가 열립니다"
             onMouseMove={onTiltMove}
             onMouseLeave={onTiltLeave}
-            onClick={() => setTorn((v) => !v)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTorn((v) => !v) } }}
+            onClick={openTicket}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTicket() } }}
           >
             <div className="ticket-main">
               <div className="ticket-holo" />
@@ -411,68 +410,116 @@ function TicketCard({
             <div className="ticket-glare" style={{ opacity: tilt.hover ? 1 : 0, background: `radial-gradient(360px circle at ${tilt.mx}% ${tilt.my}%, rgba(255,248,224,.16), rgba(255,248,224,0) 62%)` }} />
           </div>
         </div>
-        <div className="ticket-hint"><span className="ticket-hint-dot" />{torn ? '다시 클릭하면 스텁이 붙습니다' : '티켓을 클릭하면 D-day 스텁이 뜯어집니다'}</div>
+        <div className="ticket-hint"><span className="ticket-hint-dot" />티켓을 클릭하면 약속 상세가 열립니다</div>
       </div>
 
-      <div className="receipt-paper ticket-slip">
-        <div className="receipt-zigzag" />
-        <div className="receipt-memo-label">— MEMO ————————————</div>
-        <div className="receipt-memo">
-          {plan.description && <p className="receipt-memo-desc">{plan.description}</p>}
-          {checklists.length > 0 && (
-            <ul className="receipt-check-list">
-              {checklists.map((c) => (
-                <li key={c.id} className="receipt-check">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(c.checked)}
-                    disabled={busy}
-                    onChange={() => onToggleCheck(c.id, !c.checked)}
-                    aria-label={c.content}
-                  />
-                  <span className={`receipt-check-text${c.checked ? ' is-done' : ''}`}>{c.content}</span>
-                  <button type="button" className="receipt-check-remove" disabled={busy} onClick={() => onDeleteCheck(c.id)} aria-label="항목 삭제">✕</button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {memoEmpty && <div className="receipt-memo-empty">✎ 아래에서 약속 준비 항목을 추가해 보세요</div>}
-          {plan.status === 'SCHEDULED' && (
-            <div className="receipt-check-add">
-              <input
-                value={checkItem}
-                maxLength={255}
-                placeholder="준비 항목 추가"
-                onChange={(e) => setCheckItem(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && submitCheck()}
-              />
-              <button type="button" disabled={!checkItem.trim() || busy} onClick={submitCheck}>추가</button>
+      {detailOpen && (
+        <TicketDetailModal
+          plan={plan}
+          currentUserId={currentUserId}
+          busy={busy}
+          onClose={closeDetail}
+          onEdit={() => { closeDetail(); onEdit() }}
+          onDelete={onDelete}
+          onComplete={onComplete}
+          onCancel={onCancel}
+          onSkip={onSkip}
+          onAddCheck={onAddCheck}
+          onToggleCheck={onToggleCheck}
+          onDeleteCheck={onDeleteCheck}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── 티켓 상세 모달 — 기존 영수증의 메모·체크리스트·상태 전환·수정/삭제를 그대로 담는다.
+function TicketDetailModal({
+  plan, currentUserId, busy, onClose,
+  onEdit, onDelete, onComplete, onCancel, onSkip,
+  onAddCheck, onToggleCheck, onDeleteCheck,
+}) {
+  const [checkItem, setCheckItem] = useState('')
+  const ddayText = calculateDday(plan.planDate)
+  const isWriter = String(plan.writer?.id) === String(currentUserId)
+  const checklists = plan.checklists ?? []
+  const memoEmpty = !plan.description && checklists.length === 0
+
+  const submitCheck = () => {
+    const v = checkItem.trim()
+    if (!v) return
+    onAddCheck(v)
+    setCheckItem('')
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box ticket-detail" onClick={(e) => e.stopPropagation()}>
+        <div className="receipt-paper">
+          <div className="receipt-zigzag" />
+          <div className="ticket-detail-head">
+            <h3>{plan.title}</h3>
+            <span>{formatFriendlyDate(plan.planDate)} · {ddayText}</span>
+          </div>
+          <div className="receipt-memo-label">— MEMO ————————————</div>
+          <div className="receipt-memo">
+            {plan.description && <p className="receipt-memo-desc">{plan.description}</p>}
+            {checklists.length > 0 && (
+              <ul className="receipt-check-list">
+                {checklists.map((c) => (
+                  <li key={c.id} className="receipt-check">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(c.checked)}
+                      disabled={busy}
+                      onChange={() => onToggleCheck(c.id, !c.checked)}
+                      aria-label={c.content}
+                    />
+                    <span className={`receipt-check-text${c.checked ? ' is-done' : ''}`}>{c.content}</span>
+                    <button type="button" className="receipt-check-remove" disabled={busy} onClick={() => onDeleteCheck(c.id)} aria-label="항목 삭제">✕</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {memoEmpty && <div className="receipt-memo-empty">✎ 아래에서 약속 준비 항목을 추가해 보세요</div>}
+            {plan.status === 'SCHEDULED' && (
+              <div className="receipt-check-add">
+                <input
+                  value={checkItem}
+                  maxLength={255}
+                  placeholder="준비 항목 추가"
+                  onChange={(e) => setCheckItem(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && submitCheck()}
+                />
+                <button type="button" disabled={!checkItem.trim() || busy} onClick={submitCheck}>추가</button>
+              </div>
+            )}
+          </div>
+
+          <div className="receipt-barcode" />
+
+          <div className="receipt-status">
+            {plan.status === 'SCHEDULED' && (
+              <button type="button" className="receipt-status-btn is-primary" disabled={busy} onClick={onComplete}>약속 완료</button>
+            )}
+            {plan.status === 'SCHEDULED' && isWriter && (
+              <button type="button" className="receipt-status-btn" disabled={busy} onClick={onCancel}>약속 취소</button>
+            )}
+            {plan.status === 'COMPLETED' && plan.memoryStatus === 'CANDIDATE' && (
+              <button type="button" className="receipt-status-btn" disabled={busy} onClick={onSkip}>추억 스킵</button>
+            )}
+            {plan.status === 'CANCELED' && <span className="receipt-check-text is-done">취소된 약속</span>}
+            {MEMORY_LABEL[plan.memoryStatus] && <span className="receipt-memory-tag">{MEMORY_LABEL[plan.memoryStatus]}</span>}
+          </div>
+
+          {isWriter && (
+            <div className="receipt-actions">
+              <button type="button" disabled={busy} onClick={onEdit}>수정</button>
+              <button type="button" className="danger" disabled={busy} onClick={onDelete}>삭제</button>
             </div>
           )}
         </div>
-
-        <div className="receipt-barcode" />
-
-        <div className="receipt-status">
-          {plan.status === 'SCHEDULED' && (
-            <button type="button" className="receipt-status-btn is-primary" disabled={busy} onClick={onComplete}>약속 완료</button>
-          )}
-          {plan.status === 'SCHEDULED' && isWriter && (
-            <button type="button" className="receipt-status-btn" disabled={busy} onClick={onCancel}>약속 취소</button>
-          )}
-          {plan.status === 'COMPLETED' && plan.memoryStatus === 'CANDIDATE' && (
-            <button type="button" className="receipt-status-btn" disabled={busy} onClick={onSkip}>추억 스킵</button>
-          )}
-          {plan.status === 'CANCELED' && <span className="receipt-check-text is-done">취소된 약속</span>}
-          {MEMORY_LABEL[plan.memoryStatus] && <span className="receipt-memory-tag">{MEMORY_LABEL[plan.memoryStatus]}</span>}
-        </div>
-
-        {isWriter && (
-          <div className="receipt-actions">
-            <button type="button" disabled={busy} onClick={onEdit}>수정</button>
-            <button type="button" className="danger" disabled={busy} onClick={onDelete}>삭제</button>
-          </div>
-        )}
+        <button type="button" className="ticket-detail-close" onClick={onClose} aria-label="닫기">✕</button>
       </div>
     </div>
   )

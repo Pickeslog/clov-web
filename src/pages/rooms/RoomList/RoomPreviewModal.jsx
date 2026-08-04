@@ -39,7 +39,6 @@ const relTime = (v) => {
 }
 
 const FEED_META = {
-  FRIEND: { cls: 'letter', icon: 'ti-mail', tail: '님의 행운편지', fallback: '새 편지가 도착했어요' },
   NOTICE: { cls: 'sched', icon: 'ti-calendar-heart', tail: '님의 공지', fallback: '새 공지가 등록됐어요' },
 }
 // JOIN은 type 하나로 두 가지 다른 사건(MEMBER_JOINED=합류자가 actor / JOIN_ACCEPTED=수락자가 actor)을
@@ -48,6 +47,17 @@ const JOIN_SUBTYPE_META = {
   MEMBER_JOINED: { cls: 'join', icon: 'ti-user-plus', tail: '님이 합류했어요', fallback: '새 멤버가 합류했어요' },
   JOIN_ACCEPTED: { cls: 'join', icon: 'ti-user-plus', tail: '님이 가입을 수락했어요', fallback: '가입 신청이 수락됐어요' },
 }
+// FRIEND도 마찬가지로 type 하나가 계약 §13 subType 6개(LETTER_RECEIVE는 생산자가 아직 없어 실제로는 5개)를
+// 겸하고 있었다 — type만 보면 전부 "행운편지"로 나온다(#239). LEVEL_UP은 계약상 actor가 null이라
+// tail이 아니라 fallback으로 보내고, payload.level을 보간해야 해서 fallback을 함수로 둔다
+// (Notifications.jsx messageFor의 LEVEL_UP 문구와 맞춤).
+const FRIEND_SUBTYPE_META = {
+  MEMORY_WRITE: { cls: 'letter', icon: 'ti-pencil', tail: '님이 추억을 남겼어요', fallback: '새 추억이 등록됐어요' },
+  PLAN_CREATE: { cls: 'letter', icon: 'ti-calendar', tail: '님이 새 약속을 만들었어요', fallback: '새 약속이 등록됐어요' },
+  PLAN_COMPLETE: { cls: 'letter', icon: 'ti-calendar', tail: '님이 약속을 완료했어요', fallback: '약속이 완료됐어요' },
+  ROOM_UPDATE: { cls: 'letter', icon: 'ti-settings', tail: '님이 우정공간 정보를 바꿨어요', fallback: '우정공간 정보가 바뀌었어요' },
+  LEVEL_UP: { cls: 'letter', icon: 'ti-award', tail: null, fallback: (n) => `우정공간이 Lv.${n.payload?.level}이 됐어요! 🎉` },
+}
 const DEFAULT_META = { cls: 'member', icon: 'ti-bell', tail: '님의 새 소식', fallback: '새 소식이 있어요' }
 const metaFor = (n) => {
   if (n.type === 'JOIN') {
@@ -55,8 +65,14 @@ const metaFor = (n) => {
     // "님이 합류했어요"로 단정하면 확신 있게 틀린 이름이 뜨므로, 모르는 subType은 모호한 기본 문구로 떨어뜨린다.
     return JOIN_SUBTYPE_META[n.subType] ?? DEFAULT_META
   }
+  if (n.type === 'FRIEND') {
+    // LETTER_RECEIVE는 계약엔 있지만 생산자가 아직 없다(존재하지 않는 subType이 아니라 미구현) —
+    // 지금은 DEFAULT_META로 모호하게 떨어지고, 생산자가 생기면 그때 케이스를 추가한다.
+    return FRIEND_SUBTYPE_META[n.subType] ?? DEFAULT_META
+  }
   return FEED_META[n.type] ?? DEFAULT_META
 }
+const fallbackText = (meta, n) => (typeof meta.fallback === 'function' ? meta.fallback(n) : meta.fallback)
 const initialOf = (name) => (name === '나' ? '나' : (name?.slice(-2, -1) || name?.slice(0, 1) || '?'))
 const asList = (data) => (Array.isArray(data) ? data : (data?.items ?? []))
 
@@ -162,7 +178,7 @@ function MainView({ r, level, memberList, memberCount, feed, feedPending, onInvi
             return (
               <div key={n.id} className={`rp-fi${!n.isRead ? ' unread' : ''}`}>
                 <div className={`rp-fi-ic ${meta.cls}`}><i className={`ti ${meta.icon}`} aria-hidden="true" /></div>
-                <div className="rp-fi-tx"><div className="rp-fi-t">{who ? <><span className="who">{who}</span>{meta.tail}</> : meta.fallback}</div></div>
+                <div className="rp-fi-tx"><div className="rp-fi-t">{who && meta.tail ? <><span className="who">{who}</span>{meta.tail}</> : fallbackText(meta, n)}</div></div>
                 <span className="rp-fi-time">{relTime(n.createdAt)}</span>
               </div>
             )

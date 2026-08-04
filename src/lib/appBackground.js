@@ -15,6 +15,7 @@ export const APP_BACKGROUNDS = [
   { id: 'minimal-clover', name: '미니멀 클로버', thumb: '/bg-thumbs/minimal-clover.png', image: '/backgrounds/minimal-clover.webp' },
   { id: 'botanical', name: '보태니컬 청사진', thumb: '/bg-thumbs/botanical.png', image: '/backgrounds/botanical.webp' },
   { id: 'midsummer-cove', name: '한여름 비밀 만', thumb: '/bg-thumbs/midsummer-cove.png', image: '/backgrounds/midsummer-cove.webp' },
+  { id: 'spring-rain-city', name: '봄비 뒤 벚꽃 운하', thumb: '/bg-thumbs/spring-rain-city.png', image: '/backgrounds/spring-rain-city.webp' },
 ]
 
 const STORAGE_KEY = 'clov_appBgTheme'

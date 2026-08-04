@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import './schedule.proto.css'
@@ -311,6 +311,109 @@ function ticketSerialOf(plan) {
   const [y, m, d] = String(plan.planDate ?? '').split('-')
   if (!y || !m || !d) return `SER. ----·${ticketNoOf(plan)}`
   return `SER. ${y}-${m}${d}-${ticketNoOf(plan)}`
+}
+
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+const toDateKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+// 6주(42칸) 그리드 — 월 경계는 Date 생성자가 알아서 이월/이전달로 정규화해준다.
+function buildMonthGrid(year, month) {
+  const first = new Date(year, month, 1)
+  const gridStart = new Date(year, month, 1 - first.getDay())
+  return Array.from({ length: 42 }, (_, i) => {
+    const d = new Date(gridStart)
+    d.setDate(gridStart.getDate() + i)
+    return d
+  })
+}
+
+// ── 티켓 톤 커스텀 달력(브라우저 기본 date picker 대체) ──────────────
+function TicketDatePicker({ value, onChange, min }) {
+  const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const [view, setView] = useState(() => {
+    const [y, m] = (value || min || toDateKey(new Date())).split('-').map(Number)
+    return { y, m: m - 1 }
+  })
+  const triggerRef = useRef(null)
+  const panelRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e) => {
+      if (panelRef.current?.contains(e.target) || triggerRef.current?.contains(e.target)) return
+      setOpen(false)
+    }
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const openPanel = () => {
+    const [y, m] = (value || min || toDateKey(new Date())).split('-').map(Number)
+    setView({ y, m: m - 1 })
+    const r = triggerRef.current.getBoundingClientRect()
+    setPos({ top: r.bottom + 8, left: r.left })
+    setOpen(true)
+  }
+  const shiftMonth = (delta) => setView((v) => {
+    const d = new Date(v.y, v.m + delta, 1)
+    return { y: d.getFullYear(), m: d.getMonth() }
+  })
+  const pick = (d) => {
+    const key = toDateKey(d)
+    if (min && key < min) return
+    onChange(key)
+    setOpen(false)
+  }
+
+  const todayKey = toDateKey(new Date())
+  const cells = buildMonthGrid(view.y, view.m)
+
+  return (
+    <>
+      <button type="button" ref={triggerRef} className="ticket-date-trigger" onClick={openPanel}>
+        <span className={value ? '' : 'is-empty'}>{value ? formatFriendlyDate(value) : '연도-월-일'}</span>
+      </button>
+      {open && (
+        <div className="ticket-cal" ref={panelRef} style={{ top: pos.top, left: pos.left }} role="dialog" aria-label="날짜 선택">
+          <div className="ticket-cal-head">
+            <button type="button" aria-label="이전 달" onClick={() => shiftMonth(-1)}>‹</button>
+            <span className="ticket-cal-title">{view.y}년 {view.m + 1}월</span>
+            <button type="button" aria-label="다음 달" onClick={() => shiftMonth(1)}>›</button>
+          </div>
+          <div className="ticket-cal-week">
+            {WEEKDAYS.map((w, i) => (
+              <span key={w} className={i === 0 ? 'is-sun' : i === 6 ? 'is-sat' : ''}>{w}</span>
+            ))}
+          </div>
+          <div className="ticket-cal-grid">
+            {cells.map((d) => {
+              const key = toDateKey(d)
+              const disabled = Boolean(min) && key < min
+              const cls = [
+                d.getMonth() !== view.m && 'is-muted',
+                disabled && 'is-disabled',
+                key === todayKey && 'is-today',
+                key === value && 'is-selected',
+              ].filter(Boolean).join(' ')
+              return (
+                <button type="button" key={key} className={cls} disabled={disabled} onClick={() => pick(d)}>
+                  {d.getDate()}
+                </button>
+              )
+            })}
+          </div>
+          <div className="ticket-cal-foot">
+            <button type="button" className="ticket-cal-today" onClick={() => pick(new Date())}>오늘</button>
+          </div>
+        </div>
+      )}
+    </>
+  )
 }
 
 // ── 약속 티켓(선택 약속) — 티켓만 상시 노출하고, 클릭해 스텁을 뜯으면
@@ -654,20 +757,7 @@ export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, o
                 <div className="ticket-meta">
                   <div>
                     <span>DATE</span>
-                    <b className="ticket-date-cell">
-                      <span className={planDate ? '' : 'is-empty'}>{planDate ? formatFriendlyDate(planDate) : '연도-월-일'}</span>
-                      <input
-                        className="ticket-date-input"
-                        type="date"
-                        value={planDate}
-                        min={today}
-                        onChange={(e) => setPlanDate(e.target.value)}
-                        // 투명 date 입력은 텍스트 클릭만으론 피커가 안 열림(달력 아이콘만) →
-                        // 클릭 시 showPicker()로 강제로 연다(미지원/비제스처 시 무시).
-                        onClick={(e) => { try { e.currentTarget.showPicker?.() } catch { /* 미지원/비제스처 */ } }}
-                        aria-label="약속 날짜"
-                      />
-                    </b>
+                    <TicketDatePicker value={planDate} onChange={setPlanDate} min={today} />
                   </div>
                   <div><span>D-DAY</span><b>{ddayText}</b></div>
                 </div>

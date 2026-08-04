@@ -45,31 +45,14 @@
     justify-content: flex-end;
   }
 
-  .btn-schedule-new {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-height: 34px;
-    padding: 0 16px;
-    border-radius: 12px;
-    border: none;
-    background: #faf6ee;
-    color: #2e5233;
-    font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    cursor: pointer;
-    white-space: nowrap;
-    box-shadow: 0 2px 6px rgba(28, 26, 23, 0.16);
-    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  /* 우정공간(Dashboard) .section-actions/.clov-btn--dashed 오버라이드와 동일하게 맞춘다(#258) —
+     이 화면 전용 버튼(.btn-schedule-new)을 쓰지 않고 공용 Button 컴포넌트를 그대로 재사용한다. */
+  .section-actions { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .clov-btn--dashed {
+    background: #faf6ee; color: #2e5233;
+    border-width: 1.5px; border-style: dashed; border-color: rgba(46,82,51,.45);
   }
-  .btn-schedule-new:hover {
-    background: #f3efe1;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(28, 26, 23, 0.2);
-  }
+  .clov-btn--dashed:not(:disabled):hover { background: #f3efe1; }
 
   /* ── 여정 셸 ── */
   .growth-shell {

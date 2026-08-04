@@ -69,6 +69,12 @@ export default function Signup() {
 
   const clearShake = (field) => setShake((prev) => ({ ...prev, [field]: false }))
 
+  const handleEnter = (event, submit) => {
+    if (event.key !== 'Enter') return
+    event.preventDefault()
+    submit()
+  }
+
   const goStep1 = () => {
     setMessage('')
     if (!EMAIL_RE.test(email.trim())) return setShake((p) => ({ ...p, email: true }))
@@ -157,6 +163,7 @@ export default function Signup() {
                     id="email" type="email" value={email} placeholder="example@email.com" autoComplete="email"
                     $shake={shake.email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => handleEnter(e, () => document.getElementById('pw')?.focus())}
                     onAnimationEnd={() => clearShake('email')}
                   />
                 </S.InputWrap>
@@ -176,6 +183,7 @@ export default function Signup() {
                     placeholder="8~20자, 영문/숫자/특수문자 중 2가지 이상" autoComplete="new-password"
                     $shake={shake.password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => handleEnter(e, goStep1)}
                     onAnimationEnd={() => clearShake('password')}
                   />
                   <S.InputSuffix type="button" aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'} aria-pressed={showPassword} onClick={() => setShowPassword((v) => !v)}>
@@ -268,6 +276,7 @@ export default function Signup() {
                     id="nickname" type="text" value={nickname} placeholder="친구들이 부를 이름" autoComplete="nickname"
                     $shake={shake.nickname}
                     onChange={(e) => setNickname(e.target.value)}
+                    onKeyDown={(e) => handleEnter(e, () => submit())}
                     onAnimationEnd={() => clearShake('nickname')}
                   />
                 </S.InputWrap>
@@ -278,7 +287,11 @@ export default function Signup() {
                   <S.InputIcon className="input-icon">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
                   </S.InputIcon>
-                  <S.Input id="birthdate" type="text" value={birthdate} placeholder="YYYY-MM-DD" readOnly onClick={() => setBirthModalOpen(true)} />
+                  <S.Input
+                    id="birthdate" type="text" value={birthdate} placeholder="YYYY-MM-DD" readOnly
+                    onClick={() => setBirthModalOpen(true)}
+                    onKeyDown={(e) => handleEnter(e, () => setBirthModalOpen(true))}
+                  />
                 </S.InputWrap>
               </S.InputGroup>
             </S.ProfileFieldsBox>

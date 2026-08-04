@@ -14,6 +14,7 @@ export const APP_BACKGROUNDS = [
   { id: 'neon-city', name: '네온 클로버 시티', thumb: '/bg-thumbs/neon-city.png', image: '/backgrounds/neon-city.webp' },
   { id: 'minimal-clover', name: '미니멀 클로버', thumb: '/bg-thumbs/minimal-clover.png', image: '/backgrounds/minimal-clover.webp' },
   { id: 'botanical', name: '보태니컬 청사진', thumb: '/bg-thumbs/botanical.png', image: '/backgrounds/botanical.webp' },
+  { id: 'midsummer-cove', name: '한여름 비밀 만', thumb: '/bg-thumbs/midsummer-cove.png', image: '/backgrounds/midsummer-cove.webp' },
 ]
 
 const STORAGE_KEY = 'clov_appBgTheme'

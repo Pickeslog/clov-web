@@ -5,6 +5,7 @@ import './Header.css'
 import { getMe } from '../../api/user'
 import { getWallet } from '../../api/shop'
 import { useAuthStore } from '../../stores/authStore'
+import { useSettingsStore } from '../../stores/settingsStore'
 import clovLogo from '../../assets/clov_logo.png'
 import Settings from '../Settings/Settings'
 import Notifications from '../../pages/notifications/Notifications/Notifications'
@@ -40,7 +41,10 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
   const onShop = location.pathname === '/shop'
 
   const [menuOpen, setMenuOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  // 설정 모달만 스토어다 — 상점 카드("설정에서 적용")가 형제 컴포넌트라 여기 state 에 못 닿는다.
+  const settingsOpen = useSettingsStore((s) => s.open)
+  const openSettings = useSettingsStore((s) => s.openSettings)
+  const closeSettings = useSettingsStore((s) => s.closeSettings)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [switcherOpen, setSwitcherOpen] = useState(false)
 
@@ -121,7 +125,7 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
               {variant === 'room' && (
                 <li><button type="button" onClick={() => { setSwitcherOpen(true); setMenuOpen(false) }}><i className="ti ti-repeat" aria-hidden="true" /> 방 변경하기</button></li>
               )}
-              <li><button type="button" onClick={() => { setSettingsOpen(true); setMenuOpen(false) }}><i className="ti ti-settings" aria-hidden="true" /> 사용자 설정</button></li>
+              <li><button type="button" onClick={() => { openSettings(); setMenuOpen(false) }}><i className="ti ti-settings" aria-hidden="true" /> 사용자 설정</button></li>
               <li><button type="button" onClick={clear}><i className="ti ti-logout" aria-hidden="true" /> 로그아웃</button></li>
             </ul>
           )}
@@ -131,7 +135,7 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
     </header>
     {/* Settings 오버레이는 header 밖에 둔다 — header의 backdrop-filter가 fixed 오버레이의
         컨테이닝 블록이 되어 모달이 56px 헤더 안에 갇히는 오버플로우를 방지. */}
-    {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
+    {settingsOpen && <Settings onClose={closeSettings} />}
     {notificationsOpen && <Notifications onClose={() => setNotificationsOpen(false)} />}
     {switcherOpen && <RoomSwitcher currentRoomId={roomId} onClose={() => setSwitcherOpen(false)} />}
     </>

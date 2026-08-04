@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './shop.proto.css'
 import { equipItem, getInventory, getShopItems, getWallet, purchaseItem, unequipItem } from '../../../api/shop'
 import { getPreferences } from '../../../api/user'
+import { useSettingsStore } from '../../../stores/settingsStore'
 import Header from '../../../components/Header/Header'
 
 // 서버 enum ↔ 화면 문구. 등급색은 다크/라이트 공통(등급 식별이 테마에 흔들리면 안 된다).
@@ -391,6 +392,7 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
   // 배경은 상점에서 장착하는 물건이 아니다 — 사는 건 여기서, 고르는 건 사용자설정이다.
   // 이 안내가 없으면 사고 나서 "보유 중" 버튼만 남아 어디서 쓰는지 알 길이 없다.
   const isBackground = item.category === 'BACKGROUND'
+  const openSettings = useSettingsStore((s) => s.openSettings)
   const FallbackIcon = CATEGORY_FALLBACK[item.category] ?? SparkIcon
 
   return (
@@ -439,7 +441,15 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
               {equipped ? (unequipPending ? '해제 중…' : '장착 해제') : (equipPending ? '장착 중…' : '장착하기')}
             </button>
           ) : (
-            <button type="button" className="shop-buy" disabled onClick={(e) => e.stopPropagation()}>
+            // 배경은 여기서 장착하는 물건이 아니라 사용자설정에서 고르는 물건이다.
+            // 그래서 '설정에서 적용'은 안내가 아니라 실제로 그 화면을 여는 버튼이어야 한다 —
+            // 갈 곳을 알려주고 데려가지 않으면 사용자가 헤더 메뉴를 뒤져야 한다.
+            <button
+              type="button"
+              className="shop-buy"
+              disabled={!isBackground}
+              onClick={(e) => { e.stopPropagation(); if (isBackground) openSettings() }}
+            >
               <CheckIcon size={14} />
               {isBackground ? '설정에서 적용' : '보유 중'}
             </button>
@@ -463,6 +473,7 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
 // 카드 클릭 시 여는 상세 모달 — 큰 이미지 + 등급이 무엇을 뜻하는지 설명(#197).
 // 구매/장착 버튼은 카드와 동일 로직을 그대로 재사용한다(별도 상태 없음).
 function ItemDetailModal({ item, balance, pending, onBuy, equipped, equipPending, unequipPending, onEquip, onUnequip, onClose }) {
+  const openSettings = useSettingsStore((s) => s.openSettings)
   const meta = rarityOf(item.rarity)
   const discounted = item.discountRate > 0
   const affordable = balance >= item.finalPrice
@@ -522,9 +533,16 @@ function ItemDetailModal({ item, balance, pending, onBuy, equipped, equipPending
                 {equipped ? (unequipPending ? '해제 중…' : '장착 해제') : (equipPending ? '장착 중…' : '장착하기')}
               </button>
             ) : (
-              <button type="button" className="shop-buy" disabled>
+              // 카드와 같다 — 배경이면 안내가 아니라 실제로 설정을 여는 버튼이다.
+              // 모달은 먼저 닫는다. 안 닫으면 설정 모달 뒤에 상세 모달이 겹쳐 남는다.
+              <button
+                type="button"
+                className="shop-buy"
+                disabled={!isBackground}
+                onClick={() => { if (isBackground) { onClose(); openSettings() } }}
+              >
                 <CheckIcon size={14} />
-                {isBackground ? '보유 중 — 설정 > 바탕화면에서 적용' : '보유 중'}
+                {isBackground ? '설정에서 적용' : '보유 중'}
               </button>
             )
           ) : (

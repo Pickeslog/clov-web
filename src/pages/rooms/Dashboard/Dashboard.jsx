@@ -208,8 +208,8 @@ const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
 // 'past'(회색)는 D-day 3칸에서는 안 쓰인다(#206) — 다가오는 약속만 채우고 지난 약속으로 채우지 않는다.
 const ddayUrgency = (n) => (n == null ? 'far' : n < 0 ? 'past' : n === 0 ? 'today' : n <= 7 ? 'soon' : 'far')
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
-// 상태 메시지 가중 길이(한글 2, 그 외 1) — 프로토타입 "한글 20자 / 영어 40자".
-const weightedLen = (s) => [...(s || '')].reduce((n, ch) => n + (/[㄰-㆏가-힣]/.test(ch) ? 2 : 1), 0)
+// 상태 메시지 최대 길이 — 한글/영어 구분 없이 40자 통일(계약은 @Size(max=100)까지 허용하지만
+// 프론트 표시 규칙은 40자로 정함, #240).
 const STATUS_MAX = 40
 
 // 경험치 히스토리 actionType → 한글 라벨(계약 §12, 이벤트정의서 §9.1).
@@ -512,9 +512,9 @@ export default function Dashboard() {
 
   const savedStatus = data.myStatusMessage ?? ''
   const statusValue = statusDraft ?? savedStatus
-  const statusWeight = weightedLen(statusValue)
+  const statusLen = statusValue.length
   const statusDirty = statusDraft !== null && statusDraft.trim() !== savedStatus.trim()
-  const statusOver = statusWeight > STATUS_MAX
+  const statusOver = statusLen > STATUS_MAX
   const go = (path) => navigate(`/rooms/${roomId}/${path}`)
 
   return (
@@ -606,12 +606,12 @@ export default function Dashboard() {
                 <input
                   className="cover-status-input"
                   value={statusValue}
-                  maxLength={40}
+                  maxLength={STATUS_MAX}
                   placeholder="상태 메시지를 남겨보세요"
                   onChange={(e) => setStatusDraft(e.target.value)}
                 />
-                <span className="cover-status-count">{statusWeight} / {STATUS_MAX}</span>
-                <span className="cover-status-hint">(한글 20자 / 영어 40자)</span>
+                <span className="cover-status-count">{statusLen} / {STATUS_MAX}</span>
+                {!statusValue && <span className="cover-status-hint">(최대 {STATUS_MAX}자)</span>}
                 {statusDirty && (
                   <button
                     type="button"
@@ -666,7 +666,6 @@ export default function Dashboard() {
                   <div className="schedule-info">
                     <span className="schedule-icon">+</span>
                     <span className="schedule-title">새로운 약속 만들기</span>
-                    <span className="schedule-date">클릭하여 일정을 추가해보세요</span>
                   </div>
                 </div>
               )
@@ -1121,8 +1120,16 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
 
   // index가 바뀌면 현재 프레임을 필름 중앙으로 스크롤.
   useEffect(() => {
-    const cur = framesRef.current?.querySelector('.cline-film-frame.is-current')
-    cur?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    const container = framesRef.current
+    const cur = container?.querySelector('.cline-film-frame.is-current')
+    if (container && cur) {
+      // scrollIntoView는 컨테이너가 overflow-y:hidden이라 세로 스크롤을 못 찾고 window까지
+      // 올라가 대시보드 전체를 아래로 끌어내렸다(#240). scrollLeft만 직접 계산해 가로로만 맞춘다.
+      const containerRect = container.getBoundingClientRect()
+      const curRect = cur.getBoundingClientRect()
+      const offset = (curRect.left + curRect.width / 2) - (containerRect.left + containerRect.width / 2)
+      container.scrollTo({ left: container.scrollLeft + offset, behavior: 'smooth' })
+    }
     // 카드가 넘어가면 .cline-cards가 통째로 리마운트되므로(P2의 key 교체) 기울여 뒀던 카드는
     // DOM에서 떨어져 나간다. 참조만 남으면 그 노드가 회수되지 않으니 여기서 놓아준다.
     tilted.current = null

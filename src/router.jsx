@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
+import { createBrowserRouter, Navigate, Outlet, ScrollRestoration } from 'react-router-dom'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RouteErrorScreen from './components/ErrorBoundary/RouteErrorScreen'
 import Login from './pages/auth/Login/Login'
@@ -22,7 +22,9 @@ import Shop from './pages/shop/Shop/Shop'
 // errorElement를 달면 새 라우트를 추가하는 사람이 빠뜨리기 쉽다.
 export const router = createBrowserRouter([
   {
-    element: <Outlet />,
+    // ScrollRestoration 없이는 탭 이동·새로고침 시 이전 스크롤 위치가 새 화면에 그대로
+    // 남아 엉뚱한 지점(예: 우정공간의 "참여자별 추억 증거 카드")에서 시작한다(#240).
+    element: <><Outlet /><ScrollRestoration /></>,
     errorElement: <RouteErrorScreen />,
     children: [
       { path: '/login', element: <Login /> },

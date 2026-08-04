@@ -119,10 +119,10 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
             <ul className="clov-hdr-dropdown" role="menu">
               <MascotWardrobe onNavigateShop={() => { setMenuOpen(false); navigate('/shop', { state: roomId ? { fromRoomId: roomId } : undefined }) }} />
               {variant === 'room' && (
-                <li><button type="button" onClick={() => { setSwitcherOpen(true); setMenuOpen(false) }}>🔁 방 변경하기</button></li>
+                <li><button type="button" onClick={() => { setSwitcherOpen(true); setMenuOpen(false) }}><i className="ti ti-repeat" aria-hidden="true" /> 방 변경하기</button></li>
               )}
-              <li><button type="button" onClick={() => { setSettingsOpen(true); setMenuOpen(false) }}>⚙️ 사용자 설정</button></li>
-              <li><button type="button" onClick={clear}>로그아웃</button></li>
+              <li><button type="button" onClick={() => { setSettingsOpen(true); setMenuOpen(false) }}><i className="ti ti-settings" aria-hidden="true" /> 사용자 설정</button></li>
+              <li><button type="button" onClick={clear}><i className="ti ti-logout" aria-hidden="true" /> 로그아웃</button></li>
             </ul>
           )}
         </div>

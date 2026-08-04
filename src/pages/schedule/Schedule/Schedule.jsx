@@ -497,7 +497,7 @@ function FilmStripCard({ plan, stages, doneCount, selected, uploadingKey, onSele
 
       <div className="strip-footer">
         <span className="strip-footer-brand">clov. memories</span>
-        <span className="strip-footer-count">{isComplete ? '인생4컷 완성 🍀' : `${doneCount}/4 업로드`}</span>
+        <span className="strip-footer-count">{isComplete ? '인생4컷 완성' : `${doneCount}/4 업로드`}</span>
       </div>
     </article>
   )

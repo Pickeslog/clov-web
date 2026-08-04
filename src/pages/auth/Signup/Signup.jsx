@@ -69,6 +69,21 @@ export default function Signup() {
 
   const clearShake = (field) => setShake((prev) => ({ ...prev, [field]: false }))
 
+  // $shake는 emotion 클래스명 하나로 켜고 끈다. 이미 true인 상태에서 다시 true를 set하면
+  // 값이 안 바뀌어(true → true) 클래스도 안 바뀌고, 브라우저는 진행 중인 애니메이션을 그대로
+  // 이어갈 뿐 재시작하지 않는다(0.4s 안에 연속 실패 시 두 번째 shake가 무시됨, #262).
+  // false로 먼저 커밋해 애니메이션을 실제로 제거한 뒤 다음 프레임에 true로 다시 커밋해
+  // 재생을 강제한다.
+  const triggerShake = (field) => {
+    setShake((prev) => ({ ...prev, [field]: false }))
+    requestAnimationFrame(() => setShake((prev) => ({ ...prev, [field]: true })))
+  }
+
+  const triggerTermsShake = () => {
+    setTermsShake(false)
+    requestAnimationFrame(() => setTermsShake(true))
+  }
+
   const handleEnter = (event, submit) => {
     if (event.key !== 'Enter') return
     event.preventDefault()
@@ -77,21 +92,21 @@ export default function Signup() {
 
   const goStep1 = () => {
     setMessage('')
-    if (!EMAIL_RE.test(email.trim())) return setShake((p) => ({ ...p, email: true }))
-    if (!checks.ok) return setShake((p) => ({ ...p, password: true }))
+    if (!EMAIL_RE.test(email.trim())) return triggerShake('email')
+    if (!checks.ok) return triggerShake('password')
     setStep(1)
   }
 
   const goStep2 = () => {
     if (!agreements.service || !agreements.privacy) {
-      setTermsShake(true)
+      triggerTermsShake()
       return
     }
     setStep(2)
   }
 
   const submit = async ({ skipBirthNudge = false } = {}) => {
-    if (!NICKNAME_RE.test(nickname.trim())) return setShake((p) => ({ ...p, nickname: true }))
+    if (!NICKNAME_RE.test(nickname.trim())) return triggerShake('nickname')
     if (!birthdate.trim() && !skipBirthNudge) {
       setNudgeOpen(true)
       return

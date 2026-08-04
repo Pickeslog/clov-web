@@ -263,7 +263,6 @@
     cursor: pointer;
     border-bottom: 1px dashed rgba(226, 214, 176, 0.4);
   }
-  .ticket-date-trigger::after { content: "📅"; font-size: 10px; opacity: .7; }
   .ticket-date-trigger .is-empty { color: rgba(244, 242, 232, 0.5); font-weight: 400; }
 
   .ticket-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }

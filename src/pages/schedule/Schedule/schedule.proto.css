@@ -550,7 +550,7 @@
   .receipt-check-text.is-done { text-decoration: line-through; color: rgba(28, 26, 23, 0.45); }
 
   .receipt-barcode {
-    height: 18px;
+    height: 32px;
     margin: 12px 0 10px;
     background-image: repeating-linear-gradient(90deg, #1c1a17 0 2px, transparent 2px 4px, #1c1a17 4px 5px, transparent 5px 9px);
   }

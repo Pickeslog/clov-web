@@ -6,8 +6,9 @@ import {
   getMe, updateProfile, changePassword, deleteAccount,
   getPreferences, updatePreferences, presignProfileImage,
 } from '../../api/user'
+import { getInventory } from '../../api/shop'
 import { uploadImage } from '../../lib/uploadImage'
-import { APP_BACKGROUNDS, applyAppBackground, applyCustomColor, getAppBackgroundId, getCustomColor } from '../../lib/appBackground'
+import { APP_BACKGROUNDS, applyAppBackground, applyCustomColor, getAppBackgroundId, getCustomColor, isBackgroundUnlocked } from '../../lib/appBackground'
 import { MASCOT_SIZES, applyMascotSize, getMascotSize } from '../../lib/mascotSize'
 import { applyTheme, getDark } from '../../lib/theme'
 import { useAuthStore } from '../../stores/authStore'
@@ -127,6 +128,27 @@ function SettingsBody({ me, prefs, onClose }) {
     mutationFn: deleteAccount,
     onSuccess: () => { clear(); navigate('/login', { replace: true }) },
   })
+
+  // 유료 배경(itemCode 있음)은 보유해야 고를 수 있다. 기본 제공 배경은 itemCode 가 없다.
+  // 판정은 isBackgroundUnlocked 한 곳에서만 한다 — 잠금 표시와 클릭 허용이 서로 다른
+  // 조건을 쓰면 "자물쇠가 붙었는데 눌리는" 상태가 생기고 그건 에러 없이 조용하다.
+  //
+  // 대조 키는 code 다. imageUrl 로 대조하면 썸네일 경로를 바꾸는 순간(id 변경 등) 이미
+  // 산 사람의 소유가 풀린다 — 겨울 배경 id 변경이 아직 열려 있어서 실제 위험이었다.
+  //
+  // ⚠️ 이건 보안 경계가 아니라 화면 안내다. 선택값은 localStorage 고 적용은 CSS 변수라
+  //   콘솔로 얼마든지 바꿀 수 있다. 서버가 지켜야 할 건 '구매'뿐이고 그건 이미 지킨다.
+  //   그래서 이미 적용 중인 배경을 여기서 되돌리지 않는다 — 유료화 전에 골라둔 사람의
+  //   화면을 말없이 바꾸는 쪽이 더 나쁘다. 부팅 경로(initAppBackground)는 로그인보다
+  //   먼저 돌아서 보유를 알 수도 없다.
+  const inventory = useQuery({ queryKey: ['shop', 'inventory'], queryFn: getInventory })
+  const ownedCodes = new Set((inventory.data?.items ?? []).map((it) => it.code).filter(Boolean))
+  // 조회 전에는 잠긴 것으로 보이지 않게 한다 — 로딩 한 프레임 동안 보유 배경에 자물쇠가
+  // 번쩍이는 걸 막는다. 어차피 판정은 화면 안내고, 못 고르게 하는 게 목적이 아니다.
+  const isLocked = (bg) => inventory.isSuccess && !isBackgroundUnlocked(bg, ownedCodes)
+
+  // 잠긴 배경을 누르면 상점으로 보낸다 — 안 파는 것처럼 숨기는 것보다 낫다.
+  const goToShop = () => { onClose?.(); navigate('/shop') }
 
   const pickBackground = (id) => setBgId(applyAppBackground(id))
   const pickColor = (color) => { setCustomColor(color); setBgId(applyCustomColor(color)) }
@@ -253,14 +275,22 @@ function SettingsBody({ me, prefs, onClose }) {
               <div className="ps-section">
                 <div className="ps-section-title">바탕화면</div>
                 <div className="ps-bg-grid">
-                  {APP_BACKGROUNDS.map((bg) => (
-                    <button type="button" key={bg.id} className={`ps-bg-swatch${bgId === bg.id ? ' on' : ''}`} onClick={() => pickBackground(bg.id)} aria-label={bg.name} aria-pressed={bgId === bg.id}>
-                      <img src={bg.thumb} alt="" />
-                      <span>{bg.name}</span>
-                    </button>
-                  ))}
+                  {APP_BACKGROUNDS.map((bg) => {
+                    const locked = isLocked(bg)
+                    return (
+                      <button type="button" key={bg.id}
+                        className={`ps-bg-swatch${bgId === bg.id ? ' on' : ''}${locked ? ' locked' : ''}`}
+                        onClick={() => (locked ? goToShop() : pickBackground(bg.id))}
+                        aria-label={locked ? `${bg.name} — 상점에서 구매` : bg.name}
+                        aria-pressed={bgId === bg.id}>
+                        <img src={bg.thumb} alt="" />
+                        <span>{bg.name}</span>
+                        {locked && <em className="ps-bg-lock">상점</em>}
+                      </button>
+                    )
+                  })}
                 </div>
-                <p className="ps-note">기본(우드 &amp; 클로버)은 바로 적용돼요. 사진 배경은 이식된 화면(방 목록 등)에 나타납니다.</p>
+                <p className="ps-note">기본(우드 &amp; 클로버)은 바로 적용돼요. 사진 배경은 이식된 화면(방 목록 등)에 나타납니다. ‘상점’ 표시가 붙은 배경은 구매하면 여기서 고를 수 있어요.</p>
               </div>
 
               <OptionRow title="우정편지 테마" value={pref.letterTheme} options={LETTER_THEMES} onPick={(v) => setPrefAndSave({ letterTheme: v })} />

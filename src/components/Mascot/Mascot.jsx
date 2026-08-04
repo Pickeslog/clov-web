@@ -143,6 +143,7 @@ const EQUIPPED_SKIN_STATE_SPRITES = [
   '/shop/skins/crobi/magic-school-student-common',
   '/shop/skins/crobi/senior-developer-uncommon',
   '/shop/skins/onyx/blackstar-atelier-uncommon',
+  '/shop/skins/onyx/development-team-lead-epic',
 ].map((root) => ({
   defaultPath: `${root}/default.png`,
   states: skinStateSprites(root),

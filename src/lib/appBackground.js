@@ -7,6 +7,16 @@
    ===================================================================== */
 
 // 썸네일·사진 모두 번들. '심플'만 그라디언트(image 없음).
+//
+// itemCode 가 있으면 상점 유료 상품이다(shop_items.code 와 같은 값). 없으면 기본 제공이다.
+// 기존 5종과 '기본(심플)'은 무료로 남긴다 — 무료였던 걸 유료로 바꾸는 건 뺏는 것이고
+// 되돌릴 수 없다(리더 확정 2026-08-04). shop_items 에 행 자체가 없으므로 "판매 종료된
+// 유료 상품(RETIRED)"이 아니라 "상점 밖 기본 제공"이다.
+//
+// ⚠️ 소유 판정은 Settings 의 그리기 단계에서만 한다. 여기서 막지 않는 건 의도다 —
+//   선택값은 localStorage 이고 적용은 CSS 변수라, 브라우저 콘솔로 얼마든지 바꿀 수 있다.
+//   즉 이건 보안 경계가 아니라 화면 안내다. 서버가 지켜야 할 건 '구매'뿐이고 그건
+//   shop_items/user_inventory_items 가 이미 지킨다.
 export const APP_BACKGROUNDS = [
   { id: 'default', name: '기본 (심플)', thumb: '/bg-thumbs/default.png', image: null },
   { id: 'lp-wood-desk', name: 'LP 우드 데스크', thumb: '/bg-thumbs/lp-wood-desk.png', image: '/backgrounds/lp-wood-desk.webp' },
@@ -14,7 +24,20 @@ export const APP_BACKGROUNDS = [
   { id: 'neon-city', name: '네온 클로버 시티', thumb: '/bg-thumbs/neon-city.png', image: '/backgrounds/neon-city.webp' },
   { id: 'minimal-clover', name: '미니멀 클로버', thumb: '/bg-thumbs/minimal-clover.png', image: '/backgrounds/minimal-clover.webp' },
   { id: 'botanical', name: '보태니컬 청사진', thumb: '/bg-thumbs/botanical.png', image: '/backgrounds/botanical.webp' },
+  // 사계절 4종 — 상점 유료(BACKGROUND · RARE 2,800). itemCode 는 shop_items.code 와 같아야 한다.
+  { id: 'spring-rain-city', name: '봄비 뒤 벚꽃 운하', thumb: '/bg-thumbs/spring-rain-city.png', image: '/backgrounds/spring-rain-city.webp', itemCode: 'BACKGROUND_SPRING_RAIN_CITY' },
+  { id: 'midsummer-cove', name: '한여름 비밀 만', thumb: '/bg-thumbs/midsummer-cove.png', image: '/backgrounds/midsummer-cove.webp', itemCode: 'BACKGROUND_MIDSUMMER_COVE' },
+  { id: 'autumn-watercolor-path', name: '단풍빛 돌길', thumb: '/bg-thumbs/autumn-watercolor-path.png', image: '/backgrounds/autumn-watercolor-path.webp', itemCode: 'BACKGROUND_AUTUMN_WATERCOLOR_PATH' },
+  { id: 'winter-moonlit-forest', name: '토렐로의 겨울 골목', thumb: '/bg-thumbs/winter-moonlit-forest.png', image: '/backgrounds/winter-moonlit-forest.webp', itemCode: 'BACKGROUND_WINTER_MOONLIT_FOREST' },
 ]
+
+// 보유 code 집합을 받아 "고를 수 있는가"를 답한다. 화면 안내용 판정이고 보안 경계가 아니다.
+// ★ 규칙을 화면마다 다시 쓰지 않게 한 곳에 둔다 — 잠금 표시와 클릭 허용이 서로 다른
+//   조건을 쓰면 "자물쇠가 붙었는데 눌리는" 상태가 생기고, 그건 에러 없이 조용하다.
+export function isBackgroundUnlocked(bg, ownedCodes) {
+  if (!bg?.itemCode) return true
+  return ownedCodes instanceof Set && ownedCodes.has(bg.itemCode)
+}
 
 const STORAGE_KEY = 'clov_appBgTheme'
 const COLOR_KEY = 'clov_appBgColor'

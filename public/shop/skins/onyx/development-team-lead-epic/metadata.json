@@ -1,0 +1,19 @@
+{
+  "skinId": "development-team-lead-epic",
+  "mascotId": "onyx",
+  "displayName": "개발 팀장 오닉스",
+  "rarity": "EPIC",
+  "shopCategory": "COSTUME",
+  "assetUrl": "/shop/skins/onyx/development-team-lead-epic/default.png",
+  "states": {
+    "default": "default.png",
+    "angry": "angry.png",
+    "dizzy": "dizzy.png",
+    "find": "find.png",
+    "pencil": "pencil.png",
+    "pulled": "pulled.png",
+    "scared": "scared.png",
+    "sleepy": "sleepy.png",
+    "smile": "smile.png"
+  }
+}

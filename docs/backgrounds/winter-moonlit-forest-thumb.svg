@@ -1,0 +1,182 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 512 기준 모서리 반경 108 — 기존 썸네일 실측값 -->
+    <clipPath id="round"><rect width="512" height="512" rx="108" ry="108"/></clipPath>
+
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#6aa9dd"/>
+      <stop offset="0.7" stop-color="#a9cfec"/>
+      <stop offset="1"   stop-color="#d8e9f6"/>
+    </linearGradient>
+    <!-- 볕 드는 왼쪽 벽 — 원본의 따뜻한 황토 -->
+    <!-- 하늘과 맞닿는 쪽이 너무 밝으면 흰 지붕처럼 읽힌다 — 밝은 정점을 벽 가운데로 내린다 -->
+    <linearGradient id="wallSun" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0"    stop-color="#cdb384"/>
+      <stop offset="0.42" stop-color="#e7d5a9"/>
+      <stop offset="1"    stop-color="#c7ae7c"/>
+    </linearGradient>
+    <linearGradient id="wallShade" x1="1" y1="0" x2="0" y2="0.4">
+      <stop offset="0"    stop-color="#cfc2a2"/>
+      <stop offset="0.5"  stop-color="#bdb7a4"/>
+      <stop offset="1"    stop-color="#a7a9a3"/>
+    </linearGradient>
+    <linearGradient id="snow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#eef4fd"/>
+      <stop offset="0.45" stop-color="#ffffff"/>
+      <stop offset="1"    stop-color="#dbe8f8"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0"    stop-color="#ffffff" stop-opacity="0.6"/>
+      <stop offset="0.62" stop-color="#ffffff" stop-opacity="0.2"/>
+      <stop offset="1"    stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <g clip-path="url(#round)">
+    <rect width="512" height="512" fill="url(#sky)"/>
+
+    <!-- 골목 안쪽 — 먼 집과 아치. 소실점 (258, 200) -->
+    <g>
+      <rect x="214" y="150" width="88" height="60" fill="#dde8f4"/>
+      <path d="M210 156 L258 122 L306 156 Z" fill="#eef4fa"/>
+      <path d="M204 158 L258 120 L312 158 L306 165 L258 131 L210 165 Z" fill="#ffffff"/>
+      <!-- 골목을 가로지르는 아치 -->
+      <path d="M222 210 V186 A36 24 0 0 1 294 186 V210 H274 V190 A16 12 0 0 0 242 190 V210 Z" fill="#dfd6bd"/>
+      <path d="M242 190 A16 12 0 0 1 274 190 V210 H242 Z" fill="#b9cee4"/>
+      <rect x="218" y="176" width="80" height="6" rx="3" fill="#ffffff"/>
+    </g>
+
+    <!-- 왼쪽 벽 — 소실점으로 좁아진다 -->
+    <path d="M0 0 L148 0 L236 178 L236 214 L0 474 Z" fill="url(#wallSun)"/>
+    <!-- 처마에 얹힌 눈 — 가늘게. 두꺼우면 흰 지붕처럼 읽힌다 -->
+    <path d="M0 0 L148 0 L236 178 L231 179 L145 5 L0 5 Z" fill="#ffffff" opacity="0.9"/>
+    <!-- 벽면 결 — 세로 붓자국 -->
+    <g stroke="#c9b184" stroke-width="6" opacity="0.3" stroke-linecap="round">
+      <path d="M44 30 L44 386"/>
+      <path d="M112 66 L112 336"/>
+      <path d="M178 128 L178 292"/>
+    </g>
+    <!-- 왼쪽 큰 나무문 -->
+    <g>
+      <path d="M4 170 L52 236 L52 384 L4 418 Z" fill="#c2ae86"/>
+      <path d="M12 184 L46 232 L46 374 L12 400 Z" fill="#4a3a2b"/>
+    </g>
+    <!-- 창 -->
+    <path d="M104 190 L132 226 L132 274 L104 252 Z" fill="#5d5443"/>
+    <path d="M186 254 L204 276 L204 306 L186 290 Z" fill="#6b6152"/>
+
+    <!-- 오른쪽 벽 -->
+    <path d="M512 0 L364 0 L280 178 L280 214 L512 490 Z" fill="url(#wallShade)"/>
+    <path d="M512 0 L364 0 L280 178 L285 179 L367 5 L512 5 Z" fill="#ffffff" opacity="0.85"/>
+    <g stroke="#b0a68c" stroke-width="6" opacity="0.28" stroke-linecap="round">
+      <path d="M470 36 L470 400"/>
+      <path d="M406 74 L406 344"/>
+      <path d="M340 134 L340 288"/>
+    </g>
+    <g>
+      <path d="M508 184 L456 248 L456 396 L508 432 Z" fill="#b8a98c"/>
+      <path d="M500 198 L462 244 L462 386 L500 414 Z" fill="#463829"/>
+    </g>
+    <path d="M388 210 L364 244 L364 292 L388 270 Z" fill="#5a5142"/>
+
+    <!-- 오른쪽 거친 돌담 — 줄눈을 어긋나게 쌓는다 -->
+    <g>
+      <path d="M512 336 L396 276 L396 512 L512 512 Z" fill="#9a9078"/>
+      <g stroke="#7c7460" stroke-width="2.5" opacity="0.55" stroke-linecap="round">
+        <path d="M400 322 L512 380"/>
+        <path d="M400 376 L512 430"/>
+        <path d="M400 432 L512 482"/>
+        <path d="M424 296 L424 350"/>
+        <path d="M468 320 L468 372"/>
+        <path d="M444 352 L444 406"/>
+        <path d="M496 376 L496 428"/>
+        <path d="M420 410 L420 462"/>
+        <path d="M472 434 L472 486"/>
+      </g>
+      <path d="M396 276 L512 336 L512 350 L396 290 Z" fill="#ffffff" opacity="0.9"/>
+    </g>
+
+    <!-- 눈 덮인 자갈길 -->
+    <path d="M236 208 H280 L474 512 H46 Z" fill="url(#snow)"/>
+    <!-- 왼쪽 벽이 드리운 푸른 그림자 -->
+    <path d="M236 214 L46 512 L206 512 L262 214 Z" fill="#a6c2e6" opacity="0.4"/>
+    <!-- 눈 밖으로 드러난 자갈 -->
+    <g fill="#b6b0a1" opacity="0.7">
+      <ellipse cx="262" cy="250" rx="6"  ry="3"/>
+      <ellipse cx="288" cy="286" rx="8"  ry="3.5"/>
+      <ellipse cx="252" cy="320" rx="10" ry="4.5"/>
+      <ellipse cx="314" cy="348" rx="11" ry="5"/>
+      <ellipse cx="278" cy="404" rx="13" ry="5.5"/>
+      <ellipse cx="356" cy="420" rx="12" ry="5.5"/>
+      <ellipse cx="238" cy="458" rx="14" ry="6"/>
+      <ellipse cx="330" cy="486" rx="15" ry="6.5"/>
+      <ellipse cx="404" cy="464" rx="11" ry="5"/>
+      <ellipse cx="186" cy="496" rx="13" ry="6"/>
+    </g>
+
+    <!-- 소실점으로 오르는 돌계단 — 챌면(그늘)+디딤면(눈) -->
+    <g>
+      <path d="M160 428 L232 388 L232 400 L160 442 Z" fill="#ffffff"/>
+      <path d="M160 442 L232 400 L232 414 L160 458 Z" fill="#9aa4b4"/>
+      <path d="M170 396 L233 360 L233 371 L170 408 Z" fill="#ffffff"/>
+      <path d="M170 408 L233 371 L233 384 L170 421 Z" fill="#9aa4b4"/>
+      <path d="M180 366 L234 334 L234 344 L180 377 Z" fill="#ffffff"/>
+      <path d="M180 377 L234 344 L234 356 L180 389 Z" fill="#9aa4b4"/>
+      <path d="M190 340 L235 312 L235 321 L190 350 Z" fill="#ffffff"/>
+      <path d="M190 350 L235 321 L235 332 L190 361 Z" fill="#9aa4b4"/>
+    </g>
+
+    <!-- 낮은 돌담 + 화분 올리브 -->
+    <g>
+      <path d="M0 352 L150 322 L150 400 L0 452 Z" fill="#a0957d"/>
+      <g stroke="#827862" stroke-width="2.5" opacity="0.55" stroke-linecap="round">
+        <path d="M0 382 L150 352"/>
+        <path d="M0 414 L150 380"/>
+        <path d="M46 336 L46 434"/>
+        <path d="M100 326 L100 412"/>
+        <path d="M22 360 L22 448"/>
+      </g>
+      <path d="M0 352 L150 322 L150 336 L0 366 Z" fill="#ffffff"/>
+      <!-- 화분 둘 -->
+      <path d="M52 296 L92 292 L86 334 L58 336 Z" fill="#bd6440"/>
+      <rect x="49" y="287" width="46" height="11" rx="5" fill="#d17a4f"/>
+      <path d="M100 306 L130 302 L125 334 L105 336 Z" fill="#8b93a0"/>
+      <rect x="97" y="297" width="36" height="10" rx="5" fill="#a3aab5"/>
+      <!-- 올리브 잎 덤불 -->
+      <g fill="#425a42">
+        <ellipse cx="76"  cy="238" rx="44" ry="32"/>
+        <ellipse cx="120" cy="218" rx="30" ry="22"/>
+        <ellipse cx="40"  cy="212" rx="26" ry="20"/>
+        <ellipse cx="110" cy="262" rx="24" ry="16"/>
+      </g>
+      <g fill="#68865c" opacity="0.85">
+        <ellipse cx="90" cy="224" rx="20" ry="13"/>
+        <ellipse cx="52" cy="252" rx="17" ry="11"/>
+      </g>
+      <g fill="#ffffff" opacity="0.85">
+        <ellipse cx="58"  cy="212" rx="13" ry="5.5"/>
+        <ellipse cx="116" cy="202" rx="10" ry="4.5"/>
+        <ellipse cx="98"  cy="252" rx="9"  ry="4"/>
+      </g>
+      <!-- 마른 가지 -->
+      <g stroke="#7a6350" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.8">
+        <path d="M72 292 Q64 244 36 182"/>
+        <path d="M74 264 Q92 234 124 198"/>
+        <path d="M60 234 Q38 216 14 210"/>
+      </g>
+    </g>
+
+    <!-- 클로버 — 브랜드 마크. 눈길 위에 얹어 대비를 확보한다 -->
+    <g transform="translate(276 316)">
+      <circle r="118" fill="url(#halo)"/>
+      <g fill="#1f7a4c" stroke="#f4f9ff" stroke-width="5" stroke-linejoin="round">
+        <g transform="rotate(-45) scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+        <g transform="rotate(45)  scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+        <g transform="rotate(135) scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+        <g transform="rotate(-135) scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+      </g>
+      <path d="M4 52 Q14 88 -12 108" stroke="#1f7a4c" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M-40 -66 L-16 -30" stroke="#f4f9ff" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+    </g>
+  </g>
+</svg>

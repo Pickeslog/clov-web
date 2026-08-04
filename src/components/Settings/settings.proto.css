@@ -142,6 +142,15 @@
 .proto-settings .ps-bg-swatch.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(82, 183, 136, 0.3); }
 .proto-settings .ps-bg-swatch img { display: block; width: 100%; height: 56px; object-fit: cover; }
 .proto-settings .ps-bg-swatch span { display: block; padding: 5px 4px; font-size: 11px; font-weight: 700; text-align: center; color: var(--text); }
+/* 미보유 유료 배경 — 숨기지 않고 흐리게 두고 '상점' 배지를 붙인다. 눌러도 적용되지 않고
+   상점으로 넘어간다. 배지는 썸네일 위에 얹으므로 swatch가 기준 컨테이너가 돼야 한다. */
+.proto-settings .ps-bg-swatch.locked { position: relative; }
+.proto-settings .ps-bg-swatch.locked img { filter: grayscale(0.55) brightness(0.82); }
+.proto-settings .ps-bg-swatch.locked span { color: var(--muted); }
+.proto-settings .ps-bg-lock {
+  position: absolute; top: 4px; right: 4px; padding: 2px 6px; border-radius: 999px;
+  background: rgba(10, 15, 12, 0.72); color: #fff; font-size: 10px; font-weight: 800; font-style: normal;
+}
 .proto-settings .ps-note { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
 .proto-settings .ps-select {
   width: 100%; height: 44px; padding: 0 12px; border: 1.5px solid var(--input-bdr); border-radius: 12px;

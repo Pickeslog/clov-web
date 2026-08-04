@@ -6,6 +6,7 @@ import { getLetters, markRead, sendLetter, toggleFavorite } from '../../../api/l
 import { getRoomMembers } from '../../../api/room'
 import { getPreferences } from '../../../api/user'
 import Header from '../../../components/Header/Header'
+import Mascot from '../../../components/Mascot/Mascot'
 import Button from '../../../components/Button/Button'
 
 const AVATAR_COLORS = ['#40916c', '#52b788', '#74c69d', '#95d5b2', '#2d6a4f']
@@ -135,6 +136,7 @@ export default function Letters() {
     // @scope CSS가 사용자 환경에서 반영 안 되는 문제와 무관하게 다크 모드에서도 라이트로 렌더.
     <main className="proto-letters" style={LETTERS_LIGHT_PALETTE}>
       <Header variant="room" roomId={roomId} activeTab="letter" />
+      <Mascot roomId={roomId} />
       <div className="letter-tab-container">
         <section className="letter-stage">
           <div className="letter-stage-copy">

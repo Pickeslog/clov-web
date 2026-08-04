@@ -11,6 +11,7 @@ import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import { ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
+import Mascot from '../../../components/Mascot/Mascot'
 import Button from '../../../components/Button/Button'
 
 // 작성·수정 공통 (screen-spec-source/03-memory-feed-screen.md §입력 제약) — 프로토타입은 30이지만
@@ -237,6 +238,7 @@ export default function Feed() {
   return (
     <div className="proto-feed">
       <Header variant="room" roomId={roomId} activeTab="feed" />
+      <Mascot roomId={roomId} />
       <div className="feed-page">
         <div className="feed-hero">
           <div className="feed-hero-text">

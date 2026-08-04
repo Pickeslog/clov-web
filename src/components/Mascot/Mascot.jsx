@@ -134,10 +134,13 @@ const EQUIPPED_SKIN_STATE_SPRITES = [
   '/shop/skins/rob/arcade-boss-legendary',
   '/shop/skins/rob/last-signal-epic',
   '/shop/skins/rob/yellow-crew-common',
+  '/shop/skins/rob/explorer-uncommon',
   '/shop/skins/kim-cheolsu/steel-frame-safety-uncommon',
+  '/shop/skins/kim-cheolsu/junior-developer-uncommon',
   '/shop/skins/tako-gun/rov-pilot-rare',
   '/shop/skins/tako-gun/watermelon-rind-hat-common',
   '/shop/skins/crobi/ocean-rescue-champion-epic',
+  '/shop/skins/crobi/magic-school-student-common',
   '/shop/skins/onyx/blackstar-atelier-uncommon',
 ].map((root) => ({
   defaultPath: `${root}/default.png`,

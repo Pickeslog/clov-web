@@ -280,7 +280,7 @@
     opacity: 0.85;
     background-image: repeating-linear-gradient(90deg, #f4f2e8 0 1px, transparent 1px 3px, #f4f2e8 3px 4px, transparent 4px 7px, #f4f2e8 7px 8px, transparent 8px 10px);
   }
-  .ticket-stub-no { font-family: 'Space Mono', 'Courier New', monospace; font-size: 8px; letter-spacing: 0.14em; color: rgba(226, 214, 176, 0.42); }
+  .ticket-stub-no { font-family: var(--sans); font-size: 8px; letter-spacing: 0.14em; color: rgba(226, 214, 176, 0.42); }
 
   .ticket-glare { position: absolute; inset: 0; border-radius: 14px; pointer-events: none; z-index: 6; transition: opacity 0.3s ease; }
 
@@ -1084,7 +1084,7 @@
 }
 .ticket-cal-head button:hover { background: rgba(244, 242, 232, 0.2); }
 .ticket-cal-title {
-  font-family: 'Space Mono', 'Courier New', monospace;
+  font-family: var(--sans);
   font-size: 11.5px;
   letter-spacing: 0.06em;
   background: linear-gradient(100deg, #f4ecd2, #c9a961 55%, #f4ecd2);
@@ -1099,7 +1099,7 @@
 }
 .ticket-cal-week span {
   text-align: center;
-  font-family: 'Space Mono', 'Courier New', monospace;
+  font-family: var(--sans);
   font-size: 9.5px;
   color: rgba(244, 242, 232, 0.5);
 }
@@ -1113,7 +1113,7 @@
   border-radius: 8px;
   background: transparent;
   color: #f4f2e8;
-  font-family: 'Space Mono', 'Courier New', monospace;
+  font-family: var(--sans);
   font-size: 11.5px;
   cursor: pointer;
 }
@@ -1131,7 +1131,7 @@
   border: none;
   background: transparent;
   color: #c9a961;
-  font-family: 'Space Mono', 'Courier New', monospace;
+  font-family: var(--sans);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;

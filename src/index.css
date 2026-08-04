@@ -50,6 +50,14 @@
   }
 }
 
+/* 브라우저 기본값 — button/input/select/textarea는 페이지 폰트를 상속하지 않고 OS
+   컨트롤 폰트(대개 Arial류)를 쓴다. 컴포넌트마다 font-family:inherit를 개별로 붙여왔는데
+   빠진 곳(예: 설정 배경 스와치)마다 전역 폰트가 안 먹혔다 — 여기서 한 번에 리셋한다(#258 후속). */
+button, input, select, textarea, optgroup {
+  font-family: inherit;
+  font-size: inherit;
+}
+
 body {
   margin: 0;
   min-height: 100vh;

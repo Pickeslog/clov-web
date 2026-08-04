@@ -98,8 +98,12 @@
   }
 }
 
-/* 기본 = 다크(이식 화면 공통값), body.light-mode에서 라이트로 덧입힌다(lib/theme.js). */
+/* 기본 = 다크(이식 화면 공통값), body.light-mode에서 라이트로 덧입힌다(lib/theme.js).
+   마스코트 대사는 전역 폰트(엄마까투리체) 예외 — 캐릭터 말풍선은 기본 시스템 폰트를
+   유지한다(#258 후속, 리더 확인). 롭(Rob) 전용 코드 에디터 말풍선(아래)은 이 규칙 위에
+   모노스페이스로 한 번 더 override — 그대로 유지. */
 .clov-mascot-bubble {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 13px;
   background: #1e1e2e;
   color: #f1f1f1;

@@ -17,7 +17,7 @@ export const APP_BACKGROUNDS = [
   { id: 'midsummer-cove', name: '한여름 비밀 만', thumb: '/bg-thumbs/midsummer-cove.png', image: '/backgrounds/midsummer-cove.webp' },
   { id: 'spring-rain-city', name: '봄비 뒤 벚꽃 운하', thumb: '/bg-thumbs/spring-rain-city.png', image: '/backgrounds/spring-rain-city.webp' },
   { id: 'autumn-watercolor-path', name: '단풍빛 돌길', thumb: '/bg-thumbs/autumn-watercolor-path.png', image: '/backgrounds/autumn-watercolor-path.webp' },
-  { id: 'winter-moonlit-forest', name: '겨울 달빛 숲', thumb: '/bg-thumbs/winter-moonlit-forest.png', image: '/backgrounds/winter-moonlit-forest.webp' },
+  { id: 'winter-moonlit-forest', name: '토렐로의 겨울 골목', thumb: '/bg-thumbs/winter-moonlit-forest.png', image: '/backgrounds/winter-moonlit-forest.webp' },
 ]
 
 const STORAGE_KEY = 'clov_appBgTheme'

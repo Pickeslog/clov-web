@@ -73,6 +73,10 @@ export default function Letters() {
 
   const box = boxOfTab(tab)
   const letters = useQuery({ queryKey: ['letters', roomId, box], queryFn: () => getLetters(roomId, box) })
+  // 히어로 요약(안 읽은 편지 수)은 모달에서 마지막으로 본 탭(box)과 무관하게 항상 "받은 편지함"
+  // 기준이어야 한다 — box를 그대로 쓰면 "보낸 편지함" 탭을 보고 나온 뒤에도 그 편지함의
+  // 총 개수가 떠 버린다(#274). queryKey가 겹치면 React Query가 캐시를 공유해 중복 요청은 없다.
+  const receivedLetters = useQuery({ queryKey: ['letters', roomId, 'received'], queryFn: () => getLetters(roomId, 'received') })
   const members = useQuery({ queryKey: ['room', roomId, 'members'], queryFn: () => getRoomMembers(roomId), enabled: composing })
   const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
   const isPostboxTheme = (prefs.data?.letterTheme ?? 'postbox') === 'postbox'
@@ -129,7 +133,10 @@ export default function Letters() {
     sendMutation.mutate(broadcast ? { broadcast: true, content: content.trim(), emoji } : { receiverUserId, content: content.trim(), emoji })
   }
 
-  const hasMail = items.length > 0
+  // 요약 문구("총 N통의 편지가 도착했어요!")는 편지함 총 개수가 아니라 "안 읽은" 편지 수를
+  // 보여준다 — 다 읽으면 상자가 "편지 없음" 상태로 바뀌는 알림형 UX(#274).
+  const unreadCount = (receivedLetters.data?.items ?? []).filter((letter) => !letter.readAt).length
+  const hasMail = unreadCount > 0
 
   return (
     // 편지 = 항상 크림/라이트 종이 미감. 팔레트 변수를 인라인으로 못박아(모든 하위가 상속)
@@ -162,7 +169,7 @@ export default function Letters() {
           </button>
           <div className="letter-box-summary">
             {hasMail
-              ? <p>총 <b>{items.length}</b>통의 편지가<br />나에게 도착했어요!</p>
+              ? <p>총 <b>{unreadCount}</b>통의 편지가<br />나에게 도착했어요!</p>
               : <p>{EMPTY_MESSAGES[0]}</p>}
           </div>
           <button type="button" className="letter-filter-btn action-btn letter-write-btn" onClick={openCompose}>

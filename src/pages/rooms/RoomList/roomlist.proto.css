@@ -106,6 +106,19 @@
 @media (max-width: 760px) { .proto-roomlist .room-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 520px) { .proto-roomlist .room-grid { grid-template-columns: 1fr; } }
 
+/* 목록 첫 로드 때 카드가 순서대로 살짝 밀려 올라오며 나타난다(재정렬 드래그 중엔 튀지
+   않도록 .room-card.ticket에는 안 걸고 로드 시 리스트에만 건다 — 아래 room-card-enter). */
+.proto-roomlist .room-card-enter {
+  animation: roomCardEnter 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+@keyframes roomCardEnter {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .proto-roomlist .room-card-enter { animation: none; }
+}
+
 .proto-roomlist .room-card {
   background: var(--card-bg); border: 1.5px solid var(--border);
   border-radius: 20px; padding: 18px; cursor: pointer;

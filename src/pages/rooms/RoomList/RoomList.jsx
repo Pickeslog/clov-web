@@ -325,7 +325,7 @@ export default function RoomList() {
 
         {sortedRooms.length > 0 && (
           <div className="room-grid">
-            {visibleRooms.map((room) => {
+            {visibleRooms.map((room, i) => {
               const tone = headTone(room)
               const hasPlan = Boolean(room.nextPlan?.planDate)
               const dday = hasPlan ? ddayLabel(ddayDiff(room.nextPlan.planDate)) : null
@@ -334,7 +334,10 @@ export default function RoomList() {
                 <div
                   key={room.id}
                   data-room-id={room.id}
-                  className={`room-card ticket${editMode ? ' edit-mode' : ''}${dragId === room.id ? ' dragging' : ''}${String(overId) === String(room.id) ? ' drag-over' : ''}`}
+                  className={`room-card ticket room-card-enter${editMode ? ' edit-mode' : ''}${dragId === room.id ? ' dragging' : ''}${String(overId) === String(room.id) ? ' drag-over' : ''}`}
+                  // view-transition-name: 이 카드의 "입장" 클릭이 Dashboard의 .main-photo-card로
+                  // 그대로 자라 들어가는 셰어드 엘리먼트 전환의 짝(같은 이름을 그쪽에도 건다).
+                  style={{ viewTransitionName: `room-card-${room.id}`, '--enter-delay': `${Math.min(i, 8) * 35}ms` }}
                   role={editMode ? undefined : 'button'}
                   tabIndex={editMode ? undefined : 0}
                   draggable={editMode || undefined}
@@ -417,8 +420,8 @@ export default function RoomList() {
                       role={editMode ? undefined : 'button'}
                       tabIndex={editMode ? undefined : 0}
                       aria-label={editMode ? undefined : `${room.name} 바로 입장`}
-                      onClick={editMode ? undefined : (e) => { e.stopPropagation(); navigate(`/rooms/${room.id}`) }}
-                      onKeyDown={editMode ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); navigate(`/rooms/${room.id}`) } }}
+                      onClick={editMode ? undefined : (e) => { e.stopPropagation(); navigate(`/rooms/${room.id}`, { viewTransition: true }) }}
+                      onKeyDown={editMode ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); navigate(`/rooms/${room.id}`, { viewTransition: true }) } }}
                     >
                       <div className="tk-barcode">{BARCODE.map((w, k) => <i key={k} style={{ width: `${w}px` }} />)}</div>
                       <span className="tk-enter">입장 <Icon name="ti-chevron-right" /></span>

@@ -583,8 +583,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 대표 커버 카드 */}
-        <div className="main-photo-card">
+        {/* 대표 커버 카드 — RoomList의 방 카드(view-transition-name: room-card-{id})가
+            "입장" 클릭 시 이 카드로 자라 들어가는 셰어드 엘리먼트 전환의 짝. */}
+        <div className="main-photo-card" style={{ viewTransitionName: `room-card-${roomId}` }}>
           <div className="main-photo-wrapper">
             {data.coverPhotoUrl ? (
               <img

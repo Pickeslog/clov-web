@@ -515,7 +515,7 @@ export default function Dashboard() {
   const statusLen = statusValue.length
   const statusDirty = statusDraft !== null && statusDraft.trim() !== savedStatus.trim()
   const statusOver = statusLen > STATUS_MAX
-  const go = (path) => navigate(`/rooms/${roomId}/${path}`)
+  const go = (path) => navigate(`/rooms/${roomId}/${path}`, { viewTransition: true })
 
   return (
     <>

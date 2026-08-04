@@ -75,7 +75,7 @@ export default function Letters() {
   const letters = useQuery({ queryKey: ['letters', roomId, box], queryFn: () => getLetters(roomId, box) })
   // 히어로 요약(안 읽은 편지 수)은 모달에서 마지막으로 본 탭(box)과 무관하게 항상 "받은 편지함"
   // 기준이어야 한다 — box를 그대로 쓰면 "보낸 편지함" 탭을 보고 나온 뒤에도 그 편지함의
-  // 총 개수가 떠 버린다(#274). queryKey가 겹치면 React Query가 캐시를 공유해 중복 요청은 없다.
+  // 총 개수가 떠 버린다(#278). queryKey가 겹치면 React Query가 캐시를 공유해 중복 요청은 없다.
   const receivedLetters = useQuery({ queryKey: ['letters', roomId, 'received'], queryFn: () => getLetters(roomId, 'received') })
   const members = useQuery({ queryKey: ['room', roomId, 'members'], queryFn: () => getRoomMembers(roomId), enabled: composing })
   const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
@@ -134,7 +134,7 @@ export default function Letters() {
   }
 
   // 요약 문구("총 N통의 편지가 도착했어요!")는 편지함 총 개수가 아니라 "안 읽은" 편지 수를
-  // 보여준다 — 다 읽으면 상자가 "편지 없음" 상태로 바뀌는 알림형 UX(#274).
+  // 보여준다 — 다 읽으면 상자가 "편지 없음" 상태로 바뀌는 알림형 UX(#278).
   const unreadCount = (receivedLetters.data?.items ?? []).filter((letter) => !letter.readAt).length
   const hasMail = unreadCount > 0
 

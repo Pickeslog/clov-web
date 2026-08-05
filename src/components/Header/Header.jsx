@@ -100,20 +100,22 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
           </nav>
         )}
 
-        {/* 상점 — 재화가 사용자 단위라 방 안/밖(room·home) 모두에서 같은 자리에 둔다.
-            방 안에서 들어왔으면 그 방의 roomId를 넘겨 상점도 같은 공통(room) 헤더를 쓴다. */}
-        <button
-          type="button"
-          className={`clov-hdr-shop${onShop ? ' active' : ''}`}
-          onClick={() => navigate('/shop', { state: roomId ? { fromRoomId: roomId } : undefined })}
-          title="상점"
-          aria-current={onShop ? 'page' : undefined}
-        >
-          <NavIcon><path d="M4 8h16l-1.2 10a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8L4 8zM8.5 8V6a3.5 3.5 0 0 1 7 0v2" /></NavIcon>
-          <span className="clov-hdr-shop-label">상점</span>
-          {/* balance가 비면 헤더가 통째로 죽는다 — Shop.jsx도 같은 이유로 ?? 0을 쓴다(#208). */}
-          {wallet.data && <span className="clov-hdr-gold"><i aria-hidden="true">G</i>{(wallet.data.balance ?? 0).toLocaleString()}</span>}
-        </button>
+        {/* 상점(버튼+골드 표시) — 아직 어느 방에도 들어가지 않은 방 목록(home) 화면에서는
+            통째로 감춘다. 방 안(variant="room")에서만 노출. */}
+        {variant === 'room' && (
+          <button
+            type="button"
+            className={`clov-hdr-shop${onShop ? ' active' : ''}`}
+            onClick={() => navigate('/shop', { state: roomId ? { fromRoomId: roomId } : undefined })}
+            title="상점"
+            aria-current={onShop ? 'page' : undefined}
+          >
+            <NavIcon><path d="M4 8h16l-1.2 10a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8L4 8zM8.5 8V6a3.5 3.5 0 0 1 7 0v2" /></NavIcon>
+            <span className="clov-hdr-shop-label">상점</span>
+            {/* balance가 비면 헤더가 통째로 죽는다 — Shop.jsx도 같은 이유로 ?? 0을 쓴다(#208). */}
+            {wallet.data && <span className="clov-hdr-gold"><i aria-hidden="true">G</i>{(wallet.data.balance ?? 0).toLocaleString()}</span>}
+          </button>
+        )}
 
         <div className="clov-hdr-avatar-wrap">
           <button type="button" className="clov-hdr-avatar" onClick={() => setMenuOpen((v) => !v)} aria-haspopup="menu" title="내 계정">

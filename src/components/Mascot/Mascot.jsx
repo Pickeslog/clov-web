@@ -520,7 +520,18 @@ export default function Mascot({ roomId }) {
     interactMutation.mutate()
   }
 
-  if (prefs.isPending || prefs.isError) return null
+  // 로딩 중에만 감춘다. 기본 크로비를 먼저 띄웠다가 내 마스코트로 바뀌면 깜빡임이 된다.
+  //
+  // ★ isError 로는 감추지 않는다. 감췄더니 "모바일에서 마스코트가 사라진 채 안 돌아온다"가
+  //   됐다 — 전역 쿼리 설정이 retry: 1 · refetchOnWindowFocus: false 라(lib/queryClient.js),
+  //   이동 중 네트워크가 한 번 끊겨 이 요청이 실패하면 앱으로 돌아와도 재요청이 없어서
+  //   새로고침 전까지 isError 가 유지된다. 모바일에서 훨씬 자주 밟히는 경로다.
+  //
+  //   그런데 이 컴포넌트는 prefs 없이도 그릴 수 있다. 쓰는 값이 둘뿐인데 둘 다 이미
+  //   옵셔널이다 — mascotType 은 DB 기본값이 'crobi' 라 SPRITES[mascotType] 로 떨어지고,
+  //   equippedSprite 는 없으면 기본 스프라이트를 쓴다. 설정을 못 읽었을 뿐 마스코트가
+  //   없는 게 아니므로, 교감(클릭·드래그·말풍선)은 그대로 되는 게 맞다.
+  if (prefs.isPending) return null
 
   // 롭은 상태 문구(들어올림/무서움/화남/어지러움/수면)든 기본 대사든 '> ' 프롬프트를 붙인다
   // (#155·#216, 목업 그대로 — 목업도 robot이면 모든 말풍선에 '> '를 붙인다).

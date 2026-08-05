@@ -29,6 +29,10 @@ export const APP_BACKGROUNDS = [
   { id: 'midsummer-cove', name: '한여름 비밀 만', thumb: '/bg-thumbs/midsummer-cove.png', image: '/backgrounds/midsummer-cove.webp', itemCode: 'BACKGROUND_MIDSUMMER_COVE' },
   { id: 'autumn-watercolor-path', name: '단풍빛 돌길', thumb: '/bg-thumbs/autumn-watercolor-path.png', image: '/backgrounds/autumn-watercolor-path.webp', itemCode: 'BACKGROUND_AUTUMN_WATERCOLOR_PATH' },
   { id: 'winter-moonlit-forest', name: '토렐로의 겨울 골목', thumb: '/bg-thumbs/winter-moonlit-forest.png', image: '/backgrounds/winter-moonlit-forest.webp', itemCode: 'BACKGROUND_WINTER_MOONLIT_FOREST' },
+  // 한정 — 상점 유료(BACKGROUND · LEGENDARY 9,800 · 할인 80%). 다른 배경과 달리 CSS 별
+  // 반짝임 레이어가 붙는다(index.css의 [data-app-bg="developer-gemini-night"]).
+  // ★ 그 레이어가 이 배경만 LEGENDARY인 근거다 — 빼면 RARE 2,800으로 내려야 한다.
+  { id: 'developer-gemini-night', name: '은하수 아래 개발자의 밤', thumb: '/bg-thumbs/developer-gemini-night.png', image: '/backgrounds/developer-gemini-night.webp', itemCode: 'BACKGROUND_DEVELOPER_GEMINI_NIGHT' },
 ]
 
 // 보유 code 집합을 받아 "고를 수 있는가"를 답한다. 화면 안내용 판정이고 보안 경계가 아니다.
@@ -67,6 +71,7 @@ export function applyAppBackground(id, { persist = true } = {}) {
     root.style.setProperty('--clov-app-bg', `linear-gradient(${c}, ${c})`)
     root.style.setProperty('--clov-app-bg-size', 'auto')
     root.style.removeProperty('--clov-app-bg-pos')
+    root.dataset.appBg = 'custom'
     if (persist) { try { localStorage.setItem(STORAGE_KEY, 'custom') } catch { /* 무시 */ } }
     return 'custom'
   }
@@ -80,6 +85,9 @@ export function applyAppBackground(id, { persist = true } = {}) {
     root.style.removeProperty('--clov-app-bg-size')
     root.style.removeProperty('--clov-app-bg-pos')
   }
+  // 배경별 연출을 CSS에서 걸 수 있게 선택된 id를 노출한다(index.css의 별 반짝임 레이어).
+  // CSS 변수만으로는 "어느 배경이 선택됐는지"를 선택자로 쓸 수 없어서 속성을 따로 둔다.
+  root.dataset.appBg = bg.id
   if (persist) {
     try { localStorage.setItem(STORAGE_KEY, bg.id) } catch { /* storage 차단 무시 */ }
   }

@@ -274,7 +274,17 @@ export default function RoomList() {
 
         {editMode && (
           <div className="edit-banner show">
-            <Icon name="ti-arrows-move" /> 카드를 끌어다 원하는 자리에 놓으면 &quot;내 순서&quot;로 저장돼요. 🗑️로 방에서 나갈 수 있어요.
+            {/* 🗑️ 이모지였는데 기기에 따라 두부(□)로 떴다 — 카드에 실제로 붙어 있는
+                삭제 버튼과 같은 아이콘(ti-trash)을 쓰면 안내와 실물이 바로 이어진다.
+
+                본문을 span 하나로 묶는 건 .edit-banner가 flex(gap:8px)이기 때문이다.
+                안 묶으면 아이콘이 별도 플렉스 아이템이 돼서 좌우로 8px씩 벌어지고
+                "🗑 로 방에서"처럼 조사 앞이 뜬다. span 안에서는 그냥 인라인이다. */}
+            <Icon name="ti-arrows-move" />
+            <span>
+              카드를 끌어다 원하는 자리에 놓으면 &quot;내 순서&quot;로 저장돼요.{' '}
+              <Icon name="ti-trash" />로 방에서 나갈 수 있어요.
+            </span>
           </div>
         )}
 

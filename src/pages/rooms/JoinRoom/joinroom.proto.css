@@ -6,64 +6,119 @@
    로컬로 재정의하지 않는다(목업 색은 참고하지 않음, 구조/레이아웃만 참고).
    따라서 Login과 달리 다크모드에서도 tokens.css의 다크 오버라이드를 그대로 따른다
    (color-scheme 고정 없음 — 지금도 그렇다).
+   ★ 다만 "그대로 따른다"가 실제로는 지켜지지 않고 있었다 — 카드/입력 배경만 흰색으로
+     하드코딩돼 있어서 다크에서 흰 배경에 흰 글씨가 됐다. --card-bg/--paper 로 바로잡았다.
+   ★ 전용 페이지에서 모달로 바뀌었다(리더 요청). 마크업은 JoinRoomModal.jsx 하나뿐이고
+     /join·/join/:code 딥링크는 RoomList가 이 모달을 열어서 처리한다.
    의도적으로 안 한 것: box-sizing:border-box 로컬 리셋 — 지금 이 화면은 리셋이
    없는 상태(content-box)로 이미 정상 렌더링되고 있어서, 리셋을 넣으면 오히려
    레이아웃이 달라진다(#150에서 겪은 것과 같은 함정 — 이번엔 반대 방향으로 피함).
    ===================================================================== */
+/* 이제 페이지가 아니라 모달 스코프다 — 전용 페이지 시절의 min-height:100vh·배경 그라데이션·
+   flex 컬럼은 지웠다. 그대로 두면 방 목록 위에 100vh짜리 크림색 판이 깔린다.
+   display:contents 라 상자를 안 만들지만 커스텀 속성 상속은 그대로다.
+   .joinroom-topbar / .joinroom-body 규칙도 같이 지웠다 — 그 마크업은 페이지에만 있었다. */
 .proto-joinroom {
-  min-height: 100vh;
-  color: var(--text);
-  font-family: var(--sans);
-  background: linear-gradient(135deg, #fffdf3 0%, #fffaf0 48%, #fdf6e3 100%);
-  display: flex;
-  flex-direction: column;
+  display: contents;
 }
 
-.proto-joinroom .joinroom-topbar {
-  display: flex;
-  align-items: center;
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--line);
-}
+/* 모달 껍데기 — 카드 자체는 페이지 시절 값을 그대로 쓴다(#230에서 잡은 모양).
+   앱의 다른 모달(.rl-overlay·.ps-overlay)과 같은 결: 어둡게 깔고 뒤를 블러. */
+.proto-joinroom .joinroom-overlay {
+  /* ★ 이 화면 전용 토큰(tokens.css의 --forest/--mint…)을 앱 팔레트로 갈아끼운다.
+     전용 페이지일 땐 자기 색으로 서 있어도 됐지만, 이제 방 목록 위 모달이라 옆에
+     "방 만들기" 모달(.rl-modal)이 같이 산다. 초록 계열이 서로 달라서 두 모달이
+     다른 앱처럼 보였다(리더 지적).
 
-.proto-joinroom .joinroom-brand {
-  font-weight: 900;
-  font-size: 1.2rem;
-  letter-spacing: -0.02em;
-  color: var(--forest);
-}
+     값을 베끼지 않고 var()로 넘겨받는 이유 — .proto-roomlist 팔레트는 body.light-mode,
+     즉 앱 테마를 따라간다. tokens.css 다크는 OS(prefers-color-scheme) 기준이라 둘이
+     어긋나면(OS 다크 + 앱 라이트) 흰 카드에 밝은 민트 글씨가 나온다. 실제로 그 상태였다
+     (실측 대비: 제목 1.00 · 라벨 1.00 — 기준 4.5). 넘겨받으면 그 어긋남이 사라진다.
 
-.proto-joinroom .joinroom-body {
-  flex: 1;
+     --text/--muted/--card-bg/--border는 일부러 재정의하지 않는다 — 그대로 물려받으면
+     방 만들기 모달과 같은 표면·같은 글자색이 된다. */
+  --forest: var(--accent);
+  --leaf: var(--accent);
+  --mint: var(--accent);
+  --line: var(--border);
+  --glow: var(--active-bg);
+  --warn: var(--danger);
+
+  position: fixed;
+  inset: 0;
+  z-index: 300;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  /* 마운트 시점에도 transition만으로 걸리게 — 팝업처럼 갑자기 뜨지 않는다. */
+  transition: opacity 0.18s ease;
+}
+@starting-style {
+  .proto-joinroom .joinroom-overlay { opacity: 0; }
 }
 
+.proto-joinroom .joinroom-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--glow);
+  color: var(--forest);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.proto-joinroom .joinroom-close:hover { filter: brightness(0.95); }
+
 .proto-joinroom .joinroom-card {
-  width: min(420px, 100%);
-  padding: 32px;
+  /* 닫기 버튼(position:absolute)의 기준. */
+  position: relative;
+  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  transition: opacity 0.2s ease, transform 0.32s cubic-bezier(.34, 1.56, .64, 1);
+  /* 크기/여백/모서리도 .rl-modal 값 그대로 — 두 모달이 나란히 열리는데 카드 모양이
+     다르면 색만 맞춰도 여전히 따로 논다. */
+  width: min(460px, 100%);
+  padding: 22px 24px 26px;
   border: 1px solid var(--line);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.85);
+  border-radius: 20px;
+  /* ★ 예전엔 rgba(255,255,255,.85) 하드코딩이었다. 글자색은 --forest/--text 를 따라
+     다크에서 밝아지는데 카드만 흰색으로 굳어서 "흰 배경에 흰 글씨"가 됐다
+     (실측 대비: 제목 1.00 · 라벨 1.00 · 설명 1.46 — 기준 4.5). tokens.css 에 이미
+     짝이 되는 --card-bg(다크 rgba(32,43,34,.85))가 있는데 안 쓰고 있었을 뿐이다. */
+  background: var(--card-bg);
+  color: var(--text);
+  font-family: var(--sans);
   box-shadow: 0 18px 44px rgba(7, 59, 36, 0.08);
   display: grid;
   gap: 16px;
 }
 
+@starting-style {
+  .proto-joinroom .joinroom-card { opacity: 0; transform: scale(.9) translateY(10px); }
+}
+
+/* 제목/설명도 .rl-modal-title(18px/800) · .rl-modal-sub(13px)에 맞춘다. */
 .proto-joinroom .joinroom-title {
   /* 전역 index.css의 h1{font-family:var(--heading);color:var(--text-h)} 리셋 무력화(team-guides/19 §8) —
-     컨테이너(.proto-joinroom)의 'Outfit'은 상속이라 h1에 직접 걸리는 전역 규칙에 밀린다(#238). */
+     컨테이너의 폰트는 상속이라 제목에 직접 걸리는 전역 규칙에 밀린다(#238). */
   font-family: var(--sans);
-  font-size: 1.4rem;
-  font-weight: 900;
+  font-size: 18px;
+  font-weight: 800;
   color: var(--forest);
 }
 
 .proto-joinroom .joinroom-desc {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -78,47 +133,46 @@
   font-weight: 800;
 }
 
+/* 입력/버튼 모양도 방 만들기 모달과 맞춘다(.text-input / .btn-submit 값 그대로).
+   코드 자체는 대문자 고정 폭이라 letter-spacing/uppercase만 남긴다 — 이건 이 화면 고유다. */
 .proto-joinroom .joinroom-input {
-  height: 50px;
-  padding: 0 16px;
-  border: 1.5px solid var(--line);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.85);
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--input-bdr);
+  border-radius: 12px;
+  background: var(--input-bg);
   color: var(--text);
   font: inherit;
-  font-size: 1rem;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 .proto-joinroom .joinroom-input:focus {
-  border-color: var(--mint);
-  background: #fff;
-  box-shadow: 0 0 0 5px var(--glow);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.15);
 }
 
+/* 예전엔 초록 그라데이션(#093d26 → #50d990)이라 옆의 방 만들기 버튼과 다른 앱처럼 보였다. */
 .proto-joinroom .joinroom-submit {
-  height: 50px;
-  border: 0;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #093d26, #16874b 56%, #50d990);
-  color: #fff;
+  width: 100%;
+  height: 46px;
+  border: none;
+  border-radius: 14px;
+  background: var(--btn-bg);
+  color: #0a0f0c;
   font: inherit;
-  font-size: 1rem;
-  font-weight: 900;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: opacity 0.15s;
+  margin-top: 8px;
 }
-.proto-joinroom .joinroom-submit:hover {
-  transform: translateY(-2px);
-}
-.proto-joinroom .joinroom-submit:disabled {
-  opacity: 0.7;
-  cursor: default;
-  transform: none;
-}
+.proto-joinroom .joinroom-submit:hover { opacity: 0.88; }
+.proto-joinroom .joinroom-submit:disabled { opacity: 0.7; cursor: default; }
 
 .proto-joinroom .joinroom-message {
   color: var(--warn);
@@ -137,7 +191,13 @@
   line-height: 1.6;
 }
 
+/* 모달에선 링크가 아니라 "닫기" 동작이라 button이다 — 생김새만 링크로 맞춘다. */
 .proto-joinroom .joinroom-back-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
   color: var(--leaf);
   font-size: 0.85rem;
   font-weight: 800;
@@ -146,3 +206,6 @@
 .proto-joinroom .joinroom-back-link:hover {
   text-decoration: underline;
 }
+
+/* 라이트 모드용 별도 블록이 없는 건 의도다 — 위에서 앱 팔레트를 var()로 넘겨받으므로
+   .proto-roomlist 의 body.light-mode 오버라이드가 그대로 따라온다. */

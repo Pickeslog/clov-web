@@ -1108,6 +1108,11 @@
 .proto-letters .letter-write-card h3, .proto-letters .letter-write-card > p { text-align: left; }
 /* 텍스트영역: 전역 다크 input 스타일을 받아 검게 나오던 문제 → 크림 종이 카드에 맞춰 흰 배경 고정 */
 .proto-letters .letter-write-textarea {
+  /* box-sizing 미지정 시 기본값(content-box)이라 width:100% 위에 padding(@scope 안
+     .letter-write-textarea, 14px 16px)·border(1.5px)가 더 얹혀 카드 우측 밖으로
+     35px 삐져나갔다(#333). 카드(.letter-write-card, 1148행)의 overflow-x:hidden이
+     그걸 잘라내 텍스트영역 우측 테두리가 헤더·버튼 줄과 어긋나 보였다. */
+  box-sizing: border-box;
   width: 100%; background: #ffffff; color: var(--text-color);
   border: 1.5px solid var(--input-border); border-radius: 12px;
   font-family: inherit; font-size: 14px;

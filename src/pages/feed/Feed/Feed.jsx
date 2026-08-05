@@ -375,7 +375,7 @@ export default function Feed() {
                             </button>
                           </div>
                           <div className="memory-title">{item.title}</div>
-                          {preview && <div className="my-record-text">{preview}</div>}
+                          <div className="my-record-text">{preview}</div>
                         </div>
                         <MemoryFooterTags tags={tags} />
                         <div className="memory-meta-row">

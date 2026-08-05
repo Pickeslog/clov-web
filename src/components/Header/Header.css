@@ -190,6 +190,12 @@
   position: fixed; inset: 0; z-index: 300;
   background: rgba(0, 0, 0, 0.5);
   display: flex; align-items: center; justify-content: center; padding: 16px;
+  /* 드롭다운(.clov-hdr-dropdown)과 같은 방식 — mount 시점에도 transition만으로
+     걸리도록 @starting-style을 쓴다. 갑자기 튀어나오지 않고 살짝 떠오르며 들어온다. */
+  transition: opacity .18s ease;
+}
+@starting-style {
+  .clov-rs-backdrop { opacity: 0; }
 }
 .clov-rs-modal {
   width: 100%; max-width: 360px; max-height: 80vh; overflow-y: auto;
@@ -198,6 +204,13 @@
   /* .clov-hdr(헤더)만 몽토리체 예외 — 이 모달은 헤더 바깥(형제 엘리먼트)이라 전역 폰트를 그대로 쓴다(#258). */
   font-family: var(--sans);
   box-sizing: border-box;
+  transform-origin: top center;
+  /* 로그인 화면 인트로(login-slime-in)처럼 "통!" 튀는 느낌을 내되, 과하지 않게 스케일
+     오버슈트 폭만 키운 스프링 이징 하나로 축약(별도 keyframe 없이 transition만으로). */
+  transition: opacity .2s ease, transform .32s cubic-bezier(.34, 1.56, .64, 1);
+}
+@starting-style {
+  .clov-rs-modal { opacity: 0; transform: scale(.82) translateY(10px); }
 }
 .clov-rs-modal *, .clov-rs-modal *::before, .clov-rs-modal *::after { box-sizing: border-box; }
 .clov-rs-head {

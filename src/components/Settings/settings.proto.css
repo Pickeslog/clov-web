@@ -29,11 +29,23 @@
 .proto-settings .ps-overlay {
   position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center;
   padding: 20px; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px);
+  /* Header.jsx 드롭다운·방 변경하기 모달과 같은 결 — mount 시점에도 transition만으로
+     걸리도록 @starting-style을 쓴다(팝업처럼 갑자기 뜨지 않게). */
+  transition: opacity .18s ease;
+}
+@starting-style {
+  .proto-settings .ps-overlay { opacity: 0; }
 }
 .proto-settings .ps-modal {
   width: min(720px, 100%); max-height: calc(100vh - 56px); overflow: hidden;
   background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-md);
   color: var(--text); display: flex; flex-direction: column;
+  /* RoomSwitcher(.clov-rs-modal)와 같은 스프링 이징 — 오버슈트 폭만 키워 "통!" 느낌,
+     별도 keyframe 없이 transition 하나로 축약(과하지 않게 딱 한 번만 튀고 멈춘다). */
+  transition: opacity .2s ease, transform .32s cubic-bezier(.34, 1.56, .64, 1);
+}
+@starting-style {
+  .proto-settings .ps-modal { opacity: 0; transform: scale(.84) translateY(10px); }
 }
 .proto-settings .ps-head {
   display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;

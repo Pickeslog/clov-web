@@ -96,11 +96,18 @@ export default function Signup() {
     submit()
   }
 
+  // 스텝을 옮길 때는 항상 이 함수로 — 이전 스텝에서 난 실패 메시지가 다음 스텝까지
+  // 따라와서 맥락 없이 보이는 걸 막는다(뒤로가기 포함, #271).
+  const goToStep = (step) => {
+    setMessage('')
+    setStep(step)
+  }
+
   const goStep1 = () => {
     setMessage('')
     if (!EMAIL_RE.test(email.trim())) return triggerShake('email')
     if (!checks.ok) return triggerShake('password')
-    setStep(1)
+    goToStep(1)
   }
 
   const goStep2 = () => {
@@ -108,7 +115,7 @@ export default function Signup() {
       triggerTermsShake()
       return
     }
-    setStep(2)
+    goToStep(2)
   }
 
   const submit = async ({ skipBirthNudge = false } = {}) => {
@@ -281,7 +288,7 @@ export default function Signup() {
               </div>
             </div>
             <button type="button" className="signup-btn-primary" onClick={goStep2} style={{ marginTop: 0 }}>Clov. 시작하기</button>
-            <button type="button" className="signup-btn-secondary" onClick={() => setStep(0)}>← 이전으로</button>
+            <button type="button" className="signup-btn-secondary" onClick={() => goToStep(0)}>← 이전으로</button>
           </div>
         )}
 
@@ -325,7 +332,8 @@ export default function Signup() {
             <button type="button" className="signup-btn-primary" onClick={() => submit()} disabled={submitting}>
               {submitting ? '가입 중…' : '프로필 저장하기 →'}
             </button>
-            <button type="button" className="signup-btn-secondary" onClick={() => setStep(1)}>← 이전으로</button>
+            <div className={`signup-message${message ? ' is-show' : ''}`} role="alert">{message}</div>
+            <button type="button" className="signup-btn-secondary" onClick={() => goToStep(1)}>← 이전으로</button>
           </div>
         )}
 

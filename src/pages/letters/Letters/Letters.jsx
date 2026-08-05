@@ -8,8 +8,8 @@ import { getPreferences } from '../../../api/user'
 import Header from '../../../components/Header/Header'
 import Mascot from '../../../components/Mascot/Mascot'
 import Button from '../../../components/Button/Button'
+import { avatarColorForKey } from '../../../lib/avatarColor'
 
-const AVATAR_COLORS = ['#40916c', '#52b788', '#74c69d', '#95d5b2', '#2d6a4f']
 // 편지 화면 라이트 팔레트(인라인 CSS 변수) — <main>에 부여해 모든 하위가 상속.
 // letters.proto.css의 @scope 팔레트가 사용자 환경에서 반영 안 되는 이슈를 우회하는 확정 처리.
 const LETTERS_LIGHT_PALETTE = {
@@ -589,7 +589,7 @@ function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, se
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
             </button>
-            {members.map((member, index) => {
+            {members.map((member) => {
               const active = !broadcast && String(member.userId) === receiverUserId
               return (
                 <button
@@ -597,7 +597,7 @@ function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, se
                   type="button"
                   data-recipient-key={String(member.userId)}
                   className={`letter-recipient-avatar-btn${active ? ' active' : ''}`}
-                  style={{ background: AVATAR_COLORS[index % AVATAR_COLORS.length] }}
+                  style={{ background: avatarColorForKey(member.userId) }}
                   onClick={() => { setBroadcast(false); setReceiverUserId(active ? '' : String(member.userId)) }}
                   disabled={!!sendPhase}
                   title={member.nickname}

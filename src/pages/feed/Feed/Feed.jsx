@@ -13,6 +13,7 @@ import { ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
 import Mascot from '../../../components/Mascot/Mascot'
 import Button from '../../../components/Button/Button'
+import { avatarColorForKey } from '../../../lib/avatarColor'
 
 // 작성·수정 공통 (screen-spec-source/03-memory-feed-screen.md §입력 제약) — 프로토타입은 30이지만
 // 리더 결정으로 8. R2 실제 업로드 비용·저장 쿼터 도달 속도 때문에 목업 값을 의도적으로 안 따른다.
@@ -340,7 +341,7 @@ export default function Feed() {
                       <div className="polaroid-presence-row">
                         {visibleAv.map((p, idx) => (
                           <span key={p.id ?? idx} className={`presence-tile ${idx === 0 ? 'is-author' : 'friend'}`} title={p.nickname}>
-                            <span className="presence-dot">
+                            <span className="presence-dot" style={{ background: avatarColorForKey(p.id) }}>
                               {p.profileImageUrl ? <img src={p.profileImageUrl} alt="" /> : initialOf(p.nickname)}
                             </span>
                           </span>
@@ -1196,7 +1197,7 @@ export function MemoryDetailModal({
         if (comment && editingCommentId === comment.id) {
           return (
             <div className="memory-message-row" key={member.userId}>
-              <span className="memory-message-avatar">{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
+              <span className="memory-message-avatar" style={{ background: avatarColorForKey(member.userId) }}>{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
               <span className="memory-message-name">{member.nickname}</span>
               <input
                 className="memory-message-compose-input"
@@ -1216,7 +1217,7 @@ export function MemoryDetailModal({
         if (comment) {
           return (
             <div className="memory-message-row" key={member.userId}>
-              <span className="memory-message-avatar">{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
+              <span className="memory-message-avatar" style={{ background: avatarColorForKey(member.userId) }}>{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
               <span className="memory-message-name">{member.nickname}</span>
               <span className="memory-message-text">{comment.content}</span>
               {isSelf && (
@@ -1232,7 +1233,7 @@ export function MemoryDetailModal({
         if (isSelf) {
           return (
             <div className="memory-message-row" key={member.userId}>
-              <span className="memory-message-avatar">{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
+              <span className="memory-message-avatar" style={{ background: avatarColorForKey(member.userId) }}>{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
               <span className="memory-message-name">{member.nickname}</span>
               <input
                 className="memory-message-compose-input"
@@ -1251,7 +1252,7 @@ export function MemoryDetailModal({
 
         return (
           <div className="memory-message-row" key={member.userId}>
-            <span className="memory-message-avatar">{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
+            <span className="memory-message-avatar" style={{ background: avatarColorForKey(member.userId) }}>{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
             <span className="memory-message-name">{member.nickname}</span>
             <span className="memory-message-empty-text">아직 메시지 없음</span>
           </div>
@@ -1262,7 +1263,7 @@ export function MemoryDetailModal({
           <div className="memory-detail-messages-former-title">이전 멤버</div>
           {formerComments.map((comment) => (
             <div className="memory-message-row" key={comment.id}>
-              <span className="memory-message-avatar">{comment.writer?.profileImageUrl ? <img src={comment.writer.profileImageUrl} alt="" /> : initialOf(comment.writer?.nickname)}</span>
+              <span className="memory-message-avatar" style={{ background: avatarColorForKey(comment.writer?.id) }}>{comment.writer?.profileImageUrl ? <img src={comment.writer.profileImageUrl} alt="" /> : initialOf(comment.writer?.nickname)}</span>
               <span className="memory-message-name">{comment.writer?.nickname}</span>
               <span className="memory-message-text">{comment.content}</span>
             </div>

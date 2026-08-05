@@ -338,7 +338,6 @@ body.light-mode .proto-feed .feed-controls-divider { background: rgba(27, 67, 50
   position: relative; overflow: hidden;
 }
 .proto-feed .polaroid-presence-row .presence-dot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.proto-feed .polaroid-presence-row .presence-tile.friend .presence-dot { background: #ff9f7f; }
 .proto-feed .polaroid-presence-row .presence-tile.is-author .presence-dot { box-shadow: 0 0 0 2px #52b788; }
 .proto-feed .presence-more {
   display: inline-flex; align-items: center; justify-content: center;

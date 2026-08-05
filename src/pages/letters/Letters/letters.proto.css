@@ -824,16 +824,6 @@
             background: rgba(224, 86, 127, 0.22);
         }
 
-        .letter-detail-paper::after {
-            content: "🍀";
-            position: absolute;
-            top: 10px;
-            right: 14px;
-            font-size: 20px;
-            opacity: 0.32;
-            transform: rotate(8deg);
-        }
-
         .letter-detail-to,
         .letter-detail-from {
             font-weight: 800;

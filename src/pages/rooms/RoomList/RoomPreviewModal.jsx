@@ -82,7 +82,7 @@ export default function RoomPreviewModal({ roomId, onClose, onEnter }) {
   const notis = useQuery({ queryKey: ['room', roomId, 'preview-noti'], queryFn: () => getNotifications(roomId, undefined, 0, 5), enabled: !!roomId })
 
   const r = room.data
-  const memberList = asList(members.data)
+  const memberList = asList(members.data).filter((m) => m.status === 'ACTIVE')
   const memberCount = r?.memberCount ?? memberList.length
 
   const title = view === 'invite'
@@ -152,7 +152,9 @@ function MainView({ r, level, memberList, memberCount, feed, feedPending, onInvi
 
       <div className="rp-mrow">
         {memberList.slice(0, 6).map((m, i) => (
-          <span key={m.id ?? m.memberId ?? i} className="rp-av" style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}>{initialOf(m.nickname)}</span>
+          <span key={m.id ?? m.memberId ?? i} className="rp-av" style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}>
+            {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
+          </span>
         ))}
         <span className="rp-mrow-n">{memberCount}명 참여 중</span>
       </div>

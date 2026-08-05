@@ -339,7 +339,8 @@
 .proto-roomlist .rp-lvsub { font-size: 12px; color: var(--muted); }
 
 .proto-roomlist .rp-mrow { display: flex; align-items: center; gap: 6px; margin: -2px 2px 16px; flex-wrap: wrap; }
-.proto-roomlist .rp-av { width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; }
+.proto-roomlist .rp-av { width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; overflow: hidden; }
+.proto-roomlist .rp-av img { width: 100%; height: 100%; object-fit: cover; }
 .proto-roomlist .rp-mrow-n { font-size: 12px; color: var(--muted); font-weight: 600; margin-left: 3px; }
 
 .proto-roomlist .rp-sechd { display: flex; align-items: center; justify-content: space-between; margin: 2px 2px 10px; }

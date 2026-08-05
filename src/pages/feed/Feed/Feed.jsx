@@ -624,10 +624,10 @@ function SpacePhotoGallery({ memories, onClose, onOpenMemory }) {
 
       <div className="sg-body">
         {loading && allPhotos.length === 0 ? (
-          <div className="sg-empty"><span className="sg-empty-clover">🍀</span>사진을 불러오는 중…</div>
+          <div className="sg-empty"><span className="sg-empty-clover"><i className="ti ti-clover-filled" aria-hidden="true" /></span>사진을 불러오는 중…</div>
         ) : visible.length === 0 ? (
           <div className="sg-empty">
-            <span className="sg-empty-clover">{query ? '🔍' : '🍀'}</span>
+            <span className="sg-empty-clover">{query ? '🔍' : <i className="ti ti-clover-filled" aria-hidden="true" />}</span>
             {query ? '검색 결과가 없어요.' : '아직 이 우정공간에 올라온 사진이 없어요.'}
           </div>
         ) : (
@@ -890,7 +890,7 @@ export function CreateMemoryModal({ roomId, members, submitting, errorMessage, i
                 </>
               ) : (
                 <>
-                  <button type="button" className="mp-connect-open" onClick={() => setPickerOpen(true)}>🗓️ 일정계획에서 약속 가져오기</button>
+                  <button type="button" className="mp-connect-open" onClick={() => setPickerOpen(true)}><i className="ti ti-calendar" aria-hidden="true" /> 일정계획에서 약속 가져오기</button>
                   <div className="mp-connect-hint">연결 안 하면 <b>자유 기록(FREE MEMORY)</b>으로 저장돼요</div>
                 </>
               )}
@@ -1001,7 +1001,7 @@ function ScheduleJourneyModal({ roomId, plan, onClose }) {
           <button type="button" className="sj-close" onClick={onClose} aria-label="닫기">×</button>
         </div>
         <div className={`sj-progress ${isComplete ? 'is-complete' : ''}`}>
-          <span className="sj-progress-label">인생4컷 {doneCount}/4{isComplete ? ' · 완성 🍀' : ''}</span>
+          <span className="sj-progress-label">인생4컷 {doneCount}/4{isComplete ? ' · 완성' : ''}</span>
           <span className="sj-progress-bar"><span className="sj-progress-fill" style={{ width: `${Math.round((doneCount / 4) * 100)}%` }} /></span>
         </div>
         <div className="sj-stages">

@@ -434,7 +434,7 @@ body.light-mode .proto-feed .feed-controls-divider { background: rgba(27, 67, 50
   background: #fff; color: #24382f; font-family: inherit; padding: 10px 12px;
 }
 .proto-feed .memory-detail-edit-title-input { font-size: 15px; font-weight: 700; }
-.proto-feed .memory-detail-edit-body-input { font-size: 14px; line-height: 1.6; min-height: 120px; resize: vertical; }
+.proto-feed .memory-detail-edit-body-input { font-size: 14px; line-height: 1.6; min-height: 120px; resize: none; }
 .proto-feed .memory-detail-edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
 /* 댓글(친구 한 줄 메시지) */

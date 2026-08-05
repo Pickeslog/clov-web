@@ -609,7 +609,7 @@ export default function Dashboard() {
                   value={statusValue}
                   maxLength={STATUS_MAX}
                   placeholder="상태 메시지를 남겨보세요"
-                  onChange={(e) => setStatusDraft(e.target.value)}
+                  onChange={(e) => setStatusDraft(e.target.value.slice(0, STATUS_MAX))}
                 />
                 <span className="cover-status-count">{statusLen} / {STATUS_MAX}</span>
                 {!statusValue && <span className="cover-status-hint">(최대 {STATUS_MAX}자)</span>}
@@ -826,7 +826,7 @@ function InviteModal({ roomId, roomName, onClose }) {
   const cancelMutation = useMutation({ mutationFn: (inviteId) => cancelInvite(inviteId), onSuccess: invalidate })
 
   const shareText = code
-    ? `우리 우정공간 "${roomName ?? 'Clov'}"에 초대해요! 🍀\nClov 앱에서 아래 코드로 입장을 신청하세요.\n초대코드: ${code}`
+    ? `우리 우정공간 "${roomName ?? 'Clov'}"에 초대해요!\nClov 앱에서 아래 코드로 입장을 신청하세요.\n초대코드: ${code}`
     : ''
   const copy = async (text, key) => {
     try {

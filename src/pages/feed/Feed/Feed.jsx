@@ -434,6 +434,7 @@ function MonthPicker({ items, activeMonth, onPick }) {
     return latest ? Number(latest.split('-')[0]) : new Date().getFullYear()
   })
   const wrapRef = useRef(null)
+  const popRef = useRef(null)
 
   useEffect(() => {
     if (!open) return undefined
@@ -442,6 +443,25 @@ function MonthPicker({ items, activeMonth, onPick }) {
     }
     document.addEventListener('mousedown', onDoc)
     return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  // 팝오버는 트리거 아래로 펼쳐지는데, 필터 줄이 화면 중간쯤에 있으면 아래쪽이 접힌다
+  // (375x667 실측: 382px 중 136px이 화면 밖). 모자란 만큼만 끌어올린다.
+  //
+  // scrollIntoView를 쓰지 않는다. block:'nearest'는 위쪽이 이미 보이면 아무것도 안 해서
+  // 이 상황에 무반응이고, 'end'는 다 보일 때도 화면을 끌어당긴다. 게다가 scrollIntoView는
+  // 스크롤 조상을 스스로 찾아 올라가서 엉뚱한 컨테이너를 움직인 적이 있다(#240).
+  // 넘친 양을 직접 계산해 window만 그만큼 민다.
+  useEffect(() => {
+    if (!open) return
+    const el = popRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const over = r.bottom - window.innerHeight + 12 // 12 = 화면 아래와의 여백
+    if (over <= 0) return
+    // 아래를 맞추려다 팝오버 위쪽(과 트리거)이 화면 밖으로 나가면 더 나쁘다 — 거기까지만.
+    const limit = Math.max(0, r.top - 12)
+    window.scrollBy({ top: Math.min(over, limit), behavior: 'smooth' })
   }, [open])
 
   const counts = useMemo(() => {
@@ -469,7 +489,7 @@ function MonthPicker({ items, activeMonth, onPick }) {
         <IconCalendar />
       </button>
       {open && (
-        <div className="month-picker-popover open" role="dialog" aria-label="월 선택">
+        <div className="month-picker-popover open" ref={popRef} role="dialog" aria-label="월 선택">
           <div className="month-picker-header">
             <button type="button" className="month-picker-nav" onClick={() => setYear((y) => y - 1)} aria-label="이전 년도">❮</button>
             <div className="month-picker-year">{year}년</div>

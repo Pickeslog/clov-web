@@ -11,7 +11,9 @@ import Button from '../../../components/Button/Button'
 import { avatarColorForKey } from '../../../lib/avatarColor'
 
 // 편지 화면 라이트 팔레트(인라인 CSS 변수) — <main>에 부여해 모든 하위가 상속.
-// letters.proto.css의 @scope 팔레트가 사용자 환경에서 반영 안 되는 이슈를 우회하는 확정 처리.
+// letters.proto.css가 @scope를 쓰던 시절엔 이게 "@scope 반영 안 됨" 문제를 우회하는
+// 유일한 방법이었다(#345로 @scope 제거됨) — 지금은 인라인 style이 CSS보다 항상
+// 이겨서 그대로 안전하게 남겨둔다(동작 불변).
 const LETTERS_LIGHT_PALETTE = {
   colorScheme: 'light',
   '--primary-green': '#1b4332',
@@ -219,7 +221,7 @@ export default function Letters() {
 
   return (
     // 편지 = 항상 크림/라이트 종이 미감. 팔레트 변수를 인라인으로 못박아(모든 하위가 상속)
-    // @scope CSS가 사용자 환경에서 반영 안 되는 문제와 무관하게 다크 모드에서도 라이트로 렌더.
+    // 다크 모드에서도 라이트로 렌더(LETTERS_LIGHT_PALETTE 정의부 주석 참고).
     <main className="proto-letters" style={LETTERS_LIGHT_PALETTE}>
       <Header variant="room" roomId={roomId} activeTab="letter" />
       <Mascot roomId={roomId} />

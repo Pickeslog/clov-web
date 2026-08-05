@@ -1,24 +1,27 @@
-@scope (.proto-schedule) {
   /* ─────────────────────────────────────────────────────────────
      일정계획(약속 여정) — 프로토타입 룩 이식.
      원본: test-web-design/02-main (schedule.css · desktop.css · space.css).
      이 화면은 "크림 종이/세이지 앨범" 미감이라 라이트로 고정한다(팔레트는 <main> 인라인).
      .mobile-window 규칙은 실제 뷰포트 미디어쿼리로 전환, body.dark-mode 규칙은 제거.
-     ───────────────────────────────────────────────────────────── */
+     ★ 예전엔 @scope(.proto-schedule){}로 감싸 스코프를 잡았는데(letters.proto.css와 같은
+     방식), @scope 스펙상 알려진 함정(루트 요소 자신엔 안 먹음, team-guides/19 §5) 때문에
+     팔레트 변수는 이미 <main> 인라인 style로 뺐었다. 클래스 접두(.proto-schedule .foo)
+     방식으로 통일해 @scope를 걷어냈다(#345) — feed/dashboard/roomlist/notifications와
+     같은 방식이 됐다. .ticket-cal(document.body 포탈)만 원래도 스코프 밖이라 그대로 둔다. */
 
   /* 프로토타입은 전역 border-box 리셋 위에서 동작한다. 프로덕션 index.css엔 #root에만
      border-box라, width:100%+padding 요소(receipt-paper/입력/메모)가 content-box로
      삐져나가 모달 overflow:hidden에 잘렸다 → 스코프 안에서 border-box로 고정. */
-  *, *::before, *::after { box-sizing: border-box; }
+  .proto-schedule *, .proto-schedule *::before, .proto-schedule *::after { box-sizing: border-box; }
 
-  .schedule-wrap {
+  .proto-schedule .schedule-wrap {
     max-width: 980px;
     margin: 0 auto;
     padding: 26px 20px 72px;
   }
 
   /* 상태/에러/빈 안내 */
-  .schedule-state {
+  .proto-schedule .schedule-state {
     max-width: 660px;
     margin: 0 auto 16px;
     text-align: center;
@@ -32,13 +35,13 @@
   }
 
   /* ── 약속 여정 탭 타이틀 ── */
-  .section-title {
+  .proto-schedule .section-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
   }
-  .journey-section-title {
+  .proto-schedule .journey-section-title {
     max-width: 660px;
     margin: 0 auto 14px;
     align-items: center;
@@ -47,15 +50,15 @@
 
   /* 우정공간(Dashboard) .section-actions/.clov-btn--dashed 오버라이드와 동일하게 맞춘다(#258) —
      이 화면 전용 버튼(.btn-schedule-new)을 쓰지 않고 공용 Button 컴포넌트를 그대로 재사용한다. */
-  .section-actions { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
-  .clov-btn--dashed {
+  .proto-schedule .section-actions { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .proto-schedule .clov-btn--dashed {
     background: #faf6ee; color: #2e5233;
     border-width: 1.5px; border-style: dashed; border-color: rgba(46,82,51,.45);
   }
-  .clov-btn--dashed:not(:disabled):hover { background: #f3efe1; }
+  .proto-schedule .clov-btn--dashed:not(:disabled):hover { background: #f3efe1; }
 
   /* ── 여정 셸 ── */
-  .growth-shell {
+  .proto-schedule .growth-shell {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
@@ -64,7 +67,7 @@
 
   /* ══════════ 약속 상세 ══════════
      별도 마운트 배경 없이 페이지 배경 위에 티켓만 바로 떠 있게 한다. */
-  .growth-detail {
+  .proto-schedule .growth-detail {
     position: relative;
     width: 100%;
     max-width: 640px;
@@ -73,10 +76,10 @@
 
   /* ══════════ 약속 티켓(앞면) — 입장권 미감. 아래 .ticket-slip(뒷면)에
      기존 영수증 메모·체크리스트·상태 전환·수정/삭제를 그대로 담는다. ══════════ */
-  .ticket-stage { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 18px; perspective: 1200px; }
-  .ticket-tilt { width: 100%; transform-style: preserve-3d; }
+  .proto-schedule .ticket-stage { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 18px; perspective: 1200px; }
+  .proto-schedule .ticket-tilt { width: 100%; transform-style: preserve-3d; }
 
-  .ticket-card {
+  .proto-schedule .ticket-card {
     position: relative;
     display: flex;
     width: 100%;
@@ -85,9 +88,9 @@
     cursor: pointer;
     outline: none;
   }
-  .ticket-card--edit { max-width: 100%; cursor: default; min-height: 0; }
+  .proto-schedule .ticket-card--edit { max-width: 100%; cursor: default; min-height: 0; }
 
-  .ticket-main {
+  .proto-schedule .ticket-main {
     position: relative;
     flex: 1 1 auto;
     min-width: 0;
@@ -96,8 +99,8 @@
     box-shadow: 0 1.5px 2px rgba(30, 38, 28, 0.28), 0 8px 16px rgba(30, 38, 28, 0.24), inset 0 1px 0 rgba(240, 232, 207, 0.18), inset 0 0 0 1px rgba(226, 214, 176, 0.14);
     overflow: hidden;
   }
-  .ticket-card--edit .ticket-main { border-radius: 14px; }
-  .ticket-holo {
+  .proto-schedule .ticket-card--edit .ticket-main { border-radius: 14px; }
+  .proto-schedule .ticket-holo {
     position: absolute;
     inset: 0;
     background: linear-gradient(115deg, transparent 34%, rgba(196, 231, 214, 0.16) 44%, rgba(226, 214, 176, 0.22) 50%, rgba(214, 186, 196, 0.16) 56%, transparent 66%);
@@ -105,7 +108,7 @@
     animation: clovHolo 9s linear infinite;
     pointer-events: none;
   }
-  .ticket-content {
+  .proto-schedule .ticket-content {
     position: relative;
     z-index: 2;
     height: 100%;
@@ -120,10 +123,10 @@
        밝은 베이스에 섞어서 항상 읽히게 한다. */
     --ticket-accent: color-mix(in srgb, var(--stamp, #e0756a) 42%, #ffe9d6);
   }
-  .ticket-card--edit .ticket-content { gap: 12px; }
+  .proto-schedule .ticket-card--edit .ticket-content { gap: 12px; }
 
-  .ticket-toprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-  .ticket-brand {
+  .proto-schedule .ticket-toprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .proto-schedule .ticket-brand {
     font-family: var(--sans);
     font-size: 10px;
     font-weight: 700;
@@ -134,7 +137,7 @@
     color: transparent;
     white-space: nowrap;
   }
-  .ticket-admit {
+  .proto-schedule .ticket-admit {
     font-family: var(--sans);
     font-size: 9px;
     letter-spacing: 0.16em;
@@ -146,7 +149,7 @@
      (예: 'Gothic A1')를 지정했다가 한글 글리프만 조용히 시스템 폰트로 폴백되면서
      letter-spacing이 어긋난 적이 있어서 시스템 폰트로 굳혀뒀었다. 이제 --sans가 실제
      로드되는 폰트라 같은 문제는 재발하지 않는다. */
-  .ticket-title {
+  .proto-schedule .ticket-title {
     font-family: var(--sans);
     font-size: 22px;
     font-weight: 900;
@@ -155,13 +158,13 @@
   }
   /* 제목(약속 이름)만 장식용 모노스페이스 텍스트(브랜드/발권번호 등)와 뚜렷이 구분되게 —
      색은 --ticket-accent 하나로 D-DAY·스텁과 같은 축에서 나온다(포인트 컬러 통일). */
-  .ticket-title--highlight {
+  .proto-schedule .ticket-title--highlight {
     position: relative;
     display: inline-block;
     color: var(--ticket-accent);
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 0 26px color-mix(in srgb, var(--ticket-accent) 45%, transparent);
   }
-  .ticket-title--highlight::after {
+  .proto-schedule .ticket-title--highlight::after {
     content: "";
     position: absolute;
     left: 1px; right: 1px; bottom: -3px;
@@ -170,7 +173,7 @@
     background: linear-gradient(90deg, transparent, var(--ticket-accent) 18%, var(--ticket-accent) 82%, transparent);
     opacity: 0.85;
   }
-  .ticket-kicker {
+  .proto-schedule .ticket-kicker {
     margin-top: 4px;
     font-family: var(--sans);
     font-size: 9px;
@@ -178,7 +181,7 @@
     color: rgba(226, 214, 176, 0.68);
   }
 
-  .ticket-title-input {
+  .proto-schedule .ticket-title-input {
     display: block;
     width: 100%;
     border: none;
@@ -191,20 +194,20 @@
     padding: 2px 2px 6px;
     outline: none;
   }
-  .ticket-title-input::placeholder { color: rgba(244, 242, 232, 0.45); font-weight: 700; }
+  .proto-schedule .ticket-title-input::placeholder { color: rgba(244, 242, 232, 0.45); font-weight: 700; }
 
-  .ticket-meta {
+  .proto-schedule .ticket-meta {
     display: flex;
     gap: 30px;
     border-top: 1px solid rgba(226, 214, 176, 0.22);
     padding-top: 9px;
     font-family: var(--sans);
   }
-  .ticket-meta > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-  .ticket-meta > div > span:first-child { font-size: 9px; letter-spacing: 0.2em; color: rgba(244, 242, 232, 0.55); }
-  .ticket-meta > div > b { font-size: 14px; font-weight: 600; white-space: nowrap; }
+  .proto-schedule .ticket-meta > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .proto-schedule .ticket-meta > div > span:first-child { font-size: 9px; letter-spacing: 0.2em; color: rgba(244, 242, 232, 0.55); }
+  .proto-schedule .ticket-meta > div > b { font-size: 14px; font-weight: 600; white-space: nowrap; }
   /* D-DAY는 앞면에 안 보여준다 — 스텁(뜯으면 나오는 쪽)에만 있어야 "뜯는" 행동에 의미가 생긴다. */
-  .ticket-meta > div > b.ticket-meta-teaser {
+  .proto-schedule .ticket-meta > div > b.ticket-meta-teaser {
     font-size: 11px;
     font-weight: 600;
     font-style: italic;
@@ -213,7 +216,7 @@
   }
 
   /* 날짜 선택 트리거 — 실제 달력 팝오버는 .ticket-cal(아래) */
-  .ticket-date-trigger {
+  .proto-schedule .ticket-date-trigger {
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -227,16 +230,16 @@
     cursor: pointer;
     border-bottom: 1px dashed rgba(226, 214, 176, 0.4);
   }
-  .ticket-date-trigger .is-empty { color: rgba(244, 242, 232, 0.5); font-weight: 400; }
+  .proto-schedule .ticket-date-trigger .is-empty { color: rgba(244, 242, 232, 0.5); font-weight: 400; }
 
-  .ticket-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .ticket-foot span:first-child {
+  .proto-schedule .ticket-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .proto-schedule .ticket-foot span:first-child {
     font-family: var(--sans);
     font-size: 9px;
     letter-spacing: 0.16em;
     color: rgba(244, 242, 232, 0.4);
   }
-  .ticket-serial {
+  .proto-schedule .ticket-serial {
     font-family: var(--sans);
     font-size: 10px;
     letter-spacing: 0.1em;
@@ -244,7 +247,7 @@
   }
 
   /* ── 스텁(오른쪽, 뜯어지는 조각) ── */
-  .ticket-stub {
+  .proto-schedule .ticket-stub {
     position: relative;
     flex: 0 0 118px;
     width: 118px;
@@ -264,9 +267,9 @@
        들어올(마운트될) 때마다 "다시 붙는" 연출이 매번 재생됐다. 이제 실제로 뜯었다가
        닫을 때만(.is-back, TicketCard의 reattaching 상태) 재생한다. */
   }
-  .ticket-stub.is-off { animation: clovTearOff 0.4s steps(2, end) forwards; }
-  .ticket-stub.is-back { animation: clovTearBack 0.22s cubic-bezier(.3,.8,.4,1) forwards; }
-  .ticket-stub-side {
+  .proto-schedule .ticket-stub.is-off { animation: clovTearOff 0.4s steps(2, end) forwards; }
+  .proto-schedule .ticket-stub.is-back { animation: clovTearBack 0.22s cubic-bezier(.3,.8,.4,1) forwards; }
+  .proto-schedule .ticket-stub-side {
     writing-mode: vertical-rl;
     transform: rotate(180deg);
     font-family: var(--sans);
@@ -274,7 +277,7 @@
     letter-spacing: 0.24em;
     color: rgba(226, 214, 176, 0.45);
   }
-  .ticket-stub-mid {
+  .proto-schedule .ticket-stub-mid {
     position: relative;
     flex: 1;
     display: flex;
@@ -284,8 +287,8 @@
     gap: 6px;
     text-align: center;
   }
-  .ticket-stub-kicker { font-size: 9px; letter-spacing: 0.06em; color: rgba(244, 242, 232, 0.62); }
-  .ticket-stub-dday {
+  .proto-schedule .ticket-stub-kicker { font-size: 9px; letter-spacing: 0.06em; color: rgba(244, 242, 232, 0.62); }
+  .proto-schedule .ticket-stub-dday {
     font-family: var(--sans);
     font-weight: 700;
     font-size: 26px;
@@ -298,15 +301,15 @@
     background-clip: text;
     color: transparent;
   }
-  .ticket-stub-barcode {
+  .proto-schedule .ticket-stub-barcode {
     width: 100%;
     height: 22px;
     opacity: 0.85;
     background-image: repeating-linear-gradient(90deg, #f4f2e8 0 1px, transparent 1px 3px, #f4f2e8 3px 4px, transparent 4px 7px, #f4f2e8 7px 8px, transparent 8px 10px);
   }
-  .ticket-stub-no { font-family: var(--sans); font-size: 9px; letter-spacing: 0.14em; color: rgba(226, 214, 176, 0.42); }
+  .proto-schedule .ticket-stub-no { font-family: var(--sans); font-size: 9px; letter-spacing: 0.14em; color: rgba(226, 214, 176, 0.42); }
 
-  .ticket-glare { position: absolute; inset: 0; border-radius: 14px; pointer-events: none; z-index: 6; transition: opacity 0.3s ease; }
+  .proto-schedule .ticket-glare { position: absolute; inset: 0; border-radius: 14px; pointer-events: none; z-index: 6; transition: opacity 0.3s ease; }
 
   @keyframes clovHolo { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
   @keyframes clovTearOff {
@@ -325,23 +328,23 @@
   }
 
   /* ══════════ 티켓 상세 모달 — 메모/체크리스트/상태 전환/수정·삭제(크림 영수증 톤 재사용) ══════════ */
-  .modal-box.ticket-detail { max-width: 540px; background: transparent; box-shadow: none; border: none; overflow: visible; padding: 24px; }
-  .ticket-detail .receipt-paper { width: 460px; padding: 28px 30px 28px; }
-  .ticket-detail-head { text-align: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px dashed rgba(28, 26, 23, 0.3); }
-  .ticket-detail-head h3 {
+  .proto-schedule .modal-box.ticket-detail { max-width: 540px; background: transparent; box-shadow: none; border: none; overflow: visible; padding: 24px; }
+  .proto-schedule .ticket-detail .receipt-paper { width: 460px; padding: 28px 30px 28px; }
+  .proto-schedule .ticket-detail-head { text-align: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px dashed rgba(28, 26, 23, 0.3); }
+  .proto-schedule .ticket-detail-head h3 {
     margin: 0 0 4px;
     font-family: var(--sans);
     font-size: 19px;
     font-weight: 900;
     color: #1c1a17;
   }
-  .ticket-detail-head span {
+  .proto-schedule .ticket-detail-head span {
     font-family: var(--sans);
     font-size: 11px;
     letter-spacing: 0.06em;
     color: rgba(28, 26, 23, 0.55);
   }
-  .ticket-detail-close {
+  .proto-schedule .ticket-detail-close {
     position: absolute;
     top: 10px; right: 10px;
     width: 28px; height: 28px;
@@ -353,18 +356,18 @@
     line-height: 1;
     cursor: pointer;
   }
-  .ticket-detail-close:hover { background: rgba(28, 26, 23, 0.16); }
+  .proto-schedule .ticket-detail-close:hover { background: rgba(28, 26, 23, 0.16); }
 
   /* 상세 모달은 크림 영수증이 아니라 "뜯어서 연 스텁 안쪽"처럼 티켓 톤을 그대로 이어받는다. */
-  .ticket-detail .receipt-paper {
+  .proto-schedule .ticket-detail .receipt-paper {
     background: linear-gradient(150deg, #33402f 0%, #26301f 55%, #2c3a26 100%);
     color: #f4f2e8;
     border-radius: 14px;
     box-shadow: 0 1.5px 2px rgba(30, 38, 28, 0.3), 0 16px 34px rgba(18, 24, 16, 0.4), inset 0 1px 0 rgba(240, 232, 207, 0.16), inset 0 0 0 1px rgba(226, 214, 176, 0.16);
     overflow: hidden;
   }
-  .ticket-detail .receipt-paper::before,
-  .ticket-detail .receipt-paper::after {
+  .proto-schedule .ticket-detail .receipt-paper::before,
+  .proto-schedule .ticket-detail .receipt-paper::after {
     content: "";
     top: 0;
     width: auto;
@@ -374,14 +377,14 @@
     box-shadow: none;
     transform: none;
   }
-  .ticket-detail .receipt-paper::before {
+  .proto-schedule .ticket-detail .receipt-paper::before {
     left: 16px; right: 16px;
     border-top: 2px dashed rgba(226, 214, 176, 0.3);
   }
-  .ticket-detail .receipt-paper::after { content: none; }
-  .ticket-detail .receipt-zigzag { display: none; }
+  .proto-schedule .ticket-detail .receipt-paper::after { content: none; }
+  .proto-schedule .ticket-detail .receipt-zigzag { display: none; }
 
-  .ticket-detail-brandrow {
+  .proto-schedule .ticket-detail-brandrow {
     position: relative;
     z-index: 1;
     display: flex;
@@ -390,7 +393,7 @@
     gap: 10px;
     padding-top: 6px;
   }
-  .ticket-detail-stub-tag {
+  .proto-schedule .ticket-detail-stub-tag {
     font-family: 'Space Mono', 'Courier New', monospace;
     font-size: 9px;
     letter-spacing: 0.16em;
@@ -398,48 +401,48 @@
     white-space: nowrap;
   }
 
-  .ticket-detail .ticket-detail-head {
+  .proto-schedule .ticket-detail .ticket-detail-head {
     position: relative;
     z-index: 1;
     border-bottom-color: rgba(226, 214, 176, 0.24);
   }
-  .ticket-detail .ticket-detail-head h3 {
+  .proto-schedule .ticket-detail .ticket-detail-head h3 {
     font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
     color: #f4f2e8;
   }
-  .ticket-detail .ticket-detail-head span {
+  .proto-schedule .ticket-detail .ticket-detail-head span {
     color: rgba(244, 242, 232, 0.62);
   }
-  .ticket-detail .ticket-detail-close {
+  .proto-schedule .ticket-detail .ticket-detail-close {
     background: rgba(244, 242, 232, 0.18);
     color: #f4f2e8;
   }
-  .ticket-detail .ticket-detail-close:hover { background: rgba(244, 242, 232, 0.3); }
+  .proto-schedule .ticket-detail .ticket-detail-close:hover { background: rgba(244, 242, 232, 0.3); }
 
   /* 완료/취소/수정/삭제는 티켓 앞면의 D-day 스탬프색(--stamp, 지난 약속=그린)을 그대로 쓰면
      이 어두운 배경 위에서 배경과 거의 같은 색이 돼 버튼이 안 보인다(#지난 약속에서 실제로 발생) —
      그래서 모달 액션 버튼은 --stamp와 분리된 고정 골드 악센트를 쓴다. */
-  .ticket-detail { --action-accent-strong: #d9a95c; }
+  .proto-schedule .ticket-detail { --action-accent-strong: #d9a95c; }
 
-  .ticket-detail .receipt-memo,
-  .ticket-detail .receipt-memo-empty {
+  .proto-schedule .ticket-detail .receipt-memo,
+  .proto-schedule .ticket-detail .receipt-memo-empty {
     position: relative;
     z-index: 1;
     color: #f4f2e8;
   }
-  .ticket-detail .receipt-memo-desc { color: #f4f2e8; }
-  .ticket-detail .receipt-memo-empty { color: rgba(244, 242, 232, 0.55); }
-  .ticket-detail .receipt-check-text.is-done { color: rgba(244, 242, 232, 0.45); }
+  .proto-schedule .ticket-detail .receipt-memo-desc { color: #f4f2e8; }
+  .proto-schedule .ticket-detail .receipt-memo-empty { color: rgba(244, 242, 232, 0.55); }
+  .proto-schedule .ticket-detail .receipt-check-text.is-done { color: rgba(244, 242, 232, 0.45); }
 
-  .ticket-detail .receipt-barcode {
+  .proto-schedule .ticket-detail .receipt-barcode {
     position: relative;
     z-index: 1;
     opacity: 0.85;
     background-image: repeating-linear-gradient(90deg, #f4f2e8 0 1px, transparent 1px 3px, #f4f2e8 3px 4px, transparent 4px 7px, #f4f2e8 7px 8px, transparent 8px 10px);
   }
 
-  .ticket-detail .receipt-status { position: relative; z-index: 1; gap: 10px; margin: 2px 0 18px; }
-  .ticket-detail .receipt-status-btn {
+  .proto-schedule .ticket-detail .receipt-status { position: relative; z-index: 1; gap: 10px; margin: 2px 0 18px; }
+  .proto-schedule .ticket-detail .receipt-status-btn {
     border: 1.5px solid rgba(244, 242, 232, 0.65);
     background: rgba(244, 242, 232, 0.08);
     color: #f4f2e8;
@@ -447,50 +450,50 @@
     padding: 8px 16px;
     font-size: 11.5px;
   }
-  .ticket-detail .receipt-status-btn:hover:not(:disabled) {
+  .proto-schedule .ticket-detail .receipt-status-btn:hover:not(:disabled) {
     background: rgba(244, 242, 232, 0.18);
     border-color: rgba(244, 242, 232, 0.75);
   }
-  .ticket-detail .receipt-status-btn.is-primary {
+  .proto-schedule .ticket-detail .receipt-status-btn.is-primary {
     background: linear-gradient(135deg, #f4ecd2, var(--action-accent-strong) 60%, #f4ecd2);
     color: #2a2013;
     font-weight: 900;
     border-style: solid;
     border-color: transparent;
   }
-  .ticket-detail .receipt-status-btn.is-primary:hover:not(:disabled) {
+  .proto-schedule .ticket-detail .receipt-status-btn.is-primary:hover:not(:disabled) {
     background: linear-gradient(135deg, #f4ecd2, var(--action-accent-strong) 60%, #f4ecd2);
     filter: brightness(1.06);
     border-color: transparent;
   }
 
-  .ticket-detail .receipt-actions {
+  .proto-schedule .ticket-detail .receipt-actions {
     position: relative;
     z-index: 1;
     gap: 12px;
   }
-  .ticket-detail .receipt-actions button {
+  .proto-schedule .ticket-detail .receipt-actions button {
     background: rgba(244, 242, 232, 0.14);
     border: 1.5px solid rgba(244, 242, 232, 0.58);
     color: #f4f2e8;
     font-weight: 800;
   }
-  .ticket-detail .receipt-actions button:hover {
+  .proto-schedule .ticket-detail .receipt-actions button:hover {
     background: rgba(244, 242, 232, 0.24);
     border-color: rgba(244, 242, 232, 0.65);
     filter: none;
   }
-  .ticket-detail .receipt-actions button.danger {
+  .proto-schedule .ticket-detail .receipt-actions button.danger {
     background: transparent;
     color: #ffb3a3;
     border-color: rgba(255, 157, 143, 0.7);
   }
-  .ticket-detail .receipt-actions button.danger:hover {
+  .proto-schedule .ticket-detail .receipt-actions button.danger:hover {
     background: rgba(255, 107, 90, 0.16);
     border-color: #ff9d8f;
   }
 
-  .receipt-paper {
+  .proto-schedule .receipt-paper {
     position: relative;
     width: 380px;
     max-width: 100%;
@@ -501,8 +504,8 @@
     font-family: var(--sans);
     color: #1c1a17;
   }
-  .receipt-paper::before,
-  .receipt-paper::after {
+  .proto-schedule .receipt-paper::before,
+  .proto-schedule .receipt-paper::after {
     content: "";
     position: absolute;
     top: -14px;
@@ -512,10 +515,10 @@
     border: 1px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
   }
-  .receipt-paper::before { left: -16px; transform: rotate(-6deg); }
-  .receipt-paper::after { right: -16px; transform: rotate(5deg); }
+  .proto-schedule .receipt-paper::before { left: -16px; transform: rotate(-6deg); }
+  .proto-schedule .receipt-paper::after { right: -16px; transform: rotate(5deg); }
 
-  .receipt-zigzag {
+  .proto-schedule .receipt-zigzag {
     position: absolute;
     left: 0; right: 0;
     bottom: -8px;
@@ -527,7 +530,7 @@
     background-repeat: repeat-x;
   }
 
-  .receipt-memo-label {
+  .proto-schedule .receipt-memo-label {
     font-size: 9px;
     color: rgba(28, 26, 23, 0.45);
     letter-spacing: 1.5px;
@@ -535,14 +538,14 @@
     overflow: hidden;
     white-space: nowrap;
   }
-  .receipt-memo {
+  .proto-schedule .receipt-memo {
     font-family: var(--sans);
     font-size: 13px;
     line-height: 1.7;
     color: #1c1a17;
   }
-  .receipt-memo-desc { margin: 0 0 6px; white-space: pre-wrap; }
-  .receipt-memo-empty {
+  .proto-schedule .receipt-memo-desc { margin: 0 0 6px; white-space: pre-wrap; }
+  .proto-schedule .receipt-memo-empty {
     text-align: center;
     font-style: italic;
     color: rgba(28, 26, 23, 0.4);
@@ -550,17 +553,17 @@
   }
 
   /* 취소된 약속 라벨(receipt-status)이 재사용하는 취소선 텍스트 스타일 */
-  .receipt-check-text { flex: 1; }
-  .receipt-check-text.is-done { text-decoration: line-through; color: rgba(28, 26, 23, 0.45); }
+  .proto-schedule .receipt-check-text { flex: 1; }
+  .proto-schedule .receipt-check-text.is-done { text-decoration: line-through; color: rgba(28, 26, 23, 0.45); }
 
-  .receipt-barcode {
+  .proto-schedule .receipt-barcode {
     height: 32px;
     margin: 12px 0 10px;
     background-image: repeating-linear-gradient(90deg, #1c1a17 0 2px, transparent 2px 4px, #1c1a17 4px 5px, transparent 5px 9px);
   }
 
   /* 상태 전환 라인(완료/취소) — 영수증 톤 텍스트 버튼 */
-  .receipt-status {
+  .proto-schedule .receipt-status {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -568,7 +571,7 @@
     margin: 0 0 12px;
     font-family: var(--sans);
   }
-  .receipt-status-btn {
+  .proto-schedule .receipt-status-btn {
     border: 1px solid rgba(46, 82, 51, 0.5);
     background: transparent;
     color: #2e5233;
@@ -580,13 +583,13 @@
     cursor: pointer;
     transition: background 0.18s ease;
   }
-  .receipt-status-btn:hover:not(:disabled) { background: rgba(46, 82, 51, 0.08); }
-  .receipt-status-btn.is-primary { background: #2e5233; color: #f4f1e8; border-style: solid; }
-  .receipt-status-btn.is-danger { color: #c0392b; border-color: rgba(192, 57, 43, 0.5); }
-  .receipt-status-btn:disabled { opacity: 0.5; cursor: default; }
+  .proto-schedule .receipt-status-btn:hover:not(:disabled) { background: rgba(46, 82, 51, 0.08); }
+  .proto-schedule .receipt-status-btn.is-primary { background: #2e5233; color: #f4f1e8; border-style: solid; }
+  .proto-schedule .receipt-status-btn.is-danger { color: #c0392b; border-color: rgba(192, 57, 43, 0.5); }
+  .proto-schedule .receipt-status-btn:disabled { opacity: 0.5; cursor: default; }
 
-  .receipt-actions { display: flex; gap: 10px; }
-  .receipt-actions button {
+  .proto-schedule .receipt-actions { display: flex; gap: 10px; }
+  .proto-schedule .receipt-actions button {
     flex: 1;
     font-family: var(--sans);
     font-size: 11px;
@@ -600,16 +603,16 @@
     color: #f4f1e8;
     transition: filter 0.2s ease;
   }
-  .receipt-actions button:hover { filter: brightness(1.08); }
-  .receipt-actions button.danger {
+  .proto-schedule .receipt-actions button:hover { filter: brightness(1.08); }
+  .proto-schedule .receipt-actions button.danger {
     background: transparent;
     color: #c0392b;
     border-color: #c0392b;
   }
-  .receipt-actions button.danger:hover { background: rgba(192, 57, 43, 0.1); }
+  .proto-schedule .receipt-actions button.danger:hover { background: rgba(192, 57, 43, 0.1); }
 
   /* ══════════ 일정 필터 탭 — 상단 버튼과 동일한 모서리 반경·색 체계로 통일 ══════════ */
-  .growth-hero {
+  .proto-schedule .growth-hero {
     display: flex;
     justify-content: center;
     padding: 18px 0 14px;
@@ -617,7 +620,7 @@
     border-bottom: 1px solid rgba(82, 183, 136, 0.2);
   }
 
-  .growth-density {
+  .proto-schedule .growth-density {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -627,7 +630,7 @@
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.86);
   }
-  .growth-density button {
+  .proto-schedule .growth-density button {
     min-height: 34px;
     padding: 0 12px;
     border: 0;
@@ -643,9 +646,9 @@
     gap: 5px;
     transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
   }
-  .growth-density button:hover { transform: translateY(-1px); }
-  .growth-density button.active { background: var(--primary-green); color: #ffffff; }
-  .growth-density button span {
+  .proto-schedule .growth-density button:hover { transform: translateY(-1px); }
+  .proto-schedule .growth-density button.active { background: var(--primary-green); color: #ffffff; }
+  .proto-schedule .growth-density button span {
     min-width: 18px;
     height: 18px;
     display: inline-flex;
@@ -658,10 +661,10 @@
     font-size: 10px;
     line-height: 1;
   }
-  .growth-density button.active span { background: rgba(255, 255, 255, 0.22); }
+  .proto-schedule .growth-density button.active span { background: rgba(255, 255, 255, 0.22); }
 
   /* ══════════ 인생4컷 필름스트립 카드 레일 ══════════ */
-  .growth-card-rail {
+  .proto-schedule .growth-card-rail {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -670,7 +673,7 @@
     width: 100%;
     position: relative;
   }
-  .carousel-btn {
+  .proto-schedule .carousel-btn {
     flex-shrink: 0;
     width: 28px;
     height: 60px;
@@ -690,10 +693,10 @@
     z-index: 4;
     position: relative;
   }
-  .carousel-btn:hover { background: rgba(82, 183, 136, 0.22); transform: scale(1.06); }
-  .carousel-btn:active { transform: scale(0.94); }
+  .proto-schedule .carousel-btn:hover { background: rgba(82, 183, 136, 0.22); transform: scale(1.06); }
+  .proto-schedule .carousel-btn:active { transform: scale(0.94); }
 
-  .growth-card-viewport {
+  .proto-schedule .growth-card-viewport {
     flex: 0 1 936px;
     min-width: 0;
     max-width: 936px;
@@ -703,9 +706,9 @@
     scroll-behavior: smooth;
     scrollbar-width: none;
   }
-  .growth-card-viewport::-webkit-scrollbar { display: none; }
+  .proto-schedule .growth-card-viewport::-webkit-scrollbar { display: none; }
 
-  .growth-card-list {
+  .proto-schedule .growth-card-list {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -717,7 +720,7 @@
     min-width: max-content;
   }
 
-  .growth-filter-empty {
+  .proto-schedule .growth-filter-empty {
     min-width: 240px;
     min-height: 180px;
     display: grid;
@@ -732,12 +735,12 @@
     text-align: center;
   }
 
-  .growth-card {
+  .proto-schedule .growth-card {
     position: relative;
     overflow: hidden;
     cursor: pointer;
   }
-  .growth-card.four-cut {
+  .proto-schedule .growth-card.four-cut {
     flex: 0 0 var(--dt-carousel-card-w, 176px);
     width: var(--dt-carousel-card-w, 176px);
     scroll-snap-align: start;
@@ -751,22 +754,22 @@
     font-family: var(--sans);
     transition: transform 0.22s ease, box-shadow 0.22s ease;
   }
-  .growth-card.four-cut:hover { transform: translateY(-3px); }
-  .growth-card.four-cut.is-selected {
+  .proto-schedule .growth-card.four-cut:hover { transform: translateY(-3px); }
+  .proto-schedule .growth-card.four-cut.is-selected {
     outline: none;
     box-shadow: 0 0 0 2px #4a7c52, 0 10px 22px rgba(46, 82, 51, 0.28);
     transform: translateY(-3px);
   }
 
-  .strip-header {
+  .proto-schedule .strip-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 7px;
     padding: 1px 2px 9px;
   }
-  .strip-title-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  .strip-kicker {
+  .proto-schedule .strip-title-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .proto-schedule .strip-kicker {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -778,14 +781,14 @@
     line-height: 1;
     white-space: nowrap;
   }
-  .strip-kicker.is-shooting { color: #ffb3a3; }
-  .strip-kicker-dot {
+  .proto-schedule .strip-kicker.is-shooting { color: #ffb3a3; }
+  .proto-schedule .strip-kicker-dot {
     width: 5px; height: 5px;
     border-radius: 50%;
     background: #c0392b;
     animation: stripRecBlink 1.2s ease-in-out infinite;
   }
-  .strip-title {
+  .proto-schedule .strip-title {
     font-size: 12px;
     font-weight: 850;
     color: #f4f1e8;
@@ -795,7 +798,7 @@
     white-space: nowrap;
   }
 
-  .growth-dday-pill {
+  .proto-schedule .growth-dday-pill {
     min-width: 40px;
     min-height: 20px;
     display: inline-flex;
@@ -811,7 +814,7 @@
     color: #f4f1e8;
   }
 
-  .strip-body {
+  .proto-schedule .strip-body {
     position: relative;
     padding: 12px 8px 8px;
     background: #f4f1e8;
@@ -819,8 +822,8 @@
     border-radius: 3px;
     overflow: visible;
   }
-  .strip-body::before,
-  .strip-body::after {
+  .proto-schedule .strip-body::before,
+  .proto-schedule .strip-body::after {
     content: '';
     position: absolute;
     left: -1px; right: -1px;
@@ -829,17 +832,17 @@
     background-size: 14px 14px;
     background-repeat: repeat-x;
   }
-  .strip-body::before { top: -7px; background-position: 0 0; }
-  .strip-body::after { bottom: -7px; transform: scaleY(-1); }
+  .proto-schedule .strip-body::before { top: -7px; background-position: 0 0; }
+  .proto-schedule .strip-body::after { bottom: -7px; transform: scaleY(-1); }
 
-  .strip-perforation {
+  .proto-schedule .strip-perforation {
     position: relative;
     height: 0;
     margin: 7px -8px;
     border-top: 2px dashed rgba(46, 82, 51, 0.32);
   }
-  .strip-perforation::before,
-  .strip-perforation::after {
+  .proto-schedule .strip-perforation::before,
+  .proto-schedule .strip-perforation::after {
     content: '';
     position: absolute;
     top: -6px;
@@ -847,10 +850,10 @@
     border-radius: 50%;
     background: #8a9a82;
   }
-  .strip-perforation::before { left: -6px; }
-  .strip-perforation::after { right: -6px; }
+  .proto-schedule .strip-perforation::before { left: -6px; }
+  .proto-schedule .strip-perforation::after { right: -6px; }
 
-  .strip-frames {
+  .proto-schedule .strip-frames {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -860,7 +863,7 @@
     background: transparent;
     z-index: 1;
   }
-  .strip-frame {
+  .proto-schedule .strip-frame {
     position: relative;
     height: 106px;
     background:
@@ -876,7 +879,7 @@
     border: 1px solid #eee1cf;
     border-radius: 5px;
   }
-  .strip-frame-number {
+  .proto-schedule .strip-frame-number {
     position: absolute;
     top: 8px;
     left: 0; right: 0;
@@ -887,13 +890,13 @@
     line-height: 1;
     z-index: 0;
   }
-  .strip-frame-photo {
+  .proto-schedule .strip-frame-photo {
     position: absolute;
     inset: 0;
     background-size: cover;
     background-position: center;
   }
-  .strip-frame-label {
+  .proto-schedule .strip-frame-label {
     font-size: 9.5px;
     font-weight: 850;
     color: #1c1a17;
@@ -902,7 +905,7 @@
     z-index: 1;
     padding: 0 4px;
   }
-  .strip-frame--done .strip-frame-label {
+  .proto-schedule .strip-frame--done .strip-frame-label {
     position: absolute;
     bottom: 6px;
     left: 7px;
@@ -915,7 +918,7 @@
   }
 
   /* ACTIVE — 업로드 가능 단계 */
-  .strip-frame--active {
+  .proto-schedule .strip-frame--active {
     background:
       linear-gradient(135deg, rgba(204,230,216,0.88) 0 25%, transparent 25% 50%, rgba(204,230,216,0.88) 50% 75%, transparent 75%),
       #edf8f2;
@@ -924,15 +927,15 @@
     box-shadow: inset 0 0 0 1px rgba(47,125,95,0.22);
     cursor: pointer;
   }
-  .strip-frame--active:hover {
+  .proto-schedule .strip-frame--active:hover {
     background:
       linear-gradient(135deg, rgba(207,230,218,0.86) 0 25%, transparent 25% 50%, rgba(207,230,218,0.86) 50% 75%, transparent 75%),
       #e3f4ea;
     background-size: 18px 18px;
   }
-  .strip-frame--active .strip-upload-icon { animation: stripGrow 2s ease-in-out infinite; }
+  .proto-schedule .strip-frame--active .strip-upload-icon { animation: stripGrow 2s ease-in-out infinite; }
 
-  .strip-rec-badge {
+  .proto-schedule .strip-rec-badge {
     position: absolute;
     top: 6px; right: 6px;
     display: inline-flex;
@@ -944,7 +947,7 @@
     color: #c0392b;
     z-index: 1;
   }
-  .strip-rec-dot {
+  .proto-schedule .strip-rec-dot {
     width: 5px; height: 5px;
     border-radius: 50%;
     background: #c0392b;
@@ -952,24 +955,24 @@
   }
 
   /* LOCKED — 미개방 단계 */
-  .strip-frame--locked { filter: grayscale(0.9) blur(0.2px); opacity: 0.55; cursor: not-allowed; }
-  .strip-lock-icon { font-size: 20px; z-index: 1; opacity: 0.75; }
+  .proto-schedule .strip-frame--locked { filter: grayscale(0.9) blur(0.2px); opacity: 0.55; cursor: not-allowed; }
+  .proto-schedule .strip-lock-icon { font-size: 20px; z-index: 1; opacity: 0.75; }
 
-  .strip-frame--uploading { cursor: progress; }
-  .strip-frame--uploading .strip-upload-hint { color: #c0392b; }
+  .proto-schedule .strip-frame--uploading { cursor: progress; }
+  .proto-schedule .strip-frame--uploading .strip-upload-hint { color: #c0392b; }
 
-  .strip-upload-icon {
+  .proto-schedule .strip-upload-icon {
     width: 22px; height: 22px;
     display: grid;
     place-items: center;
     color: #2f7d5f;
     z-index: 1;
   }
-  .strip-upload-svg { width: 22px; height: 22px; display: block; }
-  .strip-upload-hint { font-size: 9px; font-weight: 800; color: #2f7d5f; }
-  .strip-frame-file { display: none; }
+  .proto-schedule .strip-upload-svg { width: 22px; height: 22px; display: block; }
+  .proto-schedule .strip-upload-hint { font-size: 9px; font-weight: 800; color: #2f7d5f; }
+  .proto-schedule .strip-frame-file { display: none; }
 
-  .strip-footer {
+  .proto-schedule .strip-footer {
     min-height: 26px;
     display: flex;
     align-items: center;
@@ -978,20 +981,20 @@
     padding: 9px 2px 0;
     text-align: center;
   }
-  .strip-footer-brand {
+  .proto-schedule .strip-footer-brand {
     font-family: var(--sans);
     font-size: 8.5px;
     font-weight: 700;
     letter-spacing: 0.3px;
     color: rgba(244, 241, 232, 0.6);
   }
-  .strip-footer-count {
+  .proto-schedule .strip-footer-count {
     font-family: var(--sans);
     font-size: 9.5px;
     font-weight: 700;
     color: #f4f1e8;
   }
-  .growth-card.four-cut.is-complete .strip-footer-count { color: #b9ffb0; }
+  .proto-schedule .growth-card.four-cut.is-complete .strip-footer-count { color: #b9ffb0; }
 
   @keyframes stripGrow {
     0%, 100% { transform: scale(1);   filter: drop-shadow(0 0 3px rgba(82,183,136,0.5)); }
@@ -1003,7 +1006,7 @@
   }
 
   /* ══════════ 새/수정 티켓 모달 ══════════ */
-  .modal-overlay {
+  .proto-schedule .modal-overlay {
     position: fixed;
     inset: 0;
     z-index: 1000;
@@ -1017,8 +1020,8 @@
     -webkit-backdrop-filter: blur(10px) saturate(1.08);
     animation: scheduleOverlayIn 0.24s ease both;
   }
-  .modal-overlay > .modal-box { margin: auto; }
-  .modal-box {
+  .proto-schedule .modal-overlay > .modal-box { margin: auto; }
+  .proto-schedule .modal-box {
     position: relative;
     z-index: 1;
     width: 100%;
@@ -1036,7 +1039,7 @@
   @keyframes scheduleBoxIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
 
   /* 모달 안의 마운트(초록 액자 제거) — 티켓 헤더 + 크림 슬립을 세로로 쌓는다 */
-  .schedule-editor .growth-detail {
+  .proto-schedule .schedule-editor .growth-detail {
     max-width: 100%;
     margin: 0;
     padding: 20px 22px 0;
@@ -1048,18 +1051,18 @@
     flex-direction: column;
     gap: 16px;
   }
-  .schedule-editor .ticket-card--edit { max-width: 100%; }
-  .schedule-editor .receipt-paper {
+  .proto-schedule .schedule-editor .ticket-card--edit { max-width: 100%; }
+  .proto-schedule .schedule-editor .receipt-paper {
     width: 100%;
     padding: 14px 8px 22px;
     box-shadow: none;
   }
-  .schedule-editor .receipt-paper::before,
-  .schedule-editor .receipt-paper::after { display: none; }
-  .schedule-editor .receipt-barcode { margin: 14px 0 2px; }
+  .proto-schedule .schedule-editor .receipt-paper::before,
+  .proto-schedule .schedule-editor .receipt-paper::after { display: none; }
+  .proto-schedule .schedule-editor .receipt-barcode { margin: 14px 0 2px; }
 
-  .schedule-editor .receipt-memo-label { display: block; color: rgba(28, 26, 23, 0.55); }
-  .receipt-memo-input {
+  .proto-schedule .schedule-editor .receipt-memo-label { display: block; color: rgba(28, 26, 23, 0.55); }
+  .proto-schedule .receipt-memo-input {
     min-height: 96px;
     border: 1px dashed rgba(28, 26, 23, 0.28);
     border-radius: 8px;
@@ -1075,17 +1078,17 @@
     box-sizing: border-box;
     transition: border-color .15s;
   }
-  .receipt-memo-input:focus { border-color: rgba(46, 82, 51, 0.55); }
-  .receipt-memo-input::placeholder { color: rgba(28, 26, 23, 0.4); }
+  .proto-schedule .receipt-memo-input:focus { border-color: rgba(46, 82, 51, 0.55); }
+  .proto-schedule .receipt-memo-input::placeholder { color: rgba(28, 26, 23, 0.4); }
 
-  .schedule-modal-buttons {
+  .proto-schedule .schedule-modal-buttons {
     display: flex;
     gap: 10px;
     /* 위 memo 카드의 receipt-zigzag(스캘럽 절취선)가 자기 카드 아래로 8px 삐져나오는데,
        여기 padding-top이 그보다 작으면 버튼 위쪽이 그 무늬에 살짝 파묻혀 보인다. */
     padding: 16px 22px 22px;
   }
-  .schedule-modal-buttons button {
+  .proto-schedule .schedule-modal-buttons button {
     flex: 1;
     border-radius: 8px;
     padding: 12px 0;
@@ -1096,10 +1099,10 @@
     cursor: pointer;
     border: 1px solid transparent;
   }
-  .schedule-modal-buttons .btn-main { background: #357a58; color: #ffffff; }
-  .schedule-modal-buttons .btn-main:disabled { opacity: 0.55; cursor: default; }
-  .schedule-modal-buttons .btn-sub { background: #e7f0ea; color: #2e5233; }
-  .schedule-modal-error {
+  .proto-schedule .schedule-modal-buttons .btn-main { background: #357a58; color: #ffffff; }
+  .proto-schedule .schedule-modal-buttons .btn-main:disabled { opacity: 0.55; cursor: default; }
+  .proto-schedule .schedule-modal-buttons .btn-sub { background: #e7f0ea; color: #2e5233; }
+  .proto-schedule .schedule-modal-error {
     padding: 0 22px 4px;
     color: #c0392b;
     font-size: 12px;
@@ -1108,13 +1111,13 @@
 
   /* ══════════ 반응형 (프로토타입 .mobile-window 대응) ══════════ */
   @media (max-width: 720px) {
-    .schedule-wrap { padding: 18px 12px 56px; }
-    .journey-section-title { align-items: center; }
-    .growth-hero { padding: 14px 0; }
-    .growth-density { width: 100%; }
-    .growth-density button { flex: 1; padding: 0 8px; }
-    .growth-card-rail { max-width: 100%; padding: 0; }
-    .carousel-btn { display: none; }
+    .proto-schedule .schedule-wrap { padding: 18px 12px 56px; }
+    .proto-schedule .journey-section-title { align-items: center; }
+    .proto-schedule .growth-hero { padding: 14px 0; }
+    .proto-schedule .growth-density { width: 100%; }
+    .proto-schedule .growth-density button { flex: 1; padding: 0 8px; }
+    .proto-schedule .growth-card-rail { max-width: 100%; padding: 0; }
+    .proto-schedule .carousel-btn { display: none; }
     /* ★ 모바일에선 스냅을 끈다 — 여기선 ‹ › 화살표가 숨겨져 손가락이 유일한 이동 수단인데,
        스냅 간격이 카드 한 장(150px + gap 14px = 164px)이라 82px(반 칸)보다 적게 민 손가락은
        정확히 제자리로 되돌아온다. 실측:
@@ -1129,19 +1132,19 @@
 
        scroll-behavior도 auto로 되돌린다. 화살표가 숨겨진 모바일에선 쓸 데가 없고,
        scrollRail()은 scrollBy에 behavior:'smooth'를 직접 넘기므로 잃는 게 없다. */
-    .growth-card-viewport {
+    .proto-schedule .growth-card-viewport {
       flex: 1; max-width: 100%;
       scroll-snap-type: none;
       scroll-behavior: auto;
     }
-    .growth-card.four-cut {
+    .proto-schedule .growth-card.four-cut {
       flex: 0 0 var(--mb-carousel-card-w, 150px);
       width: var(--mb-carousel-card-w, 150px);
       padding: 10px 10px 12px;
     }
-    .ticket-card { max-width: 100%; min-height: 0; flex-direction: column; }
-    .ticket-main { border-radius: 14px 14px 0 0; }
-    .ticket-stub {
+    .proto-schedule .ticket-card { max-width: 100%; min-height: 0; flex-direction: column; }
+    .proto-schedule .ticket-main { border-radius: 14px 14px 0 0; }
+    .proto-schedule .ticket-stub {
       flex: 0 0 auto;
       width: 100%;
       border-left: none;
@@ -1150,25 +1153,25 @@
       flex-direction: row;
       padding: 10px 14px;
     }
-    .ticket-stub-side { display: none; }
-    .ticket-stub-mid { flex-direction: row; gap: 10px; }
-    .ticket-stub-barcode { width: 60px; height: 30px; }
-    .ticket-title { font-size: 18px; }
-    .ticket-meta { gap: 16px; flex-wrap: wrap; }
-    .receipt-paper { width: 100%; padding: 22px 20px 30px; }
+    .proto-schedule .ticket-stub-side { display: none; }
+    .proto-schedule .ticket-stub-mid { flex-direction: row; gap: 10px; }
+    .proto-schedule .ticket-stub-barcode { width: 60px; height: 30px; }
+    .proto-schedule .ticket-title { font-size: 18px; }
+    .proto-schedule .ticket-meta { gap: 16px; flex-wrap: wrap; }
+    .proto-schedule .receipt-paper { width: 100%; padding: 22px 20px 30px; }
 
     /* 티켓 상세 모달도 좁은 화면에선 패딩/폭이 줄어야 한다 — 버튼 가독성 작업 때
        고정 460px·28px 패딩으로 늘렸던 게 .ticket-detail 쪽 detail selector라 위
        .receipt-paper 모바일 규칙보다 우선해서 그대로 남아있었다. */
-    .modal-box.ticket-detail { padding: 14px; }
-    .ticket-detail .receipt-paper { width: 100%; padding: 22px 18px 26px; }
-    .ticket-detail .receipt-status { gap: 8px; }
-    .ticket-detail .receipt-status-btn { flex: 1 1 auto; }
+    .proto-schedule .modal-box.ticket-detail { padding: 14px; }
+    .proto-schedule .ticket-detail .receipt-paper { width: 100%; padding: 22px 18px 26px; }
+    .proto-schedule .ticket-detail .receipt-status { gap: 8px; }
+    .proto-schedule .ticket-detail .receipt-status-btn { flex: 1 1 auto; }
   }
-}
 
 /* ── 티켓 톤 커스텀 달력 팝오버(브라우저 기본 date picker 대체) ──
-   document.body에 포탈되므로 @scope(.proto-schedule) 밖의 전역 규칙이어야 한다. */
+   document.body에 포탈되므로(Schedule.jsx의 createPortal) .proto-schedule 스코프
+   밖의 전역 규칙이어야 한다 — 접두사를 붙이면 안 된다. */
 .ticket-cal {
   position: fixed;
   z-index: 2000;

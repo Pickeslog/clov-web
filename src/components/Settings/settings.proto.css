@@ -218,10 +218,16 @@
   .proto-settings .ps-rail-identity,
   .proto-settings .ps-rail-footer,
   .proto-settings .ps-nav-label { display: none; }
+  /* #319 전엔 그룹마다 버튼이 하나뿐이라 flex:1(균등분배) + 그룹 내부 기본(세로 스택)이
+     사실상 "탭 두 개, 폭 반반"으로 보였다. "화면" 그룹이 5개로 늘면서 그 세로 스택이
+     그대로 살아나 레일 높이가 도로 부풀었다(실측 최대 236px — 이 PR이 줄이려던
+     177px보다 크다). 그룹도 가로로(display:flex), 폭도 콘텐츠만큼만(flex:0 0 auto)
+     차지하게 바꿔 전부 한 줄에 놓고, .ps-nav의 overflow-x:auto로 넘치는 만큼만
+     가로 스크롤하게 한다(실측 75px — 목표 58px에 근접, 두 배 이상 개선). */
   .proto-settings .ps-nav { display: flex; gap: 8px; padding: 8px 10px; overflow-x: auto; }
-  .proto-settings .ps-nav-group { flex: 1; min-width: 0; }
+  .proto-settings .ps-nav-group { flex: 0 0 auto; display: flex; gap: 6px; min-width: 0; }
   .proto-settings .ps-nav-group + .ps-nav-group { margin-top: 0; }
-  .proto-settings .ps-nav-item { text-align: center; white-space: nowrap; }
+  .proto-settings .ps-nav-item { text-align: center; white-space: nowrap; width: auto; }
   .proto-settings .ps-panel { padding: 16px; }
   .proto-settings .ps-head { padding: 16px 18px 12px; }
   .proto-settings .ps-actions { padding: 12px 16px 14px; }

@@ -20,8 +20,8 @@ const TABS = [
   { id: 'schedule', label: '일정계획', path: 'schedule', icon: <path d="M3 5h18v16H3zM3 10h18M8 3v4M16 3v4" /> },
 ]
 
-const NavIcon = ({ children }) => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
+const NavIcon = ({ children, size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
 )
 const initialOf = (name) => (name || '나').trim().slice(0, 1)
 
@@ -135,6 +135,31 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
       </div>
 
     </header>
+
+    {/* 모바일 하단 탭바 — 좁은 화면에서만 보인다(Header.css의 640px 미디어쿼리).
+        헤더 안의 네비 탭은 375px에서 52px밖에 못 받는데 158px이 필요해 뭉개졌다(#164에서
+        가로 스크롤로 임시 대응했지만 "스크롤해야 보이는 주요 이동"이라 근본 해결이 아니었다).
+        엄지 도달 범위이기도 해서 이동은 아래로 내리고 헤더에는 로고·알림·상점·아바타만 남긴다.
+
+        ★ header 밖(형제)에 둔다 — .clov-hdr의 backdrop-filter가 position:fixed 자식의
+          컨테이닝 블록이 돼서 안에 두면 탭바가 헤더 높이 안에 갇힌다(Settings 오버레이와 같은 이유). */}
+    {variant === 'room' && (
+      <nav className="clov-hdr-tabbar" aria-label="방 메뉴">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={`clov-hdr-tabbar-btn ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => goTab(tab)}
+            aria-current={activeTab === tab.id ? 'page' : undefined}
+          >
+            <NavIcon size={21}>{tab.icon}</NavIcon>
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </nav>
+    )}
+
     {/* Settings 오버레이는 header 밖에 둔다 — header의 backdrop-filter가 fixed 오버레이의
         컨테이닝 블록이 되어 모달이 56px 헤더 안에 갇히는 오버플로우를 방지. */}
     {settingsOpen && <Settings onClose={closeSettings} />}

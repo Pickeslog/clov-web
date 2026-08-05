@@ -2,7 +2,10 @@
 .clov-mascot {
   position: fixed;
   right: 18px;
-  bottom: 18px;
+  /* 모바일 하단 탭바 위로 띄운다 — --clov-tabbar-h는 Header.css가 정하고
+     데스크톱에선 0px이라 기존 18px 그대로다. 탭바가 마스코트를 덮으면
+     교감(클릭·드래그)이 통째로 막힌다. */
+  bottom: calc(18px + var(--clov-tabbar-h, 0px));
   z-index: 40;
   display: flex;
   flex-direction: column;

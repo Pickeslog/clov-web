@@ -664,8 +664,7 @@ function FilmStripCard({ plan, stages, doneCount, selected, uploadingKey, onSele
 
 // ── 새/수정 영수증 모달 ─────────────────────────────────────────────
 // 우정공간(대시보드)에서도 재사용 → export. 대시보드는 <div className="proto-schedule"
-// style={{ ...SCHEDULE_LIGHT_PALETTE, ...SCHEDULE_MODAL_CARD_STYLE }}>로 감싸 스코프·
-// 팔레트·카드 배경을 공급한다(페이지 팔레트엔 배경이 없다 — #318).
+// style={SCHEDULE_LIGHT_PALETTE}>로 감싸 스코프·팔레트를 공급한다.
 export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, onSubmit }) {
   const [title, setTitle] = useState(plan?.title ?? '')
   const [planDate, setPlanDate] = useState(plan?.planDate ?? '')

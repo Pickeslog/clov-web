@@ -36,14 +36,17 @@
 /* 상단 바는 공통 <Header variant="room"> 컴포넌트로 대체. */
 
 /* ===== 피드 헤더 영역 (feed.html) ===== */
+/* 타이틀(feed-hero-text)과 CTA(feed-hero-meta·글쓰기 버튼)를 같은 박스 하나로 묶는다 —
+   예전엔 박스가 텍스트 쪽에만 있어서 넓은 화면에서 "글쓰기" 버튼이 타이틀과 멀리 떨어져
+   보이고 시선이 끊겼다(추억피드 영역 수정 내용.md ①). 이제 한 카드 안에서
+   좌(타이틀) · 우(카운트+CTA)로 나뉘어 같은 그룹으로 읽힌다. */
 .proto-feed .feed-hero {
-  display: flex; justify-content: space-between; align-items: flex-start;
+  display: flex; justify-content: space-between; align-items: center;
   flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+  background: rgba(0,0,0,.6); border: 1px solid rgba(27,67,50,.7);
+  padding: 14px 18px; border-radius: 12px;
 }
-/* 카드 배경 없이 페이지 배경(우드텍스처)에 바로 노출되던 헤더 텍스트 — 특히 부제(--text-muted)가
-   흐릿했다. 배경 박스로 대비 확보(대시보드 #95와 동일 패턴). */
-.proto-feed .feed-hero-text { background: rgba(0,0,0,.6); border: 1px solid rgba(27,67,50,.7); padding: 10px 14px; border-radius: 12px; }
-body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); border-color: rgba(82,183,136,.6); }
+body.light-mode .proto-feed .feed-hero { background: rgba(255,255,255,.6); border-color: rgba(82,183,136,.6); }
 .proto-feed .feed-title { font-size: 20px; font-weight: 800; color: var(--accent-green); }
 .proto-feed .feed-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
 .proto-feed .feed-hero-meta { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
@@ -77,7 +80,21 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); 
 }
 .proto-feed .feed-controls-right {
   display: flex; align-items: center; justify-content: flex-end;
-  gap: 12px; flex-wrap: wrap;
+  gap: 14px; flex-wrap: wrap;
+}
+/* 정렬/뷰(보기 방식)와 월·작성자(필터)를 시각적으로 두 그룹으로 나눈다
+   (추억피드 영역 수정 내용.md ②) — 한 줄에 섞여 있던 예전과 달리, 그룹 내부는
+   촘촘히(gap 8px), 그룹 사이는 넓게(feed-controls-divider) 둬서 목적이 다른
+   컨트롤임을 바로 읽을 수 있게 한다. */
+.proto-feed .feed-controls-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.proto-feed .feed-controls-divider { width: 1px; height: 22px; background: rgba(255, 255, 255, 0.16); flex-shrink: 0; }
+body.light-mode .proto-feed .feed-controls-divider { background: rgba(27, 67, 50, 0.16); }
+/* 좁은 화면(추억피드 영역 수정 내용.md ④) — 두 그룹이 줄바꿈되면 세로 막대 구분선은
+   의미가 없어져(그룹이 이미 다른 줄이라 구분이 필요 없음) 숨긴다. 그룹 자체는
+   feed-controls-group의 flex-wrap로 각자 알아서 다음 줄로 접힌다. */
+@media (max-width: 640px) {
+  .proto-feed .feed-controls-right { justify-content: center; }
+  .proto-feed .feed-controls-divider { display: none; }
 }
 
 /* 검색창 (밝은 알약 — 두 테마 공통, 텍스트는 항상 진한 잉크) */
@@ -122,39 +139,36 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); 
 }
 .proto-feed .feed-sort-btn.active { background: #1b4332; color: #fff; }
 
-/* 사진 모아보기(갤러리) 트리거 — 월 선택 버튼과 동일한 밝은 알약 */
+/* 사진 모아보기(갤러리)·월 선택 트리거 — 예전엔 backdrop-blur+진한 그림자를 쓰는
+   "떠 있는 카드" 톤이라, 같은 줄의 정렬/필터 알약(border 1px + 옅은 흰 배경, 그림자 없음)과
+   형태 언어가 어긋나 보였다(추억피드 영역 수정 내용.md ③). 두 아이콘 버튼을 알약 계열과
+   같은 톤(같은 border 색·투명도, 그림자 최소화)으로 맞춰 "같은 컨트롤 그룹"으로 읽히게 한다. */
 .proto-feed .feed-gallery-trigger {
-  width: 40px; height: 40px; padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 16px;
-  background: rgba(255, 255, 255, 0.86); color: #1b4332;
+  width: 36px; height: 36px; padding: 0;
+  border: 1px solid rgba(82, 183, 136, 0.28); border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9); color: #1b4332;
   cursor: pointer; display: grid; place-items: center;
-  box-shadow: 0 10px 22px rgba(8, 28, 22, 0.14);
-  backdrop-filter: blur(12px);
-  transition: transform .2s ease, background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+  transition: transform .2s ease, background-color .2s ease, border-color .2s ease;
 }
 .proto-feed .feed-gallery-trigger:hover {
   transform: translateY(-1px);
   background: #e8f3ed; color: #1b4332;
   border-color: rgba(82, 183, 136, 0.7);
-  box-shadow: 0 14px 28px rgba(8, 28, 22, 0.2);
 }
 /* 월 선택 팝오버는 트리거 기준으로 붙인다(프로토타입은 JS fixed 좌표, 여기선 absolute) */
 .proto-feed .month-picker-wrap { position: relative; }
 .proto-feed .month-picker-trigger {
-  width: 40px; height: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 16px;
-  background: rgba(255, 255, 255, 0.86); color: #1b4332;
-  font-size: 17px; cursor: pointer; display: grid; place-items: center;
-  box-shadow: 0 10px 22px rgba(8, 28, 22, 0.14);
-  backdrop-filter: blur(12px);
-  transition: transform .2s ease, background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+  width: 36px; height: 36px;
+  border: 1px solid rgba(82, 183, 136, 0.28); border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9); color: #1b4332;
+  font-size: 16px; cursor: pointer; display: grid; place-items: center;
+  transition: transform .2s ease, background-color .2s ease, border-color .2s ease;
 }
 .proto-feed .month-picker-trigger:hover,
 .proto-feed .month-picker-trigger.active {
   transform: translateY(-1px);
   background: #e8f3ed; color: #1b4332;
   border-color: rgba(82, 183, 136, 0.7);
-  box-shadow: 0 14px 28px rgba(8, 28, 22, 0.2);
 }
 
 .proto-feed .month-picker-popover {

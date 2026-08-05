@@ -101,6 +101,18 @@
 .clov-hdr-wardrobe-equipped { font-size: 11px; font-weight: 700; color: #b7c99a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .clov-hdr-wardrobe-closet { border-top: 1px solid #2a2c1e; padding-top: 10px; }
+.clov-hdr-wardrobe-step-label { margin: 0 0 8px; font-size: 12px; font-weight: 700; color: #b7c99a; }
+.clov-hdr-wardrobe-step-head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.clov-hdr-wardrobe-step-head .clov-hdr-wardrobe-step-label { margin: 0; }
+.clov-hdr-wardrobe-back {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 7px; border: none;
+  background: none; color: #b7c99a; cursor: pointer; display: grid; place-items: center;
+}
+.clov-hdr-wardrobe-back:hover { background: #2b3020; color: #9ccc65; }
+.clov-hdr-wardrobe-divider {
+  grid-column: 1 / -1; font-size: 10px; font-weight: 700; color: #7c8a6a;
+  border-top: 1px dashed #2a2c1e; padding-top: 6px; margin-top: 2px;
+}
 .clov-hdr-wardrobe-note { margin: 0 0 8px; font-size: 12px; color: #b7c99a; line-height: 1.5; }
 .clov-hdr-wardrobe-shop-btn {
   width: 100%; height: 34px; border-radius: 10px; border: 1.5px solid #3c4a2a; background: #2b3020;

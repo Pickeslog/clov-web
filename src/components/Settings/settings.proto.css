@@ -216,10 +216,22 @@
        본문만 줄어든다(지금 데스크톱에서 이미 이렇게 동작한다).
      minmax(0,1fr)이라야 패널이 자기 내용 높이로 부풀지 않고 남은 만큼만 차지한 뒤 안에서 스크롤한다. */
   .proto-settings .ps-body {
-    grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr);
+    /* ★ 1fr 이 아니라 minmax(0, 1fr) 이어야 한다. 1fr 은 minmax(auto, 1fr) 이고 그 auto
+       바닥이 "콘텐츠 최소폭"이라, 레일 안 탭들이 white-space:nowrap 으로 안 줄어들면
+       트랙이 통째로 그 폭까지 부푼다. .ps-nav 의 overflow-x:auto 는 여기서 안 먹는다 —
+       자동 최소 크기를 0으로 만드는 건 플렉스/그리드 "아이템"일 때 얘기고, .ps-nav 는
+       그리드 아이템(.ps-rail)의 자식이라 레일의 min-content 를 그대로 밀어올린다.
+
+       탭이 둘일 땐 안 드러났는데 #319에서 '화면'이 5개로 쪼개지자 터졌다 —
+       375px 모달(351px) 안에서 트랙이 624px 이 되고, .ps-modal 이 overflow:hidden 이라
+       뒤쪽 탭 3개가 잘린 채 스크롤도 안 됐다(우정편지 테마·추억카드 테마·마스코트 크기).
+       데스크톱 규칙은 원래부터 minmax(0, 1fr) 이라 같은 문제가 없었다. */
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
     height: auto; min-height: 0; overflow: hidden;
   }
-  .proto-settings .ps-rail { border-right: none; border-bottom: 1px solid var(--border); }
+  /* 트랙이 좁아져도 레일이 자기 콘텐츠 폭을 우기지 않게 — 이게 있어야 .ps-nav 의
+     overflow-x:auto 가 실제로 걸린다. */
+  .proto-settings .ps-rail { border-right: none; border-bottom: 1px solid var(--border); min-width: 0; }
   /* 프로필(아바타+닉네임)은 바로 아래 '기본 정보' 섹션과 모달 제목이 이미 말해주고,
      'Clov.' 푸터는 장식이다. 둘 다 접어서 그 높이를 내용에 준다.
      그룹 라벨(계정/화면)도 항목이 둘뿐이라 버튼 글자만으로 충분하다. */

@@ -392,6 +392,16 @@
             cursor: pointer;
             flex-shrink: 0;
             transition: all 0.2s ease;
+            /* 프로필 사진(#339)이 원 밖으로 삐져나오지 않게 자른다 — Feed의 .presence-dot과
+               같은 패턴. */
+            overflow: hidden;
+        }
+        .letter-recipient-avatar-btn img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .letter-recipient-avatar-btn.broadcast {

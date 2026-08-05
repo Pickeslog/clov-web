@@ -439,7 +439,7 @@ function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, se
                   title={member.nickname}
                   aria-label={`${member.nickname}에게 보내기`}
                 >
-                  {initialOf(member.nickname)}
+                  {member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}
                 </button>
               )
             })}

@@ -8,9 +8,9 @@
 
 // 원본 스프라이트가 640px 높이라 220px도 2.9배 오버샘플이다 — 흐려지지 않는다.
 export const MASCOT_SIZES = [
-  { value: 'sm', label: '작게', px: 140 },
-  { value: 'md', label: '보통', px: 180 },
-  { value: 'lg', label: '크게', px: 220 },
+  { value: 'sm', label: '작게', px: 140, img: '/settings-options/mascot-size-sm.png' },
+  { value: 'md', label: '보통', px: 180, img: '/settings-options/mascot-size-md.png' },
+  { value: 'lg', label: '크게', px: 220, img: '/settings-options/mascot-size-lg.png' },
 ]
 
 const STORAGE_KEY = 'clov_mascotSize'

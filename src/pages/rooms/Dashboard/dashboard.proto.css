@@ -483,7 +483,20 @@ body.light-mode .proto-dashboard .section-title {
    기본값(auto)이면 브라우저가 가로 제스처까지 자기 것으로 판단해 pointercancel을
    쏘고, 그 순간 스와이프 추적이 끊긴다(= 카드가 안 넘어간다). */
 .proto-dashboard .cline-stage { display: flex; align-items: center; gap: 6px; touch-action: pan-y; }
-.proto-dashboard .cline-wire-area { flex: 1; position: relative; min-width: 0; }
+/* ★ 덱을 가로로 자른다 — 안 자르면 페이지 전체가 옆으로 밀린다.
+   .cline-cards 는 justify-content:center 인데 슬롯이 flex-shrink:0 · width:210px ·
+   margin:0 -38px 라 좁은 화면에서 자기 컨테이너보다 훨씬 넓어진다(375px 폰에서 실측:
+   문서 scrollWidth 534 = 159px 넘침). 조상 중 아무도 안 잘라서 그게 그대로 페이지
+   가로 스크롤이 됐다. 증상 셋이 전부 여기서 나왔다:
+     · body 배경이 background-attachment:fixed 라 밀린 구역엔 배경이 안 칠해진다(검은 띠)
+     · position:fixed 인 하단 탭바가 레이아웃 뷰포트를 따라 같이 밀린다
+     · 손가락으로 화면 전체가 좌우로 흔들린다
+   데스크톱은 뷰포트가 덱보다 넓어 잘릴 게 없다.
+
+   hidden 이 아니라 clip 인 이유 — overflow-x:hidden 을 주면 CSS 규칙상 overflow-y:visible
+   이 auto 로 승격돼 세로 스크롤 컨테이너가 새로 생기고, 카드 hover 팝아웃이 위아래로
+   잘린다. clip 은 반대 축을 visible 로 남겨둔다. */
+.proto-dashboard .cline-wire-area { flex: 1; position: relative; min-width: 0; overflow-x: clip; }
 .proto-dashboard .cline-wire {
   position: absolute; top: 0; left: -8px; right: -8px; height: 8px; z-index: 2; border-radius: 999px; overflow: hidden;
   background:

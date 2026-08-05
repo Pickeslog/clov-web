@@ -20,7 +20,7 @@ import Mascot from '../../../components/Mascot/Mascot'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
 // 우정공간에서 작성 모달을 인라인으로 띄우기 위해 각 화면의 모달을 재사용.
 import { ScheduleEditorModal } from '../../schedule/Schedule/Schedule'
-import { SCHEDULE_LIGHT_PALETTE, SCHEDULE_MODAL_CARD_STYLE } from '../../schedule/Schedule/palette'
+import { SCHEDULE_LIGHT_PALETTE } from '../../schedule/Schedule/palette'
 import { CreateMemoryModal, MemoryDetailModal } from '../../feed/Feed/Feed'
 
 // 우정 성장 티어(프로토타입 desktop.js 정본 — 이름·구간은 그대로, 아이콘만 팀 표준(#123, 팀장
@@ -765,7 +765,7 @@ export default function Dashboard() {
     {/* 우정공간에 머문 채 작성 모달을 인라인으로. 각 화면의 스코프·팔레트를 래퍼로 공급.
         .proto-dashboard 밖 형제로 둬 대시보드 CSS와 격리(min-height는 0으로 눌러 빈 공간 방지). */}
     {composeSchedule && (
-      <div className="proto-schedule" style={{ ...SCHEDULE_LIGHT_PALETTE, ...SCHEDULE_MODAL_CARD_STYLE }}>
+      <div className="proto-schedule" style={{ ...SCHEDULE_LIGHT_PALETTE, minHeight: 0 }}>
         <ScheduleEditorModal
           plan={null}
           submitting={createPlanMutation.isPending}

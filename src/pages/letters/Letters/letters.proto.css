@@ -261,6 +261,12 @@
             background: none;
         }
 
+        /* 발송 애니메이션(사용자 요청)의 "연필이 훑고 지나가는" 단계 — 연필 아이콘을
+           textarea 위에 절대 위치로 올려야 해서 감싸는 relative 컨테이너가 필요하다. */
+        .letter-content-canvas {
+            position: relative;
+        }
+
         .letter-write-textarea {
             height: 190px;
             /* 사용자 요청으로 리사이즈 비활성화(Letters.jsx의 LETTER_TEXTAREA_STYLE도 동일하게
@@ -268,10 +274,13 @@
             resize: none;
             line-height: 1.7;
             padding: 14px 16px !important;
-            /* 기본 HTML textarea 그대로인 느낌이었다(사용자 지적) — 아주 옅은 점 텍스처와
-               포커스 시 살짝 도는 초록 글로우로 "편지지"에 가까운 질감을 준다. */
-            background-image: radial-gradient(rgba(82, 183, 136, 0.1) 1.2px, transparent 1.2px) !important;
-            background-size: 16px 16px !important;
+            /* 기본 HTML textarea 그대로인 느낌이었다(사용자 지적) — 옅은 점 텍스처 대신
+               실제 편지지처럼 가로 줄을 그어 "쓰는 중"인 연필 애니메이션이 그 줄 위를
+               지나가는 것처럼 보이게 한다(사용자 요청). 간격(22px)은 font-size 13px ×
+               line-height 1.7 ≈ 22.1px에 맞췄다. */
+            background-image: repeating-linear-gradient(180deg, transparent 0 21px, rgba(82, 183, 136, 0.18) 21px 22px) !important;
+            background-size: 100% 22px !important;
+            background-position: 0 12px !important;
             transition: box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
@@ -292,6 +301,61 @@
             font-size: 12px;
             font-weight: 800;
             color: var(--primary-green);
+        }
+
+        /* 발송 애니메이션 — 연필이 "실제로 마지막 내용이 적힌 자리"(JS의
+           measureTextEndPosition)에 자리잡고 사각사각 긁다가 통! 하고 사라진다
+           (사용자 요청). 위치(left/top)는 JS가 잰 좌표로 트랜지션 슬라이드하고, 좌우
+           까딱거림(svg의 rotate)·통 팝(바깥 요소의 scale)은 서로 다른 요소·다른
+           속성이라 부딪히지 않는다. */
+        .letter-write-card.is-sending {
+            pointer-events: none;
+        }
+
+        .letter-send-pencil {
+            position: absolute;
+            z-index: 2;
+            /* 아이콘 좌상단이 아니라 "심 끝"이 좌표에 오도록 당겨준다 — 심은 46px 기준
+               좌상단에서 (8.8px, 37.2px) 지점이다(64뷰박스의 (4,32)를 -45° 회전한 값). */
+            margin: -37px 0 0 -9px;
+            filter: drop-shadow(0 3px 5px rgba(27, 67, 50, 0.3));
+            transition:
+                left 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                top 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.22s ease;
+        }
+        /* 좌우 까딱거림(사각사각)은 svg에 따로 건다 — 위치(left/top, transition)와
+           transform(rotate, animation)을 한 요소에서 같이 다루면 서로 안 부딪히니까. */
+        .letter-send-pencil svg {
+            display: block;
+            /* 심 끝을 축으로 돌린다 — 64뷰박스의 심 (4,32)를 -45° 회전하면 (12.2, 51.8),
+               즉 요소 기준 19%/81% 지점이다. 기본값(가운데)으로 두면 회전할 때마다 심이
+               좌우로 크게 쓸려나가 "쓰는 중"이 아니라 휘두르는 것처럼 보인다. */
+            transform-origin: 19% 81%;
+            animation: letterPencilScratch 0.17s ease-in-out infinite;
+        }
+
+        /* 마지막에 살짝 부풀었다가 훅 사라지는 "통!"(사용자 요청) — 바깥 요소의
+           scale/opacity에 건다(svg의 rotate와 다른 요소라 안 부딪힘). */
+        .letter-send-pencil.is-popping {
+            animation: letterPencilPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes letterPencilPop {
+            0%   { transform: scale(1); opacity: 1; }
+            45%  { transform: scale(1.4); opacity: 1; }
+            100% { transform: scale(0.15); opacity: 0; }
+        }
+
+        /* (연필 다음 단계 — 카드가 우체통으로 빨려 들어가는 연출은 @scope 밖에 둔다.
+           .modal-box의 등장 애니메이션을 같은 animation 속성으로 덮어써야 하는데,
+           그 규칙과 확실히 겨루려면 특정도를 올려야 해서다. 파일 아래쪽
+           .proto-letters .letter-write-card.is-sucking 참고.) */
+
+        /* 사각사각 — 심을 축으로 좌우로 까딱까딱 흔든다(사용자 요청). transform-origin을
+           심 끝(SVG 좌하단)에 두어야 연필이 통째로 미끄러지지 않고 그 자리에서 회전한다. */
+        @keyframes letterPencilScratch {
+            0%, 100% { transform: rotate(-9deg); }
+            50%      { transform: rotate(9deg); }
         }
 
         .letter-write-buttons {
@@ -1171,6 +1235,54 @@ body.light-mode .proto-letters { --primary-green: #1b4332; --accent-green: #52b7
    기본 등장 애니메이션(letterModalBoxIn)을 그대로 쓴다 — 여기선 별도 오버라이드가
    필요 없다. */
 
+/* 카드가 우체통으로 쏙 빨려 들어가는 연출(사용자 요청) — 이동 거리는 JS(Letters.jsx)가
+   우체통 실제 위치를 재서 --suck-x/--suck-y로 넘긴다.
+
+   반드시 animation으로 해야 한다: .modal-box에 `animation: letterModalBoxIn ... both`가
+   걸려 있어 fill-mode:both 때문에 등장 애니메이션의 마지막 키프레임(transform:none,
+   opacity:1)이 끝난 뒤에도 계속 적용되는데, CSS 애니메이션은 캐스케이드에서 인라인
+   스타일보다 우선이라 인라인 transform/transition으로는 절대 못 이긴다(실제로 카드가
+   전혀 안 움직이고 모서리만 둥글어지는 증상이 났다). 같은 animation 속성으로 덮어써서
+   등장 애니메이션 자체를 교체한다 — 그래서 @scope 밖 + .proto-letters 접두로 특정도를
+   확실히 높여 뒀다. */
+.proto-letters .letter-write-card.is-sucking {
+  animation: letterSuckIn 0.5s cubic-bezier(0.5, 0, 0.9, 0.4) both;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+@keyframes letterSuckIn {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+    border-radius: 20px;
+  }
+  /* 빨려 들어가기 직전 살짝 뒤로 물러났다가(진공에 빨리기 전 반동) 훅 들어간다. */
+  18% {
+    transform: translate(calc(var(--suck-x, 0px) * -0.04), calc(var(--suck-y, 0px) * -0.04)) scale(1.04) rotate(-2deg);
+    opacity: 1;
+    border-radius: 20px;
+  }
+  100% {
+    transform: translate(var(--suck-x, 0px), var(--suck-y, 0px)) scale(0.05) rotate(9deg);
+    opacity: 0;
+    border-radius: 999px;
+  }
+}
+
+/* 카드가 우체통으로 빨려 들어가는 동안(is-sucking) 배경 블러도 같이 옅어져야
+   "블러 진 배경 속으로 사라지는" 것처럼 안 보이고, 블러가 걷히며 우체통이 드러나는
+   동시에 편지가 그리로 들어가는 것처럼 읽힌다(의견 공유 후 합의, Letters.jsx가 카드의
+   is-sucking과 같은 타이밍에 이 클래스를 건다). .modal-overlay 기본값이 @scope 안에
+   있어 그 값(background/backdrop-filter)을 밖에서 덮으려면 이 파일의 다른 "반드시
+   먹어야 하는" 규칙들과 같은 패턴 — @scope 밖 + .proto-letters 접두로 특정도를
+   확실히 높여 둔다. */
+.proto-letters .letter-compose-overlay.is-fading {
+  transition: background 0.45s ease, backdrop-filter 0.45s ease;
+  background: transparent;
+  backdrop-filter: blur(0px) saturate(1);
+  -webkit-backdrop-filter: blur(0px) saturate(1);
+}
+
 /* 모션을 줄이길 원하는 사용자(prefers-reduced-motion) — 물감 필 애니메이션을 끄고
    즉시 상태만 반영한다. @scope 밖에 둔 이유는 다른 "반드시 먹어야 하는" 규칙과 같다
    (Letters.jsx 주석 참고) — 접근성 옵션은 특히 실패하면 안 되는 규칙이라 신뢰성이
@@ -1178,6 +1290,12 @@ body.light-mode .proto-letters { --primary-green: #1b4332; --accent-green: #52b7
 @media (prefers-reduced-motion: reduce) {
   .proto-letters .letter-recipient-pill { transition: none; }
   .proto-letters .letter-recipient-pill.is-squashing { animation: none; }
+  /* 발송 애니메이션(연필 훑기·우체통으로 빨려들기)도 끈다 — JS에서도
+     prefersReducedMotion()으로 아예 시작하지 않지만(모달이 빈 채로 대기하지 않게),
+     혹시 모를 경우를 위한 이중 안전장치. */
+  .proto-letters .letter-send-pencil { display: none; }
+  .proto-letters .letter-write-card.is-sucking { animation: none; }
+  .proto-letters .letter-compose-overlay.is-fading { transition: none; }
 }
 
 /* 공통 <Button>을 편지 작성에 쓰되, 편지 카드는 항상 라이트 종이라 다크 앱 모드에서도

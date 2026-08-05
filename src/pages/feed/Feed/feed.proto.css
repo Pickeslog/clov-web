@@ -254,7 +254,7 @@ body.light-mode .proto-feed .feed-controls-divider { background: rgba(27, 67, 50
 
 .proto-feed .feed-empty-state {
   grid-column: 1 / -1; padding: 44px 18px; border-radius: 24px; text-align: center;
-  color: var(--text-muted); background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted); background: rgba(255, 255, 255, 0.16);
   border: 1px solid var(--border-color); font-size: 13px; font-weight: 700; line-height: 1.6;
 }
 .proto-feed .feed-state { padding: 28px 8px; text-align: center; color: var(--text-muted); font-size: 13px; }
@@ -866,7 +866,7 @@ body.light-mode .proto-feed .polaroid-card {
   background: var(--card-bg);
   box-shadow: 0 2px 4px rgba(0,0,0,.10), 0 10px 30px rgba(8,28,22,.18), 0 24px 60px rgba(8,28,22,.10);
 }
-body.light-mode .proto-feed .feed-empty-state { color: var(--text-muted); background: rgba(0,0,0,.03); border-color: var(--border-color); }
+body.light-mode .proto-feed .feed-empty-state { color: var(--text-muted); background: rgba(0,0,0,.07); border-color: var(--border-color); }
 /* 검색 알약은 두 테마 공통(밝은 종이). 갤러리 트리거만 라이트에서 초록 잉크 유지 */
 body.light-mode .proto-feed .feed-gallery-trigger { background: rgba(255, 255, 255, 0.9); color: #1b4332; border-color: rgba(82, 183, 136, 0.28); }
 

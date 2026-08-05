@@ -23,15 +23,6 @@ const MEMORY_THEMES = [
   { value: 'stack', label: '겹침 카드' },
   { value: 'diary', label: '일기장' },
 ]
-const MASCOTS = [
-  { value: 'crobi', label: '크로비' },
-  { value: 'rob', label: '롭' },
-  { value: 'burgerOldman', label: '버거노인' },
-  { value: 'takoGun', label: '타코군' },
-  { value: 'kimCheolsu', label: '김철수' },
-  { value: 'onyx', label: '오닉스' },
-]
-
 // 사용자 설정 물감 카드 — 프로토타입 blob 모양(색상은 currentColor).
 const BLOB_PATH = 'M20,45 C20,20 60,10 100,15 C150,20 170,5 220,10 C270,15 300,25 300,45 C300,70 260,80 220,78 C180,76 160,85 110,82 C60,79 20,70 20,45 Z'
 
@@ -79,7 +70,6 @@ function SettingsBody({ me, prefs, onClose }) {
     darkMode: getDark(),
     letterTheme: prefs.letterTheme ?? 'postbox',
     memoryCardTheme: prefs.memoryCardTheme ?? 'stack',
-    mascotType: prefs.mascotType ?? 'crobi',
   })
 
   // 프로필(개인정보 수정) 저장 — 닉네임·생일.
@@ -291,7 +281,8 @@ function SettingsBody({ me, prefs, onClose }) {
 
               <OptionRow title="우정편지 테마" value={pref.letterTheme} options={LETTER_THEMES} onPick={(v) => setPrefAndSave({ letterTheme: v })} />
               <OptionRow title="참여자별 추억 증거 카드" value={pref.memoryCardTheme} options={MEMORY_THEMES} onPick={(v) => setPrefAndSave({ memoryCardTheme: v })} />
-              <OptionRow title="마스코트 캐릭터" value={pref.mascotType} options={MASCOTS} onPick={(v) => setPrefAndSave({ mascotType: v })} />
+              {/* 마스코트 캐릭터 선택은 헤더 프로필 드롭다운의 "마스코트 꾸미기"로 이동했다 —
+                  거기서 preferences.mascotType을 직접 바꾼다. 여기선 더 이상 다루지 않는다. */}
               {/* 크기는 서버가 아니라 기기-로컬이다(배경 테마와 같은 취급) — 모니터 크기에
                   딸린 취향이라 계정보다 기기에 묶는 쪽이 자연스럽다. lib/mascotSize.js 참고. */}
               <OptionRow title="마스코트 크기" value={mascotSize} options={MASCOT_SIZES} onPick={pickMascotSize} />

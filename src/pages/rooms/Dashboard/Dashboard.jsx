@@ -1149,6 +1149,9 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
   const onPointerDown = (e) => {
     const el = framesRef.current
     if (!el) return
+    // 터치·펜은 브라우저의 네이티브 가로 패닝(.cline-film-frames는 overflow-x:auto)이
+    // 이미 처리한다. 여기서 scrollLeft까지 같이 밀면 한 번의 스와이프가 두 배로 움직인다.
+    if (e.pointerType !== 'mouse') return
     drag.current = { active: true, startX: e.clientX, startLeft: el.scrollLeft, moved: false }
   }
   const onPointerMove = (e) => {
@@ -1163,6 +1166,42 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
     const el = framesRef.current
     if (el && Math.abs(e.deltaY) >= Math.abs(e.deltaX) && e.deltaY) { el.scrollLeft += e.deltaY; e.preventDefault() }
   }
+
+  // ── 카드 스와이프 ──────────────────────────────────────────────────
+  // 카드 뷰어에는 원래 클릭밖에 없었다 — 옆 카드를 정확히 눌러야만 넘어갔다.
+  // 데스크톱은 그걸로 됐지만 모바일에선 카드가 겹쳐 있어 조준이 어렵고, 애초에
+  // 손가락은 밀어서 넘긴다. 필름스트립 드래그는 필름스트립만 움직이지 카드를 안 넘긴다.
+  const swipe = useRef({ active: false, startX: 0, startY: 0, fired: false, moved: false })
+  // 40px — 탭이 미끄러진 것과 넘기려는 의도를 가르는 선.
+  const SWIPE_THRESHOLD = 40
+
+  const onSwipeDown = (e) => {
+    swipe.current = { active: true, startX: e.clientX, startY: e.clientY, fired: false, moved: false }
+    // 손가락이 카드 밖으로 나가도 제스처를 놓치지 않게 잡아둔다.
+    // 마우스는 제외 — 캡처하면 이벤트 타깃이 이 컨테이너로 바뀌어서 3D 틸트의
+    // e.target.closest('.cline-polaroid')가 항상 null이 된다.
+    // 캡처 실패는 삼켜도 된다. 손가락이 이미 떨어진 뒤 핸들러가 돌면 NotFoundError가
+    // 나는데, 그건 어차피 스와이프가 성립 안 하는 경우다 — 여기서 던지면 그것 때문에
+    // 정상 탭까지 같이 죽는다.
+    if (e.pointerType !== 'mouse') {
+      try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* 이미 놓친 포인터 */ }
+    }
+  }
+  const onSwipeMove = (e) => {
+    const s = swipe.current
+    if (!s.active || s.fired) return
+    const dx = e.clientX - s.startX
+    const dy = e.clientY - s.startY
+    // 클릭 억제용 — 문턱보다 훨씬 작다. 살짝 밀린 채 손을 떼도 상세보기가 열리면 안 된다.
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) s.moved = true
+    // 세로가 더 크면 페이지를 스크롤하려는 것이다 — 가로로 해석하지 않는다.
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) <= Math.abs(dy)) return
+    // 과거 카드는 왼쪽, 최신 카드는 오른쪽에 있다(SLOTS: +1=past, -1=newer).
+    // 오른쪽으로 밀면 왼쪽 것이 가운데로 온다 = 과거로.
+    goTo(index + (dx > 0 ? 1 : -1))
+    s.fired = true
+  }
+  const onSwipeEnd = () => { swipe.current.active = false }
 
   // ── 겹침 카드 3D 마우스 틸트 (#114 P3) ─────────────────────────────────
   // 정본 space.js:1330-1360은 window에 리스너를 달고 뷰어를 closest로 찾아 위임하지만,
@@ -1205,7 +1244,15 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
       onPointerMove={isStack ? onTiltMove : undefined}
       onPointerLeave={isStack ? untilt : undefined}
     >
-      <div className="cline-stage">
+      {/* 스와이프는 .cline-stage 에만 건다 — .cline-viewer 에 걸면 형제인 필름스트립
+          드래그까지 버블링으로 같이 잡혀서 필름을 미는 동안 카드가 넘어가 버린다. */}
+      <div
+        className="cline-stage"
+        onPointerDown={onSwipeDown}
+        onPointerMove={onSwipeMove}
+        onPointerUp={onSwipeEnd}
+        onPointerCancel={onSwipeEnd}
+      >
         {isDiary && <DiaryStage />}
         <div className="cline-wire-area">
           <div className="cline-wire" />
@@ -1234,10 +1281,16 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
                 <div
                   key={cls}
                   className={`cline-card-slot cline-slot--${cls} ${isActive ? 'is-active' : ''}`}
-                  onClick={opensDetail ? undefined : () => goTo(target)}
+                  // 스와이프가 끝나면 click도 뒤따라 온다 — 밀어서 넘긴 김에 옆 카드로
+                  // 한 번 더 가거나 상세보기가 열리면 안 된다(필름스트립의 drag.moved와 같은 가드).
+                  onClick={opensDetail ? undefined : () => { if (!swipe.current.moved) goTo(target) }}
                 >
                   {!isFanned && <Clothespin />}
-                  <ClinePolaroid memory={memories[i]} isActive={isActive} onOpen={opensDetail ? () => onOpen(memories[i]?.id) : undefined} />
+                  <ClinePolaroid
+                    memory={memories[i]}
+                    isActive={isActive}
+                    onOpen={opensDetail ? () => { if (!swipe.current.moved) onOpen(memories[i]?.id) } : undefined}
+                  />
                 </div>
               )
             })}

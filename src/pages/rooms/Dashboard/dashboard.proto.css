@@ -479,7 +479,10 @@ body.light-mode .proto-dashboard .section-title {
   background: rgba(255,255,255,.04); border: 1px dashed var(--border-color);
 }
 .proto-dashboard .cline-viewer { padding: 4px 0 16px; }
-.proto-dashboard .cline-stage { display: flex; align-items: center; gap: 6px; }
+/* pan-y — 세로 스크롤은 브라우저에 넘기고 가로 제스처만 우리가 가져온다.
+   기본값(auto)이면 브라우저가 가로 제스처까지 자기 것으로 판단해 pointercancel을
+   쏘고, 그 순간 스와이프 추적이 끊긴다(= 카드가 안 넘어간다). */
+.proto-dashboard .cline-stage { display: flex; align-items: center; gap: 6px; touch-action: pan-y; }
 .proto-dashboard .cline-wire-area { flex: 1; position: relative; min-width: 0; }
 .proto-dashboard .cline-wire {
   position: absolute; top: 0; left: -8px; right: -8px; height: 8px; z-index: 2; border-radius: 999px; overflow: hidden;

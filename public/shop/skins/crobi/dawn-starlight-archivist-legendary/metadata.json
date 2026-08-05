@@ -1,0 +1,19 @@
+{
+  "skinId": "dawn-starlight-archivist-legendary",
+  "mascotId": "crobi",
+  "displayName": "새벽의 별빛 기록자 크로비",
+  "rarity": "LEGENDARY",
+  "shopCategory": "COSTUME",
+  "assetUrl": "/shop/skins/crobi/dawn-starlight-archivist-legendary/default.png",
+  "states": {
+    "default": "default.png",
+    "angry": "angry.png",
+    "dizzy": "dizzy.png",
+    "find": "find.png",
+    "pencil": "pencil.png",
+    "pulled": "pulled.png",
+    "scared": "scared.png",
+    "sleepy": "sleepy.png",
+    "smile": "smile.png"
+  }
+}

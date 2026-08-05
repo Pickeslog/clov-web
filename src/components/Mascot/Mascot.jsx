@@ -142,6 +142,7 @@ const EQUIPPED_SKIN_STATE_SPRITES = [
   '/shop/skins/crobi/ocean-rescue-champion-epic',
   '/shop/skins/crobi/magic-school-student-common',
   '/shop/skins/crobi/senior-developer-uncommon',
+  '/shop/skins/crobi/dawn-starlight-archivist-legendary',
   '/shop/skins/onyx/blackstar-atelier-uncommon',
   '/shop/skins/onyx/development-team-lead-epic',
 ].map((root) => ({

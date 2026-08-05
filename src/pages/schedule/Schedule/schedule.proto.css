@@ -259,9 +259,13 @@
     gap: 4px;
     transform-origin: left center;
     will-change: transform, opacity;
-    animation: clovTearBack 0.22s cubic-bezier(.3,.8,.4,1) forwards;
+    /* 기본 상태는 애니메이션 없음(정지된 transform:none/opacity:1) — 예전엔 이 자리에
+       clovTearBack이 무조건 걸려 있어서, 한 번도 뜯은 적 없는 티켓도 이 화면에 새로
+       들어올(마운트될) 때마다 "다시 붙는" 연출이 매번 재생됐다. 이제 실제로 뜯었다가
+       닫을 때만(.is-back, TicketCard의 reattaching 상태) 재생한다. */
   }
   .ticket-stub.is-off { animation: clovTearOff 0.4s steps(2, end) forwards; }
+  .ticket-stub.is-back { animation: clovTearBack 0.22s cubic-bezier(.3,.8,.4,1) forwards; }
   .ticket-stub-side {
     writing-mode: vertical-rl;
     transform: rotate(180deg);

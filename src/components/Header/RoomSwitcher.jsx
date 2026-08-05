@@ -54,7 +54,9 @@ export default function RoomSwitcher({ currentRoomId, onClose }) {
                         disabled={isCurrent}
                         onClick={() => goRoom(room.id)}
                       >
-                        <span className="clov-rs-avatar" aria-hidden="true">{initialOf(room.name)}</span>
+                        <span className="clov-rs-avatar" aria-hidden="true">
+                          {room.coverPhotoUrl ? <img src={room.coverPhotoUrl} alt="" /> : initialOf(room.name)}
+                        </span>
                         <span className="clov-rs-name">{room.name}</span>
                         {isCurrent && <span className="clov-rs-badge">현재</span>}
                       </button>

@@ -478,7 +478,7 @@ function TicketCard({
               <div className="ticket-holo" />
               <div className="ticket-content">
                 <div className="ticket-toprow">
-                  <span className="ticket-brand">🍀 CLOV. MEMORIES</span>
+                  <span className="ticket-brand"><i className="ti ti-clover-filled" aria-hidden="true" /> CLOV. MEMORIES</span>
                   <span className="ticket-admit">ADMIT ONE · No. {ticketNoOf(plan)}</span>
                 </div>
                 <div className="ticket-titlewrap">
@@ -539,7 +539,7 @@ function TicketDetailModal({
       <div className="modal-box ticket-detail" onClick={(e) => e.stopPropagation()}>
         <div className="receipt-paper">
           <div className="ticket-detail-brandrow">
-            <span className="ticket-brand">🍀 CLOV. MEMORIES</span>
+            <span className="ticket-brand"><i className="ti ti-clover-filled" aria-hidden="true" /> CLOV. MEMORIES</span>
             <span className="ticket-detail-stub-tag">STUB · No. {ticketNoOf(plan)}</span>
           </div>
           <div className="ticket-detail-head">
@@ -691,7 +691,7 @@ export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, o
               <div className="ticket-holo" />
               <div className="ticket-content">
                 <div className="ticket-toprow">
-                  <span className="ticket-brand">🍀 CLOV. MEMORIES</span>
+                  <span className="ticket-brand"><i className="ti ti-clover-filled" aria-hidden="true" /> CLOV. MEMORIES</span>
                   <span className="ticket-admit">{plan ? '약속 수정하기' : '새 D-day 만들기'}</span>
                 </div>
                 <input

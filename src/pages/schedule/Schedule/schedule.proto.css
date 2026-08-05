@@ -1115,7 +1115,25 @@
     .growth-density button { flex: 1; padding: 0 8px; }
     .growth-card-rail { max-width: 100%; padding: 0; }
     .carousel-btn { display: none; }
-    .growth-card-viewport { flex: 1; max-width: 100%; }
+    /* ★ 모바일에선 스냅을 끈다 — 여기선 ‹ › 화살표가 숨겨져 손가락이 유일한 이동 수단인데,
+       스냅 간격이 카드 한 장(150px + gap 14px = 164px)이라 82px(반 칸)보다 적게 민 손가락은
+       정확히 제자리로 되돌아온다. 실측:
+
+         밀어낸 px   20  40  60  80  120  164
+         스냅 켬      0   0   0   0  164  164     ← 82px 미만은 전부 0으로 복귀
+         스냅 끔     20  40  60  80  120  164
+
+       세게 튕기면(관성이 붙으면) 넘어가지만 천천히 미는 사람에겐 "밀었는데 아무 일도
+       안 일어난다"가 된다. proximity로 바꿔도 소용없다 — 스냅점이 164px마다 촘촘해서
+       가장 가까운 점이 늘 근접 범위 안이라 mandatory와 똑같이 되돌린다(같이 실측).
+
+       scroll-behavior도 auto로 되돌린다. 화살표가 숨겨진 모바일에선 쓸 데가 없고,
+       scrollRail()은 scrollBy에 behavior:'smooth'를 직접 넘기므로 잃는 게 없다. */
+    .growth-card-viewport {
+      flex: 1; max-width: 100%;
+      scroll-snap-type: none;
+      scroll-behavior: auto;
+    }
     .growth-card.four-cut {
       flex: 0 0 var(--mb-carousel-card-w, 150px);
       width: var(--mb-carousel-card-w, 150px);

@@ -161,6 +161,10 @@ export default function RoomList() {
     return list
   }, [rooms.data, sort, roomOrder])
 
+  // "정말 방이 하나도 없는 신규 사용자"와 "즐겨찾기 필터에 걸린 게 없을 뿐"은 다른 상황이다.
+  // 전자에게만 온보딩 CTA를 띄운다 — 방이 있는 사람에게 "첫 공간을 만들어보세요"는 틀린 말이다.
+  const hasNoRooms = rooms.isSuccess && (rooms.data?.items?.length ?? 0) === 0
+
   const totalPages = Math.max(1, Math.ceil(sortedRooms.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages - 1)
   const visibleRooms = editMode ? sortedRooms : sortedRooms.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
@@ -295,33 +299,66 @@ export default function RoomList() {
         )}
 
         <div className="filter-row">
-          <div className="filter-tabs">
-            {SORTS.map((s) => (
-              <button type="button" key={s.key} className={`filter-btn${sort === s.key ? ' active' : ''}`} onClick={() => setSort(s.key)}>
-                <Icon name={s.icon} /> {s.label}
-              </button>
-            ))}
-          </div>
+          {/* 방이 없으면 정렬할 것도 편집할 것도 없다 — 의미 없는 컨트롤이 주 동선보다
+              자리를 많이 먹고 있었다(신규 사용자에게 정렬 탭 4개 + 편집 버튼). */}
+          {!hasNoRooms && (
+            <div className="filter-tabs">
+              {SORTS.map((s) => (
+                <button type="button" key={s.key} className={`filter-btn${sort === s.key ? ' active' : ''}`} onClick={() => setSort(s.key)}>
+                  <Icon name={s.icon} /> {s.label}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="toolbar-right">
-            <input
-              className="code-input"
-              value={joinCode}
-              maxLength={20}
-              placeholder="방 코드 입력"
-              onChange={(e) => { setJoinCode(e.target.value); setJoinMessage('') }}
-              onKeyDown={(e) => e.key === 'Enter' && joinCode.trim() && joinMutation.mutate()}
-            />
-            <button type="button" className="btn-enter" disabled={!joinCode.trim() || joinMutation.isPending} onClick={() => joinMutation.mutate()}>입장</button>
+            {/* 입력+버튼을 한 덩어리로 묶는다. 예전엔 130x36 13px 입력이 정렬 탭·편집 버튼과
+                같은 급으로 흩어져 있어서 "들어오는 입구"로 안 읽혔다. */}
+            <div className="code-join">
+              <Icon name="ti-ticket" />
+              <input
+                className="code-input"
+                value={joinCode}
+                maxLength={20}
+                /* /join 화면이 쓰는 말과 맞춘다 — 거기선 '초대 코드'다. */
+                placeholder="초대 코드 입력"
+                aria-label="초대 코드"
+                onChange={(e) => { setJoinCode(e.target.value); setJoinMessage('') }}
+                onKeyDown={(e) => e.key === 'Enter' && joinCode.trim() && joinMutation.mutate()}
+              />
+              <button type="button" className="btn-enter" disabled={!joinCode.trim() || joinMutation.isPending} onClick={() => joinMutation.mutate()}>입장</button>
+            </div>
             <button type="button" className="btn-create" onClick={() => setCreateOpen(true)}><Icon name="ti-plus" /> 방 만들기</button>
-            <button type="button" className={`btn-edit${editMode ? ' active' : ''}`} onClick={() => setEditMode((v) => !v)}>{editMode ? '완료' : '편집'}</button>
+            {!hasNoRooms && (
+              <button type="button" className={`btn-edit${editMode ? ' active' : ''}`} onClick={() => setEditMode((v) => !v)}>{editMode ? '완료' : '편집'}</button>
+            )}
           </div>
         </div>
         {joinMessage && <div className="rl-msg" role="alert">{joinMessage}</div>}
 
         {rooms.isPending && <div className="rl-state">불러오는 중…</div>}
         {rooms.isError && <div className="rl-state">목록을 불러오지 못했습니다. {rooms.error?.message}</div>}
-        {rooms.isSuccess && sortedRooms.length === 0 && (
-          <div className="rl-state">{sort === 'favorite' ? '즐겨찾기한 우정공간이 없어요.' : '아직 우정공간이 없어요. "방 만들기"로 첫 공간을 만들어보세요.'}</div>
+        {/* 신규 사용자 온보딩 — 예전엔 "'방 만들기'로 첫 공간을 만들어보세요" 한 줄이었다.
+            화면에서 제일 큰 안내 문구가 길을 하나만 가리켰던 셈인데, 초대를 받고 온 사람에게는
+            그게 틀린 길이다(학원 동기 피드백: 코드 입력란이 작고 눈에 안 띄어 입장이 늦어졌다).
+            들어오는 길이 둘이니 둘 다 같은 무게로 놓는다. */}
+        {hasNoRooms && (
+          <div className="rl-empty">
+            <div className="rl-empty-title">아직 우정공간이 없어요</div>
+            <p className="rl-empty-desc">직접 만들거나, 친구에게 받은 초대 코드로 들어오세요.</p>
+            <div className="rl-empty-actions">
+              <button type="button" className="rl-empty-btn primary" onClick={() => setCreateOpen(true)}>
+                <Icon name="ti-plus" /> 방 만들기
+              </button>
+              {/* 여기서 코드 입력을 또 만들지 않고 /join으로 보낸다 — 그 화면엔 이미 제목·설명·라벨과
+                  CLV-JOIN-XXXXXX 형식 안내가 있다. 지금까지 목록에서 그리로 가는 길이 없었을 뿐이다. */}
+              <button type="button" className="rl-empty-btn" onClick={() => navigate('/join')}>
+                <Icon name="ti-ticket" /> 초대 코드로 입장
+              </button>
+            </div>
+          </div>
+        )}
+        {rooms.isSuccess && !hasNoRooms && sortedRooms.length === 0 && (
+          <div className="rl-state">즐겨찾기한 우정공간이 없어요.</div>
         )}
 
         {sortedRooms.length > 0 && (

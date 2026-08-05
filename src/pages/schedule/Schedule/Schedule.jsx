@@ -411,6 +411,10 @@ function TicketCard({
   onEdit, onDelete, onComplete, onCancel,
 }) {
   const [torn, setTorn] = useState(false)
+  // 뜯었다가(is-off) 닫을 때만 "다시 붙는" 연출(clovTearBack)을 재생하기 위한 임시 플래그.
+  // torn 하나로만 판단하면 컴포넌트가 새로 마운트될 때(이 화면에 처음 들어올 때)도
+  // torn=false인 기본 상태로 렌더되면서 같은 CSS 애니메이션이 다시 걸려버린다.
+  const [reattaching, setReattaching] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 30, hover: false })
 
@@ -443,7 +447,12 @@ function TicketCard({
     setTorn(true)
     window.setTimeout(() => setDetailOpen(true), 340)
   }
-  const closeDetail = () => { setDetailOpen(false); setTorn(false) }
+  const closeDetail = () => {
+    setDetailOpen(false)
+    setTorn(false)
+    setReattaching(true)
+    window.setTimeout(() => setReattaching(false), 220) // clovTearBack 재생 시간과 동일
+  }
 
   return (
     <div className="growth-detail" style={{ '--stamp': isPast ? '#2e5233' : '#c0392b' }}>
@@ -486,7 +495,7 @@ function TicketCard({
                 </div>
               </div>
             </div>
-            <div className={`ticket-stub${torn ? ' is-off' : ''}`}>
+            <div className={`ticket-stub${torn ? ' is-off' : ''}${reattaching ? ' is-back' : ''}`}>
               <span className="ticket-stub-side">KEEP THIS STUB</span>
               <div className="ticket-stub-mid">
                 <span className="ticket-stub-kicker">{ddayPhrase}</span>

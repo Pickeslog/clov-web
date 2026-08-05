@@ -908,7 +908,6 @@
    텍스트영역이 검게 나오던 문제까지 근본 해결(caret·스크롤바 포함 라이트 렌더). */
 .proto-letters { --primary-green: #1b4332; --accent-green: #52b788; --title-color: #1b4332; --card-bg: #ffffff; --bg-light: #f7f8f5; --text-color: #2c3e35; --text-muted: #61766a; --border-color: #eadfd0; --input-border: #e2e8e4; --nav-item-bg-active: #edf4ec; --btn-primary-bg: #1b4332; --button-text: #ffffff; --shadow-color: rgba(8, 28, 22, 0.12); color-scheme: light; min-height: calc(100vh - 74px); padding: 26px 24px 72px; color: var(--text-color); }
 .proto-letters .letter-stage { margin: 0 auto; }
-.proto-letters .letter-write-card { width: min(680px, 100%); margin: 24px auto; display: block; text-align: left; }
 .proto-letters .letter-write-card h3, .proto-letters .letter-write-card > p { text-align: left; }
 /* 텍스트영역: 전역 다크 input 스타일을 받아 검게 나오던 문제 → 크림 종이 카드에 맞춰 흰 배경 고정 */
 .proto-letters .letter-write-textarea {
@@ -924,6 +923,24 @@
 .proto-letters .letter-read-btn { margin-top: 8px; border: 0; background: var(--primary-green); color: #fff; border-radius: 7px; padding: 6px 9px; font: inherit; font-size: 11px; cursor: pointer; }
 body.light-mode .proto-letters { --primary-green: #1b4332; --accent-green: #52b788; --card-bg: #ffffff; --bg-light: #f7f8f5; --text-color: #2c3e35; --text-muted: #61766a; --border-color: #eadfd0; --nav-item-bg-active: #edf4ec; }
 @media (max-width: 640px) { .proto-letters { padding: 18px 14px 52px; } .proto-letters .letter-stage { padding: 30px 18px; } }
+}
+
+/* 작성 카드 폭 — 위 .letter-stage와 같은 .letter-tab-container 오른쪽 끝에 맞춘다(#286).
+   일부러 @scope 블록 밖에 뒀다: 이 파일의 @scope(.proto-letters) 내부 규칙은 사용자 환경에서
+   반영이 안 되는 문제가 이미 알려져 있고(Letters.jsx:136 주석, 그래서 팔레트 변수도 인라인
+   style로 뺐다), 이번 정렬 수정을 시도하며 실측해보니 @scope 안에서 이 규칙 값을 바꿔도
+   getComputedStyle에 반영이 안 되는 걸 재현했다(캐스케이드 우선순위 설명만으로는 안 맞음).
+   그래서 정렬처럼 반드시 먹어야 하는 규칙은 @scope 밖, 다른 화면들과 같은 클래스 접두
+   방식으로 둔다 — 이 방식은 신뢰성이 검증된 패턴이다(Login/JoinRoom/OAuthRedirect/Signup).
+   box-sizing:border-box는 width:100%와 함께 필수 — 이 카드는 padding:28px 32px +
+   border:1px(letters.proto.css의 @scope 내부 기본 규칙)가 있어서 content-box 상태로
+   width:100%만 주면 padding+border(66px)만큼 오른쪽으로 넘친다. */
+.proto-letters .letter-write-card {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 24px 0;
+  display: block;
+  text-align: left;
 }
 
 /* 공통 <Button>을 편지 작성에 쓰되, 편지 카드는 항상 라이트 종이라 다크 앱 모드에서도

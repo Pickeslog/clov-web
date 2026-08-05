@@ -100,22 +100,26 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
           </nav>
         )}
 
-        {/* 상점(버튼+골드 표시) — 아직 어느 방에도 들어가지 않은 방 목록(home) 화면에서는
-            통째로 감춘다. 방 안(variant="room")에서만 노출. */}
-        {variant === 'room' && (
-          <button
-            type="button"
-            className={`clov-hdr-shop${onShop ? ' active' : ''}`}
-            onClick={() => navigate('/shop', { state: roomId ? { fromRoomId: roomId } : undefined })}
-            title="상점"
-            aria-current={onShop ? 'page' : undefined}
-          >
-            <NavIcon><path d="M4 8h16l-1.2 10a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8L4 8zM8.5 8V6a3.5 3.5 0 0 1 7 0v2" /></NavIcon>
-            <span className="clov-hdr-shop-label">상점</span>
-            {/* balance가 비면 헤더가 통째로 죽는다 — Shop.jsx도 같은 이유로 ?? 0을 쓴다(#208). */}
-            {wallet.data && <span className="clov-hdr-gold"><i aria-hidden="true">G</i>{(wallet.data.balance ?? 0).toLocaleString()}</span>}
-          </button>
-        )}
+        {/* 상점(버튼+골드 표시) — 방 안/밖 어디서든 보인다.
+            예전엔 방 목록(home)에서 통째로 감췄는데, 지갑은 방이 아니라 사용자에 붙어 있어서
+            (router.jsx: "상점은 재화가 사용자 단위라 방에 속하지 않는다") 진입점만 방 안으로
+            묶여 있는 게 모델과 어긋났다. 실제 구멍도 있었다:
+            - 방이 0개인 신규 사용자는 들어갈 방이 없어 상점에 사실상 못 갔다
+              (남은 길은 아바타 → 마스코트 꾸미기 → "상점으로 이동" 3단계뿐)
+            - 홈에서 상점에 들어가면 Shop.jsx가 variant="home"을 써서 정작 물건 사는
+              화면의 헤더에 잔액이 안 보였다 */}
+        <button
+          type="button"
+          className={`clov-hdr-shop${onShop ? ' active' : ''}`}
+          onClick={() => navigate('/shop', { state: roomId ? { fromRoomId: roomId } : undefined })}
+          title="상점"
+          aria-current={onShop ? 'page' : undefined}
+        >
+          <NavIcon><path d="M4 8h16l-1.2 10a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8L4 8zM8.5 8V6a3.5 3.5 0 0 1 7 0v2" /></NavIcon>
+          <span className="clov-hdr-shop-label">상점</span>
+          {/* balance가 비면 헤더가 통째로 죽는다 — Shop.jsx도 같은 이유로 ?? 0을 쓴다(#208). */}
+          {wallet.data && <span className="clov-hdr-gold"><i aria-hidden="true">G</i>{(wallet.data.balance ?? 0).toLocaleString()}</span>}
+        </button>
 
         <div className="clov-hdr-avatar-wrap">
           <button type="button" className="clov-hdr-avatar" onClick={() => setMenuOpen((v) => !v)} aria-haspopup="menu" title="내 계정">

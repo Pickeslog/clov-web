@@ -15,13 +15,13 @@ import { useAuthStore } from '../../stores/authStore'
 import { useConfirm } from '../ConfirmDialog/useConfirm'
 
 const LETTER_THEMES = [
-  { value: 'giftbox', label: '선물상자' },
-  { value: 'postbox', label: '우체통' },
+  { value: 'giftbox', label: '선물상자', img: '/settings-options/giftbox.png' },
+  { value: 'postbox', label: '우체통', img: '/settings-options/postbox.png' },
 ]
 const MEMORY_THEMES = [
-  { value: 'clothesline', label: '빨랫줄' },
-  { value: 'stack', label: '겹침 카드' },
-  { value: 'diary', label: '일기장' },
+  { value: 'clothesline', label: '빨랫줄', img: '/settings-options/clothesline.png' },
+  { value: 'stack', label: '겹침 카드', img: '/settings-options/memory-stack.png' },
+  { value: 'diary', label: '일기장', img: '/settings-options/diary.png' },
 ]
 // 사용자 설정 물감 카드 — 프로토타입 blob 모양(색상은 currentColor).
 const BLOB_PATH = 'M20,45 C20,20 60,10 100,15 C150,20 170,5 220,10 C270,15 300,25 300,45 C300,70 260,80 220,78 C180,76 160,85 110,82 C60,79 20,70 20,45 Z'
@@ -341,15 +341,25 @@ function PasswordField({ label, id, value, show, placeholder, onToggle, onChange
   )
 }
 
+// 옵션에 img가 있으면 바탕화면 스와치(ps-bg-swatch)와 같은 이미지 카드로,
+// 없으면 기존 텍스트 알약 버튼으로 렌더링한다.
 function OptionRow({ title, value, options, onPick }) {
+  const hasImages = options.some((o) => o.img)
   return (
     <div className="ps-section">
       <div className="ps-section-title">{title}</div>
-      <div className="ps-opts">
+      <div className={hasImages ? 'ps-opt-img-grid' : 'ps-opts'}>
         {options.map((o) => (
-          <button type="button" key={o.value} className={`ps-opt-btn${value === o.value ? ' on' : ''}`} onClick={() => onPick(o.value)}>
-            {o.label}
-          </button>
+          hasImages ? (
+            <button type="button" key={o.value} className={`ps-opt-img-btn${value === o.value ? ' on' : ''}`} onClick={() => onPick(o.value)}>
+              <img src={o.img} alt="" />
+              <span>{o.label}</span>
+            </button>
+          ) : (
+            <button type="button" key={o.value} className={`ps-opt-btn${value === o.value ? ' on' : ''}`} onClick={() => onPick(o.value)}>
+              {o.label}
+            </button>
+          )
         ))}
       </div>
     </div>

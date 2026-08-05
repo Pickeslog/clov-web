@@ -17,9 +17,21 @@
   padding: 0;
   cursor: pointer;
   transition: transform 0.18s ease;
-  /* 롭 드래그(#155)가 window pointermove로 따라가므로, 터치에서 브라우저가 이 버튼을
-     스크롤/줌 제스처로 가로채지 않게 막는다. */
-  touch-action: none;
+  /* ★ 예전엔 touch-action: none 이었다(드래그 #155를 브라우저가 스크롤로 가로채지 않게).
+     그런데 마스코트는 position: fixed 라 화면 우하단에 93×144px짜리 "스크롤이 죽는 구역"이
+     항상 떠 있게 된다 — elementFromPoint로 찍어보면 그 지점엔 가로 스크롤 조상이 아예
+     null 이라 브라우저가 밀어줄 대상을 못 찾는다. 하필 엄지가 제일 자연스럽게 닿는
+     자리라, 일정계획 카드 레일·추억 카드가 "안 밀린다"는 체감으로 돌아왔다.
+
+     내용 스크롤이 이스터에그보다 먼저다 — 터치 드래그를 포기하고 스크롤을 살린다.
+     manipulation 은 패닝/핀치줌은 브라우저에 주고 더블탭 확대만 막아서, 탭 대상인
+     마스코트에 딱 맞는다(교감 탭이 300ms 지연 없이 즉시 먹는 덤도 있다).
+
+     잃는 것: 터치로 마스코트 "들어올리기". 브라우저가 제스처를 가져가면 pointercancel이
+     오고 endDrag()가 스프링백으로 정리하므로 어정쩡하게 굳지 않는다.
+     남는 것: 클릭 교감·말풍선·연타 콤보 전부, 그리고 데스크톱 마우스 드래그
+     (touch-action은 터치에만 적용된다). */
+  touch-action: manipulation;
 }
 .clov-mascot-hit:hover:not(:disabled) { transform: scale(1.07); }
 .clov-mascot-hit:active:not(:disabled) { transform: scale(0.97); }

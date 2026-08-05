@@ -231,6 +231,13 @@ body.light-mode .proto-feed .feed-hero-text { background: rgba(255,255,255,.6); 
 .proto-feed .feed-grid > .memory-card:nth-child(even) .polaroid-card { transform: rotate(1.2deg); }
 .proto-feed .feed-grid > .memory-card:nth-child(even) .polaroid-card:hover { transform: rotate(0deg) scale(1.015); }
 
+/* 모바일: 3열 고정으로 카드가 찌그러지던 것을 1열 세로 스택으로(#297).
+   카드 자체 크기·비율은 안 건드리고 열 수만 줄인다 — 명세(03-memory-feed-screen.md
+   "데스크톱/모바일 차이")의 "카드가 너무 작아지지 않도록 카드 영역을 넓게 확보" 반영. */
+@media (max-width: 640px) {
+  .proto-feed .feed-grid { grid-template-columns: 1fr; }
+}
+
 .proto-feed .feed-empty-state {
   grid-column: 1 / -1; padding: 44px 18px; border-radius: 24px; text-align: center;
   color: var(--text-muted); background: rgba(255, 255, 255, 0.06);

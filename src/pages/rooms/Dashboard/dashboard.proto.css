@@ -390,8 +390,8 @@
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   font-size: 16px; font-weight: 700; color: var(--text-color); margin: 16px 0 14px;
   padding: 6px 12px; border-radius: 12px;
-  /* 테두리는 실선 — 버튼 3개가 전부 점선(크림톤 통일, 아래 참고)이라 행 테두리까지
-     점선이면 "점선 안에 점선"이 겹쳐 산만해진다(리뷰 지적, #174). */
+  /* 테두리는 실선 — 버튼/고스트 카드도 이제 전부 실선으로 통일했다(예전엔 점선이라
+     "점선 안에 점선"이 겹쳐 산만했던 문제(#174)가 있었는데, 점선 자체를 없애 해결). */
   /* .35였던 값을 .48로 올림 — 밝고 저채도인 배경 테마(minimal-clover 등)에서 직접
      확인해보니 블러만으론 행이 배경에 묻혀 카드 경계가 안 보였다(#176 리뷰 지적). */
   background: rgba(0,0,0,.48); border: 1px solid rgba(27,67,50,.7);
@@ -457,7 +457,7 @@ body.light-mode .proto-dashboard .section-title {
    어떤 배경 테마 위에서도 카드 하나가 또렷이 도드라지게 한다. 테마 변수는 참조하지 않고
    라이트 모드 색을 라이트/다크 공통으로 고정(다크모드 텍스트가 밝아서 생기는 문제 회피).*/
 .proto-dashboard .schedule-banner.schedule-banner--ghost {
-  cursor: pointer; border: 1.5px dashed rgba(27,67,50,.45); background: rgba(250,246,238,.94);
+  cursor: pointer; border: 1.5px solid rgba(27,67,50,.45); background: rgba(250,246,238,.94);
 }
 .proto-dashboard .schedule-banner.schedule-banner--ghost .schedule-info { color: #2c3e35; }
 .proto-dashboard .schedule-banner.schedule-banner--ghost .schedule-title,
@@ -468,7 +468,7 @@ body.light-mode .proto-dashboard .section-title {
    "전체 피드 보기"(#174)는 특례 선택자 대신 dashed variant 자체를 써서 이 규칙에 자동으로 묶인다. */
 .proto-dashboard .clov-btn--dashed {
   background: #faf6ee; color: #2e5233;
-  border-width: 1.5px; border-style: dashed; border-color: rgba(46,82,51,.45);
+  border-width: 1.5px; border-style: solid; border-color: rgba(46,82,51,.45);
 }
 .proto-dashboard .clov-btn--dashed:not(:disabled):hover { background: #f3efe1; }
 
@@ -844,7 +844,7 @@ body.light-mode .proto-dashboard .section-title {
 .proto-dashboard .member-invite-btn {
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;
   background: rgba(156,204,101,.14); color: var(--accent-green);
-  border: 1px dashed rgba(156,204,101,.42); border-radius: 12px;
+  border: 1px solid rgba(156,204,101,.42); border-radius: 12px;
   padding: 11px; font-size: 13px; font-weight: 800; cursor: pointer; margin-bottom: 14px;
   transition: background-color .18s ease;
 }

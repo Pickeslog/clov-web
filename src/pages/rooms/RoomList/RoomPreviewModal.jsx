@@ -5,12 +5,12 @@ import { getInvites, createInvite } from '../../../api/invite'
 import { getNotifications } from '../../../api/notification'
 import { parseUtc } from '../../../lib/datetime'
 import { validateRoomName } from '../../../lib/roomName'
+import { avatarColorForKey } from '../../../lib/avatarColor'
 
 // 방 미리보기 모달 — 프로토타입 #room-preview-modal(무탭 소식 피드 + 방 프로필 편집 + 친구 초대) 이식.
 // 소식 피드 = 실제 알림(FRIEND=편지 / JOIN=합류 / NOTICE=공지).
 
 const HEX6 = /^#[0-9a-fA-F]{6}$/
-const AVATAR_COLORS = ['#5a7a3e', '#357a58', '#6a7e73', '#52b788']
 // 이동수단 = 프로토타입과 동일(비행기/시외버스/배/기차).
 const VEHICLES = [
   { value: 'airplane', label: '비행기', icon: 'ti-plane' },
@@ -152,7 +152,7 @@ function MainView({ r, level, memberList, memberCount, feed, feedPending, onInvi
 
       <div className="rp-mrow">
         {memberList.slice(0, 6).map((m, i) => (
-          <span key={m.id ?? m.memberId ?? i} className="rp-av" style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}>
+          <span key={m.id ?? m.memberId ?? i} className="rp-av" style={{ background: avatarColorForKey(m.id ?? m.memberId ?? m.userId) }}>
             {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
           </span>
         ))}

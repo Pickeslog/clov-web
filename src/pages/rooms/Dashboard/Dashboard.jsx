@@ -18,6 +18,7 @@ import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 import Mascot from '../../../components/Mascot/Mascot'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
+import { avatarColorForKey } from '../../../lib/avatarColor'
 // 우정공간에서 작성 모달을 인라인으로 띄우기 위해 각 화면의 모달을 재사용.
 import { ScheduleEditorModal } from '../../schedule/Schedule/Schedule'
 import { SCHEDULE_LIGHT_PALETTE, SCHEDULE_MODAL_CARD_STYLE } from '../../schedule/Schedule/palette'
@@ -35,8 +36,6 @@ const TIERS = [
   { name: '전설의 클로버 우정', icon: 'diamond', max: 777 },
 ]
 const tierFor = (level) => TIERS.find((t) => (level ?? 1) <= t.max) ?? TIERS[TIERS.length - 1]
-
-const MINI_AV_COLORS = ['#1b4332', '#52b788', '#74c69d', '#95d5b2']
 
 const DAY = 86400000
 // 계절: 이미지 키 + 한글 라벨.
@@ -632,8 +631,8 @@ export default function Dashboard() {
               <div className="member-highlight-card" onClick={() => setMembersOpen(true)} title="참여 멤버 보기">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div className="member-mini-avatars">
-                    {activeMemberItems.slice(0, 4).map((m, i) => (
-                      <span key={m.membershipId ?? m.userId} className="mini-av" style={{ background: MINI_AV_COLORS[i % MINI_AV_COLORS.length] }}>
+                    {activeMemberItems.slice(0, 4).map((m) => (
+                      <span key={m.membershipId ?? m.userId} className="mini-av" style={{ background: avatarColorForKey(m.userId ?? m.membershipId) }}>
                         {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
                       </span>
                     ))}
@@ -709,9 +708,9 @@ export default function Dashboard() {
             <button type="button" className="member-invite-btn" onClick={() => { setMembersOpen(false); setInviteOpen(true) }}>
               ＋ 친구 초대 (초대코드 보내기)
             </button>
-            {activeMemberItems.map((m, i) => (
+            {activeMemberItems.map((m) => (
               <div className="member-row" key={m.membershipId ?? m.userId}>
-                <span className="member-row-av" style={{ background: MINI_AV_COLORS[i % MINI_AV_COLORS.length] }}>
+                <span className="member-row-av" style={{ background: avatarColorForKey(m.userId ?? m.membershipId) }}>
                   {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
                 </span>
                 <div>
@@ -924,7 +923,7 @@ function ExpHistoryModal({ roomId, onClose }) {
         )}
         {logsQuery.isSuccess && groupedItems.map((log) => (
           <div className="exp-history-row" key={log.id}>
-            <span className="member-row-av exp-history-av">{log.triggeredBy?.profileImageUrl ? <img src={log.triggeredBy.profileImageUrl} alt="" /> : initialOf(log.triggeredBy?.nickname)}</span>
+            <span className="member-row-av exp-history-av" style={{ background: avatarColorForKey(log.triggeredBy?.id) }}>{log.triggeredBy?.profileImageUrl ? <img src={log.triggeredBy.profileImageUrl} alt="" /> : initialOf(log.triggeredBy?.nickname)}</span>
             <div className="exp-history-main">
               <div className="exp-history-label">
                 {log.triggeredBy?.nickname ?? '알 수 없음'}님 · {expActionLabel(log.actionType)}{log.count > 1 ? ` ×${log.count}` : ''}
@@ -1040,7 +1039,7 @@ function ClinePolaroid({ memory, isActive, onOpen }) {
       <div className="cline-card-header">
         <div className="cline-avatars">
           {avatars.map((p, idx) => (
-            <span key={p.id ?? idx} className={`cline-avatar ${idx === 0 ? '' : 'is-friend'}`} title={p.nickname}>
+            <span key={p.id ?? idx} className={`cline-avatar ${idx === 0 ? '' : 'is-friend'}`} style={{ background: avatarColorForKey(p.id) }} title={p.nickname}>
               {p.profileImageUrl ? <img src={p.profileImageUrl} alt="" /> : initialOf(p.nickname)}
             </span>
           ))}

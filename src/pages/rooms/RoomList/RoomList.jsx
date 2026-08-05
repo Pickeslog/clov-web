@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './roomlist.proto.css'
 import { getRooms, createRoom, toggleRoomFavorite, leaveRoom } from '../../../api/room'
 import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/invite'
 import Header from '../../../components/Header/Header'
 import RoomPreviewModal from './RoomPreviewModal'
+import JoinRoomModal from '../JoinRoom/JoinRoomModal'
 import { ddayDiff } from '../../../lib/datetime'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
 import { describeInviteError, extractJoinedRoomId } from '../../../lib/inviteError'
@@ -81,6 +82,21 @@ export default function RoomList() {
   const confirm = useConfirm()
 
   const [createOpen, setCreateOpen] = useState(false)
+
+  // 초대 코드 모달 — 버튼으로도 열고, /join·/join/:code 딥링크로도 열린다.
+  // 라우트가 이 화면을 그리고 모달만 얹는 구조라, 딥링크로 들어와도 뒤에 방 목록이 남는다
+  // (예전 전용 페이지는 뒤가 빈 화면이었다). 닫으면 URL도 목록으로 되돌린다.
+  const location = useLocation()
+  const { code: routeCode } = useParams()
+  const [searchParams] = useSearchParams()
+  const joinRoute = location.pathname.startsWith('/join')
+  // 공유 링크는 경로(/join/:code)와 쿼리(?code=/?roomCode=) 두 형식이 다 쓰인다 — 둘 다 지원.
+  const deepLinkCode = routeCode ?? searchParams.get('code') ?? searchParams.get('roomCode') ?? ''
+  const [joinOpen, setJoinOpen] = useState(joinRoute)
+  const closeJoin = () => {
+    setJoinOpen(false)
+    if (joinRoute) navigate('/', { replace: true })
+  }
   const [previewId, setPreviewId] = useState(null)
   const [dragId, setDragId] = useState(null)
   const [overId, setOverId] = useState(null)
@@ -285,7 +301,7 @@ export default function RoomList() {
                           onClick={() => cancelReqMutation.mutate(r.id)}>요청 취소</button>
                       )}
                       {kind === 'rejected' && (
-                        <button type="button" className="req-btn primary" onClick={() => navigate('/join')}>재요청</button>
+                        <button type="button" className="req-btn primary" onClick={() => setJoinOpen(true)}>재요청</button>
                       )}
                       {kind !== 'pending' && (
                         <button type="button" className="req-btn" onClick={() => setDismissed((d) => [...d, r.id])}>지우기</button>
@@ -351,7 +367,7 @@ export default function RoomList() {
               </button>
               {/* 여기서 코드 입력을 또 만들지 않고 /join으로 보낸다 — 그 화면엔 이미 제목·설명·라벨과
                   CLV-JOIN-XXXXXX 형식 안내가 있다. 지금까지 목록에서 그리로 가는 길이 없었을 뿐이다. */}
-              <button type="button" className="rl-empty-btn" onClick={() => navigate('/join')}>
+              <button type="button" className="rl-empty-btn" onClick={() => setJoinOpen(true)}>
                 <Icon name="ti-ticket" /> 초대 코드로 입장
               </button>
             </div>
@@ -495,6 +511,7 @@ export default function RoomList() {
           onEnter={() => navigate(`/rooms/${previewId}`)}
         />
       )}
+      {joinOpen && <JoinRoomModal initialCode={deepLinkCode} onClose={closeJoin} />}
     </div>
   )
 }

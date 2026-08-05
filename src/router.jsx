@@ -8,7 +8,6 @@ import ForgotPassword from './pages/auth/PasswordReset/ForgotPassword'
 import ResetPassword from './pages/auth/PasswordReset/ResetPassword'
 import RoomList from './pages/rooms/RoomList/RoomList'
 import Dashboard from './pages/rooms/Dashboard/Dashboard'
-import JoinRoom from './pages/rooms/JoinRoom/JoinRoom'
 import Feed from './pages/feed/Feed/Feed'
 import Letters from './pages/letters/Letters/Letters'
 import Notifications from './pages/notifications/Notifications/Notifications'
@@ -37,8 +36,11 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           { path: '/', element: <RoomList /> },
-          { path: '/join', element: <JoinRoom /> },
-          { path: '/join/:code', element: <JoinRoom /> },
+          // 초대 코드는 전용 페이지가 아니라 방 목록 위 모달이다 — 딥링크로 들어와도
+          // 뒤에 목록이 남아야 "지금 어디에 있는지"가 유지된다. RoomList가 경로를 보고
+          // 모달을 열고, 닫을 때 '/'로 되돌린다. 폼 구현은 JoinRoomModal 하나뿐이다.
+          { path: '/join', element: <RoomList /> },
+          { path: '/join/:code', element: <RoomList /> },
           // 상점은 재화가 사용자 단위라 방에 속하지 않는다 — 방 안/밖 어디서든 같은 경로.
           { path: '/shop', element: <Shop /> },
           { path: '/rooms/:roomId', element: <Dashboard /> },

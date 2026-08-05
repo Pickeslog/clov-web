@@ -126,7 +126,7 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
                 <li><button type="button" onClick={() => { setSwitcherOpen(true); setMenuOpen(false) }}><i className="ti ti-repeat" aria-hidden="true" /> 방 변경하기</button></li>
               )}
               <li><button type="button" onClick={() => { openSettings(); setMenuOpen(false) }}><i className="ti ti-settings" aria-hidden="true" /> 사용자 설정</button></li>
-              <li><button type="button" onClick={clear}><i className="ti ti-logout" aria-hidden="true" /> 로그아웃</button></li>
+              <li><button type="button" onClick={() => { setMenuOpen(false); clear(); navigate('/login', { viewTransition: true, replace: true }) }}><i className="ti ti-logout" aria-hidden="true" /> 로그아웃</button></li>
             </ul>
           )}
         </div>

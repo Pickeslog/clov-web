@@ -20,9 +20,10 @@ export default function RoomSwitcher({ currentRoomId, onClose }) {
   const items = rooms.data?.items ?? []
   const others = items.filter((r) => String(r.id) !== String(currentRoomId))
 
-  const goHome = () => { navigate('/'); onClose() }
+  // Dashboard.jsx go()·RoomList.jsx 입장 클릭과 같은 규칙 — 방 이동은 root View Transition을 태운다.
+  const goHome = () => { navigate('/', { viewTransition: true }); onClose() }
   const goRoom = (roomId) => {
-    if (String(roomId) !== String(currentRoomId)) navigate(`/rooms/${roomId}`)
+    if (String(roomId) !== String(currentRoomId)) navigate(`/rooms/${roomId}`, { viewTransition: true })
     onClose()
   }
 

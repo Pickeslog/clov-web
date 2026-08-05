@@ -283,22 +283,31 @@ export default function Feed() {
             )}
           </div>
           <div className="feed-controls-right">
-            <div className="feed-sort" role="group" aria-label="정렬 순서">
-              <button type="button" className={`feed-sort-btn ${sort === 'new' ? 'active' : ''}`} onClick={() => setSort('new')}>최신순</button>
-              <button type="button" className={`feed-sort-btn ${sort === 'old' ? 'active' : ''}`} onClick={() => setSort('old')}>오래된순</button>
+            {/* 그룹 1: 보기(정렬 + 사진 모아보기) — 같은 목록을 "어떤 순서/형태로 볼지"만 바꾼다. */}
+            <div className="feed-controls-group" role="group" aria-label="보기 방식">
+              <div className="feed-sort" role="group" aria-label="정렬 순서">
+                <button type="button" className={`feed-sort-btn ${sort === 'new' ? 'active' : ''}`} onClick={() => setSort('new')}>최신순</button>
+                <button type="button" className={`feed-sort-btn ${sort === 'old' ? 'active' : ''}`} onClick={() => setSort('old')}>오래된순</button>
+              </div>
+              <button type="button" className="feed-gallery-trigger" onClick={() => setGalleryOpen(true)} title="사진 모아보기" aria-label="사진 모아보기">
+                <IconGrid />
+              </button>
             </div>
-            <button type="button" className="feed-gallery-trigger" onClick={() => setGalleryOpen(true)} title="사진 모아보기" aria-label="사진 모아보기">
-              <IconGrid />
-            </button>
-            <MonthPicker
-              items={allItems}
-              activeMonth={month}
-              onPick={(key) => setMonth(key)}
-            />
-            <div className="feed-filter-tabs">
-              <button type="button" className={`feed-tab ${writerFilter === 'all' ? 'active' : ''}`} onClick={() => setWriterFilter('all')}>전체</button>
-              <button type="button" className={`feed-tab ${writerFilter === 'mine' ? 'active' : ''}`} onClick={() => setWriterFilter('mine')}>내 기록</button>
-              <button type="button" className={`feed-tab ${writerFilter === 'others' ? 'active' : ''}`} onClick={() => setWriterFilter('others')}>친구 기록</button>
+
+            <div className="feed-controls-divider" aria-hidden="true" />
+
+            {/* 그룹 2: 필터(월 + 작성자) — 목록에 뭐가 "포함될지"를 좁힌다. */}
+            <div className="feed-controls-group" role="group" aria-label="필터">
+              <MonthPicker
+                items={allItems}
+                activeMonth={month}
+                onPick={(key) => setMonth(key)}
+              />
+              <div className="feed-filter-tabs">
+                <button type="button" className={`feed-tab ${writerFilter === 'all' ? 'active' : ''}`} onClick={() => setWriterFilter('all')}>전체</button>
+                <button type="button" className={`feed-tab ${writerFilter === 'mine' ? 'active' : ''}`} onClick={() => setWriterFilter('mine')}>내 기록</button>
+                <button type="button" className={`feed-tab ${writerFilter === 'others' ? 'active' : ''}`} onClick={() => setWriterFilter('others')}>친구 기록</button>
+              </div>
             </div>
           </div>
         </div>

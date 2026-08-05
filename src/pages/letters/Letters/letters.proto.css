@@ -548,7 +548,6 @@
             opacity: 0.72;
             animation: letterHintBob 1.8s ease-in-out infinite;
         }
-        .letter-box-hint::before { content: '👆'; font-size: 12px; }
         @keyframes letterHintBob {
             0%, 100% { transform: translateY(0); opacity: 0.6; }
             50% { transform: translateY(-3px); opacity: 0.9; }

@@ -473,10 +473,15 @@ body.light-mode .proto-dashboard .section-title {
 .proto-dashboard .clov-btn--dashed:not(:disabled):hover { background: #f3efe1; }
 
 /* ===== 참여자별 추억 증거 카드 (cline 빨랫줄+집게 캐러셀 + 필름스트립 · 프로토타입 이식) ===== */
+/* Feed.jsx의 .feed-empty-state와 같은 카드 톤(#335) — 대시보드/피드 두 "추억 없음"
+   문구가 서로 다른 스타일(투명 4% 배경 vs 불투명 82% 배경+블러)로 따로 놀아서 통일했다. */
 .proto-dashboard .memory-empty {
-  width: 100%; padding: 28px 16px; border-radius: 14px; text-align: center;
-  color: var(--text-muted); font-size: 13px; font-weight: 600;
-  background: rgba(255,255,255,.04); border: 1px dashed var(--border-color);
+  width: 100%; padding: 28px 16px; border-radius: 24px; text-align: center;
+  color: var(--text-muted); font-size: 13px; font-weight: 700;
+  background: rgba(10, 16, 12, 0.82);
+  backdrop-filter: blur(8px) saturate(0.9);
+  -webkit-backdrop-filter: blur(8px) saturate(0.9);
+  border: 1px solid var(--border-color);
 }
 .proto-dashboard .cline-viewer { padding: 4px 0 16px; }
 /* pan-y — 세로 스크롤은 브라우저에 넘기고 가로 제스처만 우리가 가져온다.
@@ -924,7 +929,7 @@ body.light-mode .proto-dashboard .schedule-banner { background: rgba(232,243,237
 /* 위의 일반 .schedule-banner 라이트모드 규칙(연녹색 배경)이 명시성 때문에 고스트 카드에도 걸리므로,
    고스트 전용 값(거의 불투명한 크림색 배경 + 진한 점선)으로 다시 덮어써서 라이트/다크 동일하게 유지 */
 body.light-mode .proto-dashboard .schedule-banner.schedule-banner--ghost { border-color: rgba(27,67,50,.45); background: rgba(250,246,238,.94); }
-body.light-mode .proto-dashboard .memory-empty { background: rgba(0,0,0,.03); border-color: var(--border-color); }
+body.light-mode .proto-dashboard .memory-empty { color: #4a5a51; background: rgba(255,255,255,.86); border-color: var(--border-color); }
 
 /* ===== 친구 초대 모달 (§7 초대코드 생성/복사·공유) — 팔레트 토큰이 라이트/다크 자동 대응 ===== */
 .proto-dashboard .invite-modal-backdrop {

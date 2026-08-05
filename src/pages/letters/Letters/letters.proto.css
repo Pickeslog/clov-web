@@ -410,14 +410,16 @@
            ★ 이 블록은 반드시 위의 .letter-recipient-picker-mini/.letter-recipient-mini-avatars
            기본 규칙보다 뒤에 와야 한다 — 소스 순서상 앞에 있으면 같은 우선순위의 기본
            규칙(max-width:150px 등)이 나중에 다시 이겨서 미디어쿼리가 적용 안 된 것처럼
-           보인다(실제 겪은 버그). */
+           보인다(실제 겪은 버그). ★ "같은 우선순위"라는 전제 때문에 이 블록 안 선택자도
+           위 기본 규칙과 똑같이 .proto-letters 접두를 받아야 한다(#345) — 한쪽만 접두가
+           붙으면 특정도가 갈려서 소스 순서가 무의미해진다. */
         @media (max-width: 480px) {
             /* flex-wrap:wrap(.letter-write-header 기본 규칙)과 flex-direction:column을
                같이 쓰면 "아래로 쌓이는" 게 아니라 세로축 기준 새 칸이 옆으로 생겨 버린다 —
                column일 땐 반드시 nowrap으로 되돌려야 진짜로 한 줄씩 쌓인다. */
-            .letter-write-header { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
-            .letter-recipient-picker-mini { max-width: 100%; align-items: flex-start; }
-            .letter-recipient-mini-avatars { flex-wrap: wrap; }
+            .proto-letters .letter-write-header { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+            .proto-letters .letter-recipient-picker-mini { max-width: 100%; align-items: flex-start; }
+            .proto-letters .letter-recipient-mini-avatars { flex-wrap: wrap; }
         }
 
         /* "물감이 옆으로 스륵 이동해 그 자리 색으로 물드는" 하이라이트(사용자 요청).

@@ -174,27 +174,61 @@
 }
 .clov-hdr-dropdown > li > button:hover { background: #2b3020; color: #9ccc65; }
 
+/* =====================================================================
+   모바일 하단 탭바 — 좁은 화면에서 방 네비를 헤더에서 화면 아래로 옮긴다.
+
+   왜: 375px에서 .clov-hdr-nav 는 52px밖에 못 받는데 4탭 + 알림에 158px이 필요했다.
+   #164에서 탭 줄만 가로 스크롤로 흐르게 해 넘침은 막았지만, "스크롤을 해야 보이는
+   주요 이동"이라 뭉쳐 보이는 건 그대로였다. 이동을 아래로 내리면 폭 경쟁이 사라지고
+   엄지 도달 범위에도 맞는다.
+
+   높이는 --clov-tabbar-h 하나로 관리한다 — 본문 여백(body)과 마스코트 위치가
+   같은 값을 봐야 어긋나지 않는다. 데스크톱에선 0px이라 아무 영향이 없다.
+   ===================================================================== */
+:root { --clov-tabbar-h: 0px; }
+.clov-hdr-tabbar { display: none; }
+
 @media (max-width: 640px) {
-  .clov-hdr-nav .clov-hdr-nav-btn span:last-child { display: none; }
-  .clov-hdr-nav-btn { padding: 7px 7px; }
+  :root { --clov-tabbar-h: calc(56px + env(safe-area-inset-bottom, 0px)); }
+
   /* 좁은 화면에선 "상점" 글자를 접고 아이콘 + 골드만 남긴다(잔액은 계속 보여야 한다). */
   .clov-hdr-shop-label { display: none; }
   .clov-hdr-shop { padding: 6px 8px; gap: 4px; }
 
-  /* 방 안(네비 4탭 + 알림 + 상점 + 아바타)에선 375px 기준으로 헤더가 120px 넘쳐
-     페이지 전체에 가로 스크롤이 생긴다. 탭 줄만 가로로 흐르게 하고 나머지는
-     항상 보이게 고정한다 — 상점·아바타는 잘리면 안 되는 진입점이다(#164). */
   .clov-hdr { padding: 12px 12px; gap: 8px; }
   .clov-hdr-left { min-width: 0; flex-shrink: 0; }
   .clov-hdr-right { min-width: 0; flex: 1; justify-content: flex-end; }
   .clov-hdr-logo { font-size: 17px; }
-  .clov-hdr-nav {
-    min-width: 0; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
-    /* 스크롤 가능한 줄이라는 힌트만 남기고 스크롤바 자체는 숨긴다. */
-    -webkit-overflow-scrolling: touch;
+  /* 네비에서 4탭은 아래 탭바로 내려갔고 알림 버튼만 헤더에 남는다.
+     알림을 JSX에서 nav 밖으로 빼지 않은 건 그러면 데스크톱에서 탭과의 간격이
+     2px에서 8px로 벌어지기 때문이다 — 여기선 화면이 안 바뀌는 쪽을 골랐다. */
+  .clov-hdr-nav-btn:not(.clov-hdr-nav-icon-btn) { display: none; }
+
+  .clov-hdr-tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    background: rgba(20, 21, 14, 0.92);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    border-top: 1px solid #2a2c1e;
+    /* 아이폰 홈 인디케이터 영역만큼 아래를 더 띄운다(없는 기기에선 0). */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    font-family: 'Griun Mongtori', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
-  .clov-hdr-nav::-webkit-scrollbar { display: none; }
-  .clov-hdr-nav-btn { flex-shrink: 0; }
+  .clov-hdr-tabbar-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    min-height: 56px; padding: 7px 2px; border: none; background: none; cursor: pointer;
+    font: inherit; font-size: 11px; font-weight: 700; color: #79ad90;
+    line-height: 1.2; transition: color .15s;
+  }
+  .clov-hdr-tabbar-btn svg { display: block; }
+  .clov-hdr-tabbar-btn.active { color: #9ccc65; }
+  /* 몽토리체 잉크가 위로 치우쳐 있어 아이콘과 라벨이 어긋나 보인다(.clov-hdr-nav-btn과 같은 보정). */
+  .clov-hdr-tabbar-btn span { transform: translateY(1px); }
+
+  /* 탭바가 본문 마지막 부분을 덮지 않게 그만큼 아래를 비운다.
+     :has()로 탭바가 실제로 있는 화면(방 안)에만 건다 — 방 목록·로그인엔 안 붙는다. */
+  body:has(.clov-hdr-tabbar) { padding-bottom: var(--clov-tabbar-h); }
 }
 
 /* ── 방 변경하기 모달 ── */
@@ -277,6 +311,10 @@ body.light-mode .clov-hdr-avatar { background: #edf4ec; color: #1b4332; }
 body.light-mode .clov-hdr-dropdown { background: #fff; border-color: #eadfd0; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12); }
 body.light-mode .clov-hdr-dropdown > li > button { color: #2c3e35; }
 body.light-mode .clov-hdr-dropdown > li > button:hover { background: #edf4ec; color: #1b4332; }
+/* 하단 탭바 — 헤더와 같은 라이트 팔레트(활성/비활성 색은 .clov-hdr-nav-btn과 동일하게 맞춘다). */
+body.light-mode .clov-hdr-tabbar { background: rgba(255, 255, 255, 0.92); border-top-color: #eadfd0; }
+body.light-mode .clov-hdr-tabbar-btn { color: #79ad90; }
+body.light-mode .clov-hdr-tabbar-btn.active { color: #1b4332; }
 
 body.light-mode .clov-hdr-dropdown-wardrobe { border-color: #eadfd0; }
 body.light-mode .clov-hdr-dropdown-wardrobe > button[aria-expanded="true"] { background: #edf4ec; color: #1b4332; }

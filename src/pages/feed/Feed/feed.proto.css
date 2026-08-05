@@ -252,9 +252,21 @@ body.light-mode .proto-feed .feed-controls-divider { background: rgba(27, 67, 50
   .proto-feed .feed-grid { grid-template-columns: 1fr; }
 }
 
+/* ★ 반투명 필름이 아니라 "종이"여야 한다.
+   사용자설정 배경 테마(사진)를 깔면 이 박스 뒤가 해변·숲 같은 사진이라, 반투명
+   필름은 글자를 못 읽게 만든다. 실제로 라이트 모드는 rgba(0,0,0,.03)이었고 #310에서
+   .07로 올렸지만 여전히 안 읽혔다 — 값이 작아서가 아니라 방향이 틀렸다. 밝은
+   화면에 "검은 필름"을 얇게 덧대는 건 대비를 만드는 방법이 아니다.
+   형제들은 전부 흰 종이를 쓴다(.feed-hero .6 · .feed-gallery-trigger .9).
+
+   그래서 (1) 라이트는 흰 종이로 뒤집고 (2) 양쪽 다 backdrop-filter로 뒤 사진을
+   흐려 놓는다. 불투명도만으로 버티면 어떤 배경이 올지에 계속 끌려다닌다 —
+   블러는 배경이 뭐든 대비를 만들어 준다(헤더가 이미 쓰는 방식). */
 .proto-feed .feed-empty-state {
   grid-column: 1 / -1; padding: 44px 18px; border-radius: 24px; text-align: center;
-  color: var(--text-muted); background: rgba(0, 0, 0, 0.55);
+  color: var(--text-muted); background: rgba(10, 16, 12, 0.82);
+  backdrop-filter: blur(8px) saturate(0.9);
+  -webkit-backdrop-filter: blur(8px) saturate(0.9);
   border: 1px solid var(--border-color); font-size: 13px; font-weight: 700; line-height: 1.6;
 }
 .proto-feed .feed-state { padding: 28px 8px; text-align: center; color: var(--text-muted); font-size: 13px; }
@@ -866,7 +878,9 @@ body.light-mode .proto-feed .polaroid-card {
   background: var(--card-bg);
   box-shadow: 0 2px 4px rgba(0,0,0,.10), 0 10px 30px rgba(8,28,22,.18), 0 24px 60px rgba(8,28,22,.10);
 }
-body.light-mode .proto-feed .feed-empty-state { color: var(--text-muted); background: rgba(0,0,0,.07); border-color: var(--border-color); }
+/* 검은 필름(.07)이 아니라 흰 종이 — 위 주석 참고. 형제인 .feed-hero(.6)보다 진한 건
+   여기엔 본문이 들어가서다(hero는 제목만이라 배경이 비쳐도 읽힌다). */
+body.light-mode .proto-feed .feed-empty-state { color: #4a5a51; background: rgba(255,255,255,.86); border-color: var(--border-color); }
 /* 검색 알약은 두 테마 공통(밝은 종이). 갤러리 트리거만 라이트에서 초록 잉크 유지 */
 body.light-mode .proto-feed .feed-gallery-trigger { background: rgba(255, 255, 255, 0.9); color: #1b4332; border-color: rgba(82, 183, 136, 0.28); }
 

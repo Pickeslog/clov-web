@@ -96,7 +96,11 @@
     min-width: 0;
     background: linear-gradient(150deg, #33402f 0%, #26301f 55%, #2c3a26 100%);
     border-radius: 14px 3px 3px 14px;
-    box-shadow: 0 1.5px 2px rgba(30, 38, 28, 0.28), 0 8px 16px rgba(30, 38, 28, 0.24), inset 0 1px 0 rgba(240, 232, 207, 0.18), inset 0 0 0 1px rgba(226, 214, 176, 0.14);
+    /* ⚠️ 바깥 그림자(drop shadow)를 안 쓴다 — 생일 금 티켓과 통일(#381).
+       금색에서 배경과 명도 차 때문에 검은 띠로 보여 뺐는데, 초록만 띄워두면 같은
+       레일에 선 두 티켓이 다른 물건처럼 보인다. inset(위 하이라이트·테두리)만 남긴다 —
+       그건 카드의 형태지 그림자가 아니다. */
+    box-shadow: inset 0 1px 0 rgba(240, 232, 207, 0.18), inset 0 0 0 1px rgba(226, 214, 176, 0.14);
     overflow: hidden;
   }
   .proto-schedule .ticket-card--edit .ticket-main { border-radius: 14px; }
@@ -254,7 +258,8 @@
     background: linear-gradient(165deg, #242d1e, #1d251a);
     border-left: 1px dashed rgba(226, 214, 176, 0.42);
     border-radius: 3px 14px 14px 3px;
-    box-shadow: 0 1.5px 2px rgba(30, 38, 28, 0.3), 0 8px 16px rgba(30, 38, 28, 0.26), inset 0 1px 0 rgba(240, 232, 207, 0.16);
+    /* 앞면과 같이 바깥 그림자를 뺀다(#381) — 스텁만 띄우면 티켓이 반쪽만 뜬 것처럼 된다. */
+    box-shadow: inset 0 1px 0 rgba(240, 232, 207, 0.16);
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -1253,27 +1258,109 @@
 }
 .ticket-cal-today:hover { color: #f4ecd2; }
 
-/* ===== 다가오는 생일 줄 (#376) =====
-   ★ 이건 약속 카드가 아니다. clov-api#143 에서 "생일은 Plan 행으로 저장하지 않고 프론트가
-     파생 표시로 그린다"로 정해졌고, 그래서 여기엔 선택·업로드·수정이 없다. 읽기 전용이다.
-   ★ 모양도 일부러 카드가 아니라 알약(chip)으로 뒀다 — 아래 필름스트립 카드와 같은 모양이면
-     "눌러서 인증하는 것"으로 읽힌다. 다르게 생겨야 다른 것으로 읽힌다.
-   금색은 대시보드 D-day 칸의 생일 배지(#fcd34d 계열)와 같은 계열로 맞춘다. */
-.proto-schedule .birthday-strip {
-  display: flex; flex-wrap: wrap; gap: 8px;
-  max-width: 660px; margin: 0 auto 16px;
+/* ===== 생일 황금 티켓 (#381) =====
+   ★ 이건 약속 티켓이 아니다. clov-api#143 에서 "생일은 Plan 행으로 저장하지 않고 프론트가
+     파생 표시로 그린다"로 정해졌다. 그래서 선택·상세·인증·수정이 전부 없다.
+   ★ 마크업은 TicketCard 와 같고 색만 다르다. 위 .ticket-* 규칙을 그대로 물려받고
+     여기서는 **덮어쓰는 것만** 적는다 — 복사해오면 원본이 바뀔 때 둘이 갈라진다.
+   ★ 초록(약속)과 금색(생일)을 나누는 게 목적이다. "생일만 특별하게".
+
+   ⚠️ 이 블록은 파일 뒤쪽에 있어야 한다. .ticket-main 등 기본 규칙과 특이도가 같아서
+      (둘 다 .proto-schedule .클래스 = 0,2,0) 순서로만 이긴다. 앞으로 옮기면 조용히
+      초록으로 돌아간다. */
+/* ===== 티켓 가로 슬라이드 (#381) =====
+   ★★ 생일 티켓과 약속 티켓이 **한 레일**에 같이 있다. 레일을 둘로 두니 같은 동작을
+     두 번 나눠 해야 했고 화살표도 두 쌍이었다. 생일이 앞, 약속이 뒤다.
+   아래 필름스트립 레일(.growth-card-rail)과 같은 구조다: 화살표 + 스냅 스크롤 뷰포트.
+   ★ 다만 한 장이 뷰포트를 거의 채운다 — 필름스트립 카드는 작아 여러 장이 보이지만
+     티켓은 한 장이 한 화면이라야 읽힌다. */
+/* 라벨 — 개수를 적는 게 핵심이다("다가오는 생일 3명"). 한 장만 보이는 게 이상하다는 걸
+   숫자가 알려주고, 그게 슬라이드를 찾게 만든다. 티켓 폭(640)에 맞춰 왼쪽을 맞춘다. */
+.proto-schedule .birthday-label {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; max-width: 640px; margin: 0 auto 8px; padding: 0 2px;
+  font-size: 12px; font-weight: 700; color: #8a7333;
 }
-.proto-schedule .birthday-chip {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 14px; border-radius: 999px;
-  background: #fdf6e0; border: 1px solid #e0b83a;
-  color: #6b4e0f; font-size: 12px; font-weight: 700;
+.proto-schedule .birthday-label .ti-cake { font-size: 15px; color: #b08a2a; }
+.proto-schedule .birthday-label b {
+  padding: 1px 8px; border-radius: 999px;
+  background: rgba(224, 184, 58, 0.18); color: #7a6019; font-weight: 800;
 }
-.proto-schedule .birthday-chip .ti-cake { font-size: 16px; color: #d4a017; flex-shrink: 0; }
-/* 이름은 길면 줄이고, 날짜·D-day 는 절대 안 줄인다 — 줄일 거면 안 보여주는 게 낫다. */
-.proto-schedule .birthday-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.proto-schedule .birthday-date { color: #96803f; font-weight: 600; flex-shrink: 0; }
-.proto-schedule .birthday-dday {
-  padding: 2px 9px; border-radius: 999px;
-  background: #fcd34d; color: #12150a; font-weight: 800; flex-shrink: 0;
+.proto-schedule .slide-rail {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; min-width: 0; margin: 0 auto 18px;
+}
+.proto-schedule .slide-viewport {
+  flex: 0 1 640px; min-width: 0; max-width: 640px;
+  overflow-x: auto; overflow-y: visible;
+  scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+.proto-schedule .slide-viewport::-webkit-scrollbar { display: none; }
+.proto-schedule .slide-list { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 12px; }
+.proto-schedule .slide-item {
+  flex: 0 0 100%; min-width: 0; margin-bottom: 0;
+  scroll-snap-align: center;
+}
+/* ★★ 엿보기(peek) — 두 장 이상일 때만 티켓을 뷰포트보다 좁게 만들어 옆 장을 살짝 보여준다.
+   화살표보다 강한 신호다. 캐러셀에서 "첫 화면 밖 콘텐츠는 대부분 안 본다"가 반복되는
+   결과인데, 잘린 티켓이 보이면 UI 부품 없이 "더 있다"가 전달된다.
+   ⚠️ 한 장뿐일 때는 적용하지 않는다 — 넘길 게 없는데 좁아질 이유가 없다. */
+.proto-schedule .slide-rail.is-multi .slide-item { flex: 0 0 calc(100% - 44px); }
+/* 생일 화살표는 금색으로 — 초록 화살표를 금 티켓 옆에 두면 둘이 따로 논다. */
+.proto-schedule .slide-rail .carousel-btn {
+  background: rgba(224, 184, 58, 0.12);
+  border-color: rgba(224, 184, 58, 0.3);
+  color: #a8801c;
+}
+.proto-schedule .slide-rail .carousel-btn:hover { background: rgba(224, 184, 58, 0.24); }
+
+/* ★ 터치 기기에서만 화살표를 접는다. 좌우 36px씩(72px)을 티켓에 돌려주고, 넘기는 건
+   스와이프가 맡는다 — 터치에서는 스와이프가 스크린리더에도 지원되는 기본 조작이다.
+   ⚠️ max-width 로 접으면 안 된다. 창을 좁힌 데스크톱은 마우스뿐이라 스와이프가 없는데,
+      그때 화살표까지 사라지면 넘길 방법이 아예 없어진다. 그래서 폭이 아니라 **입력장치**로
+      가른다(온보딩 가이드의 hover 규칙과 같은 방식). */
+@media (hover: none) and (pointer: coarse) {
+  .proto-schedule .slide-rail .carousel-btn { display: none; }
+}
+
+/* 앞면 — 초록 그라디언트를 금색으로. 나머지(반경·그림자·holo)는 물려받는다.
+   ★ 처음엔 #4a3a16 계열이었는데 채도가 낮아 갈색으로 읽혔다("골드 색이 좀 별로다").
+     같은 명도대에서 채도만 올려 금박 쪽으로 옮겼다 — 어두운 초록 티켓 옆에서
+     밝기 차가 나야 하므로 명도는 유지한다. */
+.proto-schedule .ticket-card--birthday .ticket-main {
+  background: linear-gradient(150deg, #6b5310 0%, #4a3908 55%, #755c12 100%);
+  /* ⚠️ 바깥 그림자(drop shadow)를 안 쓴다. 원본 티켓은 0 8px 18px 로 띄워 놨는데,
+     금색은 배경(밝은 나무결)과 명도 차가 커서 그림자가 아래쪽에 검은 띠처럼 남았다.
+     안쪽(inset)만 남긴다 — 위 하이라이트와 금색 테두리는 카드의 형태라 그림자가 아니다. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 232, 168, 0.3), inset 0 0 0 1px rgba(255, 206, 84, 0.55);
+}
+/* 스텁도 같이 금색으로 — 앞면만 바꾸면 반쪽만 생일이 된다. */
+.proto-schedule .ticket-card--birthday .ticket-stub {
+  background: linear-gradient(150deg, #7d6214 0%, #5a4409 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 206, 84, 0.55);
+}
+/* 커서를 없앤다 — 위 .ticket-card 가 cursor:pointer 라 그대로 두면 눌리는 것처럼 보인다. */
+.proto-schedule .ticket-card--birthday { cursor: default; }
+/* 케이크 아이콘은 브랜드 줄 안에서만 금색으로. */
+.proto-schedule .ticket-card--birthday .ticket-brand .ti-cake { color: #ffd977; }
+/* D-DAY 칸 — 약속은 "스텁을 뜯어보세요"라 흐린 색인데, 여기는 진짜 값이라 또렷해야 한다. */
+.proto-schedule .ticket-card--birthday .ticket-meta b { color: #fff0c2; }
+.proto-schedule .ticket-card--birthday .ticket-stub-dday { color: #ffe9b0; }
+
+/* ⚠️ 좁은 화면에서 스텁을 접는다 — 안 접으면 약속이 화면 밖으로 밀린다.
+   720px 이하에서 티켓은 세로로 쌓여(위 @media) 한 장이 291px 이 된다. 생일이 둘이면
+   582px 이라, 812px 짜리 화면에서 **정작 약속 티켓이 y=788** 에서 시작했다(실측).
+   이 화면의 주인공은 약속이다. 생일은 알려주는 것이지 가리는 게 아니다.
+
+   스텁을 지워도 정보가 안 사라진다 — D-day 는 앞면 meta 칸에 이미 있고, 스텁은 그걸
+   한 번 더 크게 보여주던 것뿐이다(약속 티켓은 "뜯는" 동작이 있어 스텁이 필요하지만
+   생일 티켓은 읽기 전용이라 뜯을 게 없다). */
+@media (max-width: 720px) {
+  .proto-schedule .ticket-card--birthday .ticket-stub { display: none; }
+  .proto-schedule .ticket-card--birthday .ticket-main { border-radius: 14px; }
+  .proto-schedule .ticket-card--birthday .ticket-content { padding: 14px 16px 12px; gap: 8px; }
+  /* 장식 문구는 좁은 화면에서 값을 못 한다. 일련번호는 남긴다(티켓다움이 거기서 온다). */
+  .proto-schedule .ticket-card--birthday .ticket-bday-tagline { display: none; }
 }

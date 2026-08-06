@@ -163,6 +163,23 @@
   height: 120px; background: #111509; display: grid; place-items: center;
   box-shadow: inset 0 0 0 2px #2a3a1c;
 }
+/* 친구들 단계만 5종을 2줄로 세워야 해서 더 높다. */
+.clov-guide-art.is-tall { height: auto; min-height: 120px; padding: 10px 8px; }
+
+/* 같은 크기 클로버 셋 = "방장 없음 · 모두가 같은 권한". 크기가 다르면 뜻이 바뀐다. */
+.clov-guide-trio { display: flex; gap: 14px; align-items: center; }
+
+/* ⚠️ minmax(0, 1fr) 이다. 그냥 1fr 은 minmax(auto, 1fr) 이고 auto 바닥이 콘텐츠
+   최소폭이라, 이름이 길어지면 칸이 밀려 가로로 넘친다(#338에서 밟은 함정). */
+.clov-guide-friends {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 6px; justify-items: center; width: 100%;
+}
+.clov-guide-friend { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.clov-guide-friend img { max-width: 100%; height: 64px; width: auto; }
+.clov-guide-friend span {
+  color: var(--guide-acc-l); font-size: 10px; font-weight: 700; white-space: nowrap;
+}
 .clov-guide-stepno {
   color: var(--guide-acc); font-size: 10px; font-weight: 800; letter-spacing: 0.12em;
 }
@@ -171,4 +188,18 @@
 .clov-guide-pips { display: flex; gap: 5px; justify-content: center; }
 .clov-guide-pips i { width: 7px; height: 7px; background: #3d4a2c; }
 .clov-guide-pips i.is-on { background: var(--guide-acc); }
-.clov-guide-winbody .clov-guide-row { justify-content: space-between; padding-top: 3px; }
+.clov-guide-winbody .clov-guide-row { padding-top: 3px; }
+.clov-guide-row.is-split { justify-content: space-between; width: 100%; }
+
+/* 마지막 장면 — 설명이 아니라 갈림길이라 버튼을 세로로 쌓는다.
+   창 안쪽 너비가 290px 남짓이라 셋을 가로로 놓으면 글자가 깨진다. */
+.clov-guide-cta { display: flex; flex-direction: column; gap: 7px; padding-top: 3px; }
+.clov-guide-btn.is-wide { width: 100%; }
+
+/* "이전"·"그냥 닫기"는 주 동선이 아니라 픽셀 버튼 껍데기를 씌우지 않는다 —
+   셋 다 같은 무게로 보이면 무엇을 눌러야 하는지가 사라진다. */
+.clov-guide-quiet {
+  border: 0; background: none; cursor: pointer; font: inherit;
+  font-size: 11px; font-weight: 700; color: #7f9268; text-decoration: underline; padding: 6px 4px;
+}
+.clov-guide-quiet:hover { color: var(--guide-acc); }

@@ -1,5 +1,5 @@
 /* =====================================================================
-   가이드에 띄울 마스코트 한 장을 고른다.
+   가이드에 띄울 마스코트를 고른다.
 
    Mascot.jsx 는 9개 상태 스프라이트를 전부 들고 상태 머신을 돌리지만, 가이드는
    정지 이미지 한 장이면 된다. 그래서 기본 스프라이트만 따로 모아둔다 —
@@ -28,6 +28,21 @@ const DEFAULT_SPRITES = {
   kimCheolsu: kimCheolsuSprite,
   onyx: onyxSprite,
 }
+
+/**
+ * 가이드의 "친구들" 단계에 세우는 마스코트.
+ *
+ * ⚠️ 버거노인은 일부러 뺐다 — 고를 수 있는 마스코트가 아니라 **상점 주인**으로 갈
+ *    예정이라, 여기 세우면 "고를 수 있는 친구"로 잘못 읽힌다. 역할이 확정되면
+ *    상점 쪽 화면에서 따로 소개한다.
+ */
+export const SHOWCASE_MASCOTS = [
+  { key: 'crobi', name: '크로비', sprite: crobiSprite },
+  { key: 'rob', name: '롭', sprite: robSprite },
+  { key: 'takoGun', name: '타코군', sprite: takoGunSprite },
+  { key: 'kimCheolsu', name: '김철수', sprite: kimCheolsuSprite },
+  { key: 'onyx', name: '오닉스', sprite: onyxSprite },
+]
 
 /**
  * 사용자 설정(preferences)에서 가이드에 쓸 스프라이트 URL 하나를 고른다.

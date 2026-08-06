@@ -60,6 +60,9 @@ const LOAD_BAR_FILLED = 6
 // 5종을 나란히 세우면 한 칸이 좁다. 64px 로 줄이면 화면에서 1픽셀이 1px 아래로
 // 내려가 픽셀로 안 읽힌다(§12-6) — 그래서 이 단계만 32px 로 더 굵게 줄인다.
 const SHOWCASE_RES = 32
+// START 화면 로스터가 한 마스코트를 보여주는 시간. 5종이라 한 바퀴 8초다 —
+// 더 빠르면 누가 지나갔는지 안 남고, 더 느리면 START 를 누를 때까지 한 명만 본다.
+const ROSTER_MS = 1600
 
 /** 단계별 그림. 마스코트만 쓰면 STEP 이 바뀌어도 그림이 안 바뀌어 넘어가는 느낌이 없다. */
 function StepArt({ kind, mine, friends }) {
@@ -80,7 +83,7 @@ function StepArt({ kind, mine, friends }) {
           <div className="clov-guide-friend" key={m.key}>
             {/* 64px — 원본을 32px로 줄였으니 1픽셀이 화면 2px이다. 이 아래로 내려가면
                 픽셀 아트로 안 읽힌다(§12-6). 칸 너비(약 85px)에도 들어간다. */}
-            <img src={m.url} alt="" height={64} />
+            <img src={m.small} alt="" height={64} />
             <span>{m.name}</span>
           </div>
         ))}
@@ -98,7 +101,10 @@ export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
   const [step, setStep] = useState(-1)      // -1 = START 화면, 0.. = 가이드 단계
   const [pixelUrl, setPixelUrl] = useState(null)
   // 원본으로 먼저 채워둔다 — 변환 전에 빈 칸이 보이지 않게.
-  const [friends, setFriends] = useState(() => SHOWCASE_MASCOTS.map((m) => ({ ...m, url: m.sprite })))
+  // big = START 화면 로스터(64px), small = 친구들 단계 격자(32px). 같은 이미지를 한 번만
+  // 불러 두 크기로 줄인다.
+  const [friends, setFriends] = useState(() => SHOWCASE_MASCOTS.map((m) => ({ ...m, big: m.sprite, small: m.sprite })))
+  const [rosterAt, setRosterAt] = useState(0)
 
   /* 누구인지 알아야 판단한다 — 저장 키가 계정별이다(#362). Header 가 이미 같은 키로
      조회하고 있어 캐시를 공유한다(추가 요청이 안 나간다). */
@@ -134,18 +140,37 @@ export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
     return () => { alive = false }
   }, [open, spriteUrl])
 
-  // 친구들 단계용 5종. 열릴 때 미리 변환해 둔다 — 4단계에 도착해서 변환하면 눈에 띈다.
+  /* 5종을 두 크기로 미리 변환해 둔다. 열릴 때 한 번만 돌고, 이미지는 한 번만 불러온다.
+     big   START 화면 로스터 — 132px 로 띄우니 64px(1픽셀 2.1px)
+     small 친구들 단계 격자 — 64px 로 띄우니 32px(1픽셀 2px)
+     4단계에 도착해서 변환하면 눈에 띄어서 미리 한다. */
   useEffect(() => {
     if (!open) return undefined
     let alive = true
     Promise.all(SHOWCASE_MASCOTS.map((m) => new Promise((resolve) => {
       const img = new Image()
-      img.onload = () => resolve({ ...m, url: pixelize(img, SHOWCASE_RES, PIXEL_COLORS) || m.sprite })
-      img.onerror = () => resolve({ ...m, url: m.sprite })
+      img.onload = () => resolve({
+        ...m,
+        big: pixelize(img) || m.sprite,
+        small: pixelize(img, SHOWCASE_RES, PIXEL_COLORS) || m.sprite,
+      })
+      img.onerror = () => resolve({ ...m, big: m.sprite, small: m.sprite })
       img.src = m.sprite
     }))).then((list) => { if (alive) setFriends(list) })
     return () => { alive = false }
   }, [open])
+
+  /* START 화면에서 로스터가 돈다 — 크로비 · 롭 · 타코군 · 김철수 · 오닉스 순.
+     ★ 여기서 내 마스코트를 안 쓰는 이유: 이 장면은 "환영"이라 서비스에 누가 사는지를
+       보여주는 자리다. 내 마스코트는 마지막 장면(STEP 5)에 그대로 남아 개인화를 지킨다.
+     단계로 넘어가면 멈춘다 — 안 보이는 화면에서 타이머를 돌릴 이유가 없다. */
+  useEffect(() => {
+    if (!open || step >= 0) return undefined
+    // 움직임을 줄여 달라고 한 사용자에게는 첫 장만 보여준다(자동 전환도 움직임이다).
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
+    const id = setInterval(() => setRosterAt((v) => (v + 1) % SHOWCASE_MASCOTS.length), ROSTER_MS)
+    return () => clearInterval(id)
+  }, [open, step])
 
   /* 닫을 때 START 화면으로 되돌린다 — "다시 보기"로 들어와도 처음부터 보여야 한다.
      여는 쪽(open)이 아니라 닫는 쪽에서 되돌리는 이유는, 여는 경로가 셋(자동·스토어·
@@ -173,7 +198,8 @@ export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
   const inGuide = step >= 0
   const current = STEPS[step] ?? STEPS[0]
   const isLast = step === STEPS.length - 1
-  const mascotSrc = pixelUrl || spriteUrl
+  const mascotSrc = pixelUrl || spriteUrl          // 내 마스코트 — 마지막 장면(STEP 5)에 쓴다
+  const roster = friends[rosterAt] ?? friends[0]   // START 화면에서 도는 5종
 
   // 마지막 장면의 버튼은 가이드를 끝낸 것으로 본다 — 셋 다 영구 처리다.
   const finish = (after) => { close(true); after?.() }
@@ -198,7 +224,9 @@ export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
 
         {!inGuide && (
           <div className="clov-guide-stage">
-            {mascotSrc && <img className="clov-guide-mascot" src={mascotSrc} alt="" height={132} />}
+            {/* key 를 주지 않는다 — 같은 <img> 의 src 만 갈아끼워야 자리가 안 흔들린다.
+                alt 에 이름을 넣어 스크린리더에도 누가 지나가는지 전해진다. */}
+            {roster && <img className="clov-guide-mascot" src={roster.big} alt={roster.name} height={132} />}
             <p className="clov-guide-welcome">
               클로브에 오신 것을 환영합니다.<br />
               친구들과 함께 쓰는 우정공간,<br />

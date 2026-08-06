@@ -202,10 +202,13 @@
         }
 
         /* 행운편지 탭 전체 폭 통일 — 위 카드/아래 작성 카드를 같은 중앙 정렬 컨테이너로 묶음 */
+        /* 페이지 여백은 여기가 맡는다(헤더 아래 본문만). 위 .proto-letters 주석 참고 —
+           루트에 주면 <Header>까지 밀려 들어간다. 좌우는 원래 이 컨테이너 값(20px)에
+           루트가 갖고 있던 24px 을 합치지 않고, 다른 화면과 같은 폭감으로 24px 로 맞춘다. */
         .proto-letters .letter-tab-container {
             max-width: 900px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 26px 24px 72px;
         }
 
         /* 편지 확인 모달(.letter-detail-paper)의 "편지지" 감성을 절충해서 가져온다
@@ -1269,7 +1272,11 @@
 /* 편지는 항상 크림/라이트 종이 미감이라 기본 팔레트를 라이트로 고정한다(이전엔 다크 기본이라 앱 기본
    다크에서 깨졌음). color-scheme: light → color-scheme:light dark로 인해 다크 브라우저에서 native
    텍스트영역이 검게 나오던 문제까지 근본 해결(caret·스크롤바 포함 라이트 렌더). */
-.proto-letters { --primary-green: #1b4332; --accent-green: #52b788; --title-color: #1b4332; --card-bg: #ffffff; --bg-light: #f7f8f5; --text-color: #2c3e35; --text-muted: #61766a; --border-color: #eadfd0; --input-border: #e2e8e4; --nav-item-bg-active: #edf4ec; --btn-primary-bg: #1b4332; --button-text: #ffffff; --shadow-color: rgba(8, 28, 22, 0.12); color-scheme: light; min-height: calc(100vh - 74px); padding: 26px 24px 72px; color: var(--text-color); }
+/* ⚠️ 여백을 이 루트에 주면 안 된다. <Header>가 이 안에 들어 있어서, padding 이 헤더까지
+   밀어 넣어 헤더만 좌우가 파이고 메뉴 글자가 두 줄로 접혔다(다른 화면과 달라 보였다).
+   다른 화면은 전부 안쪽 래퍼에 준다 — .proto-schedule → .schedule-wrap,
+   .proto-dashboard → .dash-main. 여기도 .letter-tab-container 로 옮겼다. */
+.proto-letters { --primary-green: #1b4332; --accent-green: #52b788; --title-color: #1b4332; --card-bg: #ffffff; --bg-light: #f7f8f5; --text-color: #2c3e35; --text-muted: #61766a; --border-color: #eadfd0; --input-border: #e2e8e4; --nav-item-bg-active: #edf4ec; --btn-primary-bg: #1b4332; --button-text: #ffffff; --shadow-color: rgba(8, 28, 22, 0.12); color-scheme: light; min-height: calc(100vh - 74px); color: var(--text-color); }
 .proto-letters .letter-stage { margin: 0 auto; }
 .proto-letters .letter-write-card h3, .proto-letters .letter-write-card > p { text-align: left; }
 /* 텍스트영역: 전역 다크 input 스타일을 받아 검게 나오던 문제 → 크림 종이 카드에 맞춰 흰 배경 고정 */
@@ -1292,7 +1299,7 @@
 .proto-letters .letter-error { color: #ef7777; font-size: 12px; font-weight: 700; }
 .proto-letters .letter-read-btn { margin-top: 8px; border: 0; background: var(--primary-green); color: #fff; border-radius: 7px; padding: 6px 9px; font: inherit; font-size: 11px; cursor: pointer; }
 body.light-mode .proto-letters { --primary-green: #1b4332; --accent-green: #52b788; --card-bg: #ffffff; --bg-light: #f7f8f5; --text-color: #2c3e35; --text-muted: #61766a; --border-color: #eadfd0; --nav-item-bg-active: #edf4ec; }
-@media (max-width: 640px) { .proto-letters { padding: 18px 14px 52px; } .proto-letters .letter-stage { padding: 30px 18px; } }
+@media (max-width: 640px) { .proto-letters .letter-tab-container { padding: 18px 14px 52px; } .proto-letters .letter-stage { padding: 30px 18px; } }
 /* 좁은 화면(행운편지 작업 내용.md ④) — 250x230 상자를 그대로 두면 375px 폭 화면에서
    좌우 여백이 거의 없어져 카드가 답답해 보인다. */
 @media (max-width: 480px) {

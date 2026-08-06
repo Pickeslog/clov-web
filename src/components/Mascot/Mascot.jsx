@@ -123,8 +123,9 @@ export default function Mascot({ roomId }) {
       queryClient.invalidateQueries({ queryKey: ['room', roomId, 'level'] })
       // 헤더 골드 배지도 즉시 갱신 — 상점(Shop.jsx)의 구매 성공 시와 동일한 무효화 키.
       queryClient.invalidateQueries({ queryKey: ['wallet'] })
-      // 하루 3회 제한(교감)과 별개로 하루 총 골드 상한(§15-4, 500)에 걸리면 서버가 조용히
-      // 0을 지급한다 — 응답의 실지급액(earnedGold)을 그대로 보여줘야 화면이 거짓말하지 않는다.
+      // 교감 캡(하루 10회)은 방 단위, 골드 캡(하루 총 6,000 · 계약 §15-4)은 유저 단위라 스코프가
+      // 다르다 — 방 여러 개면 교감은 더 되는데 골드만 먼저 막힌다. 그때 서버는 예외 없이 조용히
+      // 0을 지급하므로, 응답의 실지급액(earnedGold)을 그대로 보여줘야 화면이 거짓말하지 않는다.
       const gold = data?.earnedGold ?? 0
       showBubble(gold > 0 ? `${pickLine()} (+${gold}G)` : pickLine())
     },

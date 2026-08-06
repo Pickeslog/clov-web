@@ -1,9 +1,13 @@
 /* =====================================================================
-   가이드에 세우는 마스코트 목록.
+   화면에 "우리 마스코트들"을 죽 세울 때 쓰는 목록.
 
-   Mascot.jsx 는 9개 상태 스프라이트를 전부 들고 상태 머신을 돌리지만, 가이드는
+   Mascot.jsx 는 9개 상태 스프라이트를 전부 들고 상태 머신을 돌리지만, 이쪽은
    정지 이미지 두 장(기본·웃는 얼굴)이면 된다. 같은 이미지 파일이라 번들에서
    중복되지 않는다.
+
+   쓰는 곳 — 온보딩 가이드(START 로스터·친구 소개·마지막 배웅) · 생일 축하 모달.
+   ★ 소비자가 둘이 되면서 components/OnboardingGuide/guideMascot.js 에서 여기로
+     옮겼다(#383). "가이드 전용"으로 보이는 자리에 두면 다음 사람이 헷갈린다.
 
    ⚠️ 버거노인은 일부러 뺐다 — 고를 수 있는 마스코트가 아니라 **상점 주인**으로 갈
       예정이라, 여기 세우면 "고를 수 있는 친구"로 잘못 읽힌다. smile 스프라이트도 없다.
@@ -16,16 +20,16 @@
       'crobi' · Object.hasOwn 으로 조회)이 거기 담겨 있고, Mascot.jsx 와 같아야 한다.
    ===================================================================== */
 
-import crobiSprite from '../../assets/mascot/crobi/default.png'
-import robSprite from '../../assets/mascot/rob/idle.png'
-import takoGunSprite from '../../assets/mascot/tako-gun/default.png'
-import kimCheolsuSprite from '../../assets/mascot/kim-cheolsu/default.png'
-import onyxSprite from '../../assets/mascot/onyx/default.png'
-import crobiSmile from '../../assets/mascot/crobi/smile.png'
-import robSmile from '../../assets/mascot/rob/smile.png'
-import takoGunSmile from '../../assets/mascot/tako-gun/smile.png'
-import kimCheolsuSmile from '../../assets/mascot/kim-cheolsu/smile.png'
-import onyxSmile from '../../assets/mascot/onyx/smile.png'
+import crobiSprite from '../assets/mascot/crobi/default.png'
+import robSprite from '../assets/mascot/rob/idle.png'
+import takoGunSprite from '../assets/mascot/tako-gun/default.png'
+import kimCheolsuSprite from '../assets/mascot/kim-cheolsu/default.png'
+import onyxSprite from '../assets/mascot/onyx/default.png'
+import crobiSmile from '../assets/mascot/crobi/smile.png'
+import robSmile from '../assets/mascot/rob/smile.png'
+import takoGunSmile from '../assets/mascot/tako-gun/smile.png'
+import kimCheolsuSmile from '../assets/mascot/kim-cheolsu/smile.png'
+import onyxSmile from '../assets/mascot/onyx/smile.png'
 
 /**
  * sprite  기본 자세 — START 화면 로스터(픽셀 변환)와 "친구들" 단계(원본)에 쓴다.

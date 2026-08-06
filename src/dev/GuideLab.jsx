@@ -10,7 +10,7 @@
    ===================================================================== */
 import { useEffect, useState } from 'react'
 import OnboardingGuide from '../components/OnboardingGuide/OnboardingGuide'
-import { SHOWCASE_MASCOTS } from '../components/OnboardingGuide/guideMascot'
+import { SHOWCASE_MASCOTS } from '../lib/mascotShowcase'
 import { useGuideStore } from '../stores/guideStore'
 import { resetGuide } from '../lib/onboardingGuide'
 import { LAB_USER_ID, setLabMascot } from './guideLabQuery'

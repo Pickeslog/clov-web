@@ -569,8 +569,21 @@ export default function Mascot({ roomId }) {
     >
       {eggBubbleText && (
         <div className="clov-mascot-bubble">
-          {eggBubbleText}
-          {isTypingBubble && <span className="clov-mascot-type-cursor" />}
+          {isTypingBubble ? (
+            // 말풍선 배경(테두리·박스)이 먼저 최종 크기로 뜨고, 그 안에서 글자만
+            // 한 자씩 보이게 채워지는 것처럼 보이려고 — 아직 안 친 나머지 글자를
+            // 지우는 대신 visibility:hidden으로 숨긴 채 같이 렌더링해서 레이아웃
+            // 폭·높이가 처음부터 완성 문장 기준으로 고정되게 한다(위 Mascot.css
+            // .clov-mascot-bubble-hidden 참고). 지우면 그 자리만큼 매 글자마다
+            // 박스가 넓어지는 것처럼 보였다.
+            <>
+              {`> ${bubble.slice(0, typedLen)}`}
+              <span className="clov-mascot-type-cursor" />
+              <span className="clov-mascot-bubble-hidden" aria-hidden="true">{bubble.slice(typedLen)}</span>
+            </>
+          ) : (
+            eggBubbleText
+          )}
         </div>
       )}
       <button

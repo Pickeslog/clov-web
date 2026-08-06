@@ -1,0 +1,30 @@
+/* 온보딩 가이드 랩의 조작 바. 개발용이라 앱 토큰을 안 쓰고 여기서 다 정한다. */
+
+.lab-page { min-height: 100dvh; background: #1b2416; }
+
+/* 가이드 백드롭이 9800 이라 그 위에 올린다(ConfirmDialog 10000 보다는 아래).
+   백드롭의 형제라서 여기를 눌러도 "바깥 클릭 = 건너뛰기"가 안 걸린다. */
+.lab-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9900;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(10, 14, 8, 0.94);
+  border-top: 2px solid #4a6330;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+/* 가이드는 position:fixed 라 .lab-page 의 padding 이 안 먹는다. 백드롭 자체를 조작 바
+   위에서 끝내고, 프레임 높이(dvh 기준 고정값)도 같이 덮는다 — 둘 중 하나만 하면 프레임이
+   백드롭을 넘쳐 바 뒤로 숨는다. --lab-bar-h 는 JS 가 실측해서 넣는다(줄바꿈 대비).
+   이 규칙은 이 파일에만 있어 제품 화면에는 영향이 없다. */
+.lab-page .clov-guide-backdrop { bottom: var(--lab-bar-h, 150px); }
+.lab-page .clov-guide-frame { max-height: calc(100dvh - var(--lab-bar-h, 150px) - 40px); }
+
+.lab-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.lab-row b { color: #9ccc65; font-size: 11px; min-width: 52px; letter-spacing: 0.04em; }
+.lab-row button {
+  border: 1px solid #4a6330; background: #26301c; color: #cfe3a8; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 3px;
+}
+.lab-row button:hover { background: #33421f; }
+.lab-row button.on { background: #9ccc65; color: #16200c; border-color: #9ccc65; }
+.lab-hint { color: #7f9268; font-size: 11px; }

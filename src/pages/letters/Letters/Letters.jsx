@@ -54,6 +54,8 @@ const EMPTY_MESSAGES = [
   <>누군가에게 전한 진심은 절대 사라지지 않아요.<br />지금 이 순간, 첫 편지를 띄워보세요.</>,
 ]
 
+// 제목을 안 적고 보내면(선택 입력) 받는 사람 화면엔 빈칸 대신 이 기본 제목이 뜬다(사용자 요청).
+const DEFAULT_LETTER_TITLE = '행운의 편지'
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
 // 발송 애니메이션은 모션 최소화 설정을 켠 사용자에겐 아예 재생하지 않는다 — CSS로 숨기기만
 // 하면 재생 시간(1.8초)만큼 모달이 빈 채로 남아 오히려 더 나쁘다.
@@ -109,6 +111,7 @@ export default function Letters() {
   const [composing, setComposing] = useState(false)
   const [receiverUserId, setReceiverUserId] = useState('')
   const [broadcast, setBroadcast] = useState(false)
+  const [title, setTitle] = useState('') // 선택 입력(계약 §행운편지, 이슈 #352)
   const [content, setContent] = useState('')
   const [emoji, setEmoji] = useState('💌')
   const [message, setMessage] = useState('')
@@ -154,6 +157,7 @@ export default function Letters() {
         setTab('sent')
         setReceiverUserId('')
         setBroadcast(false)
+        setTitle('')
         setContent('')
         setEmoji('💌')
         setMessage('')
@@ -193,6 +197,7 @@ export default function Letters() {
     setMessage('')
     setReceiverUserId('')
     setBroadcast(false)
+    setTitle('')
     setComposing(true)
     setInboxOpen(false)
   }
@@ -210,7 +215,10 @@ export default function Letters() {
     }
     sendStartedAtRef.current = Date.now()
     sendAnimMsRef.current = prefersReducedMotion() ? 0 : SEND_ANIM_MS
-    sendMutation.mutate(broadcast ? { broadcast: true, content: content.trim(), emoji } : { receiverUserId, content: content.trim(), emoji })
+    const trimmedTitle = title.trim()
+    sendMutation.mutate(broadcast
+      ? { broadcast: true, title: trimmedTitle, content: content.trim(), emoji }
+      : { receiverUserId, title: trimmedTitle, content: content.trim(), emoji })
     return true
   }
 
@@ -273,6 +281,8 @@ export default function Letters() {
             setReceiverUserId={setReceiverUserId}
             broadcast={broadcast}
             setBroadcast={setBroadcast}
+            title={title}
+            setTitle={setTitle}
             content={content}
             setContent={setContent}
             message={message}
@@ -363,6 +373,7 @@ function LetterInboxModal({ tab, onTab, box, items, page, setPage, pending, erro
                     onClick={(event) => { event.stopPropagation(); onFavorite(letter.id) }}
                   >⭐</button>
                   <strong>{label}</strong>
+                  <span className="letter-inbox-title">{letter.title || DEFAULT_LETTER_TITLE}</span>
                   <p>{letter.emoji ? `${letter.emoji} ` : ''}{preview}</p>
                 </div>
               )
@@ -394,6 +405,7 @@ function LetterDetailModal({ letter, box, onBack, onClose }) {
             행운편지
           </h3>
           <div className="letter-detail-to">To. {toLabel}</div>
+          <div className="letter-detail-title">{letter.title || DEFAULT_LETTER_TITLE}</div>
           <div className="letter-detail-content">{letter.emoji || '💌'}{'\n'}{letter.content}</div>
           <div className="letter-detail-from">From. {fromLabel}</div>
         </div>
@@ -403,7 +415,7 @@ function LetterDetailModal({ letter, box, onBack, onClose }) {
 }
 
 // ── 편지 작성(모달 시트) — 헤더 우측에 수신자 아바타(받는 사람) + 이모지 ──
-function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, setBroadcast, content, setContent, message, sending, onCancel, onSend }) {
+function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, setBroadcast, title, setTitle, content, setContent, message, sending, onCancel, onSend }) {
   // 아바타만으론 "지금 누구한테 보내는지"가 안 읽혔다(사용자 지적) — 선택 상태를
   // 짧은 문구로 아바타 줄 아래 덧붙여 가독성을 높인다. 아직 아무도 안 골랐을 땐 문구
   // 자체를 아예 렌더하지 않는다(안내 문구는 발송 시 에러 메시지가 이미 해주고 있어서
@@ -614,6 +626,20 @@ function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, se
             ? <span className="letter-recipient-empty">함께하는 친구가 없어요</span>
             : (broadcast || selectedMember) && <span className="letter-recipient-mini-selected is-set">{recipientLabel}</span>}
         </div>
+      </div>
+      {/* 제목은 선택 입력 — 백엔드 title 컬럼과 짝 맞춰 60자로 제한(계약 §행운편지, 이슈 #352). */}
+      <div className="modal-form-group letter-title-group">
+        <label htmlFor="letter-title">제목 <span className="letter-title-optional">(선택)</span></label>
+        <input
+          id="letter-title"
+          type="text"
+          className="letter-write-title-input"
+          maxLength={60}
+          value={title}
+          placeholder="편지 제목을 적어보세요"
+          onChange={(event) => setTitle(event.target.value)}
+          readOnly={!!sendPhase}
+        />
       </div>
       <div className="modal-form-group letter-content-group">
         <label htmlFor="letter-content">편지 내용</label>

@@ -257,6 +257,37 @@
             margin-bottom: 4px;
         }
 
+        /* 제목(선택 입력) — 이슈 #352. content-group과 같은 톤이라 별도 박스 없이 라벨만. */
+        .proto-letters .letter-title-group {
+            padding: 0;
+            border: 0;
+            background: none;
+        }
+
+        .proto-letters .letter-title-optional {
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .proto-letters .letter-write-title-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: #fff;
+            color: var(--text-color);
+            border: 1px solid var(--input-border, #d8ebd2);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .proto-letters .letter-write-title-input::placeholder {
+            color: var(--text-muted);
+        }
+
         /* recipient-group과 짝 맞추려고 여기도 박스로 감쌌었는데, 텍스트영역이 이미 자체
            테두리를 갖고 있어 "박스 안에 박스"가 겹쳐 보기 안 좋았다(사용자 지적) — 박스
            장식은 걷어내고 레이블만 남긴다. */
@@ -994,6 +1025,19 @@
             text-overflow: ellipsis;
         }
 
+        /* 목록 카드의 제목(선택 입력, 이슈 #352) — 보낸 사람 줄과 내용 미리보기 사이에
+           한 줄로. 없으면 렌더 자체를 안 하니(Letters.jsx) 여백은 따로 신경 쓸 필요 없다. */
+        .proto-letters .letter-inbox-title {
+            display: block;
+            color: var(--text-color);
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .proto-letters .letter-inbox-card .letter-favorite-btn {
             top: 14px;
             right: 14px;
@@ -1139,6 +1183,15 @@
             margin-bottom: 18px;
         }
 
+        /* 제목(선택 입력, 이슈 #352) — 받는 사람 줄과 내용 사이, 편지지 톤에 맞춰 세리프체로. */
+        .proto-letters .letter-detail-title {
+            font-family: Georgia, 'Nanum Myeongjo', serif;
+            font-weight: 800;
+            font-size: 17px;
+            color: var(--text-color);
+            margin: -8px 0 16px;
+        }
+
         .proto-letters .letter-detail-from {
             color: #e0567f;
             text-align: right;
@@ -1215,6 +1268,9 @@
 }
 .proto-letters .letter-write-textarea::placeholder { color: #9aa7a0; }
 .proto-letters .letter-write-textarea:focus { outline: none; border-color: var(--accent-green); box-shadow: 0 0 0 4px rgba(82, 183, 136, 0.2), 0 4px 14px rgba(27, 67, 50, 0.08); }
+/* 제목 입력도 텍스트영역과 같은 이유로 box-sizing을 @scope 밖에서 못박는다(위 #333 참고). */
+.proto-letters .letter-write-title-input { box-sizing: border-box; width: 100%; }
+.proto-letters .letter-write-title-input:focus { outline: none; border-color: var(--accent-green); box-shadow: 0 0 0 4px rgba(82, 183, 136, 0.2), 0 4px 14px rgba(27, 67, 50, 0.08); }
 .proto-letters .letter-emoji-picker button.active { outline: 2px solid var(--accent-green); }
 .proto-letters .letter-error { color: #ef7777; font-size: 12px; font-weight: 700; }
 .proto-letters .letter-read-btn { margin-top: 8px; border: 0; background: var(--primary-green); color: #fff; border-radius: 7px; padding: 6px 9px; font: inherit; font-size: 11px; cursor: pointer; }

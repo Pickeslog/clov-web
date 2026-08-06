@@ -54,6 +54,8 @@ const EMPTY_MESSAGES = [
   <>누군가에게 전한 진심은 절대 사라지지 않아요.<br />지금 이 순간, 첫 편지를 띄워보세요.</>,
 ]
 
+// 제목을 안 적고 보내면(선택 입력) 받는 사람 화면엔 빈칸 대신 이 기본 제목이 뜬다(사용자 요청).
+const DEFAULT_LETTER_TITLE = '행운의 편지'
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
 // 발송 애니메이션은 모션 최소화 설정을 켠 사용자에겐 아예 재생하지 않는다 — CSS로 숨기기만
 // 하면 재생 시간(1.8초)만큼 모달이 빈 채로 남아 오히려 더 나쁘다.
@@ -371,7 +373,7 @@ function LetterInboxModal({ tab, onTab, box, items, page, setPage, pending, erro
                     onClick={(event) => { event.stopPropagation(); onFavorite(letter.id) }}
                   >⭐</button>
                   <strong>{label}</strong>
-                  {letter.title && <span className="letter-inbox-title">{letter.title}</span>}
+                  <span className="letter-inbox-title">{letter.title || DEFAULT_LETTER_TITLE}</span>
                   <p>{letter.emoji ? `${letter.emoji} ` : ''}{preview}</p>
                 </div>
               )
@@ -403,7 +405,7 @@ function LetterDetailModal({ letter, box, onBack, onClose }) {
             행운편지
           </h3>
           <div className="letter-detail-to">To. {toLabel}</div>
-          {letter.title && <div className="letter-detail-title">{letter.title}</div>}
+          <div className="letter-detail-title">{letter.title || DEFAULT_LETTER_TITLE}</div>
           <div className="letter-detail-content">{letter.emoji || '💌'}{'\n'}{letter.content}</div>
           <div className="letter-detail-from">From. {fromLabel}</div>
         </div>

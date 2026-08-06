@@ -1252,3 +1252,28 @@
   padding: 2px 4px;
 }
 .ticket-cal-today:hover { color: #f4ecd2; }
+
+/* ===== 다가오는 생일 줄 (#376) =====
+   ★ 이건 약속 카드가 아니다. clov-api#143 에서 "생일은 Plan 행으로 저장하지 않고 프론트가
+     파생 표시로 그린다"로 정해졌고, 그래서 여기엔 선택·업로드·수정이 없다. 읽기 전용이다.
+   ★ 모양도 일부러 카드가 아니라 알약(chip)으로 뒀다 — 아래 필름스트립 카드와 같은 모양이면
+     "눌러서 인증하는 것"으로 읽힌다. 다르게 생겨야 다른 것으로 읽힌다.
+   금색은 대시보드 D-day 칸의 생일 배지(#fcd34d 계열)와 같은 계열로 맞춘다. */
+.proto-schedule .birthday-strip {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  max-width: 660px; margin: 0 auto 16px;
+}
+.proto-schedule .birthday-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: 999px;
+  background: #fdf6e0; border: 1px solid #e0b83a;
+  color: #6b4e0f; font-size: 12px; font-weight: 700;
+}
+.proto-schedule .birthday-chip .ti-cake { font-size: 16px; color: #d4a017; flex-shrink: 0; }
+/* 이름은 길면 줄이고, 날짜·D-day 는 절대 안 줄인다 — 줄일 거면 안 보여주는 게 낫다. */
+.proto-schedule .birthday-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proto-schedule .birthday-date { color: #96803f; font-weight: 600; flex-shrink: 0; }
+.proto-schedule .birthday-dday {
+  padding: 2px 9px; border-radius: 999px;
+  background: #fcd34d; color: #12150a; font-weight: 800; flex-shrink: 0;
+}

@@ -25,6 +25,45 @@ export function formatTime(value) {
   return d ? d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ''
 }
 
+/* ---------------------------------------------------------------------
+   생일 — "MM-DD" 에서 다음 생일 날짜를 만든다 (clov-web#376 · clov-api#143).
+
+   ★ 왜 연도가 없는 값을 받나 — RoomMember.birthMonthDay 가 월·일만 준다(계약 §6).
+     서버는 UTC라 "오늘"을 못 준다(KST 00~09시엔 서버 기준 어제). 그래서 판단을
+     브라우저 로컬 날짜로 미룬 것이고, 여기서도 로컬 기준으로만 계산한다.
+
+   ★ 생일은 Plan 행으로 저장하지 않는다 — 매년 돌아오는 걸 저장하면 생성·멱등·
+     반복이 전부 문제가 되지만, 계산하면 그냥 "다음 생일"이다(clov-api#143 결정).
+   --------------------------------------------------------------------- */
+export function nextBirthdayDate(monthDay) {
+  const m = String(monthDay || '').match(/^(\d{1,2})-(\d{1,2})$/)
+  if (!m) return null
+  const month = Number(m[1])
+  const day = Number(m[2])
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  // 올해 → 내년 순으로 본다. 오늘이 생일이면 오늘을 준다(ddayDiff 가 0 = D-DAY).
+  for (const year of [today.getFullYear(), today.getFullYear() + 1]) {
+    const d = new Date(year, month - 1, day)
+    if (!isValidDate(d)) continue
+    d.setHours(0, 0, 0, 0)
+    // ⚠️ 2/29 생일은 평년에 Date 가 3/1 로 넘긴다. 그 동작을 그대로 쓴다 —
+    //    "없는 날"에 안 띄우는 것보다 하루 뒤에라도 축하하는 쪽이 맞다.
+    //    넘어간 결과가 오늘보다 과거일 수 있어(예: 오늘 3/5, 생일 2/29 → 3/1)
+    //    비교를 통과 못 하면 다음 해로 넘어간다.
+    if (d >= today) return toDateKey(d)
+  }
+  return null
+}
+
+const pad2 = (n) => String(n).padStart(2, '0')
+// Date → "YYYY-MM-DD" (로컬 기준). toISOString 은 UTC 라 한국 자정 직후 하루가 밀린다.
+function toDateKey(d) {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+}
+
 // 오늘과의 날짜 차이(숫자)만 반환한다. 'D-3' 같은 라벨 문자열은 각 화면이 만든다.
 export function ddayDiff(dateStr) {
   const m = String(dateStr || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/)

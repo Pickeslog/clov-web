@@ -190,8 +190,12 @@
 .proto-settings .ps-btn.secondary:hover { background: var(--active-bg); }
 .proto-settings .ps-btn.primary { background: var(--btn-bg); color: #0a0f0c; border: none; }
 .proto-settings .ps-btn.primary:hover { opacity: 0.88; }
-.proto-settings .ps-btn.danger { background: none; border: 1.5px solid color-mix(in srgb, var(--danger) 55%, var(--border)); color: var(--danger); }
-.proto-settings .ps-btn.danger:hover { background: rgba(248, 113, 113, 0.1); }
+.proto-settings .ps-btn.danger { background: none; border: 1.5px solid color-mix(in srgb, var(--danger) 55%, var(--border)); color: var(--danger); transition: background .15s ease, color .15s ease, border-color .15s ease; }
+/* 계정 탈퇴 버튼 hover — 옅은 틴트 대신 --danger로 꽉 채우고 글자를 흰색으로 뒤집는다
+   (#365 후속 사용자 요청). 위험도 높은 액션이니 hover만으로도 "이거 위험한 버튼"이
+   또렷이 읽혀야 한다는 취지 — 새로 만든 AccountDeleteDialog의 danger 톤(#b23b3b 계열)과
+   결을 맞춘다. */
+.proto-settings .ps-btn.danger:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
 .proto-settings .ps-ok { color: var(--accent); font-size: 12px; font-weight: 700; }
 .proto-settings .ps-err { color: var(--danger); font-size: 12px; font-weight: 700; }
 .proto-settings .ps-state { padding: 40px; text-align: center; color: var(--muted); font-weight: 700; }

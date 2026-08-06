@@ -12,7 +12,7 @@ import { APP_BACKGROUNDS, applyAppBackground, applyCustomColor, getAppBackground
 import { MASCOT_SIZES, applyMascotSize, getMascotSize } from '../../lib/mascotSize'
 import { applyTheme, getDark } from '../../lib/theme'
 import { useAuthStore } from '../../stores/authStore'
-import { useConfirm } from '../ConfirmDialog/useConfirm'
+import AccountDeleteDialog from '../AccountDeleteDialog/AccountDeleteDialog'
 
 const LETTER_THEMES = [
   { value: 'giftbox', label: '선물상자', img: '/settings-options/giftbox.png' },
@@ -59,13 +59,13 @@ export default function Settings({ onClose }) {
 }
 
 function SettingsBody({ me, prefs, onClose }) {
-  const confirm = useConfirm()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const clear = useAuthStore((state) => state.clear)
   const fileInputRef = useRef(null)
 
   const [pane, setPane] = useState('account')
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [nickname, setNickname] = useState(me.nickname ?? '')
   const [birthdate, setBirthdate] = useState(me.birthdate ?? '')
   const [currentPassword, setCurrentPassword] = useState('')
@@ -126,7 +126,7 @@ function SettingsBody({ me, prefs, onClose }) {
   })
   const deleteMutation = useMutation({
     mutationFn: deleteAccount,
-    onSuccess: () => { clear(); navigate('/login', { replace: true }) },
+    onSuccess: () => { setShowDeleteDialog(false); clear(); navigate('/login', { replace: true }) },
   })
 
   // 유료 배경(itemCode 있음)은 보유해야 고를 수 있다. 기본 제공 배경은 itemCode 가 없다.
@@ -314,11 +314,13 @@ function SettingsBody({ me, prefs, onClose }) {
             <div className="ps-action-group" style={{ alignItems: 'center' }}>
               <button type="button" className="ps-btn danger"
                 disabled={deleteMutation.isPending}
-                onClick={async () => { if (await confirm('정말 탈퇴하시겠어요? 되돌릴 수 없습니다.', { confirmText: '탈퇴', variant: 'danger' })) deleteMutation.mutate() }}>
-                {deleteMutation.isPending ? '처리 중…' : '계정 탈퇴'}
+                onClick={() => setShowDeleteDialog(true)}>
+                계정 탈퇴
               </button>
-              {/* 실패해도 버튼이 '처리 중…'에서 원래대로 돌아올 뿐이라 눌렸는지조차 알 수 없었다. */}
-              {deleteMutation.isError && <span className="ps-err">{deleteMutation.error?.message}</span>}
+              {/* 탈퇴는 공용 ConfirmDialog(예/아니오 두 버튼)가 아니라 전용 모달을 쓴다 —
+                  타이핑 확인이 필요한 만큼 상태(입력값·에러)를 다이얼로그 쪽에서 들고
+                  있어야 해서 useConfirm의 "메시지 문자열 하나 던지고 Promise<boolean>
+                  받기" 모델에 안 맞는다. 에러도 다이얼로그 안에서 보여준다(아래). */}
             </div>
             <div className="ps-action-group" style={{ alignItems: 'center' }}>
               {profileSave.isSuccess && <span className="ps-ok">저장됨</span>}
@@ -340,6 +342,16 @@ function SettingsBody({ me, prefs, onClose }) {
           </div>
         )}
       </div>
+
+      {showDeleteDialog && (
+        <AccountDeleteDialog
+          nickname={me.nickname ?? ''}
+          isPending={deleteMutation.isPending}
+          error={deleteMutation.isError ? (deleteMutation.error?.message || '탈퇴에 실패했어요. 잠시 후 다시 시도해 주세요.') : null}
+          onConfirm={() => deleteMutation.mutate()}
+          onCancel={() => setShowDeleteDialog(false)}
+        />
+      )}
     </>
   )
 }

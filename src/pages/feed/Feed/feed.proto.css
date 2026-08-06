@@ -385,6 +385,10 @@ body.light-mode .proto-feed .feed-controls-divider { background: rgba(27, 67, 50
 .proto-feed .memory-tag-more { color: #61766a; background: rgba(0,0,0,.05); }
 .proto-feed .memory-meta-row { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; }
 .proto-feed .memory-date { font-size: 11px; color: #61766a; }
+.proto-feed .memory-birthday-badge {
+  font-size: 10px; font-weight: 800; color: #7a5216; background: #f3ddaa;
+  border-radius: 999px; padding: 2px 8px; flex-shrink: 0; white-space: nowrap;
+}
 .proto-feed .memory-message-count { font-size: 11px; font-weight: 700; color: #61766a; flex-shrink: 0; display: inline-flex; align-items: center; margin-left: auto; }
 
 /* ===== 추억 상세 모달 ===== */
@@ -630,6 +634,10 @@ body.light-mode .proto-feed .feed-controls-divider { background: rgba(27, 67, 50
 .proto-feed .mp-receipt-btn .memory-receipt { transition: box-shadow .15s ease; }
 .proto-feed .mp-receipt-btn:hover .memory-receipt { box-shadow: 0 12px 26px rgba(28, 26, 23, 0.28); }
 .proto-feed .mp-receipt-cta { display: block; margin-top: 8px; text-align: center; font: 800 11px var(--sans); color: #2e5233; letter-spacing: .3px; }
+.proto-feed .mp-receipt-birthday {
+  margin-top: 10px; padding: 6px 10px; border-radius: 10px; text-align: center;
+  font: 800 12px var(--sans); color: #7a5216; background: #f3ddaa;
+}
 .proto-feed .mp-receipt-btn:hover .mp-receipt-cta { text-decoration: underline; text-underline-offset: 2px; }
 
 /* 여권 데이터 필드 */

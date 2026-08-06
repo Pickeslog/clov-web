@@ -9,7 +9,7 @@ import { useCreateMemory } from '../../../hooks/useCreateMemory'
 import { useMemoryDetail } from '../../../hooks/useMemoryDetail'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
-import { ddayDiff } from '../../../lib/datetime'
+import { ddayDiff, isSameMonthDay } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
 import Mascot from '../../../components/Mascot/Mascot'
 import Button from '../../../components/Button/Button'
@@ -228,6 +228,8 @@ export default function Feed() {
   // 나간 사람이 남긴 한 줄 메시지를 formerComments로 따로 보여줘야 해서다(MemoryDetailModal).
   const memberItems = members.data?.items ?? []
   const activeMemberItems = memberItems.filter((m) => m.status === 'ACTIVE')
+  // 작성자 생일(월-일) 조회용 — 추억 카드가 생일 당일 기록인지 표시하는 데 쓴다(#378).
+  const birthMonthDayByWriter = new Map(memberItems.map((m) => [String(m.userId), m.birthMonthDay]))
 
   // 작성자 필터 적용
   const byWriter = allItems.filter((item) => {
@@ -335,6 +337,8 @@ export default function Feed() {
                 const visibleAv = avatars.slice(0, 4)
                 const restAv = avatars.length - visibleAv.length
                 const preview = previewText(item.content)
+                const writerBirthMonthDay = birthMonthDayByWriter.get(String(item.writer?.id))
+                const isBirthdayMemory = Boolean(writerBirthMonthDay) && isSameMonthDay(item.memoryDate, writerBirthMonthDay)
                 return (
                   <div className="memory-card" key={item.id}>
                     <div className={`polaroid-card ${isMine ? 'mine' : 'friend'}`}>
@@ -381,6 +385,7 @@ export default function Feed() {
                         <MemoryFooterTags tags={tags} />
                         <div className="memory-meta-row">
                           <span className="memory-date">{item.memoryDate || '날짜 미정'}</span>
+                          {isBirthdayMemory && <span className="memory-birthday-badge" title={`${item.writer?.nickname}님의 생일`}>🎂 생일</span>}
                           <span className="memory-message-count"><IconComment />{item.commentCount ?? 0}</span>
                         </div>
                       </div>
@@ -1134,6 +1139,9 @@ export function MemoryDetailModal({
   const status = memory?.planId
     ? { text: '약속 기록', cls: '' }
     : { text: '자유 기록 · FREE MEMORY', cls: 'free' }
+  // 생일 당일 기록 표시(#378) — 피드 카드와 같은 판정, 영수증 아래 빈 공간에 보여준다.
+  const writerBirthMonthDay = members.find((m) => String(m.userId) === String(memory?.writer?.id))?.birthMonthDay
+  const isBirthdayMemory = memory && Boolean(writerBirthMonthDay) && isSameMonthDay(memory.memoryDate, writerBirthMonthDay)
 
   const photoNav = (dir) => {
     if (photoCount < 2) return
@@ -1489,6 +1497,9 @@ export function MemoryDetailModal({
                   </button>
                 ) : (
                   <MemoryReceipt planId={memory.planId} plan={planQuery.data} />
+                )}
+                {isBirthdayMemory && (
+                  <div className="mp-receipt-birthday">🎂 {memory.writer?.nickname}님의 생일</div>
                 )}
               </div>
             </div>

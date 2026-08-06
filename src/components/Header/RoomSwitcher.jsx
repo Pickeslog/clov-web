@@ -20,9 +20,10 @@ export default function RoomSwitcher({ currentRoomId, onClose }) {
   const items = rooms.data?.items ?? []
   const others = items.filter((r) => String(r.id) !== String(currentRoomId))
 
-  const goHome = () => { navigate('/'); onClose() }
+  // Dashboard.jsx go()·RoomList.jsx 입장 클릭과 같은 규칙 — 방 이동은 root View Transition을 태운다.
+  const goHome = () => { navigate('/', { viewTransition: true }); onClose() }
   const goRoom = (roomId) => {
-    if (String(roomId) !== String(currentRoomId)) navigate(`/rooms/${roomId}`)
+    if (String(roomId) !== String(currentRoomId)) navigate(`/rooms/${roomId}`, { viewTransition: true })
     onClose()
   }
 
@@ -30,7 +31,7 @@ export default function RoomSwitcher({ currentRoomId, onClose }) {
     <div className="clov-rs-backdrop" onClick={onClose}>
       <div className="clov-rs-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
         <div className="clov-rs-head">
-          <span>🔁 방 변경하기</span>
+          <span><i className="ti ti-repeat" aria-hidden="true" /> 방 변경하기</span>
           <button type="button" className="clov-rs-close" onClick={onClose} aria-label="닫기">×</button>
         </div>
         <p className="clov-rs-sub">내가 가지고 있는 우정공간 중 들어갈 방을 선택하세요.</p>
@@ -53,7 +54,9 @@ export default function RoomSwitcher({ currentRoomId, onClose }) {
                         disabled={isCurrent}
                         onClick={() => goRoom(room.id)}
                       >
-                        <span className="clov-rs-avatar" aria-hidden="true">{initialOf(room.name)}</span>
+                        <span className="clov-rs-avatar" aria-hidden="true">
+                          {room.coverPhotoUrl ? <img src={room.coverPhotoUrl} alt="" /> : initialOf(room.name)}
+                        </span>
                         <span className="clov-rs-name">{room.name}</span>
                         {isCurrent && <span className="clov-rs-badge">현재</span>}
                       </button>

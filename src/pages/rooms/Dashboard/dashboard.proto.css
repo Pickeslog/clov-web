@@ -23,7 +23,7 @@
 
   min-height: 100vh;
   color: var(--text-color);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--sans);
   text-align: left;
   background: transparent;
 }
@@ -140,12 +140,12 @@
   padding: 16px 22px 15px; pointer-events: none;
 }
 .proto-dashboard .hud-eyebrow {
-  font-size: 11px; font-weight: 700; color: rgba(255,255,255,.82);
+  font-size: 18px; font-weight: 700; color: rgba(255,255,255,.82);
   text-shadow: 0 1px 5px rgba(0,0,0,.45); letter-spacing: .3px;
 }
 .proto-dashboard .hud-dday {
-  font-size: clamp(28px, 5vw, 50px); font-weight: 900; color: #fff;
-  letter-spacing: -1.5px; line-height: 1; text-shadow: 0 2px 16px rgba(0,0,0,.28); margin-top: 2px;
+  font-size: clamp(28px, 8vw, 80px); font-weight: 900; color: #fff;
+  letter-spacing: -1.5px; line-height: 1; text-shadow: 0 2px 16px rgba(0,0,0,.28); margin-top: 10px;
 }
 .proto-dashboard .hud-dday span { font-size: .5em; font-weight: 800; margin-left: 4px; }
 .proto-dashboard .hud-bottom { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -473,14 +473,35 @@ body.light-mode .proto-dashboard .section-title {
 .proto-dashboard .clov-btn--dashed:not(:disabled):hover { background: #f3efe1; }
 
 /* ===== 참여자별 추억 증거 카드 (cline 빨랫줄+집게 캐러셀 + 필름스트립 · 프로토타입 이식) ===== */
+/* Feed.jsx의 .feed-empty-state와 같은 카드 톤(#335) — 대시보드/피드 두 "추억 없음"
+   문구가 서로 다른 스타일(투명 4% 배경 vs 불투명 82% 배경+블러)로 따로 놀아서 통일했다. */
 .proto-dashboard .memory-empty {
-  width: 100%; padding: 28px 16px; border-radius: 14px; text-align: center;
-  color: var(--text-muted); font-size: 13px; font-weight: 600;
-  background: rgba(255,255,255,.04); border: 1px dashed var(--border-color);
+  width: 100%; padding: 28px 16px; border-radius: 24px; text-align: center;
+  color: var(--text-muted); font-size: 13px; font-weight: 700;
+  background: rgba(10, 16, 12, 0.82);
+  backdrop-filter: blur(8px) saturate(0.9);
+  -webkit-backdrop-filter: blur(8px) saturate(0.9);
+  border: 1px solid var(--border-color);
 }
 .proto-dashboard .cline-viewer { padding: 4px 0 16px; }
-.proto-dashboard .cline-stage { display: flex; align-items: center; gap: 6px; }
-.proto-dashboard .cline-wire-area { flex: 1; position: relative; min-width: 0; }
+/* pan-y — 세로 스크롤은 브라우저에 넘기고 가로 제스처만 우리가 가져온다.
+   기본값(auto)이면 브라우저가 가로 제스처까지 자기 것으로 판단해 pointercancel을
+   쏘고, 그 순간 스와이프 추적이 끊긴다(= 카드가 안 넘어간다). */
+.proto-dashboard .cline-stage { display: flex; align-items: center; gap: 6px; touch-action: pan-y; }
+/* ★ 덱을 가로로 자른다 — 안 자르면 페이지 전체가 옆으로 밀린다.
+   .cline-cards 는 justify-content:center 인데 슬롯이 flex-shrink:0 · width:210px ·
+   margin:0 -38px 라 좁은 화면에서 자기 컨테이너보다 훨씬 넓어진다(375px 폰에서 실측:
+   문서 scrollWidth 534 = 159px 넘침). 조상 중 아무도 안 잘라서 그게 그대로 페이지
+   가로 스크롤이 됐다. 증상 셋이 전부 여기서 나왔다:
+     · body 배경이 background-attachment:fixed 라 밀린 구역엔 배경이 안 칠해진다(검은 띠)
+     · position:fixed 인 하단 탭바가 레이아웃 뷰포트를 따라 같이 밀린다
+     · 손가락으로 화면 전체가 좌우로 흔들린다
+   데스크톱은 뷰포트가 덱보다 넓어 잘릴 게 없다.
+
+   hidden 이 아니라 clip 인 이유 — overflow-x:hidden 을 주면 CSS 규칙상 overflow-y:visible
+   이 auto 로 승격돼 세로 스크롤 컨테이너가 새로 생기고, 카드 hover 팝아웃이 위아래로
+   잘린다. clip 은 반대 축을 visible 로 남겨둔다. */
+.proto-dashboard .cline-wire-area { flex: 1; position: relative; min-width: 0; overflow-x: clip; }
 .proto-dashboard .cline-wire {
   position: absolute; top: 0; left: -8px; right: -8px; height: 8px; z-index: 2; border-radius: 999px; overflow: hidden;
   background:
@@ -775,7 +796,6 @@ body.light-mode .proto-dashboard .section-title {
   font-size: 9px; line-height: 1; font-weight: 900; color: #fff; border: 1.5px solid #fff; margin-left: -6px; flex-shrink: 0;
   position: relative; overflow: hidden; background: #52b788;
 }
-.proto-dashboard .cline-avatar.is-friend { background: #ff9f7f; }
 .proto-dashboard .cline-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .proto-dashboard .cline-avatars .cline-avatar:first-child { margin-left: 0; }
 .proto-dashboard .cline-header-date { font-size: 9px; font-weight: 700; color: #aaa; letter-spacing: .02em; }
@@ -908,7 +928,7 @@ body.light-mode .proto-dashboard .schedule-banner { background: rgba(232,243,237
 /* 위의 일반 .schedule-banner 라이트모드 규칙(연녹색 배경)이 명시성 때문에 고스트 카드에도 걸리므로,
    고스트 전용 값(거의 불투명한 크림색 배경 + 진한 점선)으로 다시 덮어써서 라이트/다크 동일하게 유지 */
 body.light-mode .proto-dashboard .schedule-banner.schedule-banner--ghost { border-color: rgba(27,67,50,.45); background: rgba(250,246,238,.94); }
-body.light-mode .proto-dashboard .memory-empty { background: rgba(0,0,0,.03); border-color: var(--border-color); }
+body.light-mode .proto-dashboard .memory-empty { color: #4a5a51; background: rgba(255,255,255,.86); border-color: var(--border-color); }
 
 /* ===== 친구 초대 모달 (§7 초대코드 생성/복사·공유) — 팔레트 토큰이 라이트/다크 자동 대응 ===== */
 .proto-dashboard .invite-modal-backdrop {
@@ -936,7 +956,7 @@ body.light-mode .proto-dashboard .memory-empty { background: rgba(0,0,0,.03); bo
   background: var(--input-bg); border: 2px solid var(--border-color); border-radius: 14px; padding: 10px 10px 10px 18px;
 }
 .proto-dashboard .invite-code {
-  flex: 1; min-width: 0; text-align: left; font-family: 'Space Mono', 'Courier New', monospace;
+  flex: 1; min-width: 0; text-align: left; font-family: var(--sans);
   font-size: 21px; font-weight: 800; letter-spacing: 2px; color: var(--text-color);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }

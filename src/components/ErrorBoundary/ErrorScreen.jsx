@@ -10,7 +10,7 @@ export default function ErrorScreen({ error }) {
   return (
     <div className="clov-err">
       <div className="clov-err-card" role="alert">
-        <div className="clov-err-mark" aria-hidden="true">🍀</div>
+        <div className="clov-err-mark" aria-hidden="true"><i className="ti ti-clover-filled" aria-hidden="true" /></div>
         <h1 className="clov-err-title">화면을 그리지 못했어요</h1>
         <p className="clov-err-desc">
           잠시 문제가 생겼어요. 다시 시도하면 대부분 해결돼요.

@@ -18,9 +18,10 @@ import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 import Mascot from '../../../components/Mascot/Mascot'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
+import { avatarColorForKey } from '../../../lib/avatarColor'
 // 우정공간에서 작성 모달을 인라인으로 띄우기 위해 각 화면의 모달을 재사용.
 import { ScheduleEditorModal } from '../../schedule/Schedule/Schedule'
-import { SCHEDULE_LIGHT_PALETTE } from '../../schedule/Schedule/palette'
+import { SCHEDULE_LIGHT_PALETTE, SCHEDULE_MODAL_CARD_STYLE } from '../../schedule/Schedule/palette'
 import { CreateMemoryModal, MemoryDetailModal } from '../../feed/Feed/Feed'
 
 // 우정 성장 티어(프로토타입 desktop.js 정본 — 이름·구간은 그대로, 아이콘만 팀 표준(#123, 팀장
@@ -35,8 +36,6 @@ const TIERS = [
   { name: '전설의 클로버 우정', icon: 'diamond', max: 777 },
 ]
 const tierFor = (level) => TIERS.find((t) => (level ?? 1) <= t.max) ?? TIERS[TIERS.length - 1]
-
-const MINI_AV_COLORS = ['#1b4332', '#52b788', '#74c69d', '#95d5b2']
 
 const DAY = 86400000
 // 계절: 이미지 키 + 한글 라벨.
@@ -208,8 +207,8 @@ const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
 // 'past'(회색)는 D-day 3칸에서는 안 쓰인다(#206) — 다가오는 약속만 채우고 지난 약속으로 채우지 않는다.
 const ddayUrgency = (n) => (n == null ? 'far' : n < 0 ? 'past' : n === 0 ? 'today' : n <= 7 ? 'soon' : 'far')
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
-// 상태 메시지 가중 길이(한글 2, 그 외 1) — 프로토타입 "한글 20자 / 영어 40자".
-const weightedLen = (s) => [...(s || '')].reduce((n, ch) => n + (/[㄰-㆏가-힣]/.test(ch) ? 2 : 1), 0)
+// 상태 메시지 최대 길이 — 한글/영어 구분 없이 40자 통일(계약은 @Size(max=100)까지 허용하지만
+// 프론트 표시 규칙은 40자로 정함, #240).
 const STATUS_MAX = 40
 
 // 경험치 히스토리 actionType → 한글 라벨(계약 §12, 이벤트정의서 §9.1).
@@ -488,7 +487,13 @@ export default function Dashboard() {
   const tier = tierFor(levelNum)
   const progress = progressFromLevel(lv)
   const isFull = progress >= 100 && levelNum < MAX_LEVEL
+  // GET /members는 LEFT 멤버도 함께 반환한다(계약 §6). 두 목록이 쓰이는 곳이 다르다.
+  // - activeMemberItems: 지금 방에 있는 사람을 보여주거나 고르는 자리(명단·아바타·참여자 선택).
+  //   헤더 숫자 data.memberCount가 서버에서 ACTIVE만 세므로 이걸 써야 숫자와 행 수가 맞는다.
+  // - memberItems(LEFT 포함): 지난 기록에서 이름을 되찾는 자리(추억 상세). 여기서 거르면
+  //   나간 사람이 남긴 한 줄 메시지가 통째로 사라진다(Feed.jsx formerComments).
   const memberItems = members.data?.items ?? []
+  const activeMemberItems = memberItems.filter((m) => m.status === 'ACTIVE')
   const days = daysTogether(data.createdAt)
   const track = (memories.data?.items ?? []).length || 1
 
@@ -506,10 +511,10 @@ export default function Dashboard() {
 
   const savedStatus = data.myStatusMessage ?? ''
   const statusValue = statusDraft ?? savedStatus
-  const statusWeight = weightedLen(statusValue)
+  const statusLen = statusValue.length
   const statusDirty = statusDraft !== null && statusDraft.trim() !== savedStatus.trim()
-  const statusOver = statusWeight > STATUS_MAX
-  const go = (path) => navigate(`/rooms/${roomId}/${path}`)
+  const statusOver = statusLen > STATUS_MAX
+  const go = (path) => navigate(`/rooms/${roomId}/${path}`, { viewTransition: true })
 
   return (
     <>
@@ -577,8 +582,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 대표 커버 카드 */}
-        <div className="main-photo-card">
+        {/* 대표 커버 카드 — RoomList의 방 카드(view-transition-name: room-card-{id})가
+            "입장" 클릭 시 이 카드로 자라 들어가는 셰어드 엘리먼트 전환의 짝. */}
+        <div className="main-photo-card" style={{ viewTransitionName: `room-card-${roomId}` }}>
           <div className="main-photo-wrapper">
             {data.coverPhotoUrl ? (
               <img
@@ -600,12 +606,12 @@ export default function Dashboard() {
                 <input
                   className="cover-status-input"
                   value={statusValue}
-                  maxLength={40}
+                  maxLength={STATUS_MAX}
                   placeholder="상태 메시지를 남겨보세요"
-                  onChange={(e) => setStatusDraft(e.target.value)}
+                  onChange={(e) => setStatusDraft(e.target.value.slice(0, STATUS_MAX))}
                 />
-                <span className="cover-status-count">{statusWeight} / {STATUS_MAX}</span>
-                <span className="cover-status-hint">(한글 20자 / 영어 40자)</span>
+                <span className="cover-status-count">{statusLen} / {STATUS_MAX}</span>
+                {!statusValue && <span className="cover-status-hint">(최대 {STATUS_MAX}자)</span>}
                 {statusDirty && (
                   <button
                     type="button"
@@ -625,8 +631,8 @@ export default function Dashboard() {
               <div className="member-highlight-card" onClick={() => setMembersOpen(true)} title="참여 멤버 보기">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div className="member-mini-avatars">
-                    {memberItems.slice(0, 4).map((m, i) => (
-                      <span key={m.membershipId ?? m.userId} className="mini-av" style={{ background: MINI_AV_COLORS[i % MINI_AV_COLORS.length] }}>
+                    {activeMemberItems.slice(0, 4).map((m) => (
+                      <span key={m.membershipId ?? m.userId} className="mini-av" style={{ background: avatarColorForKey(m.userId ?? m.membershipId) }}>
                         {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
                       </span>
                     ))}
@@ -660,7 +666,6 @@ export default function Dashboard() {
                   <div className="schedule-info">
                     <span className="schedule-icon">+</span>
                     <span className="schedule-title">새로운 약속 만들기</span>
-                    <span className="schedule-date">클릭하여 일정을 추가해보세요</span>
                   </div>
                 </div>
               )
@@ -703,9 +708,9 @@ export default function Dashboard() {
             <button type="button" className="member-invite-btn" onClick={() => { setMembersOpen(false); setInviteOpen(true) }}>
               ＋ 친구 초대 (초대코드 보내기)
             </button>
-            {memberItems.map((m, i) => (
+            {activeMemberItems.map((m) => (
               <div className="member-row" key={m.membershipId ?? m.userId}>
-                <span className="member-row-av" style={{ background: MINI_AV_COLORS[i % MINI_AV_COLORS.length] }}>
+                <span className="member-row-av" style={{ background: avatarColorForKey(m.userId ?? m.membershipId) }}>
                   {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
                 </span>
                 <div>
@@ -759,7 +764,7 @@ export default function Dashboard() {
     {/* 우정공간에 머문 채 작성 모달을 인라인으로. 각 화면의 스코프·팔레트를 래퍼로 공급.
         .proto-dashboard 밖 형제로 둬 대시보드 CSS와 격리(min-height는 0으로 눌러 빈 공간 방지). */}
     {composeSchedule && (
-      <div className="proto-schedule" style={{ ...SCHEDULE_LIGHT_PALETTE, minHeight: 0 }}>
+      <div className="proto-schedule" style={{ ...SCHEDULE_LIGHT_PALETTE, ...SCHEDULE_MODAL_CARD_STYLE }}>
         <ScheduleEditorModal
           plan={null}
           submitting={createPlanMutation.isPending}
@@ -773,7 +778,7 @@ export default function Dashboard() {
       <div className="proto-feed" style={{ minHeight: 0 }}>
         <CreateMemoryModal
           roomId={roomId}
-          members={memberItems.filter((m) => String(m.userId) !== String(currentUserId))}
+          members={activeMemberItems.filter((m) => String(m.userId) !== String(currentUserId))}
           submitting={createMemoryMutation.isPending}
           errorMessage={createMemoryMutation.error?.message}
           onCancel={() => setComposeMemory(false)}
@@ -820,7 +825,7 @@ function InviteModal({ roomId, roomName, onClose }) {
   const cancelMutation = useMutation({ mutationFn: (inviteId) => cancelInvite(inviteId), onSuccess: invalidate })
 
   const shareText = code
-    ? `우리 우정공간 "${roomName ?? 'Clov'}"에 초대해요! 🍀\nClov 앱에서 아래 코드로 입장을 신청하세요.\n초대코드: ${code}`
+    ? `우리 우정공간 "${roomName ?? 'Clov'}"에 초대해요!\nClov 앱에서 아래 코드로 입장을 신청하세요.\n초대코드: ${code}`
     : ''
   const copy = async (text, key) => {
     try {
@@ -918,7 +923,7 @@ function ExpHistoryModal({ roomId, onClose }) {
         )}
         {logsQuery.isSuccess && groupedItems.map((log) => (
           <div className="exp-history-row" key={log.id}>
-            <span className="member-row-av exp-history-av">{initialOf(log.triggeredBy?.nickname)}</span>
+            <span className="member-row-av exp-history-av" style={{ background: avatarColorForKey(log.triggeredBy?.id) }}>{log.triggeredBy?.profileImageUrl ? <img src={log.triggeredBy.profileImageUrl} alt="" /> : initialOf(log.triggeredBy?.nickname)}</span>
             <div className="exp-history-main">
               <div className="exp-history-label">
                 {log.triggeredBy?.nickname ?? '알 수 없음'}님 · {expActionLabel(log.actionType)}{log.count > 1 ? ` ×${log.count}` : ''}
@@ -1034,7 +1039,7 @@ function ClinePolaroid({ memory, isActive, onOpen }) {
       <div className="cline-card-header">
         <div className="cline-avatars">
           {avatars.map((p, idx) => (
-            <span key={p.id ?? idx} className={`cline-avatar ${idx === 0 ? '' : 'is-friend'}`} title={p.nickname}>
+            <span key={p.id ?? idx} className={`cline-avatar ${idx === 0 ? '' : 'is-friend'}`} style={{ background: avatarColorForKey(p.id) }} title={p.nickname}>
               {p.profileImageUrl ? <img src={p.profileImageUrl} alt="" /> : initialOf(p.nickname)}
             </span>
           ))}
@@ -1115,8 +1120,16 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
 
   // index가 바뀌면 현재 프레임을 필름 중앙으로 스크롤.
   useEffect(() => {
-    const cur = framesRef.current?.querySelector('.cline-film-frame.is-current')
-    cur?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    const container = framesRef.current
+    const cur = container?.querySelector('.cline-film-frame.is-current')
+    if (container && cur) {
+      // scrollIntoView는 컨테이너가 overflow-y:hidden이라 세로 스크롤을 못 찾고 window까지
+      // 올라가 대시보드 전체를 아래로 끌어내렸다(#240). scrollLeft만 직접 계산해 가로로만 맞춘다.
+      const containerRect = container.getBoundingClientRect()
+      const curRect = cur.getBoundingClientRect()
+      const offset = (curRect.left + curRect.width / 2) - (containerRect.left + containerRect.width / 2)
+      container.scrollTo({ left: container.scrollLeft + offset, behavior: 'smooth' })
+    }
     // 카드가 넘어가면 .cline-cards가 통째로 리마운트되므로(P2의 key 교체) 기울여 뒀던 카드는
     // DOM에서 떨어져 나간다. 참조만 남으면 그 노드가 회수되지 않으니 여기서 놓아준다.
     tilted.current = null
@@ -1135,6 +1148,9 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
   const onPointerDown = (e) => {
     const el = framesRef.current
     if (!el) return
+    // 터치·펜은 브라우저의 네이티브 가로 패닝(.cline-film-frames는 overflow-x:auto)이
+    // 이미 처리한다. 여기서 scrollLeft까지 같이 밀면 한 번의 스와이프가 두 배로 움직인다.
+    if (e.pointerType !== 'mouse') return
     drag.current = { active: true, startX: e.clientX, startLeft: el.scrollLeft, moved: false }
   }
   const onPointerMove = (e) => {
@@ -1149,6 +1165,42 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
     const el = framesRef.current
     if (el && Math.abs(e.deltaY) >= Math.abs(e.deltaX) && e.deltaY) { el.scrollLeft += e.deltaY; e.preventDefault() }
   }
+
+  // ── 카드 스와이프 ──────────────────────────────────────────────────
+  // 카드 뷰어에는 원래 클릭밖에 없었다 — 옆 카드를 정확히 눌러야만 넘어갔다.
+  // 데스크톱은 그걸로 됐지만 모바일에선 카드가 겹쳐 있어 조준이 어렵고, 애초에
+  // 손가락은 밀어서 넘긴다. 필름스트립 드래그는 필름스트립만 움직이지 카드를 안 넘긴다.
+  const swipe = useRef({ active: false, startX: 0, startY: 0, fired: false, moved: false })
+  // 40px — 탭이 미끄러진 것과 넘기려는 의도를 가르는 선.
+  const SWIPE_THRESHOLD = 40
+
+  const onSwipeDown = (e) => {
+    swipe.current = { active: true, startX: e.clientX, startY: e.clientY, fired: false, moved: false }
+    // 손가락이 카드 밖으로 나가도 제스처를 놓치지 않게 잡아둔다.
+    // 마우스는 제외 — 캡처하면 이벤트 타깃이 이 컨테이너로 바뀌어서 3D 틸트의
+    // e.target.closest('.cline-polaroid')가 항상 null이 된다.
+    // 캡처 실패는 삼켜도 된다. 손가락이 이미 떨어진 뒤 핸들러가 돌면 NotFoundError가
+    // 나는데, 그건 어차피 스와이프가 성립 안 하는 경우다 — 여기서 던지면 그것 때문에
+    // 정상 탭까지 같이 죽는다.
+    if (e.pointerType !== 'mouse') {
+      try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* 이미 놓친 포인터 */ }
+    }
+  }
+  const onSwipeMove = (e) => {
+    const s = swipe.current
+    if (!s.active || s.fired) return
+    const dx = e.clientX - s.startX
+    const dy = e.clientY - s.startY
+    // 클릭 억제용 — 문턱보다 훨씬 작다. 살짝 밀린 채 손을 떼도 상세보기가 열리면 안 된다.
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) s.moved = true
+    // 세로가 더 크면 페이지를 스크롤하려는 것이다 — 가로로 해석하지 않는다.
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) <= Math.abs(dy)) return
+    // 과거 카드는 왼쪽, 최신 카드는 오른쪽에 있다(SLOTS: +1=past, -1=newer).
+    // 오른쪽으로 밀면 왼쪽 것이 가운데로 온다 = 과거로.
+    goTo(index + (dx > 0 ? 1 : -1))
+    s.fired = true
+  }
+  const onSwipeEnd = () => { swipe.current.active = false }
 
   // ── 겹침 카드 3D 마우스 틸트 (#114 P3) ─────────────────────────────────
   // 정본 space.js:1330-1360은 window에 리스너를 달고 뷰어를 closest로 찾아 위임하지만,
@@ -1191,7 +1243,15 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
       onPointerMove={isStack ? onTiltMove : undefined}
       onPointerLeave={isStack ? untilt : undefined}
     >
-      <div className="cline-stage">
+      {/* 스와이프는 .cline-stage 에만 건다 — .cline-viewer 에 걸면 형제인 필름스트립
+          드래그까지 버블링으로 같이 잡혀서 필름을 미는 동안 카드가 넘어가 버린다. */}
+      <div
+        className="cline-stage"
+        onPointerDown={onSwipeDown}
+        onPointerMove={onSwipeMove}
+        onPointerUp={onSwipeEnd}
+        onPointerCancel={onSwipeEnd}
+      >
         {isDiary && <DiaryStage />}
         <div className="cline-wire-area">
           <div className="cline-wire" />
@@ -1220,10 +1280,16 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
                 <div
                   key={cls}
                   className={`cline-card-slot cline-slot--${cls} ${isActive ? 'is-active' : ''}`}
-                  onClick={opensDetail ? undefined : () => goTo(target)}
+                  // 스와이프가 끝나면 click도 뒤따라 온다 — 밀어서 넘긴 김에 옆 카드로
+                  // 한 번 더 가거나 상세보기가 열리면 안 된다(필름스트립의 drag.moved와 같은 가드).
+                  onClick={opensDetail ? undefined : () => { if (!swipe.current.moved) goTo(target) }}
                 >
                   {!isFanned && <Clothespin />}
-                  <ClinePolaroid memory={memories[i]} isActive={isActive} onOpen={opensDetail ? () => onOpen(memories[i]?.id) : undefined} />
+                  <ClinePolaroid
+                    memory={memories[i]}
+                    isActive={isActive}
+                    onOpen={opensDetail ? () => { if (!swipe.current.moved) onOpen(memories[i]?.id) } : undefined}
+                  />
                 </div>
               )
             })}

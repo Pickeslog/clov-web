@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import './feed.proto.css'
 import { getMemories, getMemory } from '../../../api/memory'
@@ -11,7 +11,9 @@ import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import { ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
+import Mascot from '../../../components/Mascot/Mascot'
 import Button from '../../../components/Button/Button'
+import { avatarColorForKey } from '../../../lib/avatarColor'
 
 // 작성·수정 공통 (screen-spec-source/03-memory-feed-screen.md §입력 제약) — 프로토타입은 30이지만
 // 리더 결정으로 8. R2 실제 업로드 비용·저장 쿼터 도달 속도 때문에 목업 값을 의도적으로 안 따른다.
@@ -184,6 +186,8 @@ const todayStr = () => {
 
 export default function Feed() {
   const { roomId } = useParams()
+  const navigate = useNavigate()
+  const location = useLocation()
   const accessToken = useAuthStore((state) => state.accessToken)
   const currentUserId = currentUserIdFromToken(accessToken)
 
@@ -193,7 +197,14 @@ export default function Feed() {
   const [sort, setSort] = useState('new') // new(최신순) | old(오래된순)
   const [isGalleryOpen, setGalleryOpen] = useState(false) // 사진 모아보기 오버레이
   const [selectedMemoryId, setSelectedMemoryId] = useState(null)
-  const [isCreateOpen, setCreateOpen] = useState(false)
+  // 일정에서 "약속 완료" 직후 넘어온 경우 — 그 약속이 바로 연결된 채로 글쓰기 모달을 연다.
+  const [linkPlanId, setLinkPlanId] = useState(() => location.state?.linkPlanId ?? null)
+  const [isCreateOpen, setCreateOpen] = useState(() => Boolean(location.state?.linkPlanId))
+
+  // 뒤로가기·새로고침에서 같은 state로 다시 열리지 않도록 한 번 쓰고 지운다(setState 없음, navigate만).
+  useEffect(() => {
+    if (location.state?.linkPlanId) navigate(location.pathname, { replace: true, state: null })
+  }, [location.state, location.pathname, navigate])
 
   // 월별 아카이브를 클라이언트에서 구성하려고 방의 추억을 한 번에 받아온다.
   const feed = useQuery({
@@ -207,12 +218,16 @@ export default function Feed() {
   })
 
   // 추억 생성(본문+사진 순차 업로드)은 우정공간과 공유하는 공용 훅으로 처리.
-  const createMutation = useCreateMemory(roomId, { onSuccess: () => setCreateOpen(false) })
+  const createMutation = useCreateMemory(roomId, { onSuccess: () => { setCreateOpen(false); setLinkPlanId(null) } })
   // 추억 상세(여권) 모달의 데이터·뮤테이션도 우정공간과 공유하는 공용 훅으로 처리.
   const memoryDetail = useMemoryDetail(selectedMemoryId, roomId, { onDeleted: () => setSelectedMemoryId(null) })
 
   const allItems = feed.data?.items ?? []
+  // GET /members는 LEFT 멤버도 함께 반환한다(계약 §6).
+  // 참여자를 고르는 자리에는 지금 방에 있는 사람만 넘기고, 추억 상세에는 LEFT까지 넘긴다 —
+  // 나간 사람이 남긴 한 줄 메시지를 formerComments로 따로 보여줘야 해서다(MemoryDetailModal).
   const memberItems = members.data?.items ?? []
+  const activeMemberItems = memberItems.filter((m) => m.status === 'ACTIVE')
 
   // 작성자 필터 적용
   const byWriter = allItems.filter((item) => {
@@ -233,6 +248,7 @@ export default function Feed() {
   return (
     <div className="proto-feed">
       <Header variant="room" roomId={roomId} activeTab="feed" />
+      <Mascot roomId={roomId} />
       <div className="feed-page">
         <div className="feed-hero">
           <div className="feed-hero-text">
@@ -268,22 +284,31 @@ export default function Feed() {
             )}
           </div>
           <div className="feed-controls-right">
-            <div className="feed-sort" role="group" aria-label="정렬 순서">
-              <button type="button" className={`feed-sort-btn ${sort === 'new' ? 'active' : ''}`} onClick={() => setSort('new')}>최신순</button>
-              <button type="button" className={`feed-sort-btn ${sort === 'old' ? 'active' : ''}`} onClick={() => setSort('old')}>오래된순</button>
+            {/* 그룹 1: 보기(정렬 + 사진 모아보기) — 같은 목록을 "어떤 순서/형태로 볼지"만 바꾼다. */}
+            <div className="feed-controls-group" role="group" aria-label="보기 방식">
+              <div className="feed-sort" role="group" aria-label="정렬 순서">
+                <button type="button" className={`feed-sort-btn ${sort === 'new' ? 'active' : ''}`} onClick={() => setSort('new')}>최신순</button>
+                <button type="button" className={`feed-sort-btn ${sort === 'old' ? 'active' : ''}`} onClick={() => setSort('old')}>오래된순</button>
+              </div>
+              <button type="button" className="feed-gallery-trigger" onClick={() => setGalleryOpen(true)} title="사진 모아보기" aria-label="사진 모아보기">
+                <IconGrid />
+              </button>
             </div>
-            <button type="button" className="feed-gallery-trigger" onClick={() => setGalleryOpen(true)} title="사진 모아보기" aria-label="사진 모아보기">
-              <IconGrid />
-            </button>
-            <MonthPicker
-              items={allItems}
-              activeMonth={month}
-              onPick={(key) => setMonth(key)}
-            />
-            <div className="feed-filter-tabs">
-              <button type="button" className={`feed-tab ${writerFilter === 'all' ? 'active' : ''}`} onClick={() => setWriterFilter('all')}>전체</button>
-              <button type="button" className={`feed-tab ${writerFilter === 'mine' ? 'active' : ''}`} onClick={() => setWriterFilter('mine')}>내 기록</button>
-              <button type="button" className={`feed-tab ${writerFilter === 'others' ? 'active' : ''}`} onClick={() => setWriterFilter('others')}>친구 기록</button>
+
+            <div className="feed-controls-divider" aria-hidden="true" />
+
+            {/* 그룹 2: 필터(월 + 작성자) — 목록에 뭐가 "포함될지"를 좁힌다. */}
+            <div className="feed-controls-group" role="group" aria-label="필터">
+              <MonthPicker
+                items={allItems}
+                activeMonth={month}
+                onPick={(key) => setMonth(key)}
+              />
+              <div className="feed-filter-tabs">
+                <button type="button" className={`feed-tab ${writerFilter === 'all' ? 'active' : ''}`} onClick={() => setWriterFilter('all')}>전체</button>
+                <button type="button" className={`feed-tab ${writerFilter === 'mine' ? 'active' : ''}`} onClick={() => setWriterFilter('mine')}>내 기록</button>
+                <button type="button" className={`feed-tab ${writerFilter === 'others' ? 'active' : ''}`} onClick={() => setWriterFilter('others')}>친구 기록</button>
+              </div>
             </div>
           </div>
         </div>
@@ -316,7 +341,7 @@ export default function Feed() {
                       <div className="polaroid-presence-row">
                         {visibleAv.map((p, idx) => (
                           <span key={p.id ?? idx} className={`presence-tile ${idx === 0 ? 'is-author' : 'friend'}`} title={p.nickname}>
-                            <span className="presence-dot">
+                            <span className="presence-dot" style={{ background: avatarColorForKey(p.id) }}>
                               {p.profileImageUrl ? <img src={p.profileImageUrl} alt="" /> : initialOf(p.nickname)}
                             </span>
                           </span>
@@ -336,10 +361,10 @@ export default function Feed() {
                           </span>
                         )}
                         {!item.thumbnailUrl && (
-                          <>
-                            <i className="ti ti-clover memory-clover-placeholder" aria-hidden="true" />
-                            <span className="memory-image-text">사진이 없는 추억은<br />클로버로 보관됩니다</span>
-                          </>
+                          <div className="cline-no-photo">
+                            <i className="ti ti-photo-off cline-no-photo-icon" aria-hidden="true" />
+                            <span className="cline-no-photo-text">사진 없음</span>
+                          </div>
                         )}
                       </div>
                       <div className="polaroid-caption">
@@ -351,7 +376,7 @@ export default function Feed() {
                             </button>
                           </div>
                           <div className="memory-title">{item.title}</div>
-                          {preview && <div className="my-record-text">{preview}</div>}
+                          <div className="my-record-text">{preview}</div>
                         </div>
                         <MemoryFooterTags tags={tags} />
                         <div className="memory-meta-row">
@@ -379,10 +404,11 @@ export default function Feed() {
       {isCreateOpen && (
         <CreateMemoryModal
           roomId={roomId}
-          members={memberItems.filter((m) => String(m.userId) !== String(currentUserId))}
+          members={activeMemberItems.filter((m) => String(m.userId) !== String(currentUserId))}
           submitting={createMutation.isPending}
           errorMessage={createMutation.error?.message}
-          onCancel={() => setCreateOpen(false)}
+          initialPlanId={linkPlanId}
+          onCancel={() => { setCreateOpen(false); setLinkPlanId(null) }}
           onSubmit={(planId, payload, files) => createMutation.mutate({ planId, payload, files })}
         />
       )}
@@ -409,6 +435,7 @@ function MonthPicker({ items, activeMonth, onPick }) {
     return latest ? Number(latest.split('-')[0]) : new Date().getFullYear()
   })
   const wrapRef = useRef(null)
+  const popRef = useRef(null)
 
   useEffect(() => {
     if (!open) return undefined
@@ -417,6 +444,25 @@ function MonthPicker({ items, activeMonth, onPick }) {
     }
     document.addEventListener('mousedown', onDoc)
     return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  // 팝오버는 트리거 아래로 펼쳐지는데, 필터 줄이 화면 중간쯤에 있으면 아래쪽이 접힌다
+  // (375x667 실측: 382px 중 136px이 화면 밖). 모자란 만큼만 끌어올린다.
+  //
+  // scrollIntoView를 쓰지 않는다. block:'nearest'는 위쪽이 이미 보이면 아무것도 안 해서
+  // 이 상황에 무반응이고, 'end'는 다 보일 때도 화면을 끌어당긴다. 게다가 scrollIntoView는
+  // 스크롤 조상을 스스로 찾아 올라가서 엉뚱한 컨테이너를 움직인 적이 있다(#240).
+  // 넘친 양을 직접 계산해 window만 그만큼 민다.
+  useEffect(() => {
+    if (!open) return
+    const el = popRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const over = r.bottom - window.innerHeight + 12 // 12 = 화면 아래와의 여백
+    if (over <= 0) return
+    // 아래를 맞추려다 팝오버 위쪽(과 트리거)이 화면 밖으로 나가면 더 나쁘다 — 거기까지만.
+    const limit = Math.max(0, r.top - 12)
+    window.scrollBy({ top: Math.min(over, limit), behavior: 'smooth' })
   }, [open])
 
   const counts = useMemo(() => {
@@ -444,7 +490,7 @@ function MonthPicker({ items, activeMonth, onPick }) {
         <IconCalendar />
       </button>
       {open && (
-        <div className="month-picker-popover open" role="dialog" aria-label="월 선택">
+        <div className="month-picker-popover open" ref={popRef} role="dialog" aria-label="월 선택">
           <div className="month-picker-header">
             <button type="button" className="month-picker-nav" onClick={() => setYear((y) => y - 1)} aria-label="이전 년도">❮</button>
             <div className="month-picker-year">{year}년</div>
@@ -599,10 +645,10 @@ function SpacePhotoGallery({ memories, onClose, onOpenMemory }) {
 
       <div className="sg-body">
         {loading && allPhotos.length === 0 ? (
-          <div className="sg-empty"><span className="sg-empty-clover">🍀</span>사진을 불러오는 중…</div>
+          <div className="sg-empty"><span className="sg-empty-clover"><i className="ti ti-clover-filled" aria-hidden="true" /></span>사진을 불러오는 중…</div>
         ) : visible.length === 0 ? (
           <div className="sg-empty">
-            <span className="sg-empty-clover">{query ? '🔍' : '🍀'}</span>
+            <span className="sg-empty-clover">{query ? '🔍' : <i className="ti ti-clover-filled" aria-hidden="true" />}</span>
             {query ? '검색 결과가 없어요.' : '아직 이 우정공간에 올라온 사진이 없어요.'}
           </div>
         ) : (
@@ -653,13 +699,14 @@ function SpacePhotoGallery({ memories, onClose, onOpenMemory }) {
 // ── 글쓰기 모달(프로토타입 wm-*) ──
 // 우정공간(대시보드)에서도 재사용 → export. 대시보드는 <div className="proto-feed">로 감싸
 // 스코프·팔레트를 공급한다(약속 목록은 이 모달이 roomId로 자체 조회).
-export function CreateMemoryModal({ roomId, members, submitting, errorMessage, onCancel, onSubmit }) {
+export function CreateMemoryModal({ roomId, members, submitting, errorMessage, initialPlanId = null, onCancel, onSubmit }) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [tagsInput, setTagsInput] = useState('')
   const [participantUserIds, setParticipantUserIds] = useState(() => members.map((m) => m.userId))
   const [photos, setPhotos] = useState([]) // { file, url }
-  const [linkedPlanId, setLinkedPlanId] = useState(null) // null = 자유 기록(FREE MEMORY)
+  // 일정에서 "약속 완료" 직후 넘어온 경우 그 약속으로 미리 연결해둔다. null = 자유 기록(FREE MEMORY)
+  const [linkedPlanId, setLinkedPlanId] = useState(initialPlanId)
   const [pickerOpen, setPickerOpen] = useState(false)
   const fileRef = useRef(null)
 
@@ -864,7 +911,7 @@ export function CreateMemoryModal({ roomId, members, submitting, errorMessage, o
                 </>
               ) : (
                 <>
-                  <button type="button" className="mp-connect-open" onClick={() => setPickerOpen(true)}>🗓️ 일정계획에서 약속 가져오기</button>
+                  <button type="button" className="mp-connect-open" onClick={() => setPickerOpen(true)}><i className="ti ti-calendar" aria-hidden="true" /> 일정계획에서 약속 가져오기</button>
                   <div className="mp-connect-hint">연결 안 하면 <b>자유 기록(FREE MEMORY)</b>으로 저장돼요</div>
                 </>
               )}
@@ -975,7 +1022,7 @@ function ScheduleJourneyModal({ roomId, plan, onClose }) {
           <button type="button" className="sj-close" onClick={onClose} aria-label="닫기">×</button>
         </div>
         <div className={`sj-progress ${isComplete ? 'is-complete' : ''}`}>
-          <span className="sj-progress-label">인생4컷 {doneCount}/4{isComplete ? ' · 완성 🍀' : ''}</span>
+          <span className="sj-progress-label">인생4컷 {doneCount}/4{isComplete ? ' · 완성' : ''}</span>
           <span className="sj-progress-bar"><span className="sj-progress-fill" style={{ width: `${Math.round((doneCount / 4) * 100)}%` }} /></span>
         </div>
         <div className="sj-stages">
@@ -1150,7 +1197,7 @@ export function MemoryDetailModal({
         if (comment && editingCommentId === comment.id) {
           return (
             <div className="memory-message-row" key={member.userId}>
-              <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+              <span className="memory-message-avatar" style={{ background: avatarColorForKey(member.userId) }}>{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
               <span className="memory-message-name">{member.nickname}</span>
               <input
                 className="memory-message-compose-input"
@@ -1170,7 +1217,7 @@ export function MemoryDetailModal({
         if (comment) {
           return (
             <div className="memory-message-row" key={member.userId}>
-              <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+              <span className="memory-message-avatar" style={{ background: avatarColorForKey(member.userId) }}>{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
               <span className="memory-message-name">{member.nickname}</span>
               <span className="memory-message-text">{comment.content}</span>
               {isSelf && (
@@ -1186,7 +1233,7 @@ export function MemoryDetailModal({
         if (isSelf) {
           return (
             <div className="memory-message-row" key={member.userId}>
-              <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+              <span className="memory-message-avatar" style={{ background: avatarColorForKey(member.userId) }}>{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
               <span className="memory-message-name">{member.nickname}</span>
               <input
                 className="memory-message-compose-input"
@@ -1205,7 +1252,7 @@ export function MemoryDetailModal({
 
         return (
           <div className="memory-message-row" key={member.userId}>
-            <span className="memory-message-avatar">{initialOf(member.nickname)}</span>
+            <span className="memory-message-avatar" style={{ background: avatarColorForKey(member.userId) }}>{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}</span>
             <span className="memory-message-name">{member.nickname}</span>
             <span className="memory-message-empty-text">아직 메시지 없음</span>
           </div>
@@ -1216,7 +1263,7 @@ export function MemoryDetailModal({
           <div className="memory-detail-messages-former-title">이전 멤버</div>
           {formerComments.map((comment) => (
             <div className="memory-message-row" key={comment.id}>
-              <span className="memory-message-avatar">{initialOf(comment.writer?.nickname)}</span>
+              <span className="memory-message-avatar" style={{ background: avatarColorForKey(comment.writer?.id) }}>{comment.writer?.profileImageUrl ? <img src={comment.writer.profileImageUrl} alt="" /> : initialOf(comment.writer?.nickname)}</span>
               <span className="memory-message-name">{comment.writer?.nickname}</span>
               <span className="memory-message-text">{comment.content}</span>
             </div>
@@ -1246,8 +1293,10 @@ export function MemoryDetailModal({
               <div className="memory-detail-photo-col">
                 {photoCount === 0 && (
                   <div className="memory-detail-photo memory-detail-photo--empty">
-                    <i className="ti ti-clover memory-clover-placeholder" aria-hidden="true" />
-                    <span className="memory-image-text">사진이 없는 추억은<br />클로버로 보관됩니다</span>
+                    <div className="cline-no-photo">
+                      <i className="ti ti-photo-off cline-no-photo-icon" aria-hidden="true" />
+                      <span className="cline-no-photo-text">사진 없음</span>
+                    </div>
                   </div>
                 )}
 

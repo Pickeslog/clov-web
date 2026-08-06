@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './roomlist.proto.css'
 import { getRooms, createRoom, toggleRoomFavorite, leaveRoom } from '../../../api/room'
 import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/invite'
 import Header from '../../../components/Header/Header'
 import RoomPreviewModal from './RoomPreviewModal'
+import JoinRoomModal from '../JoinRoom/JoinRoomModal'
 import { ddayDiff } from '../../../lib/datetime'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
 import { describeInviteError, extractJoinedRoomId } from '../../../lib/inviteError'
@@ -81,6 +82,21 @@ export default function RoomList() {
   const confirm = useConfirm()
 
   const [createOpen, setCreateOpen] = useState(false)
+
+  // 초대 코드 모달 — 버튼으로도 열고, /join·/join/:code 딥링크로도 열린다.
+  // 라우트가 이 화면을 그리고 모달만 얹는 구조라, 딥링크로 들어와도 뒤에 방 목록이 남는다
+  // (예전 전용 페이지는 뒤가 빈 화면이었다). 닫으면 URL도 목록으로 되돌린다.
+  const location = useLocation()
+  const { code: routeCode } = useParams()
+  const [searchParams] = useSearchParams()
+  const joinRoute = location.pathname.startsWith('/join')
+  // 공유 링크는 경로(/join/:code)와 쿼리(?code=/?roomCode=) 두 형식이 다 쓰인다 — 둘 다 지원.
+  const deepLinkCode = routeCode ?? searchParams.get('code') ?? searchParams.get('roomCode') ?? ''
+  const [joinOpen, setJoinOpen] = useState(joinRoute)
+  const closeJoin = () => {
+    setJoinOpen(false)
+    if (joinRoute) navigate('/', { replace: true })
+  }
   const [previewId, setPreviewId] = useState(null)
   const [dragId, setDragId] = useState(null)
   const [overId, setOverId] = useState(null)
@@ -160,6 +176,10 @@ export default function RoomList() {
     }
     return list
   }, [rooms.data, sort, roomOrder])
+
+  // "정말 방이 하나도 없는 신규 사용자"와 "즐겨찾기 필터에 걸린 게 없을 뿐"은 다른 상황이다.
+  // 전자에게만 온보딩 CTA를 띄운다 — 방이 있는 사람에게 "첫 공간을 만들어보세요"는 틀린 말이다.
+  const hasNoRooms = rooms.isSuccess && (rooms.data?.items?.length ?? 0) === 0
 
   const totalPages = Math.max(1, Math.ceil(sortedRooms.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages - 1)
@@ -254,7 +274,17 @@ export default function RoomList() {
 
         {editMode && (
           <div className="edit-banner show">
-            <Icon name="ti-arrows-move" /> 카드를 끌어다 원하는 자리에 놓으면 &quot;내 순서&quot;로 저장돼요. 🗑️로 방에서 나갈 수 있어요.
+            {/* 🗑️ 이모지였는데 기기에 따라 두부(□)로 떴다 — 카드에 실제로 붙어 있는
+                삭제 버튼과 같은 아이콘(ti-trash)을 쓰면 안내와 실물이 바로 이어진다.
+
+                본문을 span 하나로 묶는 건 .edit-banner가 flex(gap:8px)이기 때문이다.
+                안 묶으면 아이콘이 별도 플렉스 아이템이 돼서 좌우로 8px씩 벌어지고
+                "🗑 로 방에서"처럼 조사 앞이 뜬다. span 안에서는 그냥 인라인이다. */}
+            <Icon name="ti-arrows-move" />
+            <span>
+              카드를 끌어다 원하는 자리에 놓으면 &quot;내 순서&quot;로 저장돼요.{' '}
+              <Icon name="ti-trash" />로 방에서 나갈 수 있어요.
+            </span>
           </div>
         )}
 
@@ -266,7 +296,8 @@ export default function RoomList() {
                 const gone = r.roomStatus !== 'ACTIVE'
                 const kind = gone ? 'vanished' : r.status === 'REJECTED' ? 'rejected' : 'pending'
                 const label = gone ? '사라진 방' : r.status === 'REJECTED' ? '거절됨' : '수락 대기 중'
-                const statusIcon = gone ? 'ti-bubble' : r.status === 'REJECTED' ? 'ti-x' : 'ti-clock'
+                // ti-bubble은 Tabler 2.47.0에 없어 빈 네모로 떴다 — 형제 아이콘과 같은 중립 계열로 교체.
+                const statusIcon = gone ? 'ti-circle-off' : r.status === 'REJECTED' ? 'ti-x' : 'ti-clock'
                 return (
                   <div className={`req-card ${kind}`} key={r.id}>
                     <span className={`req-status ${kind}`}><Icon name={statusIcon} /> {label}</span>
@@ -280,7 +311,7 @@ export default function RoomList() {
                           onClick={() => cancelReqMutation.mutate(r.id)}>요청 취소</button>
                       )}
                       {kind === 'rejected' && (
-                        <button type="button" className="req-btn primary" onClick={() => navigate('/join')}>재요청</button>
+                        <button type="button" className="req-btn primary" onClick={() => setJoinOpen(true)}>재요청</button>
                       )}
                       {kind !== 'pending' && (
                         <button type="button" className="req-btn" onClick={() => setDismissed((d) => [...d, r.id])}>지우기</button>
@@ -294,38 +325,71 @@ export default function RoomList() {
         )}
 
         <div className="filter-row">
-          <div className="filter-tabs">
-            {SORTS.map((s) => (
-              <button type="button" key={s.key} className={`filter-btn${sort === s.key ? ' active' : ''}`} onClick={() => setSort(s.key)}>
-                <Icon name={s.icon} /> {s.label}
-              </button>
-            ))}
-          </div>
+          {/* 방이 없으면 정렬할 것도 편집할 것도 없다 — 의미 없는 컨트롤이 주 동선보다
+              자리를 많이 먹고 있었다(신규 사용자에게 정렬 탭 4개 + 편집 버튼). */}
+          {!hasNoRooms && (
+            <div className="filter-tabs">
+              {SORTS.map((s) => (
+                <button type="button" key={s.key} className={`filter-btn${sort === s.key ? ' active' : ''}`} onClick={() => setSort(s.key)}>
+                  <Icon name={s.icon} /> {s.label}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="toolbar-right">
-            <input
-              className="code-input"
-              value={joinCode}
-              maxLength={20}
-              placeholder="방 코드 입력"
-              onChange={(e) => { setJoinCode(e.target.value); setJoinMessage('') }}
-              onKeyDown={(e) => e.key === 'Enter' && joinCode.trim() && joinMutation.mutate()}
-            />
-            <button type="button" className="btn-enter" disabled={!joinCode.trim() || joinMutation.isPending} onClick={() => joinMutation.mutate()}>입장</button>
+            {/* 입력+버튼을 한 덩어리로 묶는다. 예전엔 130x36 13px 입력이 정렬 탭·편집 버튼과
+                같은 급으로 흩어져 있어서 "들어오는 입구"로 안 읽혔다. */}
+            <div className="code-join">
+              <Icon name="ti-ticket" />
+              <input
+                className="code-input"
+                value={joinCode}
+                maxLength={20}
+                /* /join 화면이 쓰는 말과 맞춘다 — 거기선 '초대 코드'다. */
+                placeholder="초대 코드 입력"
+                aria-label="초대 코드"
+                onChange={(e) => { setJoinCode(e.target.value); setJoinMessage('') }}
+                onKeyDown={(e) => e.key === 'Enter' && joinCode.trim() && joinMutation.mutate()}
+              />
+              <button type="button" className="btn-enter" disabled={!joinCode.trim() || joinMutation.isPending} onClick={() => joinMutation.mutate()}>입장</button>
+            </div>
             <button type="button" className="btn-create" onClick={() => setCreateOpen(true)}><Icon name="ti-plus" /> 방 만들기</button>
-            <button type="button" className={`btn-edit${editMode ? ' active' : ''}`} onClick={() => setEditMode((v) => !v)}>{editMode ? '완료' : '편집'}</button>
+            {!hasNoRooms && (
+              <button type="button" className={`btn-edit${editMode ? ' active' : ''}`} onClick={() => setEditMode((v) => !v)}>{editMode ? '완료' : '편집'}</button>
+            )}
           </div>
         </div>
         {joinMessage && <div className="rl-msg" role="alert">{joinMessage}</div>}
 
         {rooms.isPending && <div className="rl-state">불러오는 중…</div>}
         {rooms.isError && <div className="rl-state">목록을 불러오지 못했습니다. {rooms.error?.message}</div>}
-        {rooms.isSuccess && sortedRooms.length === 0 && (
-          <div className="rl-state">{sort === 'favorite' ? '즐겨찾기한 우정공간이 없어요.' : '아직 우정공간이 없어요. "방 만들기"로 첫 공간을 만들어보세요.'}</div>
+        {/* 신규 사용자 온보딩 — 예전엔 "'방 만들기'로 첫 공간을 만들어보세요" 한 줄이었다.
+            화면에서 제일 큰 안내 문구가 길을 하나만 가리켰던 셈인데, 초대를 받고 온 사람에게는
+            그게 틀린 길이다(학원 동기 피드백: 코드 입력란이 작고 눈에 안 띄어 입장이 늦어졌다).
+            들어오는 길이 둘이니 둘 다 같은 무게로 놓는다. */}
+        {hasNoRooms && (
+          <div className="rl-empty">
+            <div className="rl-empty-title">아직 우정공간이 없어요</div>
+            <p className="rl-empty-desc">직접 만들거나, 친구에게 받은 초대 코드로 들어오세요.</p>
+            <div className="rl-empty-actions">
+              <button type="button" className="rl-empty-btn primary" onClick={() => setCreateOpen(true)}>
+                <Icon name="ti-plus" /> 방 만들기
+              </button>
+              {/* 여기서 코드 입력을 또 만들지 않고 /join으로 보낸다 — 그 화면엔 이미 제목·설명·라벨과
+                  CLV-JOIN-XXXXXX 형식 안내가 있다. 지금까지 목록에서 그리로 가는 길이 없었을 뿐이다. */}
+              <button type="button" className="rl-empty-btn" onClick={() => setJoinOpen(true)}>
+                <Icon name="ti-ticket" /> 초대 코드로 입장
+              </button>
+            </div>
+          </div>
+        )}
+        {rooms.isSuccess && !hasNoRooms && sortedRooms.length === 0 && (
+          <div className="rl-state">즐겨찾기한 우정공간이 없어요.</div>
         )}
 
         {sortedRooms.length > 0 && (
           <div className="room-grid">
-            {visibleRooms.map((room) => {
+            {visibleRooms.map((room, i) => {
               const tone = headTone(room)
               const hasPlan = Boolean(room.nextPlan?.planDate)
               const dday = hasPlan ? ddayLabel(ddayDiff(room.nextPlan.planDate)) : null
@@ -334,7 +398,10 @@ export default function RoomList() {
                 <div
                   key={room.id}
                   data-room-id={room.id}
-                  className={`room-card ticket${editMode ? ' edit-mode' : ''}${dragId === room.id ? ' dragging' : ''}${String(overId) === String(room.id) ? ' drag-over' : ''}`}
+                  className={`room-card ticket room-card-enter${editMode ? ' edit-mode' : ''}${dragId === room.id ? ' dragging' : ''}${String(overId) === String(room.id) ? ' drag-over' : ''}`}
+                  // view-transition-name: 이 카드의 "입장" 클릭이 Dashboard의 .main-photo-card로
+                  // 그대로 자라 들어가는 셰어드 엘리먼트 전환의 짝(같은 이름을 그쪽에도 건다).
+                  style={{ viewTransitionName: `room-card-${room.id}`, '--enter-delay': `${Math.min(i, 8) * 35}ms` }}
                   role={editMode ? undefined : 'button'}
                   tabIndex={editMode ? undefined : 0}
                   draggable={editMode || undefined}
@@ -417,8 +484,8 @@ export default function RoomList() {
                       role={editMode ? undefined : 'button'}
                       tabIndex={editMode ? undefined : 0}
                       aria-label={editMode ? undefined : `${room.name} 바로 입장`}
-                      onClick={editMode ? undefined : (e) => { e.stopPropagation(); navigate(`/rooms/${room.id}`) }}
-                      onKeyDown={editMode ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); navigate(`/rooms/${room.id}`) } }}
+                      onClick={editMode ? undefined : (e) => { e.stopPropagation(); navigate(`/rooms/${room.id}`, { viewTransition: true }) }}
+                      onKeyDown={editMode ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); navigate(`/rooms/${room.id}`, { viewTransition: true }) } }}
                     >
                       <div className="tk-barcode">{BARCODE.map((w, k) => <i key={k} style={{ width: `${w}px` }} />)}</div>
                       <span className="tk-enter">입장 <Icon name="ti-chevron-right" /></span>
@@ -454,6 +521,7 @@ export default function RoomList() {
           onEnter={() => navigate(`/rooms/${previewId}`)}
         />
       )}
+      {joinOpen && <JoinRoomModal initialCode={deepLinkCode} onClose={closeJoin} />}
     </div>
   )
 }

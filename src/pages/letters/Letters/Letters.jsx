@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './letters.proto.css'
 import { getLetters, markRead, sendLetter, toggleFavorite } from '../../../api/letter'
 import { getRoomMembers } from '../../../api/room'
+import { getPreferences } from '../../../api/user'
 import Header from '../../../components/Header/Header'
+import Mascot from '../../../components/Mascot/Mascot'
 import Button from '../../../components/Button/Button'
+import { avatarColorForKey } from '../../../lib/avatarColor'
 
-const AVATAR_COLORS = ['#40916c', '#52b788', '#74c69d', '#95d5b2', '#2d6a4f']
 // 편지 화면 라이트 팔레트(인라인 CSS 변수) — <main>에 부여해 모든 하위가 상속.
 // letters.proto.css의 @scope 팔레트가 사용자 환경에서 반영 안 되는 이슈를 우회하는 확정 처리.
 const LETTERS_LIGHT_PALETTE = {
@@ -31,7 +33,7 @@ const LETTERS_LIGHT_PALETTE = {
 const LETTER_TEXTAREA_STYLE = {
   colorScheme: 'light',
   width: '100%',
-  height: '140px',
+  height: '190px',
   padding: '14px 16px',
   background: '#ffffff',
   color: '#2c3e35',
@@ -40,7 +42,7 @@ const LETTER_TEXTAREA_STYLE = {
   fontSize: '13px',
   lineHeight: 1.7,
   fontFamily: 'inherit',
-  resize: 'vertical',
+  resize: 'none',
   outline: 'none',
   boxSizing: 'border-box',
 }
@@ -51,6 +53,46 @@ const EMPTY_MESSAGES = [
 ]
 
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
+// 발송 애니메이션은 모션 최소화 설정을 켠 사용자에겐 아예 재생하지 않는다 — CSS로 숨기기만
+// 하면 재생 시간(1.8초)만큼 모달이 빈 채로 남아 오히려 더 나쁘다.
+const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+
+// 연필이 "실제로 마지막 내용이 적힌 자리"를 사각거리게 하려고(사용자 요청), textarea와
+// 똑같은 폭/폰트/줄바꿈으로 화면 밖에 숨긴 거울 엘리먼트를 만들어 텍스트 끝에 마커를
+// 붙이고 그 위치를 잰다 — textarea 자체는 caret의 픽셀 좌표를 안 주기 때문에 흔히 쓰는
+// "caret mirror" 기법이다. 반환값은 textarea 자신의 좌상단 기준 좌표(px)라서, textarea를
+// 꽉 채우는 .letter-content-canvas(position:relative) 안에서 그대로 left/top으로 쓸 수 있다.
+function measureTextEndPosition(textarea) {
+  const style = getComputedStyle(textarea)
+  const mirror = document.createElement('div')
+  const props = [
+    'boxSizing', 'width', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+    'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth',
+    'fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'lineHeight', 'letterSpacing',
+  ]
+  props.forEach((prop) => { mirror.style[prop] = style[prop] })
+  mirror.style.position = 'absolute'
+  mirror.style.visibility = 'hidden'
+  mirror.style.whiteSpace = 'pre-wrap'
+  mirror.style.wordWrap = 'break-word'
+  mirror.style.overflowWrap = 'break-word'
+  mirror.style.top = '0'
+  mirror.style.left = '-9999px'
+  mirror.textContent = textarea.value || ''
+  const marker = document.createElement('span')
+  marker.textContent = '.'
+  mirror.appendChild(marker)
+  document.body.appendChild(mirror)
+  const mirrorRect = mirror.getBoundingClientRect()
+  const markerRect = marker.getBoundingClientRect()
+  document.body.removeChild(mirror)
+  const x = markerRect.left - mirrorRect.left
+  const y = markerRect.top - mirrorRect.top - textarea.scrollTop
+  // 스크롤돼서 안 보이는 곳에 있으면(글이 너무 길 때) 보이는 범위 안으로 눌러준다.
+  const maxX = Math.max(8, textarea.clientWidth - 24)
+  const maxY = Math.max(8, textarea.clientHeight - 24)
+  return { x: Math.min(Math.max(x, 8), maxX), y: Math.min(Math.max(y, 8), maxY) }
+}
 // 탭(전체/즐겨찾기/보낸편지) → 서버 box + 즐겨찾기 필터로 환산.
 const boxOfTab = (tab) => (tab === 'sent' ? 'sent' : 'received')
 
@@ -71,24 +113,49 @@ export default function Letters() {
 
   const box = boxOfTab(tab)
   const letters = useQuery({ queryKey: ['letters', roomId, box], queryFn: () => getLetters(roomId, box) })
+  // 히어로 요약(안 읽은 편지 수)은 모달에서 마지막으로 본 탭(box)과 무관하게 항상 "받은 편지함"
+  // 기준이어야 한다 — box를 그대로 쓰면 "보낸 편지함" 탭을 보고 나온 뒤에도 그 편지함의
+  // 총 개수가 떠 버린다(#278). queryKey가 겹치면 React Query가 캐시를 공유해 중복 요청은 없다.
+  const receivedLetters = useQuery({ queryKey: ['letters', roomId, 'received'], queryFn: () => getLetters(roomId, 'received') })
   const members = useQuery({ queryKey: ['room', roomId, 'members'], queryFn: () => getRoomMembers(roomId), enabled: composing })
+  const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
+  const isPostboxTheme = (prefs.data?.letterTheme ?? 'postbox') === 'postbox'
   const invalidateLetters = () => queryClient.invalidateQueries({ queryKey: ['letters', roomId] })
 
   const items = letters.data?.items ?? []
   const visibleItems = tab === 'favorite' ? items.filter((letter) => letter.isFavorite) : items
   const memberItems = (members.data?.items ?? []).filter((member) => member.status === 'ACTIVE')
 
+  // 발송 애니메이션(연필이 사각거리다 통! 사라지고(~1.0s), 이어서 카드가 우체통으로
+  // 빨려 들어가기(~0.45s), 총 1.45s)이 실제로 재생될 시간을 보장한다 — 로컬/빠른
+  // 네트워크에서는 응답이 그보다 먼저 와서 모달이 애니메이션 도중에 바로 닫혀버렸다
+  // (사용자 지적: "발송 버튼 누르면 작동해야 하는데" — 실제로는 붙어 있었지만 잘려서
+  // 안 보인 것). ComposeCard의 suckStartTimer(970ms) + letterSuckIn 애니메이션(500ms)
+  // 합과 맞춰뒀다.
+  const SEND_ANIM_MS = 1500
+  // 애니메이션은 버튼을 누른 순간부터 흐르므로, 응답을 기다린 시간만큼은 이미 재생된 것이다.
+  // 그냥 SEND_ANIM_MS를 더 기다리면 느린 네트워크에서 "다 날아간 뒤 빈 모달"이 몇 초간
+  // 남는다 — 남은 시간만 기다리도록 시작 시각을 기록해 차감한다.
+  const sendStartedAtRef = useRef(0)
+  const sendAnimMsRef = useRef(0)
+  // 발송 중 화면을 벗어나면 이 타이머가 남아 언마운트 뒤에 실행된다 — 언마운트 때 정리한다.
+  const closeTimerRef = useRef(null)
+  useEffect(() => () => window.clearTimeout(closeTimerRef.current), [])
+
   const sendMutation = useMutation({
     mutationFn: (payload) => sendLetter(roomId, payload),
     onSuccess: () => {
-      invalidateLetters()
-      setComposing(false)
-      setTab('sent')
-      setReceiverUserId('')
-      setBroadcast(false)
-      setContent('')
-      setEmoji('💌')
-      setMessage('')
+      const remaining = Math.max(0, sendAnimMsRef.current - (Date.now() - sendStartedAtRef.current))
+      closeTimerRef.current = window.setTimeout(() => {
+        invalidateLetters()
+        setComposing(false)
+        setTab('sent')
+        setReceiverUserId('')
+        setBroadcast(false)
+        setContent('')
+        setEmoji('💌')
+        setMessage('')
+      }, remaining)
     },
     onError: (error) => setMessage(error.message ?? '편지를 보내지 못했습니다.'),
   })
@@ -118,20 +185,44 @@ export default function Letters() {
     setInboxOpen(true)
   }
 
-  const openCompose = () => { setMessage(''); setComposing(true); setInboxOpen(false) }
+  // 이전에 골랐던 받는 사람이 다음에 다시 열었을 때도 남아 있었다(사용자 지적) —
+  // 매번 새로 여는 폼이니 열 때마다 수신자 선택을 초기화한다.
+  const openCompose = () => {
+    setMessage('')
+    setReceiverUserId('')
+    setBroadcast(false)
+    setComposing(true)
+    setInboxOpen(false)
+  }
+  // 실제로 발송을 시작했는지 boolean으로 돌려준다 — ComposeCard가 이 값으로 발송
+  // 애니메이션을 시작할지 정한다. 예전엔 같은 유효성 조건을 양쪽에 하나씩 복사해뒀는데,
+  // 한쪽만 바뀌면 조용히 어긋나므로 판정은 여기 한 곳에만 둔다.
   const handleSend = () => {
-    if (!content.trim()) return setMessage('편지 내용을 작성해주세요! ✍️')
-    if (!broadcast && !receiverUserId) return setMessage('받는 사람을 선택하거나 모두에게 보내기를 켜주세요.')
+    if (!content.trim()) {
+      setMessage('편지 내용을 작성해주세요! ✍️')
+      return false
+    }
+    if (!broadcast && !receiverUserId) {
+      setMessage('받는 사람을 선택하거나 모두에게 보내기를 켜주세요.')
+      return false
+    }
+    sendStartedAtRef.current = Date.now()
+    sendAnimMsRef.current = prefersReducedMotion() ? 0 : SEND_ANIM_MS
     sendMutation.mutate(broadcast ? { broadcast: true, content: content.trim(), emoji } : { receiverUserId, content: content.trim(), emoji })
+    return true
   }
 
-  const hasMail = items.length > 0
+  // 요약 문구("총 N통의 편지가 도착했어요!")는 편지함 총 개수가 아니라 "안 읽은" 편지 수를
+  // 보여준다 — 다 읽으면 상자가 "편지 없음" 상태로 바뀌는 알림형 UX(#278).
+  const unreadCount = (receivedLetters.data?.items ?? []).filter((letter) => !letter.readAt).length
+  const hasMail = unreadCount > 0
 
   return (
     // 편지 = 항상 크림/라이트 종이 미감. 팔레트 변수를 인라인으로 못박아(모든 하위가 상속)
     // @scope CSS가 사용자 환경에서 반영 안 되는 문제와 무관하게 다크 모드에서도 라이트로 렌더.
     <main className="proto-letters" style={LETTERS_LIGHT_PALETTE}>
       <Header variant="room" roomId={roomId} activeTab="letter" />
+      <Mascot roomId={roomId} />
       <div className="letter-tab-container">
         <section className="letter-stage">
           <div className="letter-stage-copy">
@@ -141,26 +232,39 @@ export default function Letters() {
           </div>
           <button
             type="button"
-            className={`letter-box-trigger theme-mailbox${hasMail ? ' has-mail' : ''}${opening ? ' is-opening' : ''}`}
+            className={`letter-box-trigger${isPostboxTheme ? ' theme-mailbox' : ''}${hasMail ? ' has-mail' : ''}${opening ? ' is-opening' : ''}`}
             onClick={openInbox}
             aria-label="받은 편지함 열기"
           >
             <span className="letter-box-ground-shadow" aria-hidden="true" />
+            <span className="letter-box-visual letter-box-visual-giftbox" aria-hidden="true">
+              <GiftboxSvg />
+              <span className="letter-box-lid" />
+              <span className="letter-box-body" />
+            </span>
             <span className="letter-box-visual letter-box-visual-mailbox" aria-hidden="true">
               <MailboxSvg />
             </span>
           </button>
+          {/* 텅 빈 상태에서 "정적 이미지"로만 보이지 않게 — 클릭 유도 힌트를 살짝 더한다
+              (행운편지 작업 내용.md ③, 편지가 있을 땐 이미 안 봐도 뻔해서 뺀다). */}
+          {!hasMail && <span className="letter-box-hint" aria-hidden="true">눌러서 열어보기</span>}
           <div className="letter-box-summary">
             {hasMail
-              ? <p>총 <b>{items.length}</b>통의 편지가<br />나에게 도착했어요!</p>
+              ? <p>총 <b>{unreadCount}</b>통의 편지가<br />나에게 도착했어요!</p>
               : <p>{EMPTY_MESSAGES[0]}</p>}
           </div>
           <button type="button" className="letter-filter-btn action-btn letter-write-btn" onClick={openCompose}>
             <span>편지 작성</span>
           </button>
         </section>
+      </div>
 
-        {composing && (
+      {/* 예전엔 letter-tab-container 안에 인라인으로 그려져 "아래로 내려오며 페이지가
+          늘어나는" 느낌이었다(사용자 지적) — 다른 두 모달(받은편지함/상세)과 같은
+          modal-overlay(블러 배경)로 띄우고, 아래에서 위로 올라오는 시트로 연출한다. */}
+      {composing && (
+        <div className="modal-overlay letter-compose-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setComposing(false) }}>
           <ComposeCard
             members={memberItems}
             receiverUserId={receiverUserId}
@@ -174,8 +278,8 @@ export default function Letters() {
             onCancel={() => setComposing(false)}
             onSend={handleSend}
           />
-        )}
-      </div>
+        </div>
+      )}
 
       {inboxOpen && (
         <LetterInboxModal
@@ -296,67 +400,312 @@ function LetterDetailModal({ letter, box, onBack, onClose }) {
   )
 }
 
-// ── 편지 작성(인라인) — 수신자 아바타 칩 + 모두에게 pill + 이모지 ──
+// ── 편지 작성(모달 시트) — 헤더 우측에 수신자 아바타(받는 사람) + 이모지 ──
 function ComposeCard({ members, receiverUserId, setReceiverUserId, broadcast, setBroadcast, content, setContent, message, sending, onCancel, onSend }) {
-  const allBtnStyle = {
-    padding: '5px 12px', fontSize: '11px', fontWeight: 600, borderRadius: '20px', border: 'none', cursor: 'pointer',
-    display: 'inline-flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s ease',
-    background: broadcast ? 'var(--primary-green)' : (receiverUserId ? '#eef1f4' : 'var(--nav-item-bg-active)'),
-    color: broadcast ? '#fff' : (receiverUserId ? '#8c93a3' : 'var(--primary-green)'),
+  // 아바타만으론 "지금 누구한테 보내는지"가 안 읽혔다(사용자 지적) — 선택 상태를
+  // 짧은 문구로 아바타 줄 아래 덧붙여 가독성을 높인다. 아직 아무도 안 골랐을 땐 문구
+  // 자체를 아예 렌더하지 않는다(안내 문구는 발송 시 에러 메시지가 이미 해주고 있어서
+  // 중복이었다 — 사용자 지적) — 그래서 실제로 뭔가 선택된 "등장의 순간"에만 보인다.
+  const selectedMember = members.find((member) => String(member.userId) === receiverUserId)
+  const recipientLabel = broadcast ? '모두에게 전송' : (selectedMember ? `${selectedMember.nickname}님에게` : '')
+
+  // 선택이 바뀔 때 "물감이 옆으로 스륵 이동해 그 사람 색으로 물드는" 하이라이트 —
+  // goo 필터 대신 가벼운 방식: 활성 아바타의 실제 위치/크기를 getBoundingClientRect로
+  // 재서 하이라이트 필을 그 자리로 translate(위치는 CSS transition), 도착한 아바타의
+  // 색으로 배경을 맞춘다. 쫀득한 느낌은 별도 애니메이션(transform: scaleX 스쿼시)으로만
+  // 줘서 위치 전환(transition)과 서로 다른 타이밍에 부딪히지 않게 한다.
+  // 대상 버튼은 콜백 ref map 대신 data-recipient-key로 찾는다 — 렌더 중 ref.current를
+  // 만드는 콜백을 만들면 react-hooks/refs 린트가 막는다.
+  const containerRef = useRef(null)
+  const pillRef = useRef(null)
+  const [pillStyle, setPillStyle] = useState({ opacity: 0 })
+  const activeKey = broadcast ? 'broadcast' : (receiverUserId || null)
+
+  useLayoutEffect(() => {
+    const container = containerRef.current
+    const target = activeKey ? container?.querySelector(`[data-recipient-key="${activeKey}"]`) : null
+    if (!container || !target) {
+      setPillStyle((prev) => ({ ...prev, opacity: 0 }))
+      return
+    }
+    const containerRect = container.getBoundingClientRect()
+    const targetRect = target.getBoundingClientRect()
+    const computed = getComputedStyle(target)
+    // 필 색이 아바타 색과 완전히 겹치면 멈춰 있을 때 눈에 안 띄어 "물감 색"이 잘 안
+    // 보였다(사용자 지적) — 아바타보다 살짝 크게(테두리 밖으로 번지듯) 그리고, 같은
+    // 색으로 은은한 글로우(box-shadow)를 둘러서 이동 중에도 색이 또렷하게 보이게 한다.
+    // 다만 어두운 색(예: 짙은 초록)은 같은 두께의 글로우도 훨씬 무거워 보였다(사용자
+    // 지적: "어두운 색들로 가면 물감이 너무 두꺼워져") — 밝기(luminance)가 낮을수록
+    // 글로우 알파를 낮춰서 색이 어두워질수록 오히려 얇고 은은해지게 보정한다.
+    const BLEED = 3
+    const [r, g, b] = (computed.backgroundColor.match(/\d+(\.\d+)?/g) || [82, 183, 136]).map(Number)
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255 // 0(어두움) ~ 1(밝음)
+    const ringAlpha = 0.14 + luminance * 0.22
+    const glowAlpha = 0.22 + luminance * 0.34
+    setPillStyle({
+      opacity: 1,
+      left: targetRect.left - containerRect.left - BLEED,
+      top: targetRect.top - containerRect.top - BLEED,
+      width: targetRect.width + BLEED * 2,
+      height: targetRect.height + BLEED * 2,
+      backgroundColor: computed.backgroundColor,
+      backgroundImage: computed.backgroundImage,
+      boxShadow: `0 0 0 2px rgba(${r}, ${g}, ${b}, ${ringAlpha.toFixed(2)}), 0 0 12px 2px rgba(${r}, ${g}, ${b}, ${glowAlpha.toFixed(2)})`,
+    })
+    const pill = pillRef.current
+    if (pill) {
+      // 클래스를 뗐다 강제 리플로우(offsetWidth) 후 다시 붙여야 매번 애니메이션이
+      // 재생된다 — 이미 붙어 있는 클래스를 다시 추가만 하면 브라우저가 "변화 없음"으로
+      // 보고 애니메이션을 재생하지 않는다.
+      pill.classList.remove('is-squashing')
+      void pill.offsetWidth
+      pill.classList.add('is-squashing')
+    }
+    // members는 모달이 열린 뒤 비동기로 채워진다 — 그 사이엔 아바타 버튼이 아직 DOM에
+    // 없어 querySelector가 못 찾고 필이 숨겨진 채로 남을 수 있었다. activeKey만 의존성에
+    // 두면 그 뒤 목록이 채워져도 재계산이 안 됐던 버그라 members.length도 추가한다.
+  }, [activeKey, members.length])
+
+  // 발송 애니메이션 — ① writing: 연필이 "실제로 마지막 내용이 적힌 자리"를 잠깐
+  // 사각거리다 통! 하고 사라진다. ② sucking: 편지지 카드 자체가 빈 편지함 화면의
+  // 우체통(.letter-box-trigger)으로 쏙 빨려 들어간다(사용자 요청 — 접히는 복잡한
+  // 연출 대신 트랜지션으로). 실제 발송(onSend)은 애니메이션과 별개로 진행 — 부모가
+  // 이 총 길이만큼 모달 닫기를 미뤄준다(Letters의 SEND_ANIM_MS와 같아야 한다).
+  const [sendPhase, setSendPhase] = useState(null) // null | 'writing' | 'sucking'
+  const textareaRef = useRef(null)
+  const pencilRef = useRef(null)
+  const cardRef = useRef(null)
+  const [pencilStyle, setPencilStyle] = useState({ opacity: 0 })
+  const [suckStyle, setSuckStyle] = useState(null)
+
+  useEffect(() => {
+    if (sendPhase !== 'writing') return undefined
+    const textarea = textareaRef.current
+    if (!textarea) return undefined
+    const target = measureTextEndPosition(textarea)
+    // 대상보다 살짝 왼쪽 위에서 미끄러져 들어와 그 자리에 "탁" 붙는 느낌을 준다.
+    setPencilStyle({ opacity: 0, left: target.x - 26, top: target.y - 8 })
+    const slideInTimer = setTimeout(() => setPencilStyle({ opacity: 1, left: target.x, top: target.y }), 20)
+    // 슬라이드 도착(~0.35s) 후 잠깐만 그 자리에서 사각거리다가(너무 오래 긁는다는
+    // 지적) "통!" 팝 클래스를 붙여 사라진다. classList로 직접 다루는 이유는 위 물감
+    // 필 하이라이트와 같다 — 강제 리플로우 없이 클래스만 추가하면 되므로(재생은 한
+    // 번뿐이라 제거→재추가 절차는 필요 없다).
+    const popTimer = setTimeout(() => pencilRef.current?.classList.add('is-popping'), 650)
+    // 펜 팝(320ms)까지 끝나면 곧바로 카드를 우체통으로 빨아들인다.
+    const suckStartTimer = setTimeout(() => setSendPhase('sucking'), 970)
+    return () => {
+      clearTimeout(slideInTimer)
+      clearTimeout(popTimer)
+      clearTimeout(suckStartTimer)
+    }
+  }, [sendPhase])
+
+  // 카드가 우체통으로 빨려 들어가는 단계 — 우체통 위치를 실측해 이동 거리를 CSS 변수로
+  // 넘기고, 실제 연출은 CSS 애니메이션(letterSuckIn)이 한다.
+  //
+  // 처음엔 인라인 transform/opacity + transition으로 했는데 전혀 움직이지 않았다:
+  // .modal-box가 `animation: letterModalBoxIn ... both`를 갖고 있어서, fill-mode:both
+  // 때문에 등장 애니메이션이 끝난 뒤에도 마지막 키프레임(transform:none, opacity:1)이
+  // 계속 적용된다. CSS 애니메이션은 캐스케이드에서 인라인 스타일보다 우선이라 인라인
+  // transform이 통째로 무시됐다. 그래서 같은 속성(animation)으로 덮어써 등장
+  // 애니메이션 자체를 교체하는 방식으로 바꿨다.
+  //
+  // 배경 블러(.letter-compose-overlay)도 같이 옅어지게 해야 "블러 진 배경 속으로
+  // 사라지는" 것처럼 안 보이고, 블러가 걷히며 우체통이 드러나는 동시에 편지가 거기로
+  // 들어가는 것처럼 읽힌다(의견 공유 후 합의).
+  useEffect(() => {
+    if (sendPhase !== 'sucking') return undefined
+    const card = cardRef.current
+    const mailbox = document.querySelector('.letter-box-trigger')
+    const overlay = card?.closest('.letter-compose-overlay')
+    if (!card || !mailbox) return undefined
+    const cardRect = card.getBoundingClientRect()
+    const mailRect = mailbox.getBoundingClientRect()
+    // 우체통 정중앙이 아니라 편지 투입구를 겨냥한다 — MailboxSvg의 투입구가 250x230
+    // 뷰박스에서 y 58~72, 즉 위에서 약 30% 지점이다.
+    const dx = (mailRect.left + mailRect.width / 2) - (cardRect.left + cardRect.width / 2)
+    const dy = (mailRect.top + mailRect.height * 0.3) - (cardRect.top + cardRect.height / 2)
+    setSuckStyle({ '--suck-x': `${Math.round(dx)}px`, '--suck-y': `${Math.round(dy)}px` })
+    overlay?.classList.add('is-fading')
+    return undefined
+  }, [sendPhase])
+
+  // 발송이 실패하면(message가 채워지면) 애니메이션을 취소하고 폼으로 되돌려 재시도할 수
+  // 있게 한다. suckStyle을 안 지우면 카드가 축소·투명해진 인라인 스타일 그대로 남아
+  // "복구가 안 된 것처럼" 보인다. setTimeout으로 한 틱 미뤄서 호출한다 — effect 본문에서
+  // 곧바로 setState를 하면 react-hooks/set-state-in-effect 린트가 막는다(다른 타이머
+  // effect들과 같은 패턴).
+  useEffect(() => {
+    if (!message) return undefined
+    const timer = setTimeout(() => {
+      setSendPhase(null)
+      setSuckStyle(null)
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [message])
+
+  const handleSendClick = () => {
+    if (sendPhase) return // 애니메이션 재생 중 중복 클릭 방지
+    // 유효성 판정은 부모(onSend) 한 곳에만 있다 — 실제로 발송이 시작됐을 때만 true를
+    // 돌려주므로 그때만 애니메이션을 켠다. 모션 최소화 설정이면 켜지 않는다(부모도 같은
+    // 조건으로 모달 닫기 대기 시간을 0으로 둔다).
+    const started = onSend()
+    if (started && !prefersReducedMotion()) setSendPhase('writing')
   }
+
   return (
-    <section className="modal-box letter-write-card" style={{ textAlign: 'left', colorScheme: 'light' }}>
-      <h3>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-3px', marginRight: '5px' }}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
-        행운 편지 작성
-      </h3>
-      <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>소중한 사람에게 마음을 담은 편지를 보내보세요.</p>
-      <div className="modal-form-group">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          <label style={{ marginBottom: 0, fontSize: '13px' }}>받는 사람 선택</label>
-          <button type="button" style={allBtnStyle} onClick={() => { setBroadcast(!broadcast); setReceiverUserId('') }}>
-            모두에게
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-1px' }}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
-          </button>
+    <section
+      ref={cardRef}
+      className={`modal-box letter-write-card${sendPhase ? ` is-sending is-${sendPhase}` : ''}`}
+      style={{ textAlign: 'left', colorScheme: 'light', ...suckStyle }}
+    >
+      {/* 원형 이모지 배지(💌) 제거 — 텍스트만으로 배치(사용자 요청). 빈 편지함(letter-
+          stage-kicker)과 같은 브랜드 톤의 kicker/제목/부제 3줄만 남기고, "받는 사람
+          선택"은 이 헤더 우측에 아바타만으로 붙여서 별도 박스/텍스트 목록 없이 바로
+          누를 수 있게 한다(사용자 요청). */}
+      <div className="letter-write-header">
+        <div className="letter-write-heading">
+          <span className="letter-write-kicker">Lucky Letter</span>
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-3px', marginRight: '5px' }}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+            행운 편지 작성
+          </h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>소중한 사람에게 마음을 담은 편지를 보내보세요.</p>
         </div>
-        <div className="letter-recipient-picker">
-          {members.length === 0 && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>함께하는 친구가 아직 없어요.</span>}
-          {members.map((member, index) => {
-            const active = !broadcast && String(member.userId) === receiverUserId
-            const muted = broadcast || (!!receiverUserId && !active)
-            return (
-              <button
-                key={member.userId}
-                type="button"
-                className={`letter-recipient-chip${active ? ' active' : ''}${muted ? ' muted' : ''}`}
-                onClick={() => { setBroadcast(false); setReceiverUserId(active ? '' : String(member.userId)) }}
-              >
-                <span className="letter-recipient-avatar" style={{ background: AVATAR_COLORS[index % AVATAR_COLORS.length] }}>{initialOf(member.nickname)}</span>
-                <span>{member.nickname}</span>
-              </button>
-            )
-          })}
+        {/* 아바타만 둥둥 떠 있으면 뭘 고르는 UI인지 안 읽혔다(사용자 지적) — 위에 작은
+            라벨, 아래에 지금 선택된 대상을 문구로 붙여 한눈에 읽히게 한다. */}
+        <div className={`letter-recipient-picker-mini${broadcast ? ' is-broadcast' : ''}`} role="group" aria-label="받는 사람 선택">
+          <span className="letter-recipient-mini-label">받는 사람</span>
+          <div className="letter-recipient-mini-avatars" ref={containerRef}>
+            <span ref={pillRef} className="letter-recipient-pill" style={pillStyle} aria-hidden="true" />
+            <button
+              type="button"
+              data-recipient-key="broadcast"
+              className={`letter-recipient-avatar-btn broadcast${broadcast ? ' active' : ''}`}
+              onClick={() => { setBroadcast(!broadcast); setReceiverUserId('') }}
+              disabled={!!sendPhase}
+              title="모두에게"
+              aria-label="모두에게 보내기"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
+            </button>
+            {members.map((member) => {
+              const active = !broadcast && String(member.userId) === receiverUserId
+              return (
+                <button
+                  key={member.userId}
+                  type="button"
+                  data-recipient-key={String(member.userId)}
+                  className={`letter-recipient-avatar-btn${active ? ' active' : ''}`}
+                  style={{ background: avatarColorForKey(member.userId) }}
+                  onClick={() => { setBroadcast(false); setReceiverUserId(active ? '' : String(member.userId)) }}
+                  disabled={!!sendPhase}
+                  title={member.nickname}
+                  aria-label={`${member.nickname}에게 보내기`}
+                >
+                  {member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : initialOf(member.nickname)}
+                </button>
+              )
+            })}
+          </div>
+          {members.length === 0
+            ? <span className="letter-recipient-empty">함께하는 친구가 없어요</span>
+            : (broadcast || selectedMember) && <span className="letter-recipient-mini-selected is-set">{recipientLabel}</span>}
         </div>
       </div>
-      <div className="modal-form-group">
+      <div className="modal-form-group letter-content-group">
         <label htmlFor="letter-content">편지 내용</label>
-        <textarea
-          id="letter-content"
-          className="letter-write-textarea"
-          maxLength={1000}
-          value={content}
-          placeholder="응원, 감사, 행운의 메시지를 자유롭게 작성해주세요."
-          onChange={(event) => setContent(event.target.value)}
-          style={LETTER_TEXTAREA_STYLE}
-        />
-        <div className="letter-content-count" style={{ textAlign: 'right', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{content.length} / 1000 (한글 500자 / 영어 1000자)</div>
+        <div className="letter-content-canvas">
+          <textarea
+            id="letter-content"
+            ref={textareaRef}
+            className="letter-write-textarea"
+            maxLength={1000}
+            value={content}
+            placeholder="응원, 감사, 행운의 메시지를 자유롭게 작성해주세요."
+            onChange={(event) => setContent(event.target.value)}
+            readOnly={!!sendPhase}
+            style={LETTER_TEXTAREA_STYLE}
+          />
+          {/* "연필이 사각사각 긁는" 단계에서만 렌더 — 실제 마지막 내용이 적힌 자리
+              (measureTextEndPosition)에 자리잡고 좌우로 까딱거리다 통! 하고 사라진다. */}
+          {sendPhase === 'writing' && (
+            <span ref={pencilRef} className="letter-send-pencil" style={pencilStyle} aria-hidden="true">
+              <PencilIcon />
+            </span>
+          )}
+        </div>
+        {/* 예전엔 "0 / 1000 (한글 500자 / 영어 1000자)"를 전부 같은 크기로 붙여놔서 약관처럼
+            빽빽했다(사용자 지적) — 실제 글자수만 도드라진 배지로 보여주고, 언어별 세부 기준은
+            title 툴팁으로 옮겨 필요한 사람만 확인하게 한다. */}
+        <div
+          className="letter-content-count"
+          title="한글 500자 · 영어 1000자 기준"
+        >
+          <b>{content.length}</b> / 1000자
+        </div>
       </div>
       {message && <p className="letter-error" role="alert" style={{ color: '#d90429', fontSize: '12px', marginTop: '8px' }}>{message}</p>}
       <div className="modal-buttons letter-write-buttons">
-        <Button variant="secondary" size="md" onClick={onCancel}>취소</Button>
-        <Button variant="primary" size="md" disabled={sending} onClick={onSend}>{sending ? '발송 중…' : '편지 발송!'}</Button>
+        <Button variant="secondary" size="md" disabled={!!sendPhase} onClick={onCancel}>취소</Button>
+        <Button variant="primary" size="md" disabled={sending || !!sendPhase} onClick={handleSendClick}>{sending ? '발송 중…' : '편지 발송!'}</Button>
       </div>
     </section>
+  )
+}
+
+// ── 발송 애니메이션용 연필 — 납작한(flat) 컬러 연필(사용자가 첨부한 레퍼런스 이미지 톤).
+// 가로로 그린 뒤 -45° 회전해 "왼쪽 아래로 심이 향한" 필기 자세로 세운다 — 대각선 좌표를
+// 직접 계산하는 것보다 각 파츠(심·나무·몸통 3색 띠·금속 링·지우개)를 눕혀 그리는 편이
+// 훨씬 단순하다. 제목 옆 라인 아이콘과 달리 여기선 실제 연필처럼 보여야 해서 별도로 그렸다.
+function PencilIcon() {
+  return (
+    <svg width="46" height="46" viewBox="0 0 64 64" aria-hidden="true">
+      <g transform="rotate(-45 32 32)">
+        {/* 흑연 심 · 깎인 나무 */}
+        <polygon points="4,32 20,23 20,41" fill="#F7CFB0" />
+        <polygon points="4,32 11.5,27.8 11.5,36.2" fill="#333333" />
+        {/* 몸통 3색 띠(밝은 노랑 → 노랑 → 주황) */}
+        <rect x="20" y="23" width="28" height="6" fill="#FDE0A0" />
+        <rect x="20" y="29" width="28" height="6" fill="#FFC93C" />
+        <rect x="20" y="35" width="28" height="6" fill="#FF8A3D" />
+        {/* 금속 링 */}
+        <rect x="48" y="23" width="7" height="18" fill="#CFD8DE" />
+        <rect x="48" y="23" width="7" height="3" fill="#A7B4BD" />
+        <rect x="48" y="38" width="7" height="3" fill="#A7B4BD" />
+        {/* 지우개 */}
+        <path d="M55 23h1a9 9 0 0 1 0 18h-1z" fill="#EE4257" />
+      </g>
+    </svg>
+  )
+}
+
+// ── 선물상자 리본 SVG(프로토타입 letter-page.js:13-39) ──
+function GiftboxSvg() {
+  return (
+    <span className="gift-bow" aria-hidden="true">
+      <svg className="gift-bow-svg" viewBox="0 0 250 120">
+        <defs>
+          <linearGradient id="dtRibL" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#ffd6e4" /><stop offset="1" stopColor="#ff8fb3" />
+          </linearGradient>
+          <linearGradient id="dtRibR" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#ffd6e4" /><stop offset="1" stopColor="#ff8fb3" />
+          </linearGradient>
+          <linearGradient id="dtKnot" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#ffe3ec" /><stop offset="1" stopColor="#ff8fb3" />
+          </linearGradient>
+        </defs>
+        <path d="M120 52 C 108 74, 92 92, 78 112 L 96 116 C 108 96, 118 78, 125 60 Z" fill="url(#dtRibL)" />
+        <path d="M130 52 C 142 74, 158 92, 172 112 L 154 116 C 142 96, 132 78, 125 60 Z" fill="url(#dtRibR)" />
+        <path d="M125 54 C 96 26, 44 18, 40 50 C 37 74, 84 74, 125 62 Z" fill="url(#dtRibL)" />
+        <path d="M125 54 C 154 26, 206 18, 210 50 C 213 74, 166 74, 125 62 Z" fill="url(#dtRibR)" />
+        <path d="M118 58 C 92 42, 58 40, 52 54 C 62 62, 92 62, 118 58 Z" fill="#e0567f" opacity="0.28" />
+        <path d="M132 58 C 158 42, 192 40, 198 54 C 188 62, 158 62, 132 58 Z" fill="#e0567f" opacity="0.28" />
+        <rect x="108" y="44" width="34" height="32" rx="9" fill="url(#dtKnot)" />
+        <rect x="112" y="47" width="10" height="26" rx="5" fill="#ffc2d6" opacity="0.5" />
+      </svg>
+    </span>
   )
 }
 

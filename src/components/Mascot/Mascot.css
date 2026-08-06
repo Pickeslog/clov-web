@@ -2,7 +2,10 @@
 .clov-mascot {
   position: fixed;
   right: 18px;
-  bottom: 18px;
+  /* 모바일 하단 탭바 위로 띄운다 — --clov-tabbar-h는 Header.css가 정하고
+     데스크톱에선 0px이라 기존 18px 그대로다. 탭바가 마스코트를 덮으면
+     교감(클릭·드래그)이 통째로 막힌다. */
+  bottom: calc(18px + var(--clov-tabbar-h, 0px));
   z-index: 40;
   display: flex;
   flex-direction: column;
@@ -17,9 +20,21 @@
   padding: 0;
   cursor: pointer;
   transition: transform 0.18s ease;
-  /* 롭 드래그(#155)가 window pointermove로 따라가므로, 터치에서 브라우저가 이 버튼을
-     스크롤/줌 제스처로 가로채지 않게 막는다. */
-  touch-action: none;
+  /* ★ 예전엔 touch-action: none 이었다(드래그 #155를 브라우저가 스크롤로 가로채지 않게).
+     그런데 마스코트는 position: fixed 라 화면 우하단에 93×144px짜리 "스크롤이 죽는 구역"이
+     항상 떠 있게 된다 — elementFromPoint로 찍어보면 그 지점엔 가로 스크롤 조상이 아예
+     null 이라 브라우저가 밀어줄 대상을 못 찾는다. 하필 엄지가 제일 자연스럽게 닿는
+     자리라, 일정계획 카드 레일·추억 카드가 "안 밀린다"는 체감으로 돌아왔다.
+
+     내용 스크롤이 이스터에그보다 먼저다 — 터치 드래그를 포기하고 스크롤을 살린다.
+     manipulation 은 패닝/핀치줌은 브라우저에 주고 더블탭 확대만 막아서, 탭 대상인
+     마스코트에 딱 맞는다(교감 탭이 300ms 지연 없이 즉시 먹는 덤도 있다).
+
+     잃는 것: 터치로 마스코트 "들어올리기". 브라우저가 제스처를 가져가면 pointercancel이
+     오고 endDrag()가 스프링백으로 정리하므로 어정쩡하게 굳지 않는다.
+     남는 것: 클릭 교감·말풍선·연타 콤보 전부, 그리고 데스크톱 마우스 드래그
+     (touch-action은 터치에만 적용된다). */
+  touch-action: manipulation;
 }
 .clov-mascot-hit:hover:not(:disabled) { transform: scale(1.07); }
 .clov-mascot-hit:active:not(:disabled) { transform: scale(0.97); }
@@ -40,6 +55,27 @@
   60% { transform: rotate(-6deg) scale(0.98); }
   80% { transform: rotate(4deg) scale(0.98); }
 }
+/* 연타 콤보 중간 클릭의 흔들림 — 목업 croby-mascot.css의 croby-nudge 그대로.
+   ★ 키프레임이 2벌인 건 실수가 아니다. 같은 클래스를 다시 붙여도 CSS 애니메이션은
+   재시작하지 않아서, 연타 중 두 번째 클릭부터 아무 반응이 없어진다. 목업도 같은 이유로
+   2벌을 번갈아 건다(JS 쪽 nudgeFlipRef). */
+@keyframes clov-mascot-nudge {
+  0% { transform: rotate(0); }
+  25% { transform: rotate(-6deg); }
+  55% { transform: rotate(5deg); }
+  80% { transform: rotate(-2deg); }
+  100% { transform: rotate(0); }
+}
+@keyframes clov-mascot-nudge-2 {
+  0% { transform: rotate(0); }
+  25% { transform: rotate(-6deg); }
+  55% { transform: rotate(5deg); }
+  80% { transform: rotate(-2deg); }
+  100% { transform: rotate(0); }
+}
+.clov-mascot--nudge .clov-mascot-sprite { animation: clov-mascot-nudge 0.35s ease-in-out 1; }
+.clov-mascot--nudge2 .clov-mascot-sprite { animation: clov-mascot-nudge-2 0.35s ease-in-out 1; }
+
 .clov-mascot--scared .clov-mascot-sprite { animation: clov-mascot-shiver 0.22s ease-in-out infinite; }
 .clov-mascot--angry .clov-mascot-sprite { filter: drop-shadow(0 8px 14px rgba(27, 67, 50, 0.18)) saturate(1.6) brightness(0.92); }
 .clov-mascot--dizzy .clov-mascot-sprite { animation: clov-mascot-wobble 0.5s ease-in-out; }
@@ -77,8 +113,12 @@
   }
 }
 
-/* 기본 = 다크(이식 화면 공통값), body.light-mode에서 라이트로 덧입힌다(lib/theme.js). */
+/* 기본 = 다크(이식 화면 공통값), body.light-mode에서 라이트로 덧입힌다(lib/theme.js).
+   마스코트 대사는 전역 폰트(엄마까투리체) 예외 — 캐릭터 말풍선은 기본 시스템 폰트를
+   유지한다(#258 후속, 리더 확인). 롭(Rob) 전용 코드 에디터 말풍선(아래)은 이 규칙 위에
+   모노스페이스로 한 번 더 override — 그대로 유지. */
 .clov-mascot-bubble {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 13px;
   background: #1e1e2e;
   color: #f1f1f1;
@@ -92,4 +132,47 @@ body.light-mode .clov-mascot-bubble {
   background: #fff;
   color: #2b2b2b;
   border-color: #2b2b2b;
+}
+
+/* 롭 전용 — 코드 에디터 창처럼 보이는 말풍선(#155, 목업 croby-mascot.css 그대로, #216).
+   캐릭터 고유 연출이라 라이트 모드에서도 유지한다 — 위 body.light-mode 규칙보다
+   뒤에 와서 우선한다. */
+.clov-mascot[data-character="rob"] .clov-mascot-bubble,
+body.light-mode .clov-mascot[data-character="rob"] .clov-mascot-bubble {
+  position: relative;
+  background: #1e1e2e;
+  border: 1px solid #383a4a;
+  border-radius: 8px;
+  padding: 16px 12px 8px;
+  max-width: 230px;
+  text-align: left;
+  font-family: 'Space Mono', 'SFMono-Regular', Consolas, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #7ee787;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+.clov-mascot[data-character="rob"] .clov-mascot-bubble::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff5f56;
+  box-shadow: 12px 0 0 #ffbd2e, 24px 0 0 #27c93f;
+}
+.clov-mascot-type-cursor {
+  display: inline-block;
+  width: 6px;
+  height: 1em;
+  margin-left: 2px;
+  background: #7ee787;
+  vertical-align: text-bottom;
+  animation: clov-mascot-cursor-blink 1s steps(1) infinite;
+}
+@keyframes clov-mascot-cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }

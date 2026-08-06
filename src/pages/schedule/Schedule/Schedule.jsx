@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import './schedule.proto.css'
 import {
   getPlans, getPlan, createPlan, updatePlan, deletePlan,
-  completePlan, cancelPlan, skipPlanMemory,
-  addChecklist, updateChecklist, deleteChecklist,
+  completePlan, cancelPlan,
   getStagePhotos, presignStagePhoto, commitStagePhoto,
 } from '../../../api/plan'
 import { uploadImage } from '../../../lib/uploadImage'
@@ -13,11 +13,10 @@ import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import { ddayDiff } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
+import Button from '../../../components/Button/Button'
+import Mascot from '../../../components/Mascot/Mascot'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
 import { SCHEDULE_LIGHT_PALETTE } from './palette'
-
-// 계약 §8: status/memoryStatus.
-const MEMORY_LABEL = { NONE: '', CANDIDATE: '추억 후보', WRITTEN: '추억 작성됨', SKIPPED: '추억 스킵' }
 // 인생4컷 4단계(계약 §9, 순서·잠김·상태는 서버 계산). 라벨은 프로토타입 필름스트립과 동일.
 const STAGES = [
   { key: 'PROPOSAL', number: 1, name: '제안하기' },
@@ -67,6 +66,7 @@ const StripUploadIcon = () => (
 // 일정계획(약속 여정) 화면 — 프로토타입 룩 이식. 인생4컷 극장(입장하기)은 후속 PR.
 export default function Schedule() {
   const { roomId } = useParams()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const accessToken = useAuthStore((state) => state.accessToken)
   const currentUserId = currentUserIdFromToken(accessToken)
@@ -136,17 +136,18 @@ export default function Schedule() {
     mutationFn: ({ id, payload }) => updatePlan(id, payload),
     onSuccess: () => { invalidateList(); invalidateDetail(); setEditing(null) },
   })
-  // 약속 완료는 XP도 준다(PLAN_COMPLETE, 계약 §12) — 다른 detailMutation류(취소/스킵/체크리스트)는
+  // 약속 완료는 XP도 준다(PLAN_COMPLETE, 계약 §12) — 다른 detailMutation류(취소)는
   // XP가 없어서 공용 헬퍼를 안 쓰고 이것만 따로 room 프리픽스 무효화를 추가한다.
+  // 완료 직후 바로 피드 글쓰기로 보내 그 자리에서 추억을 남기게 한다 — "나중에 후보에서
+  // 골라 쓰기"였던 예전 흐름 대신, 완료 시점에 바로 연결(사용자 결정, #237 후속).
   const completeMutation = useMutation({
     mutationFn: () => completePlan(effectiveId),
-    onSuccess: () => { invalidateList(); invalidateDetail(); queryClient.invalidateQueries({ queryKey: ['room', roomId] }) },
+    onSuccess: () => {
+      invalidateList(); invalidateDetail(); queryClient.invalidateQueries({ queryKey: ['room', roomId] })
+      navigate(`/rooms/${roomId}/feed`, { state: { linkPlanId: effectiveId } })
+    },
   })
   const cancelMutation = useMutation(detailMutation(() => cancelPlan(effectiveId)))
-  const skipMutation = useMutation(detailMutation(() => skipPlanMemory(effectiveId)))
-  const addCheckMutation = useMutation(detailMutation((content) => addChecklist(effectiveId, { content })))
-  const toggleCheckMutation = useMutation(detailMutation(({ id, checked }) => updateChecklist(id, { checked })))
-  const deleteCheckMutation = useMutation(detailMutation((id) => deleteChecklist(id)))
   const deleteMutation = useMutation({
     mutationFn: () => deletePlan(effectiveId),
     onSuccess: () => { invalidateList(); setSelectedPlanId(null) },
@@ -170,9 +171,7 @@ export default function Schedule() {
     : null
 
   const detailBusy =
-    completeMutation.isPending || cancelMutation.isPending || skipMutation.isPending ||
-    deleteMutation.isPending || addCheckMutation.isPending ||
-    toggleCheckMutation.isPending || deleteCheckMutation.isPending
+    completeMutation.isPending || cancelMutation.isPending || deleteMutation.isPending
 
   // 밀도 필터 + 정렬(가까운 순).
   const passesDensity = (p) => {
@@ -215,16 +214,13 @@ export default function Schedule() {
   return (
     <main className="proto-schedule" style={SCHEDULE_LIGHT_PALETTE}>
       <Header variant="room" roomId={roomId} activeTab="schedule" />
+      <Mascot roomId={roomId} />
 
       <div className="schedule-wrap">
         <div className="section-title journey-section-title">
-          <div className="journey-heading">
-            <span className="journey-page-kicker">PROMISE JOURNEY</span>
-            <span className="journey-page-title">약속 여정</span>
+          <div className="section-actions">
+            <Button variant="dashed" size="sm" onClick={() => setEditing('new')}>+ 새 D-day 만들기</Button>
           </div>
-          <button type="button" className="btn-schedule-new" onClick={() => setEditing('new')}>
-            ＋ 새 D-day 만들기
-          </button>
         </div>
 
         {plans.isPending && <div className="schedule-state">불러오는 중…</div>}
@@ -237,7 +233,8 @@ export default function Schedule() {
 
         {items.length > 0 && (
           <section className="growth-shell">
-            <ReceiptCard
+            <TicketCard
+              key={effectiveId}
               plan={selectedPlan}
               loading={detail.isPending}
               currentUserId={currentUserId}
@@ -246,20 +243,9 @@ export default function Schedule() {
               onDelete={async () => { if (await confirm('정말 이 약속을 삭제하시겠어요?', { confirmText: '삭제', variant: 'danger' })) deleteMutation.mutate() }}
               onComplete={() => completeMutation.mutate()}
               onCancel={() => cancelMutation.mutate()}
-              onSkip={() => skipMutation.mutate()}
-              onAddCheck={(c) => addCheckMutation.mutate(c)}
-              onToggleCheck={(id, checked) => toggleCheckMutation.mutate({ id, checked })}
-              onDeleteCheck={(id) => deleteCheckMutation.mutate(id)}
             />
 
             <div className="growth-hero">
-              <div>
-                <span className="growth-kicker">LIFE FOUR CUT</span>
-                <span className="growth-title">전체 약속 보기</span>
-                <span className="growth-subtitle">
-                  제안하기부터 만남까지, 네 장의 인증사진이 모이면 인생4컷처럼 완성됩니다.
-                </span>
-              </div>
               <div className="growth-density" aria-label="일정 필터">
                 {DENSITY.map((d) => (
                   <button key={d.key} type="button" className={density === d.key ? 'active' : ''} onClick={() => setDensity(d.key)}>
@@ -302,13 +288,135 @@ export default function Schedule() {
   )
 }
 
-// ── 약속 상세 영수증(선택 약속) ──────────────────────────────────────
-function ReceiptCard({
+// 약속 id·날짜로 티켓 번호/발권번호를 만든다(장식용 — 실제 데이터만 사용, 새 필드 없음).
+function ticketNoOf(plan) {
+  return String(plan.id ?? '').padStart(4, '0').slice(-4)
+}
+function ticketSerialOf(plan) {
+  const [y, m, d] = String(plan.planDate ?? '').split('-')
+  if (!y || !m || !d) return `SER. ----·${ticketNoOf(plan)}`
+  return `SER. ${y}-${m}${d}-${ticketNoOf(plan)}`
+}
+
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+const toDateKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+// 6주(42칸) 그리드 — 월 경계는 Date 생성자가 알아서 이월/이전달로 정규화해준다.
+function buildMonthGrid(year, month) {
+  const first = new Date(year, month, 1)
+  const gridStart = new Date(year, month, 1 - first.getDay())
+  return Array.from({ length: 42 }, (_, i) => {
+    const d = new Date(gridStart)
+    d.setDate(gridStart.getDate() + i)
+    return d
+  })
+}
+
+// ── 티켓 톤 커스텀 달력(브라우저 기본 date picker 대체) ──────────────
+function TicketDatePicker({ value, onChange, min }) {
+  const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const [view, setView] = useState(() => {
+    const [y, m] = (value || min || toDateKey(new Date())).split('-').map(Number)
+    return { y, m: m - 1 }
+  })
+  const triggerRef = useRef(null)
+  const panelRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e) => {
+      if (panelRef.current?.contains(e.target) || triggerRef.current?.contains(e.target)) return
+      setOpen(false)
+    }
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const openPanel = () => {
+    const [y, m] = (value || min || toDateKey(new Date())).split('-').map(Number)
+    setView({ y, m: m - 1 })
+    const r = triggerRef.current.getBoundingClientRect()
+    setPos({ top: r.bottom + 8, left: r.left })
+    setOpen(true)
+  }
+  const shiftMonth = (delta) => setView((v) => {
+    const d = new Date(v.y, v.m + delta, 1)
+    return { y: d.getFullYear(), m: d.getMonth() }
+  })
+  const pick = (d) => {
+    const key = toDateKey(d)
+    if (min && key < min) return
+    onChange(key)
+    setOpen(false)
+  }
+
+  const todayKey = toDateKey(new Date())
+  const cells = buildMonthGrid(view.y, view.m)
+
+  return (
+    <>
+      <button type="button" ref={triggerRef} className="ticket-date-trigger" onClick={openPanel}>
+        <span className={value ? '' : 'is-empty'}>{value ? formatFriendlyDate(value) : '연도-월-일'}</span>
+      </button>
+      {open && createPortal(
+        // document.body에 포탈 — 모달의 backdrop-filter/애니메이션 transform이
+        // position:fixed 자손의 컨테이닝 블록이 되어버려 좌표가 어긋나는 걸 원천 차단한다.
+        <div className="ticket-cal" ref={panelRef} style={{ top: pos.top, left: pos.left }} role="dialog" aria-label="날짜 선택">
+          <div className="ticket-cal-head">
+            <button type="button" aria-label="이전 달" onClick={() => shiftMonth(-1)}>‹</button>
+            <span className="ticket-cal-title">{view.y}년 {view.m + 1}월</span>
+            <button type="button" aria-label="다음 달" onClick={() => shiftMonth(1)}>›</button>
+          </div>
+          <div className="ticket-cal-week">
+            {WEEKDAYS.map((w, i) => (
+              <span key={w} className={i === 0 ? 'is-sun' : i === 6 ? 'is-sat' : ''}>{w}</span>
+            ))}
+          </div>
+          <div className="ticket-cal-grid">
+            {cells.map((d) => {
+              const key = toDateKey(d)
+              const disabled = Boolean(min) && key < min
+              const cls = [
+                d.getMonth() !== view.m && 'is-muted',
+                disabled && 'is-disabled',
+                key === todayKey && 'is-today',
+                key === value && 'is-selected',
+              ].filter(Boolean).join(' ')
+              return (
+                <button type="button" key={key} className={cls} disabled={disabled} onClick={() => pick(d)}>
+                  {d.getDate()}
+                </button>
+              )
+            })}
+          </div>
+          <div className="ticket-cal-foot">
+            <button type="button" className="ticket-cal-today" onClick={() => pick(new Date())}>오늘</button>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  )
+}
+
+// ── 약속 티켓(선택 약속) — 티켓만 상시 노출하고, 클릭해 스텁을 뜯으면
+//    상세 모달(TicketDetailModal)에서 기존 메모·상태 전환·수정/삭제를 연다.
+function TicketCard({
   plan, loading, currentUserId, busy,
-  onEdit, onDelete, onComplete, onCancel, onSkip,
-  onAddCheck, onToggleCheck, onDeleteCheck,
+  onEdit, onDelete, onComplete, onCancel,
 }) {
-  const [checkItem, setCheckItem] = useState('')
+  const [torn, setTorn] = useState(false)
+  // 뜯었다가(is-off) 닫을 때만 "다시 붙는" 연출(clovTearBack)을 재생하기 위한 임시 플래그.
+  // torn 하나로만 판단하면 컴포넌트가 새로 마운트될 때(이 화면에 처음 들어올 때)도
+  // torn=false인 기본 상태로 렌더되면서 같은 CSS 애니메이션이 다시 걸려버린다.
+  const [reattaching, setReattaching] = useState(false)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 30, hover: false })
 
   if (loading || !plan) {
     return (
@@ -320,98 +428,149 @@ function ReceiptCard({
 
   const diff = ddayDiff(plan.planDate)
   const ddayText = calculateDday(plan.planDate)
-  const stampColor = diff !== null && diff < 0 ? '#2e5233' : '#c0392b'
+  const isPast = diff !== null && diff < 0
   const ddayPhrase = diff === null
     ? '함께할 그날까지'
     : diff < 0 ? '함께 보낸 그날로부터' : diff === 0 ? '바로 오늘, 약속의 날!' : '함께할 그날까지'
-  const isWriter = String(plan.writer?.id) === String(currentUserId)
-  const checklists = plan.checklists ?? []
-  const memoEmpty = !plan.description && checklists.length === 0
 
-  const submitCheck = () => {
-    const v = checkItem.trim()
-    if (!v) return
-    onAddCheck(v)
-    setCheckItem('')
+  const onTiltMove = (e) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    const px = (e.clientX - r.left) / r.width
+    const py = (e.clientY - r.top) / r.height
+    setTilt({ rx: -(py - 0.5) * 6, ry: (px - 0.5) * 9, mx: px * 100, my: py * 100, hover: true })
+  }
+  const onTiltLeave = () => setTilt((s) => ({ ...s, rx: 0, ry: 0, hover: false }))
+
+  // 클릭 → 스텁이 뜯어지는 연출 → 살짝 뒤에 상세 모달 오픈.
+  const openTicket = () => {
+    if (detailOpen) return
+    setTorn(true)
+    window.setTimeout(() => setDetailOpen(true), 340)
+  }
+  const closeDetail = () => {
+    setDetailOpen(false)
+    setTorn(false)
+    setReattaching(true)
+    window.setTimeout(() => setReattaching(false), 220) // clovTearBack 재생 시간과 동일
   }
 
   return (
-    <div className="growth-detail" style={{ '--stamp': stampColor }}>
-      <div className="receipt-paper">
-        <div className="receipt-zigzag" />
-        <div className="receipt-head">
-          <div className="receipt-brand">CLOV. MEMORIES</div>
-          <div className="receipt-sub">★  약 속 메 모  ★</div>
-        </div>
-        <div className="receipt-stamp-wrap">
-          <div className="receipt-stamp">
-            <span className="receipt-stamp-label">{ddayPhrase}</span>
-            <span className="receipt-stamp-dday">{ddayText}</span>
+    <div className="growth-detail" style={{ '--stamp': isPast ? '#2e5233' : '#c0392b' }}>
+      <div className="ticket-stage">
+        <div
+          className="ticket-tilt"
+          style={{
+            transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
+            transition: tilt.hover ? 'transform .1s linear' : 'transform .55s cubic-bezier(.2,.8,.2,1)',
+          }}
+        >
+          <div
+            className={`ticket-card${torn ? ' is-torn' : ''}`}
+            role="button"
+            tabIndex={0}
+            title="클릭하면 약속 상세가 열립니다"
+            onMouseMove={onTiltMove}
+            onMouseLeave={onTiltLeave}
+            onClick={openTicket}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTicket() } }}
+          >
+            <div className="ticket-main">
+              <div className="ticket-holo" />
+              <div className="ticket-content">
+                <div className="ticket-toprow">
+                  <span className="ticket-brand"><i className="ti ti-clover-filled" aria-hidden="true" /> CLOV. MEMORIES</span>
+                  <span className="ticket-admit">ADMIT ONE · No. {ticketNoOf(plan)}</span>
+                </div>
+                <div className="ticket-titlewrap">
+                  <div className="ticket-title ticket-title--highlight">{plan.title}</div>
+                  <div className="ticket-kicker">PROMISE JOURNEY · {plan.planDate?.slice(0, 4) ?? '----'}</div>
+                </div>
+                <div className="ticket-meta">
+                  <div><span>DATE</span><b>{formatFriendlyDate(plan.planDate)}</b></div>
+                  <div><span>D-DAY</span><b className="ticket-meta-teaser">스텁을 뜯어보세요</b></div>
+                </div>
+                <div className="ticket-foot">
+                  <span>NON-TRANSFERABLE · KEEP UNTIL THE DAY</span>
+                  <span className="ticket-serial">{ticketSerialOf(plan)}</span>
+                </div>
+              </div>
+            </div>
+            <div className={`ticket-stub${torn ? ' is-off' : ''}${reattaching ? ' is-back' : ''}`}>
+              <span className="ticket-stub-side">KEEP THIS STUB</span>
+              <div className="ticket-stub-mid">
+                <span className="ticket-stub-kicker">{ddayPhrase}</span>
+                <span className="ticket-stub-dday">{ddayText}</span>
+                <div className="ticket-stub-barcode" />
+                <span className="ticket-stub-no">{ticketNoOf(plan)}</span>
+              </div>
+            </div>
+            <div className="ticket-glare" style={{ opacity: tilt.hover ? 1 : 0, background: `radial-gradient(360px circle at ${tilt.mx}% ${tilt.my}%, rgba(255,248,224,.16), rgba(255,248,224,0) 62%)` }} />
           </div>
         </div>
-        <div className="receipt-title">{plan.title}</div>
-        <div className="receipt-meta">
-          <div><span>DATE</span><span>{formatFriendlyDate(plan.planDate)}</span></div>
-          <div><span>D-DAY</span><span>{ddayText}</span></div>
-        </div>
+      </div>
 
-        <div className="receipt-memo-label">— MEMO ————————————</div>
-        <div className="receipt-memo">
-          {plan.description && <p className="receipt-memo-desc">{plan.description}</p>}
-          {checklists.length > 0 && (
-            <ul className="receipt-check-list">
-              {checklists.map((c) => (
-                <li key={c.id} className="receipt-check">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(c.checked)}
-                    disabled={busy}
-                    onChange={() => onToggleCheck(c.id, !c.checked)}
-                    aria-label={c.content}
-                  />
-                  <span className={`receipt-check-text${c.checked ? ' is-done' : ''}`}>{c.content}</span>
-                  <button type="button" className="receipt-check-remove" disabled={busy} onClick={() => onDeleteCheck(c.id)} aria-label="항목 삭제">✕</button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {memoEmpty && <div className="receipt-memo-empty">✎ 아래에서 약속 준비 항목을 추가해 보세요</div>}
-          {plan.status === 'SCHEDULED' && (
-            <div className="receipt-check-add">
-              <input
-                value={checkItem}
-                maxLength={255}
-                placeholder="준비 항목 추가"
-                onChange={(e) => setCheckItem(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && submitCheck()}
-              />
-              <button type="button" disabled={!checkItem.trim() || busy} onClick={submitCheck}>추가</button>
+      {detailOpen && (
+        <TicketDetailModal
+          plan={plan}
+          currentUserId={currentUserId}
+          busy={busy}
+          onClose={closeDetail}
+          onEdit={() => { closeDetail(); onEdit() }}
+          onDelete={onDelete}
+          onComplete={onComplete}
+          onCancel={onCancel}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── 티켓 상세 모달 — 기존 영수증의 메모·상태 전환·수정/삭제를 그대로 담는다.
+function TicketDetailModal({
+  plan, currentUserId, busy, onClose,
+  onEdit, onDelete, onComplete, onCancel,
+}) {
+  const ddayText = calculateDday(plan.planDate)
+  const isWriter = String(plan.writer?.id) === String(currentUserId)
+  const memoEmpty = !plan.description
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box ticket-detail" onClick={(e) => e.stopPropagation()}>
+        <div className="receipt-paper">
+          <div className="ticket-detail-brandrow">
+            <span className="ticket-brand"><i className="ti ti-clover-filled" aria-hidden="true" /> CLOV. MEMORIES</span>
+            <span className="ticket-detail-stub-tag">STUB · No. {ticketNoOf(plan)}</span>
+          </div>
+          <div className="ticket-detail-head">
+            <h3>{plan.title}</h3>
+            <span>{formatFriendlyDate(plan.planDate)} · {ddayText}</span>
+          </div>
+          <div className="receipt-memo">
+            {plan.description && <p className="receipt-memo-desc">{plan.description}</p>}
+            {memoEmpty && <div className="receipt-memo-empty">✎ 아직 남긴 메모가 없어요</div>}
+          </div>
+
+          <div className="receipt-barcode" />
+
+          <div className="receipt-status">
+            {plan.status === 'SCHEDULED' && (
+              <button type="button" className="receipt-status-btn is-primary" disabled={busy} onClick={onComplete}>약속 완료</button>
+            )}
+            {plan.status === 'SCHEDULED' && isWriter && (
+              <button type="button" className="receipt-status-btn" disabled={busy} onClick={onCancel}>약속 취소</button>
+            )}
+            {plan.status === 'CANCELED' && <span className="receipt-check-text is-done">취소된 약속</span>}
+          </div>
+
+          {isWriter && (
+            <div className="receipt-actions">
+              <button type="button" disabled={busy} onClick={onEdit}>수정</button>
+              <button type="button" className="danger" disabled={busy} onClick={onDelete}>삭제</button>
             </div>
           )}
         </div>
-
-        <div className="receipt-barcode" />
-
-        <div className="receipt-status">
-          {plan.status === 'SCHEDULED' && (
-            <button type="button" className="receipt-status-btn is-primary" disabled={busy} onClick={onComplete}>약속 완료</button>
-          )}
-          {plan.status === 'SCHEDULED' && isWriter && (
-            <button type="button" className="receipt-status-btn" disabled={busy} onClick={onCancel}>약속 취소</button>
-          )}
-          {plan.status === 'COMPLETED' && plan.memoryStatus === 'CANDIDATE' && (
-            <button type="button" className="receipt-status-btn" disabled={busy} onClick={onSkip}>추억 스킵</button>
-          )}
-          {plan.status === 'CANCELED' && <span className="receipt-check-text is-done">취소된 약속</span>}
-          {MEMORY_LABEL[plan.memoryStatus] && <span className="receipt-memory-tag">{MEMORY_LABEL[plan.memoryStatus]}</span>}
-        </div>
-
-        {isWriter && (
-          <div className="receipt-actions">
-            <button type="button" disabled={busy} onClick={onEdit}>수정</button>
-            <button type="button" className="danger" disabled={busy} onClick={onDelete}>삭제</button>
-          </div>
-        )}
+        <button type="button" className="ticket-detail-close" onClick={onClose} aria-label="닫기">✕</button>
       </div>
     </div>
   )
@@ -497,7 +656,7 @@ function FilmStripCard({ plan, stages, doneCount, selected, uploadingKey, onSele
 
       <div className="strip-footer">
         <span className="strip-footer-brand">clov. memories</span>
-        <span className="strip-footer-count">{isComplete ? '인생4컷 완성 🍀' : `${doneCount}/4 업로드`}</span>
+        <span className="strip-footer-count">{isComplete ? '인생4컷 완성' : `${doneCount}/4 업로드`}</span>
       </div>
     </article>
   )
@@ -505,7 +664,8 @@ function FilmStripCard({ plan, stages, doneCount, selected, uploadingKey, onSele
 
 // ── 새/수정 영수증 모달 ─────────────────────────────────────────────
 // 우정공간(대시보드)에서도 재사용 → export. 대시보드는 <div className="proto-schedule"
-// style={SCHEDULE_LIGHT_PALETTE}>로 감싸 스코프·팔레트를 공급한다.
+// style={{ ...SCHEDULE_LIGHT_PALETTE, ...SCHEDULE_MODAL_CARD_STYLE }}>로 감싸 스코프·
+// 팔레트·카드 배경을 공급한다(페이지 팔레트엔 배경이 없다 — #318).
 export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, onSubmit }) {
   const [title, setTitle] = useState(plan?.title ?? '')
   const [planDate, setPlanDate] = useState(plan?.planDate ?? '')
@@ -515,12 +675,7 @@ export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, o
     const d = new Date()
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   })()
-  const diff = ddayDiff(planDate)
   const ddayText = calculateDday(planDate)
-  const stampColor = diff !== null && diff < 0 ? '#2e5233' : '#c0392b'
-  const ddayPhrase = diff === null
-    ? '함께할 그날까지'
-    : diff < 0 ? '함께 보낸 그날로부터' : diff === 0 ? '바로 오늘, 약속의 날!' : '함께할 그날까지'
 
   const canSubmit = title.trim() && planDate && !submitting
   const submit = () => {
@@ -531,45 +686,35 @@ export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, o
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box schedule-editor" onClick={(e) => e.stopPropagation()}>
-        <div className="growth-detail" style={{ '--stamp': stampColor }}>
-          <div className="receipt-paper">
-            <div className="receipt-head">
-              <div className="receipt-brand">CLOV. MEMORIES</div>
-              <div className="receipt-sub">{plan ? '★  약속 수정하기  ★' : '★  새 D-day 만들기  ★'}</div>
-            </div>
-            <div className="receipt-stamp-wrap">
-              <div className="receipt-stamp">
-                <span className="receipt-stamp-label">{ddayPhrase}</span>
-                <span className="receipt-stamp-dday">{ddayText}</span>
+        <div className="growth-detail">
+          <div className="ticket-card ticket-card--edit">
+            <div className="ticket-main">
+              <div className="ticket-holo" />
+              <div className="ticket-content">
+                <div className="ticket-toprow">
+                  <span className="ticket-brand"><i className="ti ti-clover-filled" aria-hidden="true" /> CLOV. MEMORIES</span>
+                  <span className="ticket-admit">{plan ? '약속 수정하기' : '새 D-day 만들기'}</span>
+                </div>
+                <input
+                  className="ticket-title-input"
+                  value={title}
+                  maxLength={100}
+                  placeholder="약속 제목"
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+                <div className="ticket-meta">
+                  <div>
+                    <span>DATE</span>
+                    <TicketDatePicker value={planDate} onChange={setPlanDate} min={today} />
+                  </div>
+                  <div><span>D-DAY</span><b>{ddayText}</b></div>
+                </div>
               </div>
             </div>
-            <input
-              className="receipt-title-input"
-              value={title}
-              maxLength={100}
-              placeholder="약속 제목"
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <div className="receipt-meta">
-              <div>
-                <span>DATE</span>
-                <span className="receipt-date-cell">
-                  <span className={planDate ? '' : 'is-empty'}>{planDate ? formatFriendlyDate(planDate) : '연도-월-일'}</span>
-                  <input
-                    className="receipt-date-input"
-                    type="date"
-                    value={planDate}
-                    min={today}
-                    onChange={(e) => setPlanDate(e.target.value)}
-                    // 투명 date 입력은 텍스트 클릭만으론 피커가 안 열림(달력 아이콘만) →
-                    // 클릭 시 showPicker()로 강제로 연다(미지원/비제스처 시 무시).
-                    onClick={(e) => { try { e.currentTarget.showPicker?.() } catch { /* 미지원/비제스처 */ } }}
-                    aria-label="약속 날짜"
-                  />
-                </span>
-              </div>
-              <div><span>D-DAY</span><span>{ddayText}</span></div>
-            </div>
+          </div>
+
+          <div className="receipt-paper ticket-slip">
+            <div className="receipt-zigzag" />
             <div className="receipt-memo-label">— MEMO ————————————</div>
             <textarea
               className="receipt-memo-input"
@@ -584,7 +729,7 @@ export function ScheduleEditorModal({ plan, submitting, errorMessage, onClose, o
         <div className="schedule-modal-buttons">
           <button type="button" className="btn-sub" onClick={onClose}>취소</button>
           <button type="button" className="btn-main" disabled={!canSubmit} onClick={submit}>
-            {submitting ? '저장 중…' : plan ? '수정 저장' : '만들기'}
+            {submitting ? '저장 중…' : plan ? '수정' : '만들기'}
           </button>
         </div>
       </div>

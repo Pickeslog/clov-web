@@ -2,7 +2,8 @@
    Shop — 상점(코스튬 & 스킨).
    시안의 회색 SaaS 톤 대신 다른 이식 화면과 같은 포레스트 다크를 쓰고,
    라이트 모드는 body.light-mode로 덧입힌다(헤더·다른 화면과 동일 규칙).
-   폰트는 앱 브랜드 폰트 Outfit — 시스템 폰트를 쓰면 이 화면만 톤이 튄다(#164).
+   폰트는 사이트 전역 폰트(--sans, 엄마까투리체)로 통일(#258 후속) — 예전엔 Outfit을
+   앱 브랜드 폰트로 따로 지정했지만(#164), 이제 전역 폰트가 브랜드 폰트다.
    등급색은 다크/라이트 공통 — 등급 식별이 테마에 따라 흔들리면 안 된다.
    ===================================================================== */
 .proto-shop {
@@ -27,7 +28,7 @@
 
   min-height: 100vh;
   color: var(--text);
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--sans);
   /* 배경은 index.css의 body(글로벌 --clov-app-bg)가 담당 — 페이지는 투명. */
   background: transparent;
 }
@@ -181,7 +182,10 @@
      같은 색을 반복해 색맹이어도 라벨 텍스트로 식별 가능하다. */
   border-top: 4px solid var(--rarity);
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  /* 카드 전체가 상세 모달(#197)을 여는 버튼이라 포인터 커서로 클릭 가능함을 알린다. */
+  cursor: pointer;
 }
+.proto-shop .shop-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* border-color 단축 대신 좌·우·하만 지정 — 안 그러면 등급 스트라이프(위쪽)까지
    덮어써서 hover·보유 상태에서 등급색이 사라진다. */
 .proto-shop .shop-card:hover {
@@ -260,14 +264,55 @@
   font-size: 13px; font-weight: 700; border: 1px solid transparent;
 }
 .proto-shop .shop-msg svg { display: block; flex-shrink: 0; }
-.proto-shop .shop-msg.ok { background: rgba(63, 174, 109, .14); border-color: rgba(63, 174, 109, .34); color: #7ede9f; }
-.proto-shop .shop-msg.err { background: rgba(248, 113, 113, .12); border-color: rgba(248, 113, 113, .32); color: var(--danger); }
+/* 상점 화면은 사용자가 고른 배경 테마 이미지 위에 뜬다 — 반투명 색 배경(14~32%)은
+   화려한 배경 이미지에 묻혀 거의 안 보였다(#340). 카드와 같은 완전 불투명 배경(--card-bg)에
+   색은 테두리·아이콘·글자로만 표현해서 어떤 배경 위에서도 확실히 도드라지게 한다. */
+.proto-shop .shop-msg.ok { background: var(--card-bg); border-color: #3fae6d; color: #7ede9f; }
+.proto-shop .shop-msg.err { background: var(--card-bg); border-color: var(--danger); color: var(--danger); }
 .proto-shop .shop-empty {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
   padding: 54px 20px; text-align: center; font-size: 13px; color: var(--muted);
   border: 1px dashed var(--border); border-radius: 18px; background: var(--card-bg);
 }
 .proto-shop .shop-empty svg { display: block; opacity: .55; }
+
+/* ── 아이템 상세 모달 (#197) ──
+   카드 클릭 시 큰 이미지 + 등급이 무엇을 뜻하는지 설명을 보여준다. 팔레트는
+   var() 기반이라 카드와 동일하게 다크/라이트가 자동으로 맞는다(ConfirmDialog와
+   달리 별도 light-mode 오버라이드가 필요 없음). */
+.proto-shop .shop-detail-overlay {
+  position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px);
+  animation: shopDetailFadeIn .15s ease;
+}
+.proto-shop .shop-detail-modal {
+  position: relative; width: min(420px, 100%); max-height: 90vh; overflow-y: auto;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px;
+  border-top: 4px solid var(--rarity);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  animation: shopDetailSlideUp .18s cubic-bezier(.34, 1.56, .64, 1);
+}
+.proto-shop .shop-detail-close {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  width: 32px; height: 32px; display: grid; place-items: center;
+  border: none; border-radius: 50%; cursor: pointer;
+  background: rgba(0, 0, 0, 0.4); color: #fff;
+}
+.proto-shop .shop-detail-close:hover { background: rgba(0, 0, 0, 0.6); }
+.proto-shop .shop-detail-art {
+  position: relative; aspect-ratio: 4 / 3; display: grid; place-items: center; overflow: hidden;
+  background: linear-gradient(155deg, var(--rarity-soft), transparent 70%), var(--chip-bg);
+  border-bottom: 1px solid var(--border);
+}
+.proto-shop .shop-detail-art img { width: 100%; height: 100%; object-fit: contain; }
+.proto-shop .shop-detail-body { display: flex; flex-direction: column; gap: 8px; padding: 18px 20px 22px; }
+.proto-shop .shop-detail-body .shop-name { font-size: 19px; }
+.proto-shop .shop-detail-rarity-desc { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--rarity); font-weight: 700; }
+.proto-shop .shop-detail-desc { -webkit-line-clamp: unset; line-clamp: unset; font-size: 13px; }
+.proto-shop .shop-detail-body .shop-price { padding-top: 10px; }
+
+@keyframes shopDetailFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes shopDetailSlideUp { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 @media (max-width: 640px) {
   .proto-shop .shop-wrap { padding: 4px 14px 48px; }

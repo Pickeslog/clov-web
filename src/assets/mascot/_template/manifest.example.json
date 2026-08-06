@@ -1,0 +1,15 @@
+{
+  "id": "character-id",
+  "label": "캐릭터 이름",
+  "states": {
+    "default": "default.png",
+    "dizzy": "dizzy.png",
+    "sleepy": "sleepy.png",
+    "find": "find.png",
+    "pencil": "pencil.png",
+    "smile": "smile.png",
+    "lifted": "pulled.png",
+    "scared": "scared.png",
+    "angry": "angry.png"
+  }
+}

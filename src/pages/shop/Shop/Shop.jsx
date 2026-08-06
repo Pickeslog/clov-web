@@ -4,15 +4,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './shop.proto.css'
 import { equipItem, getInventory, getShopItems, getWallet, purchaseItem, unequipItem } from '../../../api/shop'
 import { getPreferences } from '../../../api/user'
+import { useSettingsStore } from '../../../stores/settingsStore'
 import Header from '../../../components/Header/Header'
 
 // 서버 enum ↔ 화면 문구. 등급색은 다크/라이트 공통(등급 식별이 테마에 흔들리면 안 된다).
+// desc는 상세 모달에서 등급이 무엇을 뜻하는지 보여주는 짧은 설명(#197).
 const RARITY = {
-  COMMON: { label: '일반', color: '#9aa39b', soft: 'rgba(154, 163, 155, .22)' },
-  UNCOMMON: { label: '고급', color: '#3fae6d', soft: 'rgba(63, 174, 109, .22)' },
-  RARE: { label: '희귀', color: '#4a90e2', soft: 'rgba(74, 144, 226, .22)' },
-  EPIC: { label: '영웅', color: '#a678e2', soft: 'rgba(166, 120, 226, .22)' },
-  LEGENDARY: { label: '전설', color: '#e0993a', soft: 'rgba(224, 153, 58, .24)' },
+  COMMON: { label: '일반', color: '#9aa39b', soft: 'rgba(154, 163, 155, .22)', desc: '누구나 쉽게 만날 수 있는 기본 아이템이에요.' },
+  UNCOMMON: { label: '고급', color: '#3fae6d', soft: 'rgba(63, 174, 109, .22)', desc: '기본보다 한 걸음 더 신경 쓴 디자인의 아이템이에요.' },
+  RARE: { label: '희귀', color: '#4a90e2', soft: 'rgba(74, 144, 226, .22)', desc: '자주 만나기 힘든, 희귀한 아이템이에요.' },
+  EPIC: { label: '영웅', color: '#a678e2', soft: 'rgba(166, 120, 226, .22)', desc: '소수만 보유할 수 있는 특별한 아이템이에요.' },
+  LEGENDARY: { label: '전설', color: '#e0993a', soft: 'rgba(224, 153, 58, .24)', desc: '단 하나뿐인 전설 등급의 아이템이에요.' },
 }
 const RARITY_ORDER = ['COMMON', 'UNCOMMON', 'RARE', 'EPIC', 'LEGENDARY']
 
@@ -33,6 +35,8 @@ const AlertIcon = (p) => <Icon {...p}><circle cx="12" cy="12" r="9" /><path d="M
 const ShirtIcon = (p) => <Icon {...p}><path d="M9 3 4 6l2 4 2-1v11h8V9l2 1 2-4-5-3a3 3 0 0 1-6 0z" /></Icon>
 const PaletteIcon = (p) => <Icon {...p}><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 1.6-3.2 2 2 0 0 1 1.6-3.2H18a3 3 0 0 0 3-3 9 9 0 0 0-9-8.6z" /><circle cx="7.5" cy="11" r="1" /><circle cx="12" cy="7.5" r="1" /><circle cx="16.5" cy="11" r="1" /></Icon>
 const GiftIcon = (p) => <Icon {...p}><path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2 8h20v4H2zM12 8v13" /><path d="M12 8S9.5 3 7.5 4.5 9 8 12 8zM12 8s2.5-5 4.5-3.5S15 8 12 8z" /></Icon>
+const ImageIcon = (p) => <Icon {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" /><path d="m3.5 16.5 4-4a2 2 0 0 1 2.8 0l3.2 3.2" /><path d="m13 14 1.6-1.6a2 2 0 0 1 2.8 0l3.1 3.1" /></Icon>
+const CloseIcon = (p) => <Icon {...p}><path d="M18 6 6 18M6 6l12 12" /></Icon>
 
 // 금화 — 이모지 대신 그린 SVG(금색은 고정값: 재화 식별이 테마에 흔들리면 안 된다).
 // 그라디언트 id는 인스턴스마다 고유해야 한다 — 카드가 여러 장 그려지면 같은 id의
@@ -55,14 +59,18 @@ const CoinIcon = ({ size = 15 }) => {
   )
 }
 
+// BACKGROUND는 마스코트에 입히는 게 아니라 사용자설정 > 바탕화면에서 고르는 물건이다.
+// 비어 있던 SKIN 탭을 재활용하지 않고 값을 새로 만들었다 — 코드가 '스킨'이라 부르고
+// 실물이 배경이면, 나중에 진짜 마스코트 스킨을 SKIN으로 넣는 순간 한 탭에서 섞인다.
 const CATEGORIES = [
   { key: 'all', label: '전체', Icon: SparkIcon },
   { key: 'COSTUME', label: '코스튬', Icon: ShirtIcon },
+  { key: 'BACKGROUND', label: '배경', Icon: ImageIcon },
   { key: 'SKIN', label: '스킨', Icon: PaletteIcon },
   { key: 'EVENT', label: '이벤트·한정', Icon: GiftIcon },
 ]
 // 아트가 아직 없는 아이템의 폴백 아이콘(텍스트 플레이스홀더 대체).
-const CATEGORY_FALLBACK = { COSTUME: ShirtIcon, SKIN: PaletteIcon, EVENT: GiftIcon }
+const CATEGORY_FALLBACK = { COSTUME: ShirtIcon, BACKGROUND: ImageIcon, SKIN: PaletteIcon, EVENT: GiftIcon }
 
 // 서버 에러코드 → 사용자 문구. 계약 §15의 구매 실패 3종만 따로 풀어 쓴다.
 const PURCHASE_ERRORS = {
@@ -108,6 +116,7 @@ export default function Shop() {
   const [owned, setOwned] = useState(false) // 보유함 탭
   const [sort, setSort] = useState('default')
   const [message, setMessage] = useState(null) // { tone: 'ok' | 'err', text }
+  const [detailItem, setDetailItem] = useState(null) // 카드 클릭 시 여는 상세 모달(#197)
 
   // 구매 마이크로 인터랙션 — 클릭한 구매 버튼에서 보유 골드 표시까지 코인이 날아간다.
   const [flyingCoins, setFlyingCoins] = useState([])
@@ -196,6 +205,7 @@ export default function Shop() {
       unequipPending={unequip.isPending}
       onEquip={() => { setMessage(null); equip.mutate(item.id) }}
       onUnequip={() => { setMessage(null); unequip.mutate() }}
+      onOpenDetail={() => setDetailItem(item)}
     />
   )
 
@@ -322,6 +332,21 @@ export default function Shop() {
           ))}
         </div>
       )}
+
+      {detailItem && (
+        <ItemDetailModal
+          item={detailItem}
+          balance={balance}
+          pending={purchase.isPending && purchase.variables === detailItem.id}
+          onBuy={() => { setMessage(null); lastBuyRectRef.current = null; purchase.mutate(detailItem.id) }}
+          equipped={detailItem.id === equippedItemId}
+          equipPending={equip.isPending && equip.variables === detailItem.id}
+          unequipPending={unequip.isPending}
+          onEquip={() => { setMessage(null); equip.mutate(detailItem.id) }}
+          onUnequip={() => { setMessage(null); unequip.mutate() }}
+          onClose={() => setDetailItem(null)}
+        />
+      )}
     </main>
   )
 }
@@ -358,16 +383,27 @@ function FlyingCoin({ coin, onDone }) {
   )
 }
 
-function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequipPending, onEquip, onUnequip }) {
+function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequipPending, onEquip, onUnequip, onOpenDetail }) {
   const meta = rarityOf(item.rarity)
   const discounted = item.discountRate > 0
   const affordable = balance >= item.finalPrice
-  // 오늘 범위: COSTUME만 마스코트에 장착 가능(서버도 동일하게 검증). SKIN/EVENT는 보유만.
+  // COSTUME만 마스코트에 장착 가능(서버도 동일하게 검증). SKIN/EVENT/BACKGROUND는 보유만.
   const equippable = item.category === 'COSTUME'
+  // 배경은 상점에서 장착하는 물건이 아니다 — 사는 건 여기서, 고르는 건 사용자설정이다.
+  // 이 안내가 없으면 사고 나서 "보유 중" 버튼만 남아 어디서 쓰는지 알 길이 없다.
+  const isBackground = item.category === 'BACKGROUND'
+  const openSettings = useSettingsStore((s) => s.openSettings)
   const FallbackIcon = CATEGORY_FALLBACK[item.category] ?? SparkIcon
 
   return (
-    <article className={`shop-card${item.owned ? ' owned' : ''}`} style={{ '--rarity': meta.color, '--rarity-soft': meta.soft }}>
+    <article
+      className={`shop-card${item.owned ? ' owned' : ''}`}
+      style={{ '--rarity': meta.color, '--rarity-soft': meta.soft }}
+      onClick={onOpenDetail}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenDetail() } }}
+    >
       <div className="shop-art">
         {discounted && !item.owned && <span className="shop-badge">-{item.discountRate}%</span>}
         {item.owned && (
@@ -400,14 +436,22 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
               type="button"
               className={`shop-buy${equipped ? ' equipped' : ''}`}
               disabled={equipPending || unequipPending}
-              onClick={equipped ? onUnequip : onEquip}
+              onClick={(e) => { e.stopPropagation(); (equipped ? onUnequip : onEquip)() }}
             >
               {equipped ? (unequipPending ? '해제 중…' : '장착 해제') : (equipPending ? '장착 중…' : '장착하기')}
             </button>
           ) : (
-            <button type="button" className="shop-buy" disabled>
+            // 배경은 여기서 장착하는 물건이 아니라 사용자설정에서 고르는 물건이다.
+            // 그래서 '설정에서 적용'은 안내가 아니라 실제로 그 화면을 여는 버튼이어야 한다 —
+            // 갈 곳을 알려주고 데려가지 않으면 사용자가 헤더 메뉴를 뒤져야 한다.
+            <button
+              type="button"
+              className="shop-buy"
+              disabled={!isBackground}
+              onClick={(e) => { e.stopPropagation(); if (isBackground) openSettings() }}
+            >
               <CheckIcon size={14} />
-              보유 중
+              {isBackground ? '설정에서 적용' : '보유 중'}
             </button>
           )
         ) : (
@@ -415,7 +459,7 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
             type="button"
             className={`shop-buy${affordable ? '' : ' poor'}`}
             disabled={pending || !affordable}
-            onClick={onBuy}
+            onClick={(e) => { e.stopPropagation(); onBuy(e) }}
           >
             {!pending && affordable && <BagIcon size={14} />}
             {pending ? '구매 중…' : affordable ? '구매하기' : '골드 부족'}
@@ -423,5 +467,97 @@ function ItemCard({ item, balance, pending, onBuy, equipped, equipPending, unequ
         )}
       </div>
     </article>
+  )
+}
+
+// 카드 클릭 시 여는 상세 모달 — 큰 이미지 + 등급이 무엇을 뜻하는지 설명(#197).
+// 구매/장착 버튼은 카드와 동일 로직을 그대로 재사용한다(별도 상태 없음).
+function ItemDetailModal({ item, balance, pending, onBuy, equipped, equipPending, unequipPending, onEquip, onUnequip, onClose }) {
+  const openSettings = useSettingsStore((s) => s.openSettings)
+  const meta = rarityOf(item.rarity)
+  const discounted = item.discountRate > 0
+  const affordable = balance >= item.finalPrice
+  const equippable = item.category === 'COSTUME'
+  const isBackground = item.category === 'BACKGROUND'
+  const FallbackIcon = CATEGORY_FALLBACK[item.category] ?? SparkIcon
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return (
+    <div className="shop-detail-overlay" onClick={onClose}>
+      <div
+        className="shop-detail-modal"
+        style={{ '--rarity': meta.color, '--rarity-soft': meta.soft }}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={item.name}
+      >
+        <button type="button" className="shop-detail-close" onClick={onClose} aria-label="닫기">
+          <CloseIcon size={18} />
+        </button>
+
+        <div className="shop-detail-art">
+          {discounted && !item.owned && <span className="shop-badge">-{item.discountRate}%</span>}
+          {item.imageUrl
+            ? <img src={item.imageUrl} alt="" />
+            : <span className="shop-art-fallback"><FallbackIcon size={72} /></span>}
+        </div>
+
+        <div className="shop-detail-body">
+          <span className="shop-rarity">{meta.label}</span>
+          <h3 className="shop-name">{item.name}</h3>
+          <p className="shop-detail-rarity-desc">{meta.desc}</p>
+          {item.description && <p className="shop-desc shop-detail-desc">{item.description}</p>}
+
+          <div className="shop-price">
+            {discounted && <span className="shop-price-was">{gold(item.price)}</span>}
+            <span className={`shop-price-now${discounted ? ' discounted' : ''}`}>
+              <CoinIcon />
+              {gold(item.finalPrice)}
+            </span>
+          </div>
+
+          {item.owned ? (
+            equippable ? (
+              <button
+                type="button"
+                className={`shop-buy${equipped ? ' equipped' : ''}`}
+                disabled={equipPending || unequipPending}
+                onClick={equipped ? onUnequip : onEquip}
+              >
+                {equipped ? (unequipPending ? '해제 중…' : '장착 해제') : (equipPending ? '장착 중…' : '장착하기')}
+              </button>
+            ) : (
+              // 카드와 같다 — 배경이면 안내가 아니라 실제로 설정을 여는 버튼이다.
+              // 모달은 먼저 닫는다. 안 닫으면 설정 모달 뒤에 상세 모달이 겹쳐 남는다.
+              <button
+                type="button"
+                className="shop-buy"
+                disabled={!isBackground}
+                onClick={() => { if (isBackground) { onClose(); openSettings() } }}
+              >
+                <CheckIcon size={14} />
+                {isBackground ? '설정에서 적용' : '보유 중'}
+              </button>
+            )
+          ) : (
+            <button
+              type="button"
+              className={`shop-buy${affordable ? '' : ' poor'}`}
+              disabled={pending || !affordable}
+              onClick={onBuy}
+            >
+              {!pending && affordable && <BagIcon size={14} />}
+              {pending ? '구매 중…' : affordable ? '구매하기' : '골드 부족'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }

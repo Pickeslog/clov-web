@@ -6,30 +6,34 @@ import {
   getMe, updateProfile, changePassword, deleteAccount,
   getPreferences, updatePreferences, presignProfileImage,
 } from '../../api/user'
+import { getInventory } from '../../api/shop'
 import { uploadImage } from '../../lib/uploadImage'
-import { APP_BACKGROUNDS, applyAppBackground, applyCustomColor, getAppBackgroundId, getCustomColor } from '../../lib/appBackground'
+import { APP_BACKGROUNDS, applyAppBackground, applyCustomColor, getAppBackgroundId, getCustomColor, isBackgroundUnlocked } from '../../lib/appBackground'
 import { MASCOT_SIZES, applyMascotSize, getMascotSize } from '../../lib/mascotSize'
 import { applyTheme, getDark } from '../../lib/theme'
 import { useAuthStore } from '../../stores/authStore'
 import { useConfirm } from '../ConfirmDialog/useConfirm'
 
 const LETTER_THEMES = [
-  { value: 'giftbox', label: '선물상자' },
-  { value: 'postbox', label: '우체통' },
+  { value: 'giftbox', label: '선물상자', img: '/settings-options/giftbox.png' },
+  { value: 'postbox', label: '우체통', img: '/settings-options/postbox.png' },
 ]
 const MEMORY_THEMES = [
-  { value: 'clothesline', label: '빨랫줄' },
-  { value: 'stack', label: '겹침 카드' },
-  { value: 'diary', label: '일기장' },
+  { value: 'clothesline', label: '빨랫줄', img: '/settings-options/clothesline.png' },
+  { value: 'stack', label: '겹침 카드', img: '/settings-options/memory-stack.png' },
+  { value: 'diary', label: '일기장', img: '/settings-options/diary.png' },
 ]
-const MASCOTS = [
-  { value: 'crobi', label: '크로비' },
-  { value: 'rob', label: '롭' },
-  { value: 'burgerOldman', label: '버거노인' },
-  { value: 'takoGun', label: '타코군' },
-  { value: 'kimCheolsu', label: '김철수' },
+// "화면" 그룹 네비 항목(#319) — 예전엔 "테마 설정" 하나에 이 다섯이 전부 한 패널로
+// 쌓여 있었다. 배경(색상+사진)만은 안 쪼갠다 — 둘 다 같은 값(bgId)을 공유하고
+// "↺ 기본값으로" 리셋도 이 둘을 함께 초기화해서, 완전히 나누면 리셋 버튼 자리가
+// 애매해진다.
+const THEME_PANES = [
+  { key: 'mode', label: '모드' },
+  { key: 'background', label: '배경' },
+  { key: 'letterTheme', label: '우정편지 테마' },
+  { key: 'memoryCardTheme', label: '추억카드 테마' },
+  { key: 'mascotSize', label: '마스코트 크기' },
 ]
-
 // 사용자 설정 물감 카드 — 프로토타입 blob 모양(색상은 currentColor).
 const BLOB_PATH = 'M20,45 C20,20 60,10 100,15 C150,20 170,5 220,10 C270,15 300,25 300,45 C300,70 260,80 220,78 C180,76 160,85 110,82 C60,79 20,70 20,45 Z'
 
@@ -75,9 +79,8 @@ function SettingsBody({ me, prefs, onClose }) {
   const [customColor, setCustomColor] = useState(getCustomColor)
   const [pref, setPref] = useState({
     darkMode: getDark(),
-    letterTheme: prefs.letterTheme ?? 'giftbox',
+    letterTheme: prefs.letterTheme ?? 'postbox',
     memoryCardTheme: prefs.memoryCardTheme ?? 'stack',
-    mascotType: prefs.mascotType ?? 'crobi',
   })
 
   // 프로필(개인정보 수정) 저장 — 닉네임·생일.
@@ -127,6 +130,27 @@ function SettingsBody({ me, prefs, onClose }) {
     onSuccess: () => { clear(); navigate('/login', { replace: true }) },
   })
 
+  // 유료 배경(itemCode 있음)은 보유해야 고를 수 있다. 기본 제공 배경은 itemCode 가 없다.
+  // 판정은 isBackgroundUnlocked 한 곳에서만 한다 — 잠금 표시와 클릭 허용이 서로 다른
+  // 조건을 쓰면 "자물쇠가 붙었는데 눌리는" 상태가 생기고 그건 에러 없이 조용하다.
+  //
+  // 대조 키는 code 다. imageUrl 로 대조하면 썸네일 경로를 바꾸는 순간(id 변경 등) 이미
+  // 산 사람의 소유가 풀린다 — 겨울 배경 id 변경이 아직 열려 있어서 실제 위험이었다.
+  //
+  // ⚠️ 이건 보안 경계가 아니라 화면 안내다. 선택값은 localStorage 고 적용은 CSS 변수라
+  //   콘솔로 얼마든지 바꿀 수 있다. 서버가 지켜야 할 건 '구매'뿐이고 그건 이미 지킨다.
+  //   그래서 이미 적용 중인 배경을 여기서 되돌리지 않는다 — 유료화 전에 골라둔 사람의
+  //   화면을 말없이 바꾸는 쪽이 더 나쁘다. 부팅 경로(initAppBackground)는 로그인보다
+  //   먼저 돌아서 보유를 알 수도 없다.
+  const inventory = useQuery({ queryKey: ['shop', 'inventory'], queryFn: getInventory })
+  const ownedCodes = new Set((inventory.data?.items ?? []).map((it) => it.code).filter(Boolean))
+  // 조회 전에는 잠긴 것으로 보이지 않게 한다 — 로딩 한 프레임 동안 보유 배경에 자물쇠가
+  // 번쩍이는 걸 막는다. 어차피 판정은 화면 안내고, 못 고르게 하는 게 목적이 아니다.
+  const isLocked = (bg) => inventory.isSuccess && !isBackgroundUnlocked(bg, ownedCodes)
+
+  // 잠긴 배경을 누르면 상점으로 보낸다 — 안 파는 것처럼 숨기는 것보다 낫다.
+  const goToShop = () => { onClose?.(); navigate('/shop') }
+
   const pickBackground = (id) => setBgId(applyAppBackground(id))
   const pickColor = (color) => { setCustomColor(color); setBgId(applyCustomColor(color)) }
   const resetBackground = () => setBgId(applyAppBackground('default'))
@@ -162,10 +186,12 @@ function SettingsBody({ me, prefs, onClose }) {
             </div>
             <div className="ps-nav-group">
               <p className="ps-nav-label">화면</p>
-              <button type="button" className={`ps-nav-item${pane === 'theme' ? ' active' : ''}`} onClick={() => setPane('theme')}>테마 설정</button>
+              {THEME_PANES.map((p) => (
+                <button type="button" key={p.key} className={`ps-nav-item${pane === p.key ? ' active' : ''}`} onClick={() => setPane(p.key)}>{p.label}</button>
+              ))}
             </div>
           </div>
-          <div className="ps-rail-footer"><i className="ti ti-clover" aria-hidden="true" /> Clov.</div>
+          <div className="ps-rail-footer"><i className="ti ti-clover-filled" aria-hidden="true" /> Clov.</div>
         </nav>
 
         <section className="ps-panel">
@@ -194,10 +220,6 @@ function SettingsBody({ me, prefs, onClose }) {
                   <input className="ps-input" id="set-email" type="email" value={me.email ?? ''} readOnly />
                 </div>
                 <div className="ps-field">
-                  <label className="ps-label" htmlFor="set-code">내 초대코드</label>
-                  <input className="ps-input" id="set-code" value={me.personalInviteCode ?? ''} readOnly />
-                </div>
-                <div className="ps-field">
                   <label className="ps-label" htmlFor="set-birth">생년월일</label>
                   <input className="ps-input" id="set-birth" type="date" value={birthdate ?? ''} onChange={(e) => setBirthdate(e.target.value)} />
                 </div>
@@ -224,16 +246,16 @@ function SettingsBody({ me, prefs, onClose }) {
                 </div>
               )}
             </>
-          ) : (
-            <>
-              <div className="ps-section">
-                <div className="ps-section-title">테마</div>
-                <div className="ps-swatches">
-                  <button type="button" className={`ps-mode-swatch light${!pref.darkMode ? ' on' : ''}`} onClick={() => setTheme(false)} aria-label="라이트 모드" aria-pressed={!pref.darkMode} />
-                  <button type="button" className={`ps-mode-swatch dark${pref.darkMode ? ' on' : ''}`} onClick={() => setTheme(true)} aria-label="다크 모드" aria-pressed={pref.darkMode} />
-                </div>
+          ) : pane === 'mode' ? (
+            <div className="ps-section">
+              <div className="ps-section-title">테마</div>
+              <div className="ps-swatches">
+                <button type="button" className={`ps-mode-swatch light${!pref.darkMode ? ' on' : ''}`} onClick={() => setTheme(false)} aria-label="라이트 모드" aria-pressed={!pref.darkMode} />
+                <button type="button" className={`ps-mode-swatch dark${pref.darkMode ? ' on' : ''}`} onClick={() => setTheme(true)} aria-label="다크 모드" aria-pressed={pref.darkMode} />
               </div>
-
+            </div>
+          ) : pane === 'background' ? (
+            <>
               <div className="ps-section">
                 <div className="ps-section-header">
                   <div className="ps-section-title">사용자 설정</div>
@@ -252,23 +274,34 @@ function SettingsBody({ me, prefs, onClose }) {
               <div className="ps-section">
                 <div className="ps-section-title">바탕화면</div>
                 <div className="ps-bg-grid">
-                  {APP_BACKGROUNDS.map((bg) => (
-                    <button type="button" key={bg.id} className={`ps-bg-swatch${bgId === bg.id ? ' on' : ''}`} onClick={() => pickBackground(bg.id)} aria-label={bg.name} aria-pressed={bgId === bg.id}>
-                      <img src={bg.thumb} alt="" />
-                      <span>{bg.name}</span>
-                    </button>
-                  ))}
+                  {APP_BACKGROUNDS.map((bg) => {
+                    const locked = isLocked(bg)
+                    return (
+                      <button type="button" key={bg.id}
+                        className={`ps-bg-swatch${bgId === bg.id ? ' on' : ''}${locked ? ' locked' : ''}`}
+                        onClick={() => (locked ? goToShop() : pickBackground(bg.id))}
+                        aria-label={locked ? `${bg.name} — 상점에서 구매` : bg.name}
+                        aria-pressed={bgId === bg.id}>
+                        <img src={bg.thumb} alt="" />
+                        <span>{bg.name}</span>
+                        {locked && <em className="ps-bg-lock">상점</em>}
+                      </button>
+                    )
+                  })}
                 </div>
-                <p className="ps-note">기본(우드 &amp; 클로버)은 바로 적용돼요. 사진 배경은 이식된 화면(방 목록 등)에 나타납니다.</p>
+                <p className="ps-note">기본(우드 &amp; 클로버)은 바로 적용돼요. 사진 배경은 이식된 화면(방 목록 등)에 나타납니다. ‘상점’ 표시가 붙은 배경은 구매하면 여기서 고를 수 있어요.</p>
               </div>
-
-              <OptionRow title="우정편지 테마" value={pref.letterTheme} options={LETTER_THEMES} onPick={(v) => setPrefAndSave({ letterTheme: v })} />
-              <OptionRow title="참여자별 추억 증거 카드" value={pref.memoryCardTheme} options={MEMORY_THEMES} onPick={(v) => setPrefAndSave({ memoryCardTheme: v })} />
-              <OptionRow title="마스코트 캐릭터" value={pref.mascotType} options={MASCOTS} onPick={(v) => setPrefAndSave({ mascotType: v })} />
-              {/* 크기는 서버가 아니라 기기-로컬이다(배경 테마와 같은 취급) — 모니터 크기에
-                  딸린 취향이라 계정보다 기기에 묶는 쪽이 자연스럽다. lib/mascotSize.js 참고. */}
-              <OptionRow title="마스코트 크기" value={mascotSize} options={MASCOT_SIZES} onPick={pickMascotSize} />
             </>
+          ) : pane === 'letterTheme' ? (
+            <OptionRow title="우정편지 테마" value={pref.letterTheme} options={LETTER_THEMES} onPick={(v) => setPrefAndSave({ letterTheme: v })} />
+          ) : pane === 'memoryCardTheme' ? (
+            <OptionRow title="참여자별 추억 증거 카드" value={pref.memoryCardTheme} options={MEMORY_THEMES} onPick={(v) => setPrefAndSave({ memoryCardTheme: v })} />
+          ) : (
+            // 마스코트 캐릭터 선택은 헤더 프로필 드롭다운의 "마스코트 꾸미기"로 이동했다 —
+            // 거기서 preferences.mascotType을 직접 바꾼다. 여기선 더 이상 다루지 않는다.
+            // 크기는 서버가 아니라 기기-로컬이다(배경 테마와 같은 취급) — 모니터 크기에
+            // 딸린 취향이라 계정보다 기기에 묶는 쪽이 자연스럽다. lib/mascotSize.js 참고.
+            <OptionRow title="마스코트 크기" value={mascotSize} options={MASCOT_SIZES} onPick={pickMascotSize} />
           )}
         </section>
       </div>
@@ -323,15 +356,25 @@ function PasswordField({ label, id, value, show, placeholder, onToggle, onChange
   )
 }
 
+// 옵션에 img가 있으면 바탕화면 스와치(ps-bg-swatch)와 같은 이미지 카드로,
+// 없으면 기존 텍스트 알약 버튼으로 렌더링한다.
 function OptionRow({ title, value, options, onPick }) {
+  const hasImages = options.some((o) => o.img)
   return (
     <div className="ps-section">
       <div className="ps-section-title">{title}</div>
-      <div className="ps-opts">
+      <div className={hasImages ? 'ps-opt-img-grid' : 'ps-opts'}>
         {options.map((o) => (
-          <button type="button" key={o.value} className={`ps-opt-btn${value === o.value ? ' on' : ''}`} onClick={() => onPick(o.value)}>
-            {o.label}
-          </button>
+          hasImages ? (
+            <button type="button" key={o.value} className={`ps-opt-img-btn${value === o.value ? ' on' : ''}`} onClick={() => onPick(o.value)}>
+              <img src={o.img} alt="" />
+              <span>{o.label}</span>
+            </button>
+          ) : (
+            <button type="button" key={o.value} className={`ps-opt-btn${value === o.value ? ' on' : ''}`} onClick={() => onPick(o.value)}>
+              {o.label}
+            </button>
+          )
         ))}
       </div>
     </div>

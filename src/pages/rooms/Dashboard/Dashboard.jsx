@@ -14,6 +14,8 @@ import { useMemoryDetail } from '../../../hooks/useMemoryDetail'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import { parseUtc, ddayDiff, formatDate, formatTime, nextBirthdayDate } from '../../../lib/datetime'
+import { shouldShowCelebration, markCelebrationSeen } from '../../../lib/birthdayCelebration'
+import BirthdayCelebration from '../../../components/BirthdayCelebration/BirthdayCelebration'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 import Mascot from '../../../components/Mascot/Mascot'
@@ -398,6 +400,19 @@ export default function Dashboard() {
     setTierBursts([])
   }, [roomId])
 
+  // ★ 원래 fireTierCelebration 안에 있던 것을 밖으로 뺐다(#383) — 생일 폭죽이 같은 기계를
+  //   쓴다. 웨이브마다 자기 타이머로 사라지는 구조·타이머 정리·파티클 수 상한이 여기 다 들어
+  //   있어서, 새로 만들면 그 셋을 전부 다시 맞춰야 한다.
+  const spawnBurstStage = useCallback((point, count, spread, delay) => {
+    const startTimer = setTimeout(() => {
+      const stageId = `${Date.now()}-${Math.random()}`
+      setTierBursts((cur) => [...cur, { id: stageId, x: point.x, y: point.y, particles: buildTierBurstParticles(count, spread) }])
+      const endTimer = setTimeout(() => setTierBursts((cur) => cur.filter((b) => b.id !== stageId)), 1800)
+      tierBurstTimersRef.current.push(endTimer)
+    }, delay)
+    tierBurstTimersRef.current.push(startTimer)
+  }, [])
+
   const fireTierCelebration = useCallback((isMax) => {
     if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
     const mascotEl = document.querySelector('.clov-mascot-sprite') ?? document.querySelector('.clov-mascot')
@@ -407,16 +422,7 @@ export default function Dashboard() {
       ? { x: bannerRect.left + bannerRect.width / 2, y: bannerRect.top + bannerRect.height / 2 }
       : { x: window.innerWidth / 2, y: window.innerHeight / 2 }
     const mascotPoint = mascotRect ? { x: mascotRect.left + mascotRect.width / 2, y: mascotRect.top + mascotRect.height / 2 } : fallback
-
-    const spawnStage = (point, count, spread, delay) => {
-      const startTimer = setTimeout(() => {
-        const stageId = `${Date.now()}-${Math.random()}`
-        setTierBursts((cur) => [...cur, { id: stageId, x: point.x, y: point.y, particles: buildTierBurstParticles(count, spread) }])
-        const endTimer = setTimeout(() => setTierBursts((cur) => cur.filter((b) => b.id !== stageId)), 1800)
-        tierBurstTimersRef.current.push(endTimer)
-      }, delay)
-      tierBurstTimersRef.current.push(startTimer)
-    }
+    const spawnStage = spawnBurstStage
 
     if (isMax) {
       // 만렙 6단계(프로토타입 triggerTierUpEvent 그대로): 정중앙(0ms) → 좌상(400) → 우상(800) →
@@ -431,7 +437,49 @@ export default function Dashboard() {
     } else {
       spawnStage(mascotPoint, 100, 400, 0)
     }
-  }, [])
+  }, [spawnBurstStage])
+
+  /* 생일 폭죽(#383) — 양쪽 위에서 하나씩 터뜨리고 가운데로 마무리한다.
+     ★ 티어업(마스코트 위 한 방)과 다르게 화면 위쪽 양옆에서 올린다 — 축하 모달이
+       가운데를 덮고 있어서, 거기서 터뜨리면 카드 뒤로 다 가려진다.
+     ⚠️ prefers-reduced-motion 이면 안 터뜨린다. 모달은 그래도 뜬다(축하 메시지는 정보다). */
+  const fireBirthdayCelebration = useCallback(() => {
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const w = window.innerWidth, h = window.innerHeight
+    spawnBurstStage({ x: w * 0.18, y: h * 0.24 }, 90, 320, 260)
+    spawnBurstStage({ x: w * 0.82, y: h * 0.24 }, 90, 320, 620)
+    spawnBurstStage({ x: w * 0.5, y: h * 0.16 }, 120, 420, 1000)
+  }, [spawnBurstStage])
+
+  /* 생일 축하 모달(#383) — 하루에 한 번만.
+     ★ ref 로 한 번만 판정한다. members/me 쿼리가 갱신될 때마다 effect 가 다시 도는데,
+       그때 이미 "봤음"으로 저장돼 있어 두 번은 안 뜨지만 — 사용자가 닫은 직후 재조회가
+       일어나면 판정이 또 돌아 깜빡일 수 있다. ref 가 그걸 막는다.
+     ★ 저장은 띄우는 순간 한다(닫을 때가 아니라). 닫지 않고 이동해도 오늘 몫은 끝난 것으로
+       친다 — 안 그러면 화면을 옮길 때마다 다시 뜬다. */
+  const [celebration, setCelebration] = useState(null)   // null | { variant, name }
+  const celebrationDecidedRef = useRef(false)
+  const celebrationTimerRef = useRef(null)
+  useEffect(() => {
+    if (celebrationDecidedRef.current) return
+    // 토큰(JWT sub)에서 오므로 보통 첫 렌더에 이미 있다. 그래도 막아두는 건 이 값으로
+    // 저장 키를 만들기 때문이다 — null 로 저장하면 "모르는 사람" 키가 생겨 진짜 사용자가
+    // 자기 생일에 못 본다(가이드에서 밟은 자리 — #362).
+    if (currentUserId == null) return
+    if (!isMyBirthday && !birthdayFriend) return
+    celebrationDecidedRef.current = true
+    if (!shouldShowCelebration(currentUserId)) return
+    markCelebrationSeen(currentUserId)
+    // 내 생일이 친구 생일보다 우선(둘 다인 날은 드물다).
+    const next = isMyBirthday ? { variant: 'me' } : { variant: 'friend', name: birthdayFriend.nickname }
+    fireBirthdayCelebration()
+    // ★ 폭죽이 먼저 오르고 카드가 뜬다. 동시에 내면 카드가 화면 가운데를 덮어 폭죽의
+    //   시작을 가린다. 첫 폭죽이 260ms 라 그 뒤에 놓았다.
+    //   (이 지연 덕분에 effect 본문에서 동기 setState 를 하지 않게 되는 것도 맞다 —
+    //    react-hooks/set-state-in-effect. 레벨업 축하도 같은 구조다.)
+    celebrationTimerRef.current = setTimeout(() => setCelebration(next), 420)
+  }, [currentUserId, isMyBirthday, birthdayFriend, fireBirthdayCelebration])
+  useEffect(() => () => { if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current) }, [])
 
   // 마지막으로 본 레벨을 방마다 기기-로컬(localStorage)에 저장해뒀다가 새 값과 비교해서
   // "티어가 바뀌었는지/만렙을 찍었는지" 판정한다. 같은 방을 쓰는 누구의 XP든(내 것이든 친구
@@ -746,6 +794,17 @@ export default function Dashboard() {
 
       {historyOpen && (
         <ExpHistoryModal roomId={roomId} onClose={() => setHistoryOpen(false)} />
+      )}
+
+      {/* 생일 축하 모달(#383). 포탈로 body 에 붙인다 — 대시보드 안에 두면 배너의
+          stacking context 에 갇혀서 폭죽 레이어와 앞뒤가 뒤집힌다. */}
+      {celebration && createPortal(
+        <BirthdayCelebration
+          variant={celebration.variant}
+          name={celebration.name}
+          onClose={() => setCelebration(null)}
+        />,
+        document.body,
       )}
 
       {tierBursts.length > 0 && createPortal(

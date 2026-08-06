@@ -450,6 +450,16 @@ body.light-mode .proto-dashboard .section-title {
 .proto-dashboard .schedule-dday-badge.is-today { background: #fb7185; }
 .proto-dashboard .schedule-dday-badge.is-soon { background: #f59e0b; }
 .proto-dashboard .schedule-dday-badge.is-far { background: #4ade80; }
+/* 생일(#376) — 임박도 4색과 다른 금색을 쓴다. 생일은 저장된 약속이 아니라 매년 돌아오는
+   날이라, "며칠 남았나"보다 **다른 종류의 날**이라는 걸 색으로 먼저 말하는 게 맞다.
+   ★ 밝은 금색이라 위의 고정 글자색(#12150a)이 그대로 대비를 만족한다 — 배지 4색과 같은 이유다. */
+.proto-dashboard .schedule-dday-badge.is-birthday { background: #fcd34d; }
+/* 카드 자체도 금색 테두리 — 배지만 바꾸면 3칸이 나란히 있을 때 눈에 안 띈다.
+   ⚠️ :hover 규칙은 위 .schedule-banner:hover 와 특이도가 같으므로(둘 다 0,3,0)
+      반드시 그 뒤에 와야 이긴다. 순서를 바꾸면 조용히 초록으로 돌아간다. */
+.proto-dashboard .schedule-banner--birthday { border-color: #e0b83a; }
+.proto-dashboard .schedule-banner--birthday:hover { border-color: #d4a017; }
+.proto-dashboard .schedule-banner--birthday .schedule-icon { color: #d4a017; }
 /* 부족한 칸을 채우는 고스트 카드 — 실제 카드와 구분되게 점선 테두리 + 카드 스타일 배경.
    페이지 배경은 사용자가 고를 수 있는 배경 테마(우드텍스처부터 네온 도시 사진까지)라 밝기·복잡도가
    제각각이다. 반투명 배경(예: rgba(...,.04))으로는 어떤 배경을 깔아도 이미지가 그대로 비쳐서 글자가

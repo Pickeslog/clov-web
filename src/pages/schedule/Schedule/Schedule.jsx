@@ -8,10 +8,11 @@ import {
   completePlan, cancelPlan,
   getStagePhotos, presignStagePhoto, commitStagePhoto,
 } from '../../../api/plan'
+import { getRoomMembers } from '../../../api/room'
 import { uploadImage } from '../../../lib/uploadImage'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
-import { ddayDiff } from '../../../lib/datetime'
+import { ddayDiff, nextBirthdayDate } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 import Mascot from '../../../components/Mascot/Mascot'
@@ -24,6 +25,9 @@ const STAGES = [
   { key: 'CONFIRMED', number: 3, name: '약속 확정' },
   { key: 'MEETING', number: 4, name: '만남' },
 ]
+// 생일을 며칠 전부터 띄우나(#376). 대시보드 D-day 칸과 같은 값이어야 한다 —
+// 한쪽만 바꾸면 대시보드엔 뜨는데 일정계획엔 없는 날이 생긴다.
+const BIRTHDAY_LEAD_DAYS = 7
 const DENSITY = [
   { key: 'all', label: '전체' },
   { key: 'proof', label: '인증 가능' },
@@ -82,6 +86,25 @@ export default function Schedule() {
     queryFn: () => getPlans(roomId),
   })
   const items = plans.data?.items ?? []
+
+  /* 다가오는 생일(#376) — clov-api#143 에서 "Plan 행으로 저장하지 않는다"로 정해졌다.
+     ⚠️⚠️ items 에 절대 섞지 않는다. items 는 아래를 전부 물고 있다:
+        stageQueries   카드마다 GET /plans/{id}/stage-photos → 가짜 id 로 호출이 나간다
+        closestId      GET /plans/{planId} 상세             → 404
+        counts         전체/인증가능/다가오는/완료 개수       → 숫자가 틀어진다
+        TicketCard     수정·삭제·완료·취소                   → 생일엔 의미가 없다
+     그래서 별도 배열로 두고 레일 위에 읽기 전용 줄로만 그린다.
+     ★ ACTIVE 멤버만 본다 — 나간 사람 생일이 뜨면 안 된다(대시보드 생일 배너와 같은 규칙). */
+  const members = useQuery({
+    queryKey: ['room', roomId, 'members'],   // 대시보드와 같은 키 — 거기서 왔으면 캐시가 그대로 쓰인다
+    queryFn: () => getRoomMembers(roomId),
+  })
+  const birthdays = (members.data?.items ?? [])
+    .filter((m) => m.status === 'ACTIVE')
+    .map((m) => ({ m, date: nextBirthdayDate(m.birthMonthDay) }))   // 생일 미입력·탈퇴 → null
+    .map(({ m, date }) => ({ m, date, d: ddayDiff(date) }))
+    .filter(({ d }) => d !== null && d >= 0 && d <= BIRTHDAY_LEAD_DAYS)
+    .sort((a, b) => a.d - b.d)
 
   // 카드별 4컷 상태 — 목록엔 진행도가 없어 약속마다 stage-photos를 조회(계약 §9).
   // 백엔드/R2 미준비 시 실패해도 카드는 중립(1단계 활성·나머지 잠김 근사)으로 렌더.
@@ -222,6 +245,22 @@ export default function Schedule() {
             <Button variant="dashed" size="sm" onClick={() => setEditing('new')}>+ 새 D-day 만들기</Button>
           </div>
         </div>
+
+        {/* 다가오는 생일 — 약속 목록과 완전히 분리된 읽기 전용 줄이다(#376).
+            ★ 약속이 하나도 없어도 뜬다. 생일은 약속의 부속물이 아니라 그냥 돌아오는 날이라,
+              "약속이 없으니 생일도 숨긴다"가 되면 안 된다. 그래서 plans 상태 밖에 둔다. */}
+        {birthdays.length > 0 && (
+          <div className="birthday-strip">
+            {birthdays.map(({ m, date, d }) => (
+              <div className="birthday-chip" key={m.userId}>
+                <i className="ti ti-cake" aria-hidden="true" />
+                <span className="birthday-name">{m.nickname}님의 생일</span>
+                <span className="birthday-date">{date}</span>
+                <span className="birthday-dday">{d === 0 ? 'D-DAY' : `D-${d}`}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {plans.isPending && <div className="schedule-state">불러오는 중…</div>}
         {plans.isError && <div className="schedule-state">약속을 불러오지 못했습니다. {plans.error?.message}</div>}

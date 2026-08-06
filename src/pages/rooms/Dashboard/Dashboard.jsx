@@ -13,7 +13,7 @@ import { useCreateMemory } from '../../../hooks/useCreateMemory'
 import { useMemoryDetail } from '../../../hooks/useMemoryDetail'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
-import { parseUtc, ddayDiff, formatDate, formatTime } from '../../../lib/datetime'
+import { parseUtc, ddayDiff, formatDate, formatTime, nextBirthdayDate } from '../../../lib/datetime'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 import Mascot from '../../../components/Mascot/Mascot'
@@ -206,6 +206,9 @@ const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
 // 뱃지 색상 구분(프로토타입 getDdayAccent 이식) — 지남=회색, 오늘=장미, 7일 이내=주황, 그 외=초록.
 // 'past'(회색)는 D-day 3칸에서는 안 쓰인다(#206) — 다가오는 약속만 채우고 지난 약속으로 채우지 않는다.
 const ddayUrgency = (n) => (n == null ? 'far' : n < 0 ? 'past' : n === 0 ? 'today' : n <= 7 ? 'soon' : 'far')
+// 생일을 며칠 전부터 D-day 칸에 띄우나(#376). 원안이 "생일 7일 전"이었고, 배지 색이
+// 주황(is-soon)으로 바뀌는 경계도 7이라 같은 값을 쓴다.
+const BIRTHDAY_LEAD_DAYS = 7
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
 // 상태 메시지 최대 길이 — 한글/영어 구분 없이 40자 통일(계약은 @Size(max=100)까지 허용하지만
 // 프론트 표시 규칙은 40자로 정함, #240).
@@ -505,8 +508,20 @@ export default function Dashboard() {
     // 다가오는 칸은 아직 안 한 약속만 — 완료/취소된 약속은 "다가오는"이 아니다.
     .filter((p) => p.status === 'SCHEDULED')
     .filter((p) => { const d = ddayDiff(p.planDate); return d !== null && d >= 0 })
+
+  // 생일 D-7 예고(#376) — 서버에 Plan 행을 만들지 않고 여기서 파생시킨다(clov-api#143 결정).
+  // ★ 본인도 포함한다. 생일 배너 쪽은 "{내 닉네임}님의 생일입니다!" 오표기를 막느라 본인을
+  //   뺐지만, D-day 칸에서 "내 생일 D-3"은 오히려 자연스럽다.
+  // ★ ACTIVE 멤버만 — 나간 사람 생일이 뜨면 안 된다(생일 배너가 이미 쓰는 규칙).
+  //   행을 저장하지 않으므로 나가는 순간 그냥 사라진다. "이미 생성됐으면 유지" 같은 갈래가 없다.
+  const birthdaySlots = activeMemberItems
+    .map((m) => ({ m, planDate: nextBirthdayDate(m.birthMonthDay) }))  // 생일 미입력·탈퇴 → null
+    .filter(({ planDate }) => { const d = ddayDiff(planDate); return d !== null && d >= 0 && d <= BIRTHDAY_LEAD_DAYS })
+    .map(({ m, planDate }) => ({ id: `birthday-${m.userId}`, title: `${m.nickname}님의 생일`, planDate, isBirthday: true }))
+
+  const ddaySlots = [...futurePlans, ...birthdaySlots]
     .sort((a, b) => a.planDate.localeCompare(b.planDate))
-  const ddaySlots = futurePlans.slice(0, 3)
+    .slice(0, 3)
   const memoryItems = (memories.data?.items ?? []).slice(0, 24)
 
   const savedStatus = data.myStatusMessage ?? ''
@@ -671,13 +686,15 @@ export default function Dashboard() {
               )
             }
             return (
-              <div key={p.id} className="schedule-banner" onClick={() => go('schedule')}>
+              <div key={p.id} className={`schedule-banner${p.isBirthday ? ' schedule-banner--birthday' : ''}`} onClick={() => go('schedule')}>
                 <div className="schedule-info">
-                  <i className="ti ti-calendar schedule-icon" aria-hidden="true" />
+                  <i className={`ti ${p.isBirthday ? 'ti-cake' : 'ti-calendar'} schedule-icon`} aria-hidden="true" />
                   <span className="schedule-title">{p.title}</span>
                   <span className="schedule-date">{p.planDate}</span>
                 </div>
-                <span className={`schedule-dday-badge is-${ddayUrgency(ddayDiff(p.planDate))}`}>{ddayLabel(ddayDiff(p.planDate))}</span>
+                {/* 생일은 늘 금색이다 — 약속처럼 긴박도(주황/초록)로 물들이지 않는다.
+                    "며칠 남았나"가 아니라 "이건 다른 종류의 날"이라는 표시다. */}
+                <span className={`schedule-dday-badge is-${p.isBirthday ? 'birthday' : ddayUrgency(ddayDiff(p.planDate))}`}>{ddayLabel(ddayDiff(p.planDate))}</span>
               </div>
             )
           })}

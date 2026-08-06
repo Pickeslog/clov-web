@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import './OnboardingGuide.css'
-import { getMe, getPreferences } from '../../api/user'
-import { SHOWCASE_MASCOTS, guideMascotSprite } from './guideMascot'
-import { PIXEL_COLORS, pixelize } from './pixelize'
+import { getMe } from '../../api/user'
+import { SHOWCASE_MASCOTS } from './guideMascot'
+import { pixelize } from './pixelize'
 import { PixelClover, PixelText } from './PixelText'
 import './StepMockup.css'
 import { MockGold, MockRoomCard, MockRoutes } from './StepMockup'
@@ -59,9 +59,6 @@ const STEPS = [
 
 const LOAD_BAR_CELLS = 9
 const LOAD_BAR_FILLED = 6
-// 5종을 나란히 세우면 한 칸이 좁다. 64px 로 줄이면 화면에서 1픽셀이 1px 아래로
-// 내려가 픽셀로 안 읽힌다(§12-6) — 그래서 이 단계만 32px 로 더 굵게 줄인다.
-const SHOWCASE_RES = 32
 // START 화면 로스터가 한 마스코트를 보여주는 시간. 5종이라 한 바퀴 8초다 —
 // 더 빠르면 누가 지나갔는지 안 남고, 더 느리면 START 를 누를 때까지 한 명만 본다.
 const ROSTER_MS = 1600
@@ -70,25 +67,35 @@ const ROSTER_MS = 1600
    ★ 1~3단계는 **실제 화면을 닮은 미니 목업**이 움직인다(StepMockup.jsx). 처음엔 은유
      (클로버 셋 · CLV-JOIN 글자 · 동전)를 썼는데, 그림이 예뻐도 "그래서 화면 어디서
      하는데?"가 안 풀렸다. 사용자가 곧 볼 화면과 닮아야 가이드가 안내가 된다. */
-function StepArt({ kind, mine, friends }) {
+function StepArt({ kind }) {
   if (kind === 'room') return <MockRoomCard />
   if (kind === 'routes') return <MockRoutes />
   if (kind === 'gold') return <MockGold />
   if (kind === 'mascots') {
     return (
       <div className="clov-guide-friends">
-        {friends.map((m) => (
+        {/* ★ 원본을 그대로 쓴다. 픽셀로 줄이면 칸 너비(약 87px) 안에서 1픽셀이 2px 남짓이라
+            얼굴이 뭉갠다 — 누구인지 알아보라고 세운 자리에서 그게 제일 손해다.
+            CSS 에서 image-rendering 을 auto 로 되돌려야 한다(창 전체가 pixelated 다). */}
+        {SHOWCASE_MASCOTS.map((m) => (
           <div className="clov-guide-friend" key={m.key}>
-            {/* 64px — 원본을 32px로 줄였으니 1픽셀이 화면 2px이다. 이 아래로 내려가면
-                픽셀 아트로 안 읽힌다(§12-6). 칸 너비(약 85px)에도 들어간다. */}
-            <img src={m.small} alt="" height={64} />
+            <img src={m.sprite} alt="" />
             <span>{m.name}</span>
           </div>
         ))}
       </div>
     )
   }
-  return mine ? <img src={mine} alt="" height={104} /> : null
+  /* 마지막 장면 — 다섯이 웃으며 배웅한다.
+     ★ 여기만 픽셀 변환을 안 한다. 배웅하는 자리라 가장 잘 나온 그림으로 보낸다.
+       그래서 CSS 에서 image-rendering 을 auto 로 되돌려야 한다(창 전체가 pixelated 다).
+     ★ 조금씩 겹쳐 세운다 — 5명을 안 겹치면 한 명이 50px 남짓이라 얼굴이 안 보인다.
+       겹치면 같은 폭에서 훨씬 크게 세울 수 있다(방 카드 멤버 아바타와 같은 방식). */
+  return (
+    <div className="clov-guide-lineup">
+      {SHOWCASE_MASCOTS.map((m) => <img key={m.key} src={m.smile} alt={m.name} />)}
+    </div>
+  )
 }
 
 export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
@@ -97,11 +104,9 @@ export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
   const closeGuide = useGuideStore((s) => s.closeGuide)
 
   const [step, setStep] = useState(-1)      // -1 = START 화면, 0.. = 가이드 단계
-  const [pixelUrl, setPixelUrl] = useState(null)
   // 원본으로 먼저 채워둔다 — 변환 전에 빈 칸이 보이지 않게.
-  // big = START 화면 로스터(64px), small = 친구들 단계 격자(32px). 같은 이미지를 한 번만
-  // 불러 두 크기로 줄인다.
-  const [friends, setFriends] = useState(() => SHOWCASE_MASCOTS.map((m) => ({ ...m, big: m.sprite, small: m.sprite })))
+  // 픽셀 변환이 필요한 곳은 이제 START 화면 로스터 하나뿐이다(4·5단계는 원본을 쓴다).
+  const [roster, setRoster] = useState(() => SHOWCASE_MASCOTS.map((m) => ({ ...m, big: m.sprite })))
   const [rosterAt, setRosterAt] = useState(0)
 
   /* 누구인지 알아야 판단한다 — 저장 키가 계정별이다(#362). Header 가 이미 같은 키로
@@ -122,22 +127,6 @@ export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
     if (shouldShowGuide(userId)) openGuide()
   }, [userId, openGuide])
 
-  const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences, enabled: open })
-  const spriteUrl = guideMascotSprite(prefs.data)
-
-  // 내 마스코트를 픽셀 아트로. 실패하면 원본을 그대로 쓴다(안 보이는 것보단 낫다).
-  useEffect(() => {
-    if (!open || !spriteUrl) return undefined
-    let alive = true
-    const img = new Image()
-    // crossOrigin 을 일부러 안 붙인다 — 스킨은 /shop/skins/… 로 같은 출처다. 붙이면
-    // CORS 헤더가 없는 응답에서 로드 자체가 실패해 이미지가 통째로 사라진다.
-    img.onload = () => { if (alive) setPixelUrl(pixelize(img)) }
-    img.onerror = () => { if (alive) setPixelUrl(null) }
-    img.src = spriteUrl
-    return () => { alive = false }
-  }, [open, spriteUrl])
-
   /* 5종을 두 크기로 미리 변환해 둔다. 열릴 때 한 번만 돌고, 이미지는 한 번만 불러온다.
      big   START 화면 로스터 — 132px 로 띄우니 64px(1픽셀 2.1px)
      small 친구들 단계 격자 — 64px 로 띄우니 32px(1픽셀 2px)
@@ -147,14 +136,10 @@ export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
     let alive = true
     Promise.all(SHOWCASE_MASCOTS.map((m) => new Promise((resolve) => {
       const img = new Image()
-      img.onload = () => resolve({
-        ...m,
-        big: pixelize(img) || m.sprite,
-        small: pixelize(img, SHOWCASE_RES, PIXEL_COLORS) || m.sprite,
-      })
-      img.onerror = () => resolve({ ...m, big: m.sprite, small: m.sprite })
+      img.onload = () => resolve({ ...m, big: pixelize(img) || m.sprite })
+      img.onerror = () => resolve({ ...m, big: m.sprite })
       img.src = m.sprite
-    }))).then((list) => { if (alive) setFriends(list) })
+    }))).then((list) => { if (alive) setRoster(list) })
     return () => { alive = false }
   }, [open])
 
@@ -196,8 +181,7 @@ export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
   const inGuide = step >= 0
   const current = STEPS[step] ?? STEPS[0]
   const isLast = step === STEPS.length - 1
-  const mascotSrc = pixelUrl || spriteUrl          // 내 마스코트 — 마지막 장면(STEP 5)에 쓴다
-  const roster = friends[rosterAt] ?? friends[0]   // START 화면에서 도는 5종
+  const rosterNow = roster[rosterAt] ?? roster[0]   // START 화면에서 도는 5종 중 지금 차례
 
   // 마지막 장면의 버튼은 가이드를 끝낸 것으로 본다 — 셋 다 영구 처리다.
   const finish = (after) => { close(true); after?.() }
@@ -224,7 +208,7 @@ export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
           <div className="clov-guide-stage">
             {/* key 를 주지 않는다 — 같은 <img> 의 src 만 갈아끼워야 자리가 안 흔들린다.
                 alt 에 이름을 넣어 스크린리더에도 누가 지나가는지 전해진다. */}
-            {roster && <img className="clov-guide-mascot" src={roster.big} alt={roster.name} height={132} />}
+            {rosterNow && <img className="clov-guide-mascot" src={rosterNow.big} alt={rosterNow.name} height={132} />}
             <p className="clov-guide-welcome">
               클로브에 오신 것을 환영합니다.<br />
               친구들과 함께 쓰는 우정공간,<br />
@@ -255,7 +239,7 @@ export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
               </div>
               <div className="clov-guide-winbody">
                 <div className={`clov-guide-art${current.art === 'mascots' ? ' is-tall' : ''}`}>
-                  <StepArt kind={current.art} mine={mascotSrc} friends={friends} />
+                  <StepArt kind={current.art} />
                 </div>
                 <p className="clov-guide-stepno">STEP {step + 1} / {STEPS.length}</p>
                 <h2 className="clov-guide-heading">{current.heading}</h2>

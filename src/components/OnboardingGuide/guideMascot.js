@@ -1,56 +1,40 @@
 /* =====================================================================
-   가이드에 띄울 마스코트를 고른다.
+   가이드에 세우는 마스코트 목록.
 
    Mascot.jsx 는 9개 상태 스프라이트를 전부 들고 상태 머신을 돌리지만, 가이드는
-   정지 이미지 한 장이면 된다. 그래서 기본 스프라이트만 따로 모아둔다 —
-   같은 이미지 파일이라 번들에서 중복되지 않는다.
+   정지 이미지 두 장(기본·웃는 얼굴)이면 된다. 같은 이미지 파일이라 번들에서
+   중복되지 않는다.
 
-   ⚠️ 정규화 규칙은 Mascot.jsx 의 것을 그대로 따라야 한다(현재 Mascot.jsx 의
-      mascotType 계산부). 두 화면이 같은 사용자에게 다른 캐릭터를 보여주면 안 된다.
-      - 'robot' → 'rob'      옛 값이 DB에 남아 있다
-      - 모르는 값 → 'crobi'   백엔드에 mascotType 검증이 없다
-      - Object.hasOwn 을 쓴다. SPRITES['constructor'] 는 Object 함수라 truthy 여서
-        그냥 조회하면 src 에 함수가 들어가 이미지가 깨진다(Mascot.jsx 에서 재현됨)
+   ⚠️ 버거노인은 일부러 뺐다 — 고를 수 있는 마스코트가 아니라 **상점 주인**으로 갈
+      예정이라, 여기 세우면 "고를 수 있는 친구"로 잘못 읽힌다. smile 스프라이트도 없다.
+      역할이 확정되면 상점 쪽 화면에서 따로 소개한다.
+
+   ⚠️ guideMascotSprite(preferences) 가 여기 있었다(2026-08-06 제거). 가이드가 "내가
+      고른 마스코트"를 띄우던 자리(START 화면·마지막 장면)가 전부 5종을 보여주는 쪽으로
+      바뀌면서 그 함수도 preferences 조회도 쓸 데가 없어졌다. 개인화를 되살릴 일이 생기면
+      git 이력에서 꺼내 쓴다 — mascotType 정규화 규칙('robot' → 'rob' · 모르는 값 →
+      'crobi' · Object.hasOwn 으로 조회)이 거기 담겨 있고, Mascot.jsx 와 같아야 한다.
    ===================================================================== */
 
 import crobiSprite from '../../assets/mascot/crobi/default.png'
 import robSprite from '../../assets/mascot/rob/idle.png'
-import burgerOldmanSprite from '../../assets/mascot/burger-oldman/default.png'
 import takoGunSprite from '../../assets/mascot/tako-gun/default.png'
 import kimCheolsuSprite from '../../assets/mascot/kim-cheolsu/default.png'
 import onyxSprite from '../../assets/mascot/onyx/default.png'
-
-const DEFAULT_SPRITES = {
-  crobi: crobiSprite,
-  rob: robSprite,
-  burgerOldman: burgerOldmanSprite,
-  takoGun: takoGunSprite,
-  kimCheolsu: kimCheolsuSprite,
-  onyx: onyxSprite,
-}
+import crobiSmile from '../../assets/mascot/crobi/smile.png'
+import robSmile from '../../assets/mascot/rob/smile.png'
+import takoGunSmile from '../../assets/mascot/tako-gun/smile.png'
+import kimCheolsuSmile from '../../assets/mascot/kim-cheolsu/smile.png'
+import onyxSmile from '../../assets/mascot/onyx/smile.png'
 
 /**
- * 가이드의 "친구들" 단계에 세우는 마스코트.
- *
- * ⚠️ 버거노인은 일부러 뺐다 — 고를 수 있는 마스코트가 아니라 **상점 주인**으로 갈
- *    예정이라, 여기 세우면 "고를 수 있는 친구"로 잘못 읽힌다. 역할이 확정되면
- *    상점 쪽 화면에서 따로 소개한다.
+ * sprite  기본 자세 — START 화면 로스터(픽셀 변환)와 "친구들" 단계(원본)에 쓴다.
+ * smile   웃는 얼굴 — 마지막 장면에서 배웅할 때만 쓴다.
  */
 export const SHOWCASE_MASCOTS = [
-  { key: 'crobi', name: '크로비', sprite: crobiSprite },
-  { key: 'rob', name: '롭', sprite: robSprite },
-  { key: 'takoGun', name: '타코군', sprite: takoGunSprite },
-  { key: 'kimCheolsu', name: '김철수', sprite: kimCheolsuSprite },
-  { key: 'onyx', name: '오닉스', sprite: onyxSprite },
+  { key: 'crobi', name: '크로비', sprite: crobiSprite, smile: crobiSmile },
+  { key: 'rob', name: '롭', sprite: robSprite, smile: robSmile },
+  { key: 'takoGun', name: '타코군', sprite: takoGunSprite, smile: takoGunSmile },
+  { key: 'kimCheolsu', name: '김철수', sprite: kimCheolsuSprite, smile: kimCheolsuSmile },
+  { key: 'onyx', name: '오닉스', sprite: onyxSprite, smile: onyxSmile },
 ]
-
-/**
- * 사용자 설정(preferences)에서 가이드에 쓸 스프라이트 URL 하나를 고른다.
- * 장착한 스킨이 있으면 그쪽이 우선이다 — 가이드에서까지 기본 외형이 뜨면
- * "내가 고른 마스코트"가 아니게 된다.
- */
-export function guideMascotSprite(preferences) {
-  const stored = preferences?.mascotType === 'robot' ? 'rob' : preferences?.mascotType
-  const mascotType = Object.hasOwn(DEFAULT_SPRITES, stored ?? '') ? stored : 'crobi'
-  return preferences?.equippedItem?.imageUrl || DEFAULT_SPRITES[mascotType]
-}

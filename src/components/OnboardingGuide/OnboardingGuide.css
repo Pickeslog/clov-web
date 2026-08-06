@@ -246,10 +246,29 @@
   gap: 10px 6px; justify-items: center; width: 100%;
 }
 .clov-guide-friend { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.clov-guide-friend img { max-width: 100%; height: 64px; width: auto; }
+/* ★ 원본 그림이라 image-rendering 을 auto 로 되돌린다(창 전체는 pixelated 다).
+   정사각 상자 + contain — rob(900x510)처럼 가로로 긴 캐릭터가 칸을 밀어내지 않게. */
+.clov-guide-friend img {
+  width: 100%; max-width: 72px; aspect-ratio: 1;
+  object-fit: contain; object-position: bottom;
+  image-rendering: auto;
+}
 .clov-guide-friend span {
   color: var(--guide-acc-l); font-size: 10px; font-weight: 700; white-space: nowrap;
 }
+
+/* 마지막 장면 — 다섯이 조금씩 겹쳐 선다.
+   ★ 안 겹치면 한 명이 50px 남짓이라 얼굴이 안 보인다. 겹치면 같은 폭에서 훨씬 크게 선다.
+   ★ image-rendering 을 auto 로 되돌린다 — 이 그림만 원본이라, 창 전체에 걸린 pixelated
+     를 그대로 두면 축소될 때 계단이 진다.
+   object-position: bottom 으로 발밑을 맞춰 한 줄로 선 것처럼 보이게 한다. */
+.clov-guide-lineup { display: flex; justify-content: center; align-items: flex-end; width: 100%; }
+.clov-guide-lineup img {
+  flex: none; width: 74px; height: 74px;
+  object-fit: contain; object-position: bottom;
+  image-rendering: auto;
+}
+.clov-guide-lineup img + img { margin-left: -21px; }
 .clov-guide-stepno {
   color: var(--guide-acc); font-size: 10px; font-weight: 800; letter-spacing: 0.12em;
 }

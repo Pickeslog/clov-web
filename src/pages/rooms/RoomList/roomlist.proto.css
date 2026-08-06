@@ -236,9 +236,9 @@
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--active-bg); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px;
 }
-.proto-roomlist .req-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-@media (max-width: 760px) { .proto-roomlist .req-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 520px) { .proto-roomlist .req-grid { grid-template-columns: 1fr; } }
+.proto-roomlist .req-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 760px) { .proto-roomlist .req-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .proto-roomlist .req-grid { grid-template-columns: minmax(0, 1fr); } }
 .proto-roomlist .req-card {
   background: var(--card-bg); border: 1.5px dashed var(--border); border-radius: 16px;
   padding: 15px; display: flex; flex-direction: column; gap: 8px;
@@ -250,7 +250,10 @@
 .proto-roomlist .req-status.rejected { background: #3a2222; color: #f59a9a; }
 .proto-roomlist .req-status.vanished { background: #213338; color: #9cc4cf; }
 .proto-roomlist .req-note { font-size: 11.5px; color: var(--muted); margin-top: -2px; line-height: 1.45; }
-.proto-roomlist .req-name { font-size: 15px; font-weight: 800; color: var(--text); word-break: keep-all; }
+.proto-roomlist .req-name {
+  font-size: 15px; font-weight: 800; color: var(--text); word-break: keep-all;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .proto-roomlist .req-meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
 .proto-roomlist .req-actions { display: flex; gap: 8px; margin-top: 4px; }
 .proto-roomlist .req-btn {

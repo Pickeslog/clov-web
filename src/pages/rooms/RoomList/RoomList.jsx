@@ -80,15 +80,28 @@ const initialOf = (name) => (name || '?').trim().slice(0, 1)
 
 // 티켓 카드의 참여 멤버 아바타 — 정원 8명까지 실제 프로필 사진(없으면 이니셜)을 보여준다.
 // RoomPreviewModal의 참여 멤버 렌더와 같은 쿼리 키를 써서 캐시를 공유한다.
+// 카드마다 멤버 목록을 따로 불러오므로(계약에 목록용 요약 필드가 없다), 화면에
+// 걸쳐 있는(뷰포트 200px 이내) 카드만 요청하도록 지연 로드해 한 번에 나가는
+// 요청 수를 줄인다 — 페이지당 최대 9장이 한꺼번에 다 불리지 않는다.
 function RoomAvatars({ roomId }) {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    if (visible || !ref.current) return
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setVisible(true); io.disconnect() }
+    }, { rootMargin: '200px' })
+    io.observe(ref.current)
+    return () => io.disconnect()
+  }, [visible])
   const members = useQuery({
     queryKey: ['room', roomId, 'members'],
     queryFn: () => getRoomMembers(roomId),
-    enabled: !!roomId,
+    enabled: !!roomId && visible,
   })
   const memberList = (members.data?.items ?? []).filter((m) => m.status === 'ACTIVE').slice(0, 8)
   return (
-    <div className="tk-avs">
+    <div className="tk-avs" ref={ref}>
       {memberList.map((m) => (
         <span key={m.membershipId ?? m.userId} className="tk-av" style={{ background: avatarColorForKey(m.userId ?? m.membershipId) }}>
           {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}

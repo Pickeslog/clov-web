@@ -64,6 +64,15 @@ function toDateKey(d) {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 
+// dateStr(YYYY-MM-DD 등 ddayDiff와 같은 형식)의 월-일이 monthDay("MM-DD", 계약 §6
+// birthMonthDay)와 같은지. 생일처럼 연도 없이 월-일만 비교해야 하는 화면에서 쓴다.
+export function isSameMonthDay(dateStr, monthDay) {
+  const m = String(dateStr || '').match(/\d{4}\D+(\d{1,2})\D+(\d{1,2})/)
+  if (!m || !monthDay) return false
+  const [, month, day] = m
+  return `${month.padStart(2, '0')}-${day.padStart(2, '0')}` === monthDay
+}
+
 // 오늘과의 날짜 차이(숫자)만 반환한다. 'D-3' 같은 라벨 문자열은 각 화면이 만든다.
 export function ddayDiff(dateStr) {
   const m = String(dateStr || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/)

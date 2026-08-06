@@ -73,6 +73,12 @@ export function isSameMonthDay(dateStr, monthDay) {
   return `${month.padStart(2, '0')}-${day.padStart(2, '0')}` === monthDay
 }
 
+// 오늘이 monthDay("MM-DD")와 같은 날인지 — 로컬 기준(위 nextBirthdayDate와 같은 이유).
+export function isTodayMonthDay(monthDay) {
+  const today = new Date()
+  return isSameMonthDay(toDateKey(today), monthDay)
+}
+
 // 오늘과의 날짜 차이(숫자)만 반환한다. 'D-3' 같은 라벨 문자열은 각 화면이 만든다.
 export function ddayDiff(dateStr) {
   const m = String(dateStr || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/)

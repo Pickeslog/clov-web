@@ -9,6 +9,9 @@ import Header from '../../../components/Header/Header'
 import Mascot from '../../../components/Mascot/Mascot'
 import Button from '../../../components/Button/Button'
 import { avatarColorForKey } from '../../../lib/avatarColor'
+import { isTodayMonthDay } from '../../../lib/datetime'
+import { useAuthStore } from '../../../stores/authStore'
+import { currentUserIdFromToken } from '../../../lib/jwt'
 
 // 편지 화면 라이트 팔레트(인라인 CSS 변수) — <main>에 부여해 모든 하위가 상속.
 // letters.proto.css가 @scope를 쓰던 시절엔 이게 "@scope 반영 안 됨" 문제를 우회하는
@@ -103,6 +106,8 @@ const boxOfTab = (tab) => (tab === 'sent' ? 'sent' : 'received')
 export default function Letters() {
   const { roomId } = useParams()
   const queryClient = useQueryClient()
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const currentUserId = currentUserIdFromToken(accessToken)
   const [tab, setTab] = useState('all') // all | favorite | sent
   const [page, setPage] = useState(0)
   const [inboxOpen, setInboxOpen] = useState(false)
@@ -122,7 +127,9 @@ export default function Letters() {
   // 기준이어야 한다 — box를 그대로 쓰면 "보낸 편지함" 탭을 보고 나온 뒤에도 그 편지함의
   // 총 개수가 떠 버린다(#278). queryKey가 겹치면 React Query가 캐시를 공유해 중복 요청은 없다.
   const receivedLetters = useQuery({ queryKey: ['letters', roomId, 'received'], queryFn: () => getLetters(roomId, 'received') })
-  const members = useQuery({ queryKey: ['room', roomId, 'members'], queryFn: () => getRoomMembers(roomId), enabled: composing })
+  // 생일 CTA(#377)가 편지함 진입 즉시 필요해서 편지 작성 중(composing)이 아니어도 부른다
+  // — 이전엔 작성 모달을 열 때만 가져왔다.
+  const members = useQuery({ queryKey: ['room', roomId, 'members'], queryFn: () => getRoomMembers(roomId), enabled: Boolean(roomId) })
   const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
   const isPostboxTheme = (prefs.data?.letterTheme ?? 'postbox') === 'postbox'
   const invalidateLetters = () => queryClient.invalidateQueries({ queryKey: ['letters', roomId] })
@@ -130,6 +137,10 @@ export default function Letters() {
   const items = letters.data?.items ?? []
   const visibleItems = tab === 'favorite' ? items.filter((letter) => letter.isFavorite) : items
   const memberItems = (members.data?.items ?? []).filter((member) => member.status === 'ACTIVE')
+  // 오늘 생일인 멤버(본인 제외, Dashboard.jsx의 birthdayFriend와 같은 규칙) — CTA 배너용.
+  const birthdayMember = memberItems.find(
+    (m) => String(m.userId) !== String(currentUserId) && isTodayMonthDay(m.birthMonthDay),
+  )
 
   // 발송 애니메이션(연필이 사각거리다 통! 사라지고(~1.0s), 이어서 카드가 우체통으로
   // 빨려 들어가기(~0.45s), 총 1.45s)이 실제로 재생될 시간을 보장한다 — 로컬/빠른
@@ -193,9 +204,11 @@ export default function Letters() {
 
   // 이전에 골랐던 받는 사람이 다음에 다시 열었을 때도 남아 있었다(사용자 지적) —
   // 매번 새로 여는 폼이니 열 때마다 수신자 선택을 초기화한다.
-  const openCompose = () => {
+  // receiverUserId를 생략하면(대부분) 매번 새로 여는 폼이라 수신자 선택을 초기화한다.
+  // 생일 CTA처럼 특정 사람을 미리 선택해서 열고 싶을 때만 넘긴다.
+  const openCompose = (presetReceiverUserId = '') => {
     setMessage('')
-    setReceiverUserId('')
+    setReceiverUserId(presetReceiverUserId)
     setBroadcast(false)
     setTitle('')
     setComposing(true)
@@ -264,9 +277,14 @@ export default function Letters() {
               ? <p>총 <b>{unreadCount}</b>통의 편지가<br />나에게 도착했어요!</p>
               : <p>{EMPTY_MESSAGES[0]}</p>}
           </div>
-          <button type="button" className="letter-filter-btn action-btn letter-write-btn" onClick={openCompose}>
+          <button type="button" className="letter-filter-btn action-btn letter-write-btn" onClick={() => openCompose()}>
             <span>편지 작성</span>
           </button>
+          {birthdayMember && (
+            <button type="button" className="letter-birthday-nudge" onClick={() => openCompose(birthdayMember.userId)}>
+              🎂 {birthdayMember.nickname}님 생일이에요, 축하 편지 보내보세요
+            </button>
+          )}
         </section>
       </div>
 

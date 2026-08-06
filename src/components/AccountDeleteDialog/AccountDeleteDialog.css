@@ -1,0 +1,83 @@
+/* =====================================================================
+   계정 탈퇴 전용 모달. ConfirmDialog.css의 팔레트·오버레이 규칙(다크 기본 +
+   body.light-mode, z-index 10000)을 그대로 따르되, 위험도가 높은 액션이라
+   타이핑 확인(type-to-confirm) UI가 추가로 들어간다 — 아래 컴포넌트 주석 참고.
+   ===================================================================== */
+.clov-adel-overlay {
+  position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px);
+  animation: clovAdelFadeIn .15s ease;
+}
+.clov-adel-modal {
+  width: min(400px, 100%);
+  background: #1e2016; border: 1px solid #3a2020; border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  padding: 26px 24px 22px; color: #eef0e2;
+  display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;
+  animation: clovAdelSlideUp .18s cubic-bezier(.34, 1.56, .64, 1);
+}
+body.light-mode .clov-adel-modal {
+  background: #fffdfb; border-color: rgba(178, 59, 59, 0.22); color: #1b4332;
+  box-shadow: 0 12px 40px rgba(178, 59, 59, 0.14);
+}
+
+.clov-adel-icon {
+  width: 46px; height: 46px; color: #e0625f;
+  display: flex; align-items: center; justify-content: center;
+}
+.clov-adel-icon svg { width: 100%; height: 100%; }
+body.light-mode .clov-adel-icon { color: #b23b3b; }
+
+.clov-adel-title { margin: 0; font-size: 17px; font-weight: 800; }
+
+/* 결과 목록 — 가운데 정렬 모달 안에서도 목록 자체는 왼쪽 정렬해야 훑어 읽기 쉽다.
+   word-break: keep-all — 기본값(normal)은 한글을 음절 단위로 아무 데서나 끊어서
+   "없어요"가 "없어/요"로, <b>로 감싼 "익명화"가 인라인 박스 경계에서 "익/명화"로
+   쪼개지는 등 부자연스럽게 줄바꿈됐다(실측 확인). keep-all은 한글·한자·가나를
+   공백/구두점에서만 끊어서 단어 중간이 안 갈라진다. */
+.clov-adel-list {
+  width: 100%;
+  margin: 0; padding: 0 0 0 18px;
+  text-align: left; font-size: 13px; line-height: 1.65; color: #d6d8c8;
+  word-break: keep-all;
+  display: flex; flex-direction: column; gap: 4px;
+}
+body.light-mode .clov-adel-list { color: #3d5747; }
+.clov-adel-list b { color: #f0a5a3; font-weight: 700; }
+body.light-mode .clov-adel-list b { color: #b23b3b; }
+
+.clov-adel-confirm {
+  width: 100%;
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: 4px; text-align: left;
+  word-break: keep-all; /* "닉네임 OOO을(를)"이 단어 중간에서 안 잘리게 — 위 목록과 동일 이유 */
+}
+.clov-adel-confirm label { font-size: 12.5px; color: #b7bba6; }
+body.light-mode .clov-adel-confirm label { color: #5c7768; }
+.clov-adel-confirm strong { color: #eef0e2; }
+body.light-mode .clov-adel-confirm strong { color: #1b4332; }
+
+.clov-adel-input {
+  width: 100%; box-sizing: border-box;
+  padding: 10px 12px; font-size: 14px;
+  background: #14150e; border: 1.5px solid #3a3c2c; border-radius: 10px; color: #eef0e2;
+  transition: border-color .15s ease;
+}
+.clov-adel-input::placeholder { color: #6b6d5c; }
+.clov-adel-input:focus { outline: none; border-color: #e0625f; }
+.clov-adel-input[aria-invalid="true"] { border-color: #b23b3b; }
+body.light-mode .clov-adel-input {
+  background: #fff; border-color: #cfd8d1; color: #1b4332;
+}
+body.light-mode .clov-adel-input::placeholder { color: #96a89d; }
+
+.clov-adel-error {
+  margin: 0; font-size: 12.5px; color: #f0a5a3; width: 100%; text-align: left;
+}
+body.light-mode .clov-adel-error { color: #b23b3b; }
+
+.clov-adel-actions { display: flex; gap: 8px; margin-top: 6px; width: 100%; }
+.clov-adel-actions .clov-btn { flex: 1; }
+
+@keyframes clovAdelFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes clovAdelSlideUp { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }

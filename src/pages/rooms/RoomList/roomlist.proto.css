@@ -117,9 +117,9 @@
 .proto-roomlist .btn-edit.active { border-color: var(--accent); color: var(--accent); background: var(--active-bg); }
 
 /* 방 그리드 */
-.proto-roomlist .room-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
-@media (max-width: 760px) { .proto-roomlist .room-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 520px) { .proto-roomlist .room-grid { grid-template-columns: 1fr; } }
+.proto-roomlist .room-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 32px; }
+@media (max-width: 760px) { .proto-roomlist .room-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .proto-roomlist .room-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* 목록 첫 로드 때 카드가 순서대로 살짝 밀려 올라오며 나타난다(재정렬 드래그 중엔 튀지
    않도록 .room-card.ticket에는 안 걸고 로드 시 리스트에만 건다 — 아래 room-card-enter). */
@@ -184,21 +184,31 @@
 .proto-roomlist .tk-skyline i { display: block; background: #fffdf7; border-radius: 1px 1px 0 0; }
 .proto-roomlist .tk-pax { padding: 12px 15px 4px; display: flex; align-items: flex-start; justify-content: space-between; }
 .proto-roomlist .tk-pax-kick { font-size: 9px; color: #9aa89f; font-weight: 700; }
-.proto-roomlist .tk-name { font-size: 15px; font-weight: 800; color: #1e2e26; word-break: keep-all; }
-.proto-roomlist .tk-avs { display: flex; margin-top: 6px; }
+.proto-roomlist .tk-name {
+  font-size: 15px; font-weight: 800; color: #1e2e26; word-break: keep-all;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.proto-roomlist .tk-avs { display: flex; flex-wrap: wrap; row-gap: 4px; margin-top: 6px; min-height: 22px; }
 .proto-roomlist .tk-av {
   width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 9px; font-weight: 800;
   display: flex; align-items: center; justify-content: center; border: 1.5px solid #fff; flex: none;
+  overflow: hidden;
 }
+.proto-roomlist .tk-av img { width: 100%; height: 100%; object-fit: cover; }
 .proto-roomlist .tk-av + .tk-av { margin-left: -7px; }
 .proto-roomlist .tk-corner { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
 .proto-roomlist .tk-badge { background: #d95f5f; color: #fff; font-size: 10px; font-weight: 800; border-radius: 9px; padding: 1px 7px; }
 .proto-roomlist .tk-star { font-size: 17px; cursor: pointer; background: none; border: none; padding: 0; line-height: 1; }
 .proto-roomlist .tk-star:hover { transform: scale(1.15); }
-.proto-roomlist .tk-grid { padding: 4px 15px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px 10px; }
+.proto-roomlist .tk-grid { padding: 4px 15px 12px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 7px 10px; }
 .proto-roomlist .tk-grid.single { display: block; }
 .proto-roomlist .tk-cell-lbl { font-size: 9px; color: #9aa89f; font-weight: 700; }
-.proto-roomlist .tk-cell-val { font-size: 12px; font-weight: 800; color: #1e2e26; }
+.proto-roomlist .tk-cell-val {
+  font-size: 12px; font-weight: 800; color: #1e2e26;
+  line-height: 1.25; min-height: 30px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; text-overflow: ellipsis; word-break: break-all;
+}
 .proto-roomlist .tk-cell-val.accent { color: #1b4332; }
 .proto-roomlist .tk-cell-val.empty { display: flex; align-items: center; gap: 5px; font-weight: 700; color: #8a9a5a; margin-top: 1px; }
 .proto-roomlist .tk-perf { position: relative; border-top: 2px dashed #e6dfcf; margin: 0 12px; }
@@ -226,9 +236,9 @@
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--active-bg); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px;
 }
-.proto-roomlist .req-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-@media (max-width: 760px) { .proto-roomlist .req-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 520px) { .proto-roomlist .req-grid { grid-template-columns: 1fr; } }
+.proto-roomlist .req-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 760px) { .proto-roomlist .req-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .proto-roomlist .req-grid { grid-template-columns: minmax(0, 1fr); } }
 .proto-roomlist .req-card {
   background: var(--card-bg); border: 1.5px dashed var(--border); border-radius: 16px;
   padding: 15px; display: flex; flex-direction: column; gap: 8px;
@@ -240,7 +250,10 @@
 .proto-roomlist .req-status.rejected { background: #3a2222; color: #f59a9a; }
 .proto-roomlist .req-status.vanished { background: #213338; color: #9cc4cf; }
 .proto-roomlist .req-note { font-size: 11.5px; color: var(--muted); margin-top: -2px; line-height: 1.45; }
-.proto-roomlist .req-name { font-size: 15px; font-weight: 800; color: var(--text); word-break: keep-all; }
+.proto-roomlist .req-name {
+  font-size: 15px; font-weight: 800; color: var(--text); word-break: keep-all;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .proto-roomlist .req-meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
 .proto-roomlist .req-actions { display: flex; gap: 8px; margin-top: 4px; }
 .proto-roomlist .req-btn {

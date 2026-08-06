@@ -414,7 +414,7 @@ body.light-mode .proto-dashboard .section-title {
    그 선택자에 이 클래스를 같이 묶어 같은 규칙을 공유한다 — 값 중복 없이. */
 
 /* ===== D-day 3열 (schedule-banner) ===== */
-.proto-dashboard .schedule-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.proto-dashboard .schedule-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .proto-dashboard .schedule-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   /* rgba(255,255,255,.05)는 페이지 배경(우드텍스처)에 거의 안 묻혀서 카드와 배경 구분이
@@ -898,7 +898,7 @@ body.light-mode .proto-dashboard .section-title {
   .proto-dashboard .main-photo-card { flex-direction: column; align-items: stretch; }
   .proto-dashboard .main-photo-wrapper { flex-basis: auto; width: 100%; margin: 0 0 -18px; transform: rotate(-1.5deg); }
   .proto-dashboard .cover-summary { padding: 28px 20px 20px; }
-  .proto-dashboard .schedule-grid { grid-template-columns: 1fr; }
+  .proto-dashboard .schedule-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* =====================================================================

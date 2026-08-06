@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './roomlist.proto.css'
-import { getRooms, createRoom, toggleRoomFavorite, leaveRoom } from '../../../api/room'
+import { getRooms, createRoom, toggleRoomFavorite, leaveRoom, getRoomMembers } from '../../../api/room'
 import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/invite'
 import Header from '../../../components/Header/Header'
 import RoomPreviewModal from './RoomPreviewModal'
@@ -12,6 +12,7 @@ import { ddayDiff } from '../../../lib/datetime'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
 import { describeInviteError, extractJoinedRoomId } from '../../../lib/inviteError'
 import { validateRoomName } from '../../../lib/roomName'
+import { avatarColorForKey } from '../../../lib/avatarColor'
 
 const PAGE_SIZE = 9
 const ORDER_KEY = 'clov-room-order'
@@ -76,6 +77,40 @@ const skyline = (seed) => {
 const BARCODE = [2, 1, 3, 1, 2, 1, 3, 1, 2]
 
 const Icon = ({ name, style }) => <i className={`ti ${name}`} style={style} aria-hidden="true" />
+const initialOf = (name) => (name || '?').trim().slice(0, 1)
+
+// 티켓 카드의 참여 멤버 아바타 — 정원 8명까지 실제 프로필 사진(없으면 이니셜)을 보여준다.
+// RoomPreviewModal의 참여 멤버 렌더와 같은 쿼리 키를 써서 캐시를 공유한다.
+// 카드마다 멤버 목록을 따로 불러오므로(계약에 목록용 요약 필드가 없다), 화면에
+// 걸쳐 있는(뷰포트 200px 이내) 카드만 요청하도록 지연 로드해 한 번에 나가는
+// 요청 수를 줄인다 — 페이지당 최대 9장이 한꺼번에 다 불리지 않는다.
+function RoomAvatars({ roomId }) {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    if (visible || !ref.current) return
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setVisible(true); io.disconnect() }
+    }, { rootMargin: '200px' })
+    io.observe(ref.current)
+    return () => io.disconnect()
+  }, [visible])
+  const members = useQuery({
+    queryKey: ['room', roomId, 'members'],
+    queryFn: () => getRoomMembers(roomId),
+    enabled: !!roomId && visible,
+  })
+  const memberList = (members.data?.items ?? []).filter((m) => m.status === 'ACTIVE').slice(0, 8)
+  return (
+    <div className="tk-avs" ref={ref}>
+      {memberList.map((m) => (
+        <span key={m.membershipId ?? m.userId} className="tk-av" style={{ background: avatarColorForKey(m.userId ?? m.membershipId) }}>
+          {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
+        </span>
+      ))}
+    </div>
+  )
+}
 
 export default function RoomList() {
   const navigate = useNavigate()
@@ -447,10 +482,7 @@ export default function RoomList() {
                       <div style={{ minWidth: 0 }}>
                         <div className="tk-pax-kick">우정공간</div>
                         <div className="tk-name">{room.name}</div>
-                        <div className="tk-avs">
-                          <span className="tk-av" style={{ background: 'var(--primary)' }}>나</span>
-                          {room.memberCount > 1 && <span className="tk-av" style={{ background: '#6a7e73' }}>+{room.memberCount - 1}</span>}
-                        </div>
+                        <RoomAvatars roomId={room.id} />
                       </div>
                       <div className="tk-corner">
                         <button type="button" className="tk-star"

@@ -83,7 +83,13 @@
 }
 .clov-guide-stage.is-steps { justify-content: center; padding: 62px 18px 18px; }
 
-.clov-guide-mascot { animation: clov-guide-bob 1.4s steps(2, end) infinite; }
+/* ★ 정사각 상자에 가둔다. height 만 고정하면 가로가 캐릭터 비율대로 제각각이 되어
+   rob(900x510)이 132px 높이에서 233px까지 벌어진다 — crobi 85px 의 2.7배라 로스터가
+   돌 때 한 명만 화면을 덮는다. 앱의 Mascot.css 가 같은 이유로 이미 쓰는 규칙이다. */
+.clov-guide-mascot {
+  height: 132px; width: auto; max-width: 132px; object-fit: contain;
+  animation: clov-guide-bob 1.4s steps(2, end) infinite;
+}
 @keyframes clov-guide-bob {
   0%, 50% { transform: translateY(0); }
   51%, 100% { transform: translateY(4px); }
@@ -128,6 +134,72 @@
   box-shadow:
     0 -3px 0 var(--guide-ink), 0 3px 0 var(--guide-ink),
     -3px 0 0 var(--guide-ink), 3px 0 0 var(--guide-ink);
+}
+
+/* ── 커서를 올렸을 때 ────────────────────────────────────────────
+   ⚠️ hover 관련은 전부 이 미디어 쿼리 안에 둔다. 이유가 둘이다.
+      ① 터치 기기는 :hover 가 탭 후에 눌러붙어서, 건너뛰기를 눌러도 START 가 계속
+        떠 있는 것처럼 보인다.
+      ② 화살표는 숨겨도 자리를 차지하는데, hover 가 없는 기기에선 영영 안 보이므로
+        **가장 좁은 화면에서 폭만 잡아먹는다.** 아예 만들지 않는다. */
+@media (hover: hover) and (pointer: fine) {
+  /* 선택 표시 화살표 — START 양옆에 나타난다(JRPG·마인크래프트 메뉴 관례).
+     ★ 흐름에 넣지 않고 버튼 안쪽 여백(padding 18px)에 겹친다. 흐름에 두면 버튼이
+       181 → 231px 로 늘어 옆의 "건너뛰기"가 두 줄로 깨진다 — 실제로 그렇게 됐다.
+       absolute 라 폭에 아무 영향이 없고, hover 순간 레이아웃도 안 흔들린다.
+     계단형 clip-path 로 픽셀 모양을 낸다(이 창의 다른 그림도 전부 계단이다).
+     ⚠️ translate/scale 을 transform 대신 각각 쓴다 — transform 하나에 둘을 넣으면
+        ::after 의 좌우 반전이 세로 중앙 정렬을 덮어쓴다. */
+  .clov-guide-btn.is-primary { position: relative; }
+  .clov-guide-btn.is-primary::before,
+  .clov-guide-btn.is-primary::after {
+    content: ''; position: absolute; top: 50%; translate: 0 -50%;
+    width: 9px; height: 15px;
+    background: #16200c; opacity: 0;
+    transition: opacity 0.1s steps(2, end);
+    clip-path: polygon(
+      0 0, 33% 0, 33% 17%, 67% 17%, 67% 33%, 100% 33%,
+      100% 67%, 67% 67%, 67% 83%, 33% 83%, 33% 100%, 0 100%
+    );
+  }
+  .clov-guide-btn.is-primary::before { left: 3px; }
+  .clov-guide-btn.is-primary::after { right: 3px; scale: -1 1; }
+  .clov-guide-btn.is-primary:hover::before,
+  .clov-guide-btn.is-primary:hover::after { opacity: 1; }
+
+  /* 떠오르고 아래 그림자가 깊어진다 — 누를 때 6px 내려앉는 :active 와 이어져야
+     "실제로 눌리는 물건"으로 읽힌다. hover 가 없으면 그 사실이 누른 뒤에야 전달된다. */
+  .clov-guide-btn.is-primary:hover {
+    transform: translateY(-2px);
+    background: #b2dd7f;
+    box-shadow:
+      0 -3px 0 var(--guide-ink), 0 3px 0 var(--guide-ink),
+      -3px 0 0 var(--guide-ink), 3px 0 0 var(--guide-ink),
+      0 9px 0 var(--guide-acc-d), 0 12px 0 var(--guide-ink);
+  }
+  /* :active 가 :hover 를 이기도록 뒤에 다시 쓴다 — 미디어쿼리는 특이도를 안 올리므로
+     순서로만 결정된다(#342에서 밟은 함정). */
+  .clov-guide-btn.is-primary:active {
+    transform: translateY(6px);
+    box-shadow:
+      0 -3px 0 var(--guide-ink), 0 3px 0 var(--guide-ink),
+      -3px 0 0 var(--guide-ink), 3px 0 0 var(--guide-ink);
+  }
+  .clov-guide-btn:not(.is-primary):hover { background: #26301c; color: #eaf3d6; }
+
+  /* ★ 버튼만 반응하면 UI 가 반응한 것이고, 마스코트가 같이 반응하면 캐릭터가 반응한 것이다.
+     :has() 로 JS 없이 앞선 형제를 바꾼다(선택자가 뒤를 못 보므로 부모에서 건다). */
+  .clov-guide-stage:has(.clov-guide-btn.is-primary:hover) .clov-guide-mascot {
+    animation: clov-guide-hop 0.36s steps(2, end) infinite;
+  }
+}
+@keyframes clov-guide-hop {
+  0%, 45% { transform: translateY(0); }
+  46%, 100% { transform: translateY(-7px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clov-guide-btn.is-primary:hover { transform: none; }
+  .clov-guide-stage:has(.clov-guide-btn.is-primary:hover) .clov-guide-mascot { animation: none; }
 }
 
 .clov-guide-never {

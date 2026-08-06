@@ -4,7 +4,9 @@ import './OnboardingGuide.css'
 import { getMe, getPreferences } from '../../api/user'
 import { SHOWCASE_MASCOTS, guideMascotSprite } from './guideMascot'
 import { PIXEL_COLORS, pixelize } from './pixelize'
-import { PixelClover, PixelCoin, PixelText } from './PixelText'
+import { PixelClover, PixelText } from './PixelText'
+import './StepMockup.css'
+import { MockGold, MockRoomCard, MockRoutes } from './StepMockup'
 import { dropLegacyGuideKeys, markGuideDone, markGuideSkipped, shouldShowGuide } from '../../lib/onboardingGuide'
 import { useGuideStore } from '../../stores/guideStore'
 
@@ -25,19 +27,19 @@ import { useGuideStore } from '../../stores/guideStore'
 const STEPS = [
   {
     label: 'CLOVER',
-    art: 'clovers',
+    art: 'room',
     heading: '우정공간이 뭐예요?',
     body: '친구들과 함께 쓰는 하나의 공간이에요. 약속을 잡고, 사진을 남기고, 편지를 주고받아요. 방장은 없어요 — 모두가 같은 권한이에요.',
   },
   {
     label: 'ROUTE',
-    art: 'code',
+    art: 'routes',
     heading: '들어오는 길은 두 가지',
     body: '직접 우정공간을 만들거나, 친구에게 받은 초대 코드로 들어와요. 코드는 CLV-JOIN- 으로 시작해요.',
   },
   {
     label: 'GOLD',
-    art: 'coin',
+    art: 'gold',
     heading: '추억을 남기면 골드를 받아요',
     body: '글과 사진을 올리거나 마스코트를 눌러도 쌓여요. 모은 골드로 상점에서 배경과 코스튬을 사요.',
   },
@@ -64,18 +66,14 @@ const SHOWCASE_RES = 32
 // 더 빠르면 누가 지나갔는지 안 남고, 더 느리면 START 를 누를 때까지 한 명만 본다.
 const ROSTER_MS = 1600
 
-/** 단계별 그림. 마스코트만 쓰면 STEP 이 바뀌어도 그림이 안 바뀌어 넘어가는 느낌이 없다. */
+/* 단계별 그림.
+   ★ 1~3단계는 **실제 화면을 닮은 미니 목업**이 움직인다(StepMockup.jsx). 처음엔 은유
+     (클로버 셋 · CLV-JOIN 글자 · 동전)를 썼는데, 그림이 예뻐도 "그래서 화면 어디서
+     하는데?"가 안 풀렸다. 사용자가 곧 볼 화면과 닮아야 가이드가 안내가 된다. */
 function StepArt({ kind, mine, friends }) {
-  if (kind === 'clovers') {
-    // 같은 크기 클로버 셋 — "방장 없음 · 모두가 같은 권한"을 그림으로 말한다.
-    return (
-      <div className="clov-guide-trio">
-        {[0, 1, 2].map((k) => <PixelClover key={k} scale={5} fill="#9ccc65" />)}
-      </div>
-    )
-  }
-  if (kind === 'code') return <PixelText text="CLV-JOIN" scale={4} fill="#9ccc65" title="초대 코드" />
-  if (kind === 'coin') return <PixelCoin scale={5} fill="#e8c85a" title="골드" />
+  if (kind === 'room') return <MockRoomCard />
+  if (kind === 'routes') return <MockRoutes />
+  if (kind === 'gold') return <MockGold />
   if (kind === 'mascots') {
     return (
       <div className="clov-guide-friends">

@@ -1,0 +1,117 @@
+/* =====================================================================
+   단계별 미니 목업 — 실제 화면 모양을 같은 팔레트로 흉내 내고 CSS 로 움직인다.
+   색은 .clov-guide-frame 이 세운 --guide-* 를 그대로 물려받는다(따로 정의하지 않는다).
+
+   ⚠️ 맨 아래 prefers-reduced-motion 블록이 모든 애니메이션을 끈다. 그때 보이는 정지
+      상태가 **다 그려진 마지막 장면**이어야 정보가 사라지지 않는다 — 그래서 끄기만
+      하는 게 아니라 최종값을 같이 지정한다.
+   ===================================================================== */
+
+/* ── STEP 1 · 방 목록 티켓 카드 ───────────────────────────────── */
+.gm-card {
+  width: 100%; max-width: 210px;
+  background: #f4f1e6;
+  box-shadow: 0 -3px 0 var(--guide-acc-d), 0 3px 0 var(--guide-acc-d),
+    -3px 0 0 var(--guide-acc-d), 3px 0 0 var(--guide-acc-d);
+}
+.gm-card-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 5px 8px; background: #7fb069;
+}
+.gm-kick { font-size: 9px; font-weight: 800; color: #1f3d1a; letter-spacing: 0.06em; }
+.gm-route { font-size: 9px; color: #1f3d1a; }
+.gm-card-body { padding: 6px 8px 8px; }
+.gm-name { font-size: 11px; font-weight: 800; color: #2b2b2b; }
+.gm-avs { display: flex; gap: 4px; margin-top: 6px; }
+/* ★ 크기가 전부 같다 — "방장 없음 · 모두 같은 권한"을 글이 아니라 그림으로 말한다. */
+.gm-avs i {
+  width: 12px; height: 12px; border-radius: 50%; opacity: 0;
+  animation: gm-pop 3.6s var(--gm-d, 0s) infinite;
+}
+.gm-avs i:nth-child(1) { background: #e0645c; }
+.gm-avs i:nth-child(2) { background: #52b788; }
+.gm-avs i:nth-child(3) { background: #4c86d6; }
+.gm-avs i:nth-child(4) { background: #c9a227; }
+@keyframes gm-pop {
+  0%, 9% { opacity: 0; }
+  10%, 92% { opacity: 1; }
+  93%, 100% { opacity: 0; }
+}
+
+/* ── STEP 2 · 들어오는 두 갈래 ────────────────────────────────── */
+.gm-routes { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; }
+.gm-btn {
+  width: 100%; max-width: 190px; padding: 7px 10px;
+  font-size: 11px; font-weight: 800; text-align: center;
+  color: var(--guide-acc-l); background: #26301c;
+  box-shadow: 0 0 0 2px var(--guide-acc-d);
+}
+.gm-or { font-size: 9px; font-weight: 700; color: var(--guide-muted); }
+/* 둘을 번갈아 켠다 — 어느 한쪽이 주 동선처럼 보이면 "두 가지"가 아니게 된다. */
+.gm-btn.is-first { animation: gm-alt 3.2s infinite; }
+.gm-btn.is-second { animation: gm-alt 3.2s 1.6s infinite; }
+@keyframes gm-alt {
+  0%, 44% { background: var(--guide-acc); color: #16200c; box-shadow: 0 0 0 2px var(--guide-ink); }
+  45%, 100% { background: #26301c; color: var(--guide-acc-l); box-shadow: 0 0 0 2px var(--guide-acc-d); }
+}
+.gm-caret {
+  display: inline-block; width: 6px; height: 11px; vertical-align: -1px;
+  background: currentColor; animation: gm-blink 1s steps(1, end) infinite;
+}
+@keyframes gm-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+/* ── STEP 3 · 추억 → 골드 한 바퀴 ─────────────────────────────── */
+.gm-gold { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+.gm-badge {
+  position: relative; display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; background: #26301c; box-shadow: 0 0 0 2px var(--guide-acc-d);
+  animation: gm-flash 4.5s infinite;
+}
+.gm-coin { flex: none; }
+/* 두 숫자를 겹쳐두고 바꿔치기한다 — CSS 로 숫자를 세는 것보다 정확하고 가볍다. */
+.gm-num { font-size: 11px; font-weight: 800; color: var(--guide-acc-l); }
+.gm-num.is-after { position: absolute; left: 27px; }
+.gm-num.is-before { animation: gm-was 4.5s infinite; }
+.gm-num.is-after { animation: gm-now 4.5s infinite; }
+@keyframes gm-was { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes gm-now { 0%, 49% { opacity: 0; } 50%, 100% { opacity: 1; } }
+@keyframes gm-flash {
+  0%, 48% { box-shadow: 0 0 0 2px var(--guide-acc-d); }
+  50%, 60% { box-shadow: 0 0 0 2px var(--guide-acc); }
+  62%, 100% { box-shadow: 0 0 0 2px var(--guide-acc-d); }
+}
+
+.gm-memo {
+  display: flex; gap: 7px; align-items: center;
+  width: 100%; max-width: 190px; padding: 7px 8px;
+  background: #f4f1e6; box-shadow: 0 0 0 2px var(--guide-acc-d);
+}
+.gm-photo { width: 26px; height: 26px; flex: none; background: #cfd8bd; box-shadow: inset 0 0 0 2px #a8b892; }
+.gm-lines { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
+/* 글이 채워지는 것처럼 폭이 자란다 — "글과 사진을 올리면"의 그림 버전. */
+.gm-line { height: 5px; background: #b9c2a6; width: 0; animation: gm-write 4.5s infinite; }
+.gm-line.is-short { max-width: 62%; animation-delay: 0.35s; }
+@keyframes gm-write { 0%, 4% { width: 0; } 26%, 100% { width: 100%; } }
+
+.gm-plus {
+  font-size: 11px; font-weight: 900; color: #e8c85a; opacity: 0;
+  animation: gm-float 4.5s infinite;
+}
+@keyframes gm-float {
+  0%, 30% { opacity: 0; translate: 0 5px; }
+  36%, 54% { opacity: 1; translate: 0 -1px; }
+  64%, 100% { opacity: 0; translate: 0 -12px; }
+}
+
+/* ── 움직임을 줄여 달라고 한 사용자 ──────────────────────────────
+   끄기만 하면 아바타가 안 보이거나 글이 빈 채로 멈춘다. 최종 상태를 같이 준다. */
+@media (prefers-reduced-motion: reduce) {
+  .gm-avs i, .gm-btn.is-first, .gm-btn.is-second, .gm-caret,
+  .gm-badge, .gm-num, .gm-line, .gm-plus { animation: none; }
+  .gm-avs i { opacity: 1; }
+  .gm-btn.is-first { background: var(--guide-acc); color: #16200c; box-shadow: 0 0 0 2px var(--guide-ink); }
+  .gm-line { width: 100%; }
+  .gm-num.is-before { opacity: 0; }
+  .gm-num.is-after { opacity: 1; }
+  .gm-plus { opacity: 1; translate: 0 -1px; }
+}

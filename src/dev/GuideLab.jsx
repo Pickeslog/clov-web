@@ -13,7 +13,7 @@ import OnboardingGuide from '../components/OnboardingGuide/OnboardingGuide'
 import { SHOWCASE_MASCOTS } from '../components/OnboardingGuide/guideMascot'
 import { useGuideStore } from '../stores/guideStore'
 import { resetGuide } from '../lib/onboardingGuide'
-import { setLabMascot } from './guideLabQuery'
+import { LAB_USER_ID, setLabMascot } from './guideLabQuery'
 
 // 가이드의 단계 수. STEP 표시("STEP n / 5")를 폴링 조건으로 쓰기 때문에 필요하다.
 // ⚠️ 가이드가 단계를 늘리면 여기도 같이 고친다 — 안 고치면 단계 버튼이 조용히 멈춘다.
@@ -73,7 +73,7 @@ export default function GuideLab() {
     try {
       $('.clov-guide-close')?.click()
       await until(() => !$('.clov-guide-win'))
-      resetGuide()
+      resetGuide(LAB_USER_ID)
       openGuide()
       await until(() => $('.clov-guide-btn.is-primary') && !stepText())
       if (n < 0) return

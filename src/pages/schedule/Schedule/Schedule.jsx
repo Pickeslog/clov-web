@@ -246,18 +246,15 @@ export default function Schedule() {
           </div>
         </div>
 
-        {/* 다가오는 생일 — 약속 목록과 완전히 분리된 읽기 전용 줄이다(#376).
+        {/* 다가오는 생일 — 약속 목록과 완전히 분리된 읽기 전용 황금 티켓이다(#381).
             ★ 약속이 하나도 없어도 뜬다. 생일은 약속의 부속물이 아니라 그냥 돌아오는 날이라,
-              "약속이 없으니 생일도 숨긴다"가 되면 안 된다. 그래서 plans 상태 밖에 둔다. */}
+              "약속이 없으니 생일도 숨긴다"가 되면 안 된다. 그래서 plans 상태 밖에 둔다.
+            ★ 원래 알약(chip)이었는데 티켓으로 바꿨다 — 리더가 "상단에 표시가 나오는" 것 말고
+              티켓 자체가 금색으로 서기를 원했다. 생일이 다른 날과 다르게 보이는 게 목적이다. */}
         {birthdays.length > 0 && (
-          <div className="birthday-strip">
+          <div className="birthday-tickets">
             {birthdays.map(({ m, date, d }) => (
-              <div className="birthday-chip" key={m.userId}>
-                <i className="ti ti-cake" aria-hidden="true" />
-                <span className="birthday-name">{m.nickname}님의 생일</span>
-                <span className="birthday-date">{date}</span>
-                <span className="birthday-dday">{d === 0 ? 'D-DAY' : `D-${d}`}</span>
-              </div>
+              <BirthdayTicket key={m.userId} name={m.nickname} planDate={date} dday={d} />
             ))}
           </div>
         )}
@@ -445,6 +442,69 @@ function TicketDatePicker({ value, onChange, min }) {
 
 // ── 약속 티켓(선택 약속) — 티켓만 상시 노출하고, 클릭해 스텁을 뜯으면
 //    상세 모달(TicketDetailModal)에서 기존 메모·상태 전환·수정/삭제를 연다.
+/* =====================================================================
+   생일 황금 티켓 (#381) — 다가오는 생일을 티켓 모양으로 세운다.
+
+   ★ 읽기 전용이다. 클릭·기울임·스텁 뜯기가 전부 없다 — 이건 저장된 약속이 아니라
+     멤버의 birthMonthDay 에서 파생한 표시다(clov-api#143 결정). 상세로 열 것도,
+     완료할 것도, 인증할 것도 없어서 누를 수 있게 만들면 눌러보고 헛수고를 한다.
+
+   ★ TicketCard 와 같은 마크업을 쓴다(같은 CSS 를 그대로 물려받는다). 다른 건 색뿐이고,
+     그 색은 --stamp 하나만 바꾸면 따라온다 — 이 화면은 --stamp 를 축으로 제목·D-DAY
+     강조색을 파생시키게 설계돼 있다(schedule.proto.css 의 --ticket-accent).
+
+   ⚠️ items(=GET /plans)에 절대 안 들어간다. 거기 넣으면 stage-photos 를 없는 id 로
+      호출하고 필터 개수(전체/인증 가능/…)가 틀어진다.
+   ===================================================================== */
+function BirthdayTicket({ name, planDate, dday }) {
+  const ddayText = dday === 0 ? 'D-Day' : `D-${dday}`
+  const year = planDate?.slice(0, 4) ?? '----'
+  // 약속처럼 id 가 없다. 월-일을 번호로 쓴다 — 같은 생일이면 해마다 같은 번호가 된다.
+  const no = (planDate ?? '').slice(5).replace('-', '') || '0000'
+
+  return (
+    <div className="growth-detail birthday-ticket-wrap" style={{ '--stamp': '#c9922b' }}>
+      <div className="ticket-stage">
+        {/* role 도 tabIndex 도 없다 — 누르는 물건이 아니다. */}
+        <div className="ticket-card ticket-card--birthday">
+          <div className="ticket-main">
+            <div className="ticket-holo" />
+            <div className="ticket-content">
+              <div className="ticket-toprow">
+                <span className="ticket-brand"><i className="ti ti-cake" aria-hidden="true" /> CLOV. BIRTHDAY</span>
+                <span className="ticket-admit">HAPPY DAY · No. {no}</span>
+              </div>
+              <div className="ticket-titlewrap">
+                <div className="ticket-title ticket-title--highlight">{name}님의 생일</div>
+                <div className="ticket-kicker">BIRTHDAY · {year}</div>
+              </div>
+              <div className="ticket-meta">
+                <div><span>DATE</span><b>{formatFriendlyDate(planDate)}</b></div>
+                {/* 약속 티켓은 여기가 "스텁을 뜯어보세요"다. 뜯을 게 없으니 날짜를 바로 쓴다. */}
+                <div><span>D-DAY</span><b>{ddayText}</b></div>
+              </div>
+              <div className="ticket-foot">
+                <span>ONE DAY A YEAR · CELEBRATE TOGETHER</span>
+                <span className="ticket-serial">SER. {year}-{no}-BDAY</span>
+              </div>
+            </div>
+          </div>
+          {/* 스텁은 붙어 있다(is-off 없음) — 뜯는 연출이 없다. */}
+          <div className="ticket-stub">
+            <span className="ticket-stub-side">KEEP THIS STUB</span>
+            <div className="ticket-stub-mid">
+              <span className="ticket-stub-kicker">{dday === 0 ? '오늘이 그날이에요' : '생일까지'}</span>
+              <span className="ticket-stub-dday">{ddayText}</span>
+              <div className="ticket-stub-barcode" />
+              <span className="ticket-stub-no">{no}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function TicketCard({
   plan, loading, currentUserId, busy,
   onEdit, onDelete, onComplete, onCancel,

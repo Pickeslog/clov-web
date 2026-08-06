@@ -7,11 +7,18 @@
      교감(클릭·드래그)이 통째로 막힌다. */
   bottom: calc(18px + var(--clov-tabbar-h, 0px));
   z-index: 40;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
   pointer-events: none;
+  /* ★ 플로우에 남는 자식은 버튼(스프라이트) 하나뿐이다 — 말풍선은 absolute로 빼서
+     컨테이너 폭 계산에서 완전히 제외한다(아래 .clov-mascot-bubble). 그래서 이
+     컨테이너는 항상 스프라이트 폭 그대로 고정되고, 대사가 길어져도(롭 타이핑 등)
+     스프라이트는 절대 움직이지 않는다.
+
+     ★★ 한 번 여기 폭을 말풍선 최대치(264px)에 맞춰 넓혀본 적이 있는데(위 커밋 로그),
+     그러면 말풍선을 컨테이너 오른쪽 끝(right:0)에 붙이게 되어 이번엔 "말풍선이
+     스프라이트 중앙이 아니라 오른쪽으로 치우쳐 보인다"는 문제가 생겼다 — 원래(예전
+     flex 버전)는 말풍선·스프라이트가 같은 중심축에 정렬돼 있었다. 그래서 컨테이너는
+     다시 스프라이트에 딱 맞게 좁게 두고, 대신 말풍선 쪽에서 위치 계산 방식 자체를
+     바꿔 중앙 정렬 + 무제한 성장을 동시에 만족시킨다 — 아래 주석 참고. */
 }
 .clov-mascot-hit {
   pointer-events: auto;
@@ -118,6 +125,40 @@
    유지한다(#258 후속, 리더 확인). 롭(Rob) 전용 코드 에디터 말풍선(아래)은 이 규칙 위에
    모노스페이스로 한 번 더 override — 그대로 유지. */
 .clov-mascot-bubble {
+  /* 플로우에서 빼서 스프라이트(버튼) 폭에 컨테이너가 영향받지 않게 한다 — 위
+     .clov-mascot 주석 참고. left:50% + translateX(-50%)는 "폭을 모르는 박스를
+     한 점 위에 중앙 정렬"하는 표준 기법이다 — 이 점(50%)은 컨테이너 폭(=스프라이트
+     폭) 기준이라 텍스트가 아무리 늘어나도 그 중심은 항상 스프라이트 중앙에 고정된다.
+
+     ★ width: max-content가 핵심이다. width가 auto인 채로 offset을 하나만
+     (예: right만) 주면, 브라우저는 절대 위치 박스의 "줄바꿈 전 자연스런 너비"를
+     구할 때 이 좁은 컨테이너(스프라이트 폭, 90~180px)를 넘지 못하게 잘라버린다
+     (CSS 2.1 §10.3.7 shrink-to-fit — 실측으로 확인, 롭 대사가 90px에서 못 자라고
+     계속 여러 줄로 눌렸었다). width를 max-content로 명시하면 이 계산을 아예 건너뛰고
+     콘텐츠가 원하는 폭을 그대로 쓰되 아래 max-width로만 clamp된다 — 좁은 컨테이너
+     안에 있어도 자유롭게(중앙 기준 양옆으로) 자란다. */
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  width: max-content;
+  /* max-width를 "박스 전체" 기준으로 재기 위해 명시한다 — 이 앱은 전역
+     * { box-sizing: border-box }가 없어서(index.css는 특정 셀렉터에만 건다)
+     기본값 content-box면 아래 넘침 상한이 padding+border만큼 어긋난다. */
+  box-sizing: border-box;
+  /* ★★ 넘침 상한. 마스코트는 화면 오른쪽 끝에서 18px 안쪽에 고정돼 있는데,
+     말풍선을 스프라이트 중앙에 맞추면 폭의 절반이 스프라이트 오른쪽으로 삐져나온다.
+     그 삐져나온 길이가 18px를 넘는 순간 말풍선이 화면 밖으로 잘리고 문서에
+     가로 스크롤바까지 생긴다(롭 긴 대사에서 실제로 재현 — 데스크톱 5px, 모바일 20px
+     초과에 scrollWidth > clientWidth 확인).
+
+     여기서 100%는 이 말풍선의 컨테이닝 블록, 즉 .clov-mascot의 폭 = 스프라이트 폭이다.
+     중앙 정렬이면 좌우로 각각 12px씩만 더 나갈 수 있으므로 전체 폭을
+     "스프라이트 폭 + 24px"로 묶으면 오른쪽 끝에 항상 6px 여백이 남는다(18-12).
+     캐릭터마다 스프라이트 폭이 다르고 모바일에선 0.8배로 줄지만, %가 알아서
+     따라가므로 브레이크포인트별로 값을 따로 관리할 필요가 없다.
+     min()으로 감싸 각 테마가 정한 상한과 이 기하학적 상한 중 작은 쪽을 쓴다. */
+  max-width: min(190px, calc(100% + 24px));
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 13px;
   background: #1e1e2e;
@@ -125,7 +166,6 @@
   border: 1.5px solid #383a4a;
   border-radius: 10px;
   padding: 4px 10px;
-  max-width: 190px;
   text-align: center;
 }
 body.light-mode .clov-mascot-bubble {
@@ -139,12 +179,18 @@ body.light-mode .clov-mascot-bubble {
    뒤에 와서 우선한다. */
 .clov-mascot[data-character="rob"] .clov-mascot-bubble,
 body.light-mode .clov-mascot[data-character="rob"] .clov-mascot-bubble {
-  position: relative;
+  /* position은 여기서 다시 선언하지 않는다 — 기본 .clov-mascot-bubble의
+     position: absolute(스프라이트 안 밀리게 하는 고정 앵커)를 그대로 물려받아야
+     한다. 예전에 여기서 position: relative로 덮어써서 롭만 다시 플로우에 남아
+     타이핑 중 스프라이트가 밀리는 원인이었다 — ::before 신호등 점은 relative가
+     아니어도 absolute인 부모 기준으로 정상 배치된다. */
   background: #1e1e2e;
   border: 1px solid #383a4a;
   border-radius: 8px;
   padding: 16px 12px 8px;
-  max-width: 230px;
+  /* 롭만 상한이 넓다(코드창이라 한 줄이 길수록 읽기 좋다). 기하학적 넘침 상한은
+     기본 규칙과 동일하게 같이 건다 — 위 .clov-mascot-bubble 주석 참고. */
+  max-width: min(230px, calc(100% + 24px));
   text-align: left;
   font-family: 'Space Mono', 'SFMono-Regular', Consolas, Menlo, monospace;
   font-size: 12px;
@@ -172,7 +218,215 @@ body.light-mode .clov-mascot[data-character="rob"] .clov-mascot-bubble {
   vertical-align: text-bottom;
   animation: clov-mascot-cursor-blink 1s steps(1) infinite;
 }
+/* 롭 타이핑 효과에서 "아직 안 쳐진 나머지 글자"를 담는 자리 — 보이지는 않지만
+   레이아웃 공간은 그대로 차지한다(visibility: hidden ≠ display: none). 그래서
+   말풍선 박스(테두리·배경)는 타이핑 시작 프레임부터 최종 크기로 뜨고, 그 안에서
+   글자만 한 자씩 눈에 보이게 채워진다 — 박스 자체가 매 글자마다 커지는 대신. */
+.clov-mascot-bubble-hidden {
+  visibility: hidden;
+}
 @keyframes clov-mascot-cursor-blink {
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
+}
+
+/* ── 캐릭터별 말풍선 테마(#155 후속) — 롭처럼 라이트 모드에서도 고유 연출을
+   유지해야 해서, 각 규칙을 body.light-mode와 묶어 기본 라이트 모드 규칙보다
+   뒤에 둔다. position은 절대 재선언하지 않는다 — 기본 .clov-mascot-bubble의
+   absolute 앵커(스프라이트 고정)를 깨뜨리면 롭과 같은 문제가 재발한다. ──*/
+
+/* 크로비 — 메모장 느낌: 크림색 종이 + 가로 줄 + 왼쪽 빨간 여백선. */
+.clov-mascot[data-character="crobi"] .clov-mascot-bubble,
+body.light-mode .clov-mascot[data-character="crobi"] .clov-mascot-bubble {
+  background-color: #fffdf2;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 16px,
+    #cfe0f0 16px,
+    #cfe0f0 17px
+  );
+  background-position: 0 3px;
+  color: #3a3a2e;
+  border: 1px solid #e3d9b6;
+  border-left: 3px solid #ef8a80;
+  border-radius: 2px;
+  padding: 8px 10px 7px 12px;
+  /* max-width는 기본 .clov-mascot-bubble의 min(190px, calc(100% + 24px))을 그대로
+     쓴다 — 여기서 190px로 다시 선언하면 넘침 상한이 풀려 화면 밖으로 나간다. */
+  text-align: left;
+  line-height: 17px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 12.5px;
+  box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.18);
+}
+/* 상단 스프링 제본 구멍 3개 */
+.clov-mascot[data-character="crobi"] .clov-mascot-bubble::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  width: 60px;
+  height: 4px;
+  transform: translateX(-50%);
+  background-image: radial-gradient(circle, #cfc7a0 1.4px, transparent 1.5px);
+  background-size: 12px 4px;
+  background-repeat: repeat-x;
+  opacity: 0.8;
+}
+
+/* 타코군 — 물속(deep water) 재질.
+   ★ 이전 버전이 "소다맛 사탕"처럼 보였던 이유를 셋 다 걷어냈다(사용자 피드백):
+     1) 상단이 흰색에 가까운 밝은 그라데이션(#dffaff) — 캔디 코팅의 광택 그 자체
+     2) 좌상단의 크고 선명한 흰 반사광 블롭 — 젤리/구슬의 스페큘러 하이라이트 공식
+     3) inset 흰색 상단 테두리 + 쨍한 시안 보더 — 사탕 표면의 유광 림
+   대신 물처럼 보이게 하는 요소로 바꿨다: 빛이 위에서 아래로 감쇠하는 깊이 그라데이션,
+   윤곽이 흐릿한 광선(caustics), 부유물(marine snow), 가장자리로 갈수록 어두워지는
+   비네트. 광택 대신 "탁함"이 물의 핵심이다. */
+.clov-mascot[data-character="takoGun"] .clov-mascot-bubble,
+body.light-mode .clov-mascot[data-character="takoGun"] .clov-mascot-bubble {
+  background-color: #0d4a66;
+  background-image:
+    /* 부유물(marine snow) — 크기가 다른 두 겹이라 규칙적인 패턴으로 안 읽힌다.
+       물이 "비어 있지 않다"는 신호라 유리·사탕 재질과 가장 크게 갈리는 부분. */
+    radial-gradient(circle, rgba(214, 245, 255, 0.28) 0.6px, transparent 0.7px),
+    radial-gradient(circle, rgba(214, 245, 255, 0.18) 0.5px, transparent 0.6px),
+    /* 물속 광선(caustics) — 경계를 딱 끊지 않고 서서히 밝아졌다 사라지게 해서
+       줄무늬가 아니라 "빛이 물을 통과하는 결"로 보이게 한다. */
+    repeating-linear-gradient(
+      102deg,
+      rgba(255, 255, 255, 0) 0px,
+      rgba(255, 255, 255, 0.055) 10px,
+      rgba(255, 255, 255, 0) 22px
+    ),
+    /* 수면에서 내려오는 확산광 — 블롭이 아니라 위쪽 전체에 넓고 흐릿하게 */
+    linear-gradient(180deg, rgba(168, 232, 255, 0.2) 0%, rgba(168, 232, 255, 0) 45%),
+    /* 깊이 그라데이션 — 아래로 갈수록 빛이 흡수돼 어두워진다 */
+    linear-gradient(178deg, #2a7f9e 0%, #12566f 45%, #072e42 100%);
+  background-size: 17px 15px, 11px 23px, auto, auto, auto;
+  background-position: 0 0, 6px 4px, 0 0, 0 0, 0 0;
+  color: #dbf3fb;
+  border: 1px solid #1d6a86;
+  border-radius: 12px 12px 6px 6px;
+  padding: 8px 12px 10px;
+  /* max-width는 기본 규칙의 넘침 상한을 그대로 물려받는다(위 crobi 주석 참고). */
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  text-shadow: 0 1px 3px rgba(0, 25, 40, 0.75);
+  /* 바깥 그림자는 깊은 물색으로, 안쪽은 가장자리를 어둡게 먹는 비네트만 남긴다
+     (흰색 inset 하이라이트는 광택으로 읽혀서 제거). */
+  box-shadow: 0 6px 16px rgba(4, 35, 52, 0.45), inset 0 0 14px rgba(3, 28, 42, 0.55);
+}
+/* 밑단 거품 — 물 밑에서 올라오는 잔거품.
+   배경이 어두워지면서 흰 점(0.85)이 사탕 스프링클처럼 튀어서 톤을 낮췄다.
+   ★ 한 겹으로 깔면 간격이 완벽히 일정해서 거품이 아니라 재봉선/타공처럼 보인다
+     (2.6배로 확대해 확인). 주기가 서로 안 맞는(7px vs 11px) 두 겹을 크기·높이를
+     달리해 겹치면, 최소공배수 주기(77px)만큼 가서야 패턴이 반복돼 눈에는
+     불규칙하게 흩어진 것으로 읽힌다. */
+.clov-mascot[data-character="takoGun"] .clov-mascot-bubble::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 3px;
+  height: 5px;
+  background-image:
+    radial-gradient(circle, rgba(206, 240, 252, 0.5) 1.1px, transparent 1.2px),
+    radial-gradient(circle, rgba(206, 240, 252, 0.32) 0.8px, transparent 0.9px);
+  background-size: 7px 5px, 11px 5px;
+  background-position: 0 2px, 3px 0;
+  background-repeat: repeat-x, repeat-x;
+  opacity: 0.75;
+}
+/* 산호초 참고 이미지에서 색만 3점 아주 조금 — 바닥에 산호 끝이 살짝 보이는 정도로만
+   힌트를 준다. 화면 전체를 채우는 산호초 이미지처럼 빽빽하게 넣지 않는다(사용자
+   요청 — "산호초 줄여"). no-repeat으로 정확히 3개만, 아주 작게.
+   ★ opacity를 낮게 유지하는 건 디자인 취향이 아니라 물의 성질이다 — 깊이가 있으면
+   물이 색을 먹어서 채도가 떨어진다. 쨍한 원색으로 두면 물 위에 얹힌 스티커처럼
+   보여서, 위 배경을 아무리 어둡게 해도 다시 사탕 쪽으로 끌려간다. */
+.clov-mascot[data-character="takoGun"] .clov-mascot-bubble::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 1px;
+  height: 7px;
+  background-image:
+    radial-gradient(circle 2px at 18% 85%, #e07d9e, transparent 75%),
+    radial-gradient(circle 1.6px at 52% 55%, #dba158, transparent 75%),
+    radial-gradient(circle 2px at 82% 80%, #8f78cf, transparent 75%);
+  background-repeat: no-repeat;
+  opacity: 0.6;
+}
+
+/* 김철수 — 나무판자 느낌: 세로 나뭇결 + 굵은 테두리 + 못대가리. */
+.clov-mascot[data-character="kimCheolsu"] .clov-mascot-bubble,
+body.light-mode .clov-mascot[data-character="kimCheolsu"] .clov-mascot-bubble {
+  /* 판자 이음매(가로선) + 옹이 2개 + 나뭇결 두 겹(굵은 결 + 옅은 결)을 겹쳐서
+     이전보다 훨씬 나무처럼 보이게 한다. 못대가리(::before/::after)는 그대로 두고,
+     이 레이어들은 전부 배경(background-image 다중 레이어)으로만 추가했다. */
+  background-color: #a9713f;
+  background-image:
+    /* 위아래 판자 이음매 */
+    linear-gradient(180deg, transparent 46%, rgba(0, 0, 0, 0.3) 46%, rgba(0, 0, 0, 0.3) 48%, transparent 48%),
+    /* 옹이 2개 */
+    radial-gradient(ellipse 7px 5px at 22% 74%, rgba(58, 34, 10, 0.45), rgba(58, 34, 10, 0.15) 60%, transparent 75%),
+    radial-gradient(ellipse 5px 4px at 80% 26%, rgba(58, 34, 10, 0.4), rgba(58, 34, 10, 0.12) 60%, transparent 75%),
+    /* 굵은 나뭇결 */
+    repeating-linear-gradient(100deg, rgba(0, 0, 0, 0.16) 0px, rgba(0, 0, 0, 0.16) 2px, transparent 2px, transparent 9px),
+    /* 옅은 결 — 앞의 굵은 결과 각도를 살짝 틀어 자연스러운 나이테처럼 보이게 */
+    repeating-linear-gradient(94deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 6px),
+    linear-gradient(160deg, #b9824a 0%, #93602f 100%);
+  color: #fff6e0;
+  border: 3px solid #6b431f;
+  border-radius: 4px;
+  padding: 9px 11px;
+  /* max-width는 기본 규칙의 넘침 상한을 그대로 물려받는다(위 crobi 주석 참고). */
+  text-align: center;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 13px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+  /* 안쪽 위는 밝게, 아래는 어둡게 — 판자를 파낸 듯한 입체감(베벨) */
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.32), inset 0 2px 0 rgba(255, 255, 255, 0.16), inset 0 -3px 5px rgba(0, 0, 0, 0.4);
+}
+/* 좌우 상단 못대가리 2개 */
+.clov-mascot[data-character="kimCheolsu"] .clov-mascot-bubble::before,
+.clov-mascot[data-character="kimCheolsu"] .clov-mascot-bubble::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #3f2712;
+  box-shadow: 0 1px 1px rgba(255, 255, 255, 0.25);
+}
+.clov-mascot[data-character="kimCheolsu"] .clov-mascot-bubble::before { left: 6px; }
+.clov-mascot[data-character="kimCheolsu"] .clov-mascot-bubble::after { right: 6px; }
+
+/* 오닉스 — 보석 느낌: 어두운 보라 그라데이션 + 각진 보석컷 실루엣 + 반짝임. */
+.clov-mascot[data-character="onyx"] .clov-mascot-bubble,
+body.light-mode .clov-mascot[data-character="onyx"] .clov-mascot-bubble {
+  background: linear-gradient(135deg, #2c1a4a 0%, #4a2c7a 45%, #190f30 100%);
+  color: #ecdfff;
+  border: 1px solid #9b6bff;
+  /* 위쪽 모서리를 깎아 보석 컷처럼 보이게 한다 */
+  clip-path: polygon(8% 0, 92% 0, 100% 28%, 100% 100%, 0 100%, 0 28%);
+  padding: 12px 12px 9px;
+  /* max-width는 기본 규칙의 넘침 상한을 그대로 물려받는다(위 crobi 주석 참고). */
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  box-shadow: 0 0 12px rgba(155, 107, 255, 0.55), 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+/* 우상단 반짝임 */
+.clov-mascot[data-character="onyx"] .clov-mascot-bubble::before {
+  content: '✦';
+  position: absolute;
+  top: 4px;
+  right: 10px;
+  font-size: 10px;
+  color: #d9c2ff;
+  opacity: 0.9;
 }

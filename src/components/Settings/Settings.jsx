@@ -28,11 +28,10 @@ const MEMORY_THEMES = [
 // "↺ 기본값으로" 리셋도 이 둘을 함께 초기화해서, 완전히 나누면 리셋 버튼 자리가
 // 애매해진다.
 const THEME_PANES = [
-  { key: 'mode', label: '모드' },
+  { key: 'general', label: '일반' },
   { key: 'background', label: '배경' },
   { key: 'letterTheme', label: '우정편지 테마' },
   { key: 'memoryCardTheme', label: '추억카드 테마' },
-  { key: 'mascotSize', label: '마스코트 크기' },
 ]
 // 사용자 설정 물감 카드 — 프로토타입 blob 모양(색상은 currentColor).
 const BLOB_PATH = 'M20,45 C20,20 60,10 100,15 C150,20 170,5 220,10 C270,15 300,25 300,45 C300,70 260,80 220,78 C180,76 160,85 110,82 C60,79 20,70 20,45 Z'
@@ -246,14 +245,23 @@ function SettingsBody({ me, prefs, onClose }) {
                 </div>
               )}
             </>
-          ) : pane === 'mode' ? (
-            <div className="ps-section">
-              <div className="ps-section-title">테마</div>
-              <div className="ps-swatches">
-                <button type="button" className={`ps-mode-swatch light${!pref.darkMode ? ' on' : ''}`} onClick={() => setTheme(false)} aria-label="라이트 모드" aria-pressed={!pref.darkMode} />
-                <button type="button" className={`ps-mode-swatch dark${pref.darkMode ? ' on' : ''}`} onClick={() => setTheme(true)} aria-label="다크 모드" aria-pressed={pref.darkMode} />
+          ) : pane === 'general' ? (
+            <>
+              <div className="ps-section">
+                <div className="ps-section-title">테마</div>
+                <div className="ps-swatches">
+                  <button type="button" className={`ps-mode-swatch light${!pref.darkMode ? ' on' : ''}`} onClick={() => setTheme(false)} aria-label="라이트 모드" aria-pressed={!pref.darkMode} />
+                  <button type="button" className={`ps-mode-swatch dark${pref.darkMode ? ' on' : ''}`} onClick={() => setTheme(true)} aria-label="다크 모드" aria-pressed={pref.darkMode} />
+                </div>
               </div>
-            </div>
+              {/* 마스코트 캐릭터 선택은 헤더 프로필 드롭다운의 "마스코트 꾸미기"로 이동했다 —
+                  거기서 preferences.mascotType을 직접 바꾼다. 여기선 더 이상 다루지 않는다.
+                  크기는 서버가 아니라 기기-로컬이다(배경 테마와 같은 취급) — 모니터 크기에
+                  딸린 취향이라 계정보다 기기에 묶는 쪽이 자연스럽다. lib/mascotSize.js 참고. */}
+              <div className="ps-section">
+                <OptionRow title="마스코트 크기" value={mascotSize} options={MASCOT_SIZES} onPick={pickMascotSize} />
+              </div>
+            </>
           ) : pane === 'background' ? (
             <>
               <div className="ps-section">
@@ -294,14 +302,8 @@ function SettingsBody({ me, prefs, onClose }) {
             </>
           ) : pane === 'letterTheme' ? (
             <OptionRow title="우정편지 테마" value={pref.letterTheme} options={LETTER_THEMES} onPick={(v) => setPrefAndSave({ letterTheme: v })} />
-          ) : pane === 'memoryCardTheme' ? (
-            <OptionRow title="참여자별 추억 증거 카드" value={pref.memoryCardTheme} options={MEMORY_THEMES} onPick={(v) => setPrefAndSave({ memoryCardTheme: v })} />
           ) : (
-            // 마스코트 캐릭터 선택은 헤더 프로필 드롭다운의 "마스코트 꾸미기"로 이동했다 —
-            // 거기서 preferences.mascotType을 직접 바꾼다. 여기선 더 이상 다루지 않는다.
-            // 크기는 서버가 아니라 기기-로컬이다(배경 테마와 같은 취급) — 모니터 크기에
-            // 딸린 취향이라 계정보다 기기에 묶는 쪽이 자연스럽다. lib/mascotSize.js 참고.
-            <OptionRow title="마스코트 크기" value={mascotSize} options={MASCOT_SIZES} onPick={pickMascotSize} />
+            <OptionRow title="참여자별 추억 증거 카드" value={pref.memoryCardTheme} options={MEMORY_THEMES} onPick={(v) => setPrefAndSave({ memoryCardTheme: v })} />
           )}
         </section>
       </div>

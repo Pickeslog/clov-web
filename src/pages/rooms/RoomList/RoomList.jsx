@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './roomlist.proto.css'
-import { getRooms, createRoom, toggleRoomFavorite, leaveRoom, getRoomMembers } from '../../../api/room'
+import { getRooms, createRoom, toggleRoomFavorite, leaveRoom } from '../../../api/room'
 import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/invite'
 import Header from '../../../components/Header/Header'
 import RoomPreviewModal from './RoomPreviewModal'
@@ -79,32 +79,14 @@ const BARCODE = [2, 1, 3, 1, 2, 1, 3, 1, 2]
 const Icon = ({ name, style }) => <i className={`ti ${name}`} style={style} aria-hidden="true" />
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
 
-// 티켓 카드의 참여 멤버 아바타 — 정원 8명까지 실제 프로필 사진(없으면 이니셜)을 보여준다.
-// RoomPreviewModal의 참여 멤버 렌더와 같은 쿼리 키를 써서 캐시를 공유한다.
-// 카드마다 멤버 목록을 따로 불러오므로(계약에 목록용 요약 필드가 없다), 화면에
-// 걸쳐 있는(뷰포트 200px 이내) 카드만 요청하도록 지연 로드해 한 번에 나가는
-// 요청 수를 줄인다 — 페이지당 최대 9장이 한꺼번에 다 불리지 않는다.
-function RoomAvatars({ roomId }) {
-  const ref = useRef(null)
-  const [visible, setVisible] = useState(false)
-  useEffect(() => {
-    if (visible || !ref.current) return
-    const io = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) { setVisible(true); io.disconnect() }
-    }, { rootMargin: '200px' })
-    io.observe(ref.current)
-    return () => io.disconnect()
-  }, [visible])
-  const members = useQuery({
-    queryKey: ['room', roomId, 'members'],
-    queryFn: () => getRoomMembers(roomId),
-    enabled: !!roomId && visible,
-  })
-  const memberList = (members.data?.items ?? []).filter((m) => m.status === 'ACTIVE').slice(0, 8)
+// 티켓 카드의 참여 멤버 아바타 — GET /rooms가 room.memberAvatars로 이미 정원(최대 8명)까지
+// ACTIVE 멤버를 joinedAt 오름차순으로 내려준다(계약 §4-3·§6, clov-api#142). 카드별로 따로
+// 부르던 GET /rooms/{roomId}/members + 지연 로드는 이제 필요 없다(clov-web#368).
+function RoomAvatars({ memberAvatars }) {
   return (
-    <div className="tk-avs" ref={ref}>
-      {memberList.map((m) => (
-        <span key={m.membershipId ?? m.userId} className="tk-av" style={{ background: avatarColorForKey(m.userId ?? m.membershipId) }}>
+    <div className="tk-avs">
+      {(memberAvatars ?? []).map((m) => (
+        <span key={m.userId} className="tk-av" style={{ background: avatarColorForKey(m.userId) }}>
           {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
         </span>
       ))}
@@ -482,7 +464,7 @@ export default function RoomList() {
                       <div style={{ minWidth: 0 }}>
                         <div className="tk-pax-kick">우정공간</div>
                         <div className="tk-name">{room.name}</div>
-                        <RoomAvatars roomId={room.id} />
+                        <RoomAvatars memberAvatars={room.memberAvatars} />
                       </div>
                       <div className="tk-corner">
                         <button type="button" className="tk-star"

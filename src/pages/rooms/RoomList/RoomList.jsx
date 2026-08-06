@@ -7,6 +7,7 @@ import { getMyJoinRequests, requestJoin, cancelJoinRequest } from '../../../api/
 import Header from '../../../components/Header/Header'
 import RoomPreviewModal from './RoomPreviewModal'
 import JoinRoomModal from '../JoinRoom/JoinRoomModal'
+import OnboardingGuide from '../../../components/OnboardingGuide/OnboardingGuide'
 import { ddayDiff } from '../../../lib/datetime'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
 import { describeInviteError, extractJoinedRoomId } from '../../../lib/inviteError'
@@ -522,6 +523,9 @@ export default function RoomList() {
         />
       )}
       {joinOpen && <JoinRoomModal initialCode={deepLinkCode} onClose={closeJoin} />}
+      {/* 첫 방문이면 스스로 열린다(clov-guide-done / clov-guide-skipped 를 본다).
+          프로필 → "가이드 다시 보기"도 이 인스턴스를 guideStore 로 연다. */}
+      <OnboardingGuide />
     </div>
   )
 }

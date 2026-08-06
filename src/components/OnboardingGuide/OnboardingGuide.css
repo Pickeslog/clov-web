@@ -1,0 +1,174 @@
+/* =====================================================================
+   온보딩 가이드 — 픽셀 창.
+
+   ★ 라이트/다크에 적응하지 않는다. 행운편지가 항상 크림 종이인 것과 같은 판단으로,
+     이 화면은 항상 어두운 픽셀 패널이다. 팔레트를 여기 지역 변수로 못박아 앱 토큰이
+     바뀌어도 이 창의 미감이 흔들리지 않게 한다.
+
+   z-index 9800 — 추억피드 라이트박스(9600) 위, ConfirmDialog(10000) 아래.
+   가이드 위에 확인 다이얼로그가 뜨는 건 정상이고 그 반대는 아니다.
+   ===================================================================== */
+
+.clov-guide-backdrop {
+  position: fixed; inset: 0; z-index: 9800;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px 16px;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.clov-guide-frame {
+  --guide-ink: #14150e;
+  --guide-panel: #1a1f14;
+  --guide-acc: #9ccc65;
+  --guide-acc-d: #4a6330;
+  --guide-acc-l: #cfe3a8;
+  --guide-muted: #8fa876;
+
+  position: relative;
+  width: min(360px, 100%);
+  /* ⚠️ dvh 다. 모바일에서 주소창이 보이는 상태여도 아래 버튼이 화면 안에 있어야 한다
+     (#316 설정 모달에서 같은 걸 밟았다). vh 면 주소창 높이만큼 잘린다. */
+  height: min(640px, calc(100dvh - 40px));
+  background: var(--guide-panel);
+  border: 4px solid var(--guide-acc);
+  box-shadow:
+    0 0 0 4px var(--guide-ink),
+    9px 9px 0 rgba(0, 0, 0, 0.16),
+    inset 0 0 0 4px var(--guide-acc-d);
+  overflow: hidden;
+}
+
+.clov-guide-frame img,
+.clov-guide-frame svg { display: block; image-rendering: pixelated; }
+
+.clov-guide-dots {
+  position: absolute; inset: 0; opacity: 0.45; pointer-events: none;
+  background-image: radial-gradient(var(--guide-acc-d) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+.clov-guide-watermark {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  opacity: 0.06; pointer-events: none;
+}
+
+.clov-guide-corner {
+  position: absolute; width: 32px; height: 32px; pointer-events: none;
+  display: grid; place-items: center;
+  background: var(--guide-panel);
+  box-shadow:
+    0 -3px 0 var(--guide-acc), 0 3px 0 var(--guide-acc),
+    -3px 0 0 var(--guide-acc), 3px 0 0 var(--guide-acc);
+}
+.clov-guide-corner.is-tl { top: 12px; left: 12px; }
+.clov-guide-corner.is-tr { top: 12px; right: 12px; }
+.clov-guide-corner.is-bl { bottom: 12px; left: 12px; }
+.clov-guide-corner.is-br { bottom: 12px; right: 12px; }
+
+.clov-guide-topbar {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  padding: 6px 14px; background: var(--guide-acc-d);
+  box-shadow:
+    0 -3px 0 var(--guide-acc), 0 3px 0 var(--guide-acc),
+    -3px 0 0 var(--guide-acc), 3px 0 0 var(--guide-acc);
+}
+
+/* 내용판. 세로로 넘치면 여기서 스크롤한다 — 작은 화면에서 버튼이 잘리면 안 된다.
+   overflow-x 는 건드리지 않는다(hidden 을 주면 반대 축이 auto 로 승격돼 #334 처럼
+   가로 스크롤이 생긴다). */
+.clov-guide-stage {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; padding: 62px 22px 22px;
+  overflow-y: auto;
+}
+.clov-guide-stage.is-steps { justify-content: center; padding: 62px 18px 18px; }
+
+.clov-guide-mascot { animation: clov-guide-bob 1.4s steps(2, end) infinite; }
+@keyframes clov-guide-bob {
+  0%, 50% { transform: translateY(0); }
+  51%, 100% { transform: translateY(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clov-guide-mascot { animation: none; }
+}
+
+.clov-guide-welcome {
+  color: var(--guide-acc-l); font-size: 13px; font-weight: 700; line-height: 1.9; text-align: center;
+}
+.clov-guide-bar { display: flex; gap: 4px; }
+.clov-guide-bar i { width: 11px; height: 13px; background: var(--guide-acc-d); }
+.clov-guide-bar i.is-on { background: var(--guide-acc); }
+.clov-guide-ask {
+  color: var(--guide-muted); font-size: 11px; font-weight: 800; letter-spacing: 0.06em;
+}
+
+.clov-guide-row { display: flex; gap: 9px; align-items: center; }
+
+.clov-guide-btn {
+  border: 0; cursor: pointer; font: inherit; font-size: 13px; font-weight: 800;
+  padding: 11px 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--guide-panel); color: var(--guide-acc-l);
+  box-shadow:
+    0 -3px 0 var(--guide-acc-d), 0 3px 0 var(--guide-acc-d),
+    -3px 0 0 var(--guide-acc-d), 3px 0 0 var(--guide-acc-d);
+}
+.clov-guide-btn:active { transform: translateY(2px); }
+
+.clov-guide-btn.is-primary {
+  background: var(--guide-acc); color: #16200c;
+  box-shadow:
+    0 -3px 0 var(--guide-ink), 0 3px 0 var(--guide-ink),
+    -3px 0 0 var(--guide-ink), 3px 0 0 var(--guide-ink),
+    0 7px 0 var(--guide-acc-d), 0 10px 0 var(--guide-ink);
+}
+/* 눌리면 아래 그림자 두 겹만큼 내려앉는다 — 실제로 눌리는 물리 버튼처럼 보이게. */
+.clov-guide-btn.is-primary:active {
+  transform: translateY(6px);
+  box-shadow:
+    0 -3px 0 var(--guide-ink), 0 3px 0 var(--guide-ink),
+    -3px 0 0 var(--guide-ink), 3px 0 0 var(--guide-ink);
+}
+
+.clov-guide-never {
+  margin-top: 2px; border: 0; background: none; cursor: pointer; font: inherit;
+  font-size: 11px; font-weight: 700; color: #7f9268; text-decoration: underline; padding: 5px;
+}
+.clov-guide-never:hover { color: var(--guide-acc); }
+
+/* ── 4단계 창 ──────────────────────────────────────────────── */
+.clov-guide-win {
+  width: 100%; background: var(--guide-panel);
+  box-shadow:
+    0 -4px 0 var(--guide-acc), 0 4px 0 var(--guide-acc),
+    -4px 0 0 var(--guide-acc), 4px 0 0 var(--guide-acc),
+    0 12px 0 rgba(0, 0, 0, 0.4);
+}
+.clov-guide-winbar {
+  background: var(--guide-acc-d); padding: 8px 11px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.clov-guide-winbar span {
+  color: #eaf3d6; font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+}
+.clov-guide-close {
+  width: 19px; height: 19px; border: 0; cursor: pointer; background: #c94f4f; color: #fff;
+  font: inherit; font-size: 11px; font-weight: 900; line-height: 1;
+  box-shadow:
+    0 -2px 0 var(--guide-ink), 0 2px 0 var(--guide-ink),
+    -2px 0 0 var(--guide-ink), 2px 0 0 var(--guide-ink);
+}
+.clov-guide-winbody { padding: 13px 14px; display: flex; flex-direction: column; gap: 9px; }
+.clov-guide-art {
+  height: 120px; background: #111509; display: grid; place-items: center;
+  box-shadow: inset 0 0 0 2px #2a3a1c;
+}
+.clov-guide-stepno {
+  color: var(--guide-acc); font-size: 10px; font-weight: 800; letter-spacing: 0.12em;
+}
+.clov-guide-heading { color: #eef0e2; font-size: 15px; font-weight: 800; line-height: 1.4; }
+.clov-guide-body { color: #b7c99a; font-size: 12px; font-weight: 500; line-height: 1.8; }
+.clov-guide-pips { display: flex; gap: 5px; justify-content: center; }
+.clov-guide-pips i { width: 7px; height: 7px; background: #3d4a2c; }
+.clov-guide-pips i.is-on { background: var(--guide-acc); }
+.clov-guide-winbody .clov-guide-row { justify-content: space-between; padding-top: 3px; }

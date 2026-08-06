@@ -13,6 +13,7 @@ import { uploadImage } from '../../../lib/uploadImage'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
 import { ddayDiff, nextBirthdayDate } from '../../../lib/datetime'
+import { useTicketTilt } from '../../../hooks/useTicketTilt'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 import Mascot from '../../../components/Mascot/Mascot'
@@ -225,6 +226,82 @@ export default function Schedule() {
     vp.scrollBy({ left: dir * 320, behavior: 'smooth' })
   }
 
+  /* ── 약속 티켓 슬라이드(#381) ────────────────────────────────────────
+     티켓 ↔ 아래 필름스트립 레일이 같은 선택을 가리켜야 한다. 양방향으로 맞춘다. */
+  const planTicketRailRef = useRef(null)
+  const planRailReadyRef = useRef(false)
+  // 스크롤이 만든 선택 변경("메아리")을 기억한다. 이걸 ②가 다시 스크롤로 되받으면
+  // 둘이 서로 밀어대며 진동한다 — 실제로 연속 클릭이 씹혔다(586 → 588).
+  const scrollEchoRef = useRef(null)
+
+  const scrollPlanTicketRail = (dir) => {
+    const vp = planTicketRailRef.current
+    if (!vp) return
+    const first = vp.querySelector('.plan-ticket-wrap')
+    const gap = parseFloat(getComputedStyle(vp.firstElementChild).columnGap) || 0
+    vp.scrollBy({ left: dir * (first ? first.getBoundingClientRect().width + gap : vp.clientWidth), behavior: 'smooth' })
+  }
+
+  // ① 스크롤이 멎으면 가운데 티켓을 선택으로 올린다.
+  //    ★ setTimeout 안에서 setState 한다 — 스크롤마다 갱신하면 렌더가 폭주하고,
+  //      effect 본문 동기 setState 도 아니게 된다(react-hooks/set-state-in-effect).
+  useEffect(() => {
+    const vp = planTicketRailRef.current
+    if (!vp) return
+    let timer
+    const onScroll = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        const vr = vp.getBoundingClientRect()
+        const mid = vr.left + vr.width / 2
+        let bestId = null
+        let bestDist = Infinity
+        vp.querySelectorAll('[data-plan-id]').forEach((el) => {
+          const r = el.getBoundingClientRect()
+          const dist = Math.abs((r.left + r.width / 2) - mid)
+          if (dist < bestDist) { bestDist = dist; bestId = el.dataset.planId }
+        })
+        if (bestId) { scrollEchoRef.current = bestId; setSelectedPlanId(bestId) }
+      }, 140)
+    }
+    vp.addEventListener('scroll', onScroll, { passive: true })
+    return () => { vp.removeEventListener('scroll', onScroll); clearTimeout(timer) }
+    // ⚠️ deps 를 []로 두면 안 된다. 첫 마운트엔 plans 가 아직 안 와서 items 가 비고,
+    //    그러면 이 레일 자체가 렌더되지 않아 ref 가 null 이라 리스너가 안 붙는다.
+    //    그 뒤로 다시 붙을 기회가 없어 슬라이드가 선택을 못 바꾼다(실제로 그랬다).
+  }, [items.length])
+
+  // ② 선택이 바뀌면 그 티켓을 가운데로 민다(아래 레일에서 골랐을 때).
+  //    ⚠️ 이미 가운데면 아무것도 안 한다 — 안 그러면 ①과 서로 밀어대며 진동한다.
+  //    첫 렌더만 애니메이션 없이 자리를 잡는다(들어오자마자 미끄러지면 산만하다).
+  useEffect(() => {
+    if (!effectiveId) return
+    // 스크롤이 만든 변경이면 되받지 않는다(위 scrollEchoRef 설명).
+    if (scrollEchoRef.current != null && String(effectiveId) === scrollEchoRef.current) {
+      scrollEchoRef.current = null
+      planRailReadyRef.current = true
+      return
+    }
+    scrollEchoRef.current = null
+    // ⚠️ rAF 로 한 프레임 미룬다. 목록이 막 붙은 직후엔 폭이 아직 0이라 그 자리에서
+    //    재면 offset 이 엉뚱하게 나와 첫 티켓에 머무른다(실제로 그랬다).
+    const raf = requestAnimationFrame(() => {
+      const vp = planTicketRailRef.current
+      if (!vp) return
+      const el = vp.querySelector(`[data-plan-id="${CSS.escape(String(effectiveId))}"]`)
+      if (!el) return
+      const vr = vp.getBoundingClientRect()
+      const r = el.getBoundingClientRect()
+      if (!vr.width || !r.width) return
+      const offset = (r.left + r.width / 2) - (vr.left + vr.width / 2)
+      if (Math.abs(offset) >= 8) {
+        vp.scrollBy({ left: offset, behavior: planRailReadyRef.current ? 'smooth' : 'auto' })
+      }
+      planRailReadyRef.current = true
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [effectiveId, visible.length, density])
+
   // 생일 티켓 슬라이드(#381).
   // ★ 뷰포트 폭이 아니라 **티켓 한 장 + 간격**만큼 넘긴다. 다음 장을 살짝 보여주려고
   //   티켓을 뷰포트보다 좁게 뒀기 때문에(엿보기), 뷰포트 폭으로 넘기면 한 장을 넘어간다.
@@ -314,17 +391,38 @@ export default function Schedule() {
 
         {items.length > 0 && (
           <section className="growth-shell">
-            <TicketCard
-              key={effectiveId}
-              plan={selectedPlan}
-              loading={detail.isPending}
-              currentUserId={currentUserId}
-              busy={detailBusy}
-              onEdit={() => selectedPlan && setEditing(selectedPlan)}
-              onDelete={async () => { if (await confirm('정말 이 약속을 삭제하시겠어요?', { confirmText: '삭제', variant: 'danger' })) deleteMutation.mutate() }}
-              onComplete={() => completeMutation.mutate()}
-              onCancel={() => cancelMutation.mutate()}
-            />
+            {/* 약속 티켓도 슬라이드로(#381) — 생일 티켓과 같은 구조다.
+                ★ 티켓이 선택을 주도하고 아래 필름스트립 레일이 따라온다. 같은 목록을
+                  둘이 따로 고르면 어느 쪽이 진실인지 알 수 없어진다. 스크롤이 멎으면
+                  가운데 티켓이 선택되고, 레일에서 고르면 티켓이 그리로 미끄러진다. */}
+            <div className={`plan-ticket-rail${visible.length > 1 ? ' is-multi' : ''}`}>
+              {visible.length > 1 && (
+                <button type="button" className="carousel-btn" aria-label="이전 약속 티켓" onClick={() => scrollPlanTicketRail(-1)}>‹</button>
+              )}
+              <div className="plan-ticket-viewport" ref={planTicketRailRef}>
+                <div className="plan-ticket-list">
+                  {visible.map((p) => (
+                    <TicketCard
+                      key={p.id}
+                      plan={p}
+                      /* 상세(설명·체크리스트)는 요약 응답에 없다. 지금 선택된 티켓에만
+                         내려보내고, 모달은 그게 도착해야 연다. */
+                      detailPlan={p.id === effectiveId ? detail.data : null}
+                      currentUserId={currentUserId}
+                      busy={detailBusy}
+                      onSelect={() => setSelectedPlanId(p.id)}
+                      onEdit={() => selectedPlan && setEditing(selectedPlan)}
+                      onDelete={async () => { if (await confirm('정말 이 약속을 삭제하시겠어요?', { confirmText: '삭제', variant: 'danger' })) deleteMutation.mutate() }}
+                      onComplete={() => completeMutation.mutate()}
+                      onCancel={() => cancelMutation.mutate()}
+                    />
+                  ))}
+                </div>
+              </div>
+              {visible.length > 1 && (
+                <button type="button" className="carousel-btn" aria-label="다음 약속 티켓" onClick={() => scrollPlanTicketRail(1)}>›</button>
+              )}
+            </div>
 
             <div className="growth-hero">
               <div className="growth-density" aria-label="일정 필터">
@@ -502,6 +600,7 @@ function TicketDatePicker({ value, onChange, min }) {
       호출하고 필터 개수(전체/인증 가능/…)가 틀어진다.
    ===================================================================== */
 function BirthdayTicket({ name, userId, planDate, dday }) {
+  const tilt = useTicketTilt()
   const ddayText = dday === 0 ? 'D-Day' : `D-${dday}`
   const year = planDate?.slice(0, 4) ?? '----'
   // ⚠️ 멤버 id 로 만든다. 날짜로 만들면 같은 날 생일인 두 사람이 같은 번호를 갖는다.
@@ -512,39 +611,44 @@ function BirthdayTicket({ name, userId, planDate, dday }) {
   return (
     <div className="growth-detail birthday-ticket-wrap" style={{ '--stamp': '#c9922b' }}>
       <div className="ticket-stage">
-        {/* role 도 tabIndex 도 없다 — 누르는 물건이 아니다. */}
-        <div className="ticket-card ticket-card--birthday">
-          <div className="ticket-main">
-            <div className="ticket-holo" />
-            <div className="ticket-content">
-              <div className="ticket-toprow">
-                <span className="ticket-brand"><i className="ti ti-cake" aria-hidden="true" /> CLOV. BIRTHDAY</span>
-                <span className="ticket-admit">HAPPY DAY · No. {no}</span>
-              </div>
-              <div className="ticket-titlewrap">
-                <div className="ticket-title ticket-title--highlight">{name}님의 생일</div>
-                <div className="ticket-kicker">BIRTHDAY · {year}</div>
-              </div>
-              <div className="ticket-meta">
-                <div><span>DATE</span><b>{formatFriendlyDate(planDate)}</b></div>
-                {/* 약속 티켓은 여기가 "스텁을 뜯어보세요"다. 뜯을 게 없으니 날짜를 바로 쓴다. */}
-                <div><span>D-DAY</span><b>{ddayText}</b></div>
-              </div>
-              <div className="ticket-foot">
-                <span className="ticket-bday-tagline">ONE DAY A YEAR · CELEBRATE TOGETHER</span>
-                <span className="ticket-serial">SER. {year}-{mmdd}-{no}</span>
+        {/* 3D 기울임 — 약속 티켓과 같은 훅을 쓴다(#381). 두 티켓이 같은 손맛이어야 한다.
+            ★ 기울임은 "만질 수 있다"지 "누르면 열린다"가 아니다. 여전히 role·tabIndex·
+              onClick 이 없고 cursor 도 default 다 — 이건 읽기 전용 티켓이다. */}
+        <div className="ticket-tilt" style={tilt.tiltStyle}>
+          <div className="ticket-card ticket-card--birthday" {...tilt.handlers}>
+            <div className="ticket-main">
+              <div className="ticket-holo" />
+              <div className="ticket-content">
+                <div className="ticket-toprow">
+                  <span className="ticket-brand"><i className="ti ti-cake" aria-hidden="true" /> CLOV. BIRTHDAY</span>
+                  <span className="ticket-admit">HAPPY DAY · No. {no}</span>
+                </div>
+                <div className="ticket-titlewrap">
+                  <div className="ticket-title ticket-title--highlight">{name}님의 생일</div>
+                  <div className="ticket-kicker">BIRTHDAY · {year}</div>
+                </div>
+                <div className="ticket-meta">
+                  <div><span>DATE</span><b>{formatFriendlyDate(planDate)}</b></div>
+                  {/* 약속 티켓은 여기가 "스텁을 뜯어보세요"다. 뜯을 게 없으니 날짜를 바로 쓴다. */}
+                  <div><span>D-DAY</span><b>{ddayText}</b></div>
+                </div>
+                <div className="ticket-foot">
+                  <span className="ticket-bday-tagline">ONE DAY A YEAR · CELEBRATE TOGETHER</span>
+                  <span className="ticket-serial">SER. {year}-{mmdd}-{no}</span>
+                </div>
               </div>
             </div>
-          </div>
-          {/* 스텁은 붙어 있다(is-off 없음) — 뜯는 연출이 없다. */}
-          <div className="ticket-stub">
-            <span className="ticket-stub-side">KEEP THIS STUB</span>
-            <div className="ticket-stub-mid">
-              <span className="ticket-stub-kicker">{dday === 0 ? '오늘이 그날이에요' : '생일까지'}</span>
-              <span className="ticket-stub-dday">{ddayText}</span>
-              <div className="ticket-stub-barcode" />
-              <span className="ticket-stub-no">{no}</span>
+            {/* 스텁은 붙어 있다(is-off 없음) — 뜯는 연출이 없다. */}
+            <div className="ticket-stub">
+              <span className="ticket-stub-side">KEEP THIS STUB</span>
+              <div className="ticket-stub-mid">
+                <span className="ticket-stub-kicker">{dday === 0 ? '오늘이 그날이에요' : '생일까지'}</span>
+                <span className="ticket-stub-dday">{ddayText}</span>
+                <div className="ticket-stub-barcode" />
+                <span className="ticket-stub-no">{no}</span>
+              </div>
             </div>
+            <div className="ticket-glare" style={tilt.glareStyle} />
           </div>
         </div>
       </div>
@@ -552,9 +656,14 @@ function BirthdayTicket({ name, userId, planDate, dday }) {
   )
 }
 
+/**
+ * plan        목록 요약(PlanSummary) — 티켓 앞면은 이것만으로 그린다.
+ * detailPlan  상세(설명·체크리스트). 요약에 없는 값이라 모달은 이게 와야 연다.
+ *             선택된 티켓에만 내려온다.
+ */
 function TicketCard({
-  plan, loading, currentUserId, busy,
-  onEdit, onDelete, onComplete, onCancel,
+  plan, detailPlan, currentUserId, busy,
+  onSelect, onEdit, onDelete, onComplete, onCancel,
 }) {
   const [torn, setTorn] = useState(false)
   // 뜯었다가(is-off) 닫을 때만 "다시 붙는" 연출(clovTearBack)을 재생하기 위한 임시 플래그.
@@ -562,16 +671,11 @@ function TicketCard({
   // torn=false인 기본 상태로 렌더되면서 같은 CSS 애니메이션이 다시 걸려버린다.
   const [reattaching, setReattaching] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
-  const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 30, hover: false })
+  // 생일 티켓과 같은 훅을 쓴다(#381) — 원래 여기 인라인으로 있던 걸 뺐다.
+  const tilt = useTicketTilt()
 
-  if (loading || !plan) {
-    return (
-      <div className="growth-detail">
-        <div className="receipt-paper"><div className="receipt-memo-empty">불러오는 중…</div></div>
-      </div>
-    )
-  }
-
+  // 앞면은 목록 요약만으로 그린다 — 상세를 기다릴 이유가 없다(예전엔 여기서
+  // "불러오는 중…"을 띄웠는데, 이제 티켓이 여러 장이라 그 자리가 없다).
   const diff = ddayDiff(plan.planDate)
   const ddayText = calculateDday(plan.planDate)
   const isPast = diff !== null && diff < 0
@@ -579,17 +683,12 @@ function TicketCard({
     ? '함께할 그날까지'
     : diff < 0 ? '함께 보낸 그날로부터' : diff === 0 ? '바로 오늘, 약속의 날!' : '함께할 그날까지'
 
-  const onTiltMove = (e) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    const px = (e.clientX - r.left) / r.width
-    const py = (e.clientY - r.top) / r.height
-    setTilt({ rx: -(py - 0.5) * 6, ry: (px - 0.5) * 9, mx: px * 100, my: py * 100, hover: true })
-  }
-  const onTiltLeave = () => setTilt((s) => ({ ...s, rx: 0, ry: 0, hover: false }))
-
   // 클릭 → 스텁이 뜯어지는 연출 → 살짝 뒤에 상세 모달 오픈.
   const openTicket = () => {
     if (detailOpen) return
+    // 먼저 선택으로 올린다 — 가운데가 아닌(엿보이는) 티켓을 눌렀을 수도 있고,
+    // 그래야 상세 조회가 이 티켓 걸로 시작된다.
+    onSelect?.()
     setTorn(true)
     window.setTimeout(() => setDetailOpen(true), 340)
   }
@@ -601,22 +700,15 @@ function TicketCard({
   }
 
   return (
-    <div className="growth-detail" style={{ '--stamp': isPast ? '#2e5233' : '#c0392b' }}>
+    <div className="growth-detail plan-ticket-wrap" data-plan-id={plan.id} style={{ '--stamp': isPast ? '#2e5233' : '#c0392b' }}>
       <div className="ticket-stage">
-        <div
-          className="ticket-tilt"
-          style={{
-            transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
-            transition: tilt.hover ? 'transform .1s linear' : 'transform .55s cubic-bezier(.2,.8,.2,1)',
-          }}
-        >
+        <div className="ticket-tilt" style={tilt.tiltStyle}>
           <div
             className={`ticket-card${torn ? ' is-torn' : ''}`}
             role="button"
             tabIndex={0}
             title="클릭하면 약속 상세가 열립니다"
-            onMouseMove={onTiltMove}
-            onMouseLeave={onTiltLeave}
+            {...tilt.handlers}
             onClick={openTicket}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTicket() } }}
           >
@@ -650,14 +742,16 @@ function TicketCard({
                 <span className="ticket-stub-no">{ticketNoOf(plan)}</span>
               </div>
             </div>
-            <div className="ticket-glare" style={{ opacity: tilt.hover ? 1 : 0, background: `radial-gradient(360px circle at ${tilt.mx}% ${tilt.my}%, rgba(255,248,224,.16), rgba(255,248,224,0) 62%)` }} />
+            <div className="ticket-glare" style={tilt.glareStyle} />
           </div>
         </div>
       </div>
 
-      {detailOpen && (
+      {/* detailPlan 이 와야 연다 — 설명·작성자는 목록 요약에 없어서, 요약으로 열면
+          메모가 빈 것처럼 보이고 수정·삭제 권한 판정도 틀린다. */}
+      {detailOpen && detailPlan && (
         <TicketDetailModal
-          plan={plan}
+          plan={detailPlan}
           currentUserId={currentUserId}
           busy={busy}
           onClose={closeDetail}

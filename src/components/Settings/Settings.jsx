@@ -37,6 +37,28 @@ const THEME_PANES = [
 const BLOB_PATH = 'M20,45 C20,20 60,10 100,15 C150,20 170,5 220,10 C270,15 300,25 300,45 C300,70 260,80 220,78 C180,76 160,85 110,82 C60,79 20,70 20,45 Z'
 
 // 사용자설정 모달 — 프로토타입 2-패널(계정/화면) 레이아웃.
+/* =====================================================================
+   내 프로필(닉네임·생일·사진)이 바뀌면 그 값을 **베껴 쓰는** 캐시를 전부 지운다.
+
+   ⚠️ ['me'] 만 지우면 안 된다. 내 프로필은 세 곳에 복제돼 있다:
+       ['me']                          사용자설정·헤더
+       ['room', roomId, 'members']     방 멤버 목록 — nickname · profileImageUrl ·
+                                       birthMonthDay(계약 §4-3)
+       ['rooms']                       방 목록 카드의 memberAvatars(clov-api#141)
+
+   실제로 터진 것: 사용자설정에서 생일을 지웠는데 일정계획의 생일 티켓이 그대로 남았다.
+   티켓은 ['me'] 가 아니라 members 의 birthMonthDay 를 읽기 때문이다(#381).
+   닉네임·사진도 같은 이유로 방 안에서는 낡은 값이 남아 있었다.
+
+   ★ ['room'] 은 접두 매칭이라 그 방의 members·level·상세가 같이 지워진다. 넓어 보이지만
+     전부 내 닉네임·사진이 섞여 있는 것들이고, 프로필 저장은 자주 일어나지 않는다.
+   ===================================================================== */
+function invalidateMyProfileEverywhere(queryClient) {
+  queryClient.invalidateQueries({ queryKey: ['me'] })
+  queryClient.invalidateQueries({ queryKey: ['room'] })
+  queryClient.invalidateQueries({ queryKey: ['rooms'] })
+}
+
 export default function Settings({ onClose }) {
   const me = useQuery({ queryKey: ['me'], queryFn: getMe })
   const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
@@ -85,7 +107,7 @@ function SettingsBody({ me, prefs, onClose }) {
   // 프로필(개인정보 수정) 저장 — 닉네임·생일.
   const profileSave = useMutation({
     mutationFn: () => updateProfile({ nickname: nickname.trim(), birthdate: birthdate || null }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['me'] }),
+    onSuccess: () => invalidateMyProfileEverywhere(queryClient),
   })
   // 환경설정(테마) — 프로토타입처럼 바꾸는 즉시 저장(테마 패널 푸터는 '닫기'만).
   //
@@ -118,7 +140,7 @@ function SettingsBody({ me, prefs, onClose }) {
       const imageUrl = await uploadImage(presignProfileImage, file)
       return updateProfile({ profileImageUrl: imageUrl })
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['me'] }),
+    onSuccess: () => invalidateMyProfileEverywhere(queryClient),
   })
   const passwordMutation = useMutation({
     mutationFn: changePassword,

@@ -1267,6 +1267,29 @@
    아래 약속 레일(.growth-card-rail)과 같은 구조다: 화살표 + 스냅 스크롤 뷰포트.
    ★ 다만 한 장이 뷰포트 폭을 꽉 채운다 — 약속 카드는 작아서 여러 장이 보이지만
      티켓은 한 장이 한 화면이라야 읽힌다. */
+/* ===== 약속 티켓 슬라이드 (#381) =====
+   생일 레일과 같은 구조다 — 두 티켓이 같은 조작을 갖는 게 목적이다.
+   ⚠️ .ticket-stage 가 margin-bottom:18px 을 갖고 있어 레일 안에서는 걷어낸다. */
+.proto-schedule .plan-ticket-rail {
+  display: flex; align-items: flex-start; justify-content: center; gap: 8px;
+  width: 100%; min-width: 0;
+}
+.proto-schedule .plan-ticket-viewport {
+  flex: 0 1 640px; min-width: 0; max-width: 640px;
+  overflow-x: auto; overflow-y: visible;
+  scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+.proto-schedule .plan-ticket-viewport::-webkit-scrollbar { display: none; }
+.proto-schedule .plan-ticket-list { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 12px; }
+.proto-schedule .plan-ticket-wrap { flex: 0 0 100%; min-width: 0; scroll-snap-align: center; }
+/* 엿보기 — 생일 레일과 같은 44px. 두 장 이상일 때만. */
+.proto-schedule .plan-ticket-rail.is-multi .plan-ticket-wrap { flex: 0 0 calc(100% - 44px); }
+/* 터치에서는 화살표를 접고 폭을 돌려준다(생일 레일과 같은 규칙 — 폭이 아니라 입력장치). */
+@media (hover: none) and (pointer: coarse) {
+  .proto-schedule .plan-ticket-rail .carousel-btn { display: none; }
+}
+
 /* 라벨 — 개수를 적는 게 핵심이다("다가오는 생일 3명"). 한 장만 보이는 게 이상하다는 걸
    숫자가 알려주고, 그게 슬라이드를 찾게 만든다. 티켓 폭(640)에 맞춰 왼쪽을 맞춘다. */
 .proto-schedule .birthday-label {

@@ -1270,25 +1270,30 @@
 /* growth-detail 이 원래 갖고 있을 수 있는 아래 여백을 걷어낸다(여기선 gap 이 맡는다). */
 .proto-schedule .birthday-ticket-wrap { margin-bottom: 0; }
 
-/* 앞면 — 초록 그라디언트를 금색으로. 나머지(반경·그림자·holo)는 물려받는다. */
+/* 앞면 — 초록 그라디언트를 금색으로. 나머지(반경·그림자·holo)는 물려받는다.
+   ★ 처음엔 #4a3a16 계열이었는데 채도가 낮아 갈색으로 읽혔다("골드 색이 좀 별로다").
+     같은 명도대에서 채도만 올려 금박 쪽으로 옮겼다 — 어두운 초록 티켓 옆에서
+     밝기 차가 나야 하므로 명도는 유지한다. */
 .proto-schedule .ticket-card--birthday .ticket-main {
-  background: linear-gradient(150deg, #4a3a16 0%, #3a2d10 55%, #4f3f18 100%);
+  background: linear-gradient(150deg, #6b5310 0%, #4a3908 55%, #755c12 100%);
   box-shadow:
     0 1.5px 2px rgba(46, 34, 8, 0.3), 0 8px 18px rgba(46, 34, 8, 0.28),
-    inset 0 1px 0 rgba(255, 232, 168, 0.24), inset 0 0 0 1px rgba(224, 184, 58, 0.42);
+    inset 0 1px 0 rgba(255, 232, 168, 0.3), inset 0 0 0 1px rgba(255, 206, 84, 0.55);
 }
 /* 스텁도 같이 금색으로 — 앞면만 바꾸면 반쪽만 생일이 된다. */
 .proto-schedule .ticket-card--birthday .ticket-stub {
-  background: linear-gradient(150deg, #57431a 0%, #43340f 100%);
-  box-shadow: inset 0 0 0 1px rgba(224, 184, 58, 0.42);
+  background: linear-gradient(150deg, #7d6214 0%, #5a4409 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 206, 84, 0.55);
 }
 /* 커서를 없앤다 — 위 .ticket-card 가 cursor:pointer 라 그대로 두면 눌리는 것처럼 보인다. */
 .proto-schedule .ticket-card--birthday { cursor: default; }
 /* 케이크 아이콘은 브랜드 줄 안에서만 금색으로. */
-.proto-schedule .ticket-card--birthday .ticket-brand .ti-cake { color: #f0c75e; }
+.proto-schedule .ticket-card--birthday .ticket-brand .ti-cake { color: #ffd977; }
 /* D-DAY 칸 — 약속은 "스텁을 뜯어보세요"라 흐린 색인데, 여기는 진짜 값이라 또렷해야 한다. */
-.proto-schedule .ticket-card--birthday .ticket-meta b { color: #f6e3af; }
+.proto-schedule .ticket-card--birthday .ticket-meta b { color: #fff0c2; }
 .proto-schedule .ticket-card--birthday .ticket-stub-dday { color: #ffe9b0; }
+/* 같은 날 생일이 셋 이상일 때 전원 이름 — 장식 문구가 아니라 정보다. */
+.proto-schedule .ticket-bday-names { color: #f6e3af; font-weight: 700; }
 
 /* ⚠️ 좁은 화면에서 스텁을 접는다 — 안 접으면 약속이 화면 밖으로 밀린다.
    720px 이하에서 티켓은 세로로 쌓여(위 @media) 한 장이 291px 이 된다. 생일이 둘이면
@@ -1302,6 +1307,8 @@
   .proto-schedule .ticket-card--birthday .ticket-stub { display: none; }
   .proto-schedule .ticket-card--birthday .ticket-main { border-radius: 14px; }
   .proto-schedule .ticket-card--birthday .ticket-content { padding: 14px 16px 12px; gap: 8px; }
-  /* 장식 문구는 좁은 화면에서 값을 못 한다. 일련번호는 남긴다(티켓다움이 거기서 온다). */
-  .proto-schedule .ticket-card--birthday .ticket-foot span:first-child { display: none; }
+  /* 장식 문구는 좁은 화면에서 값을 못 한다. 일련번호는 남긴다(티켓다움이 거기서 온다).
+     ⚠️ 이름 목록(.ticket-bday-names)은 안 지운다 — 제목이 "외 N명"으로 줄었을 때
+        누군지 알 수 있는 유일한 자리다. 장식(.ticket-bday-tagline)만 접는다. */
+  .proto-schedule .ticket-card--birthday .ticket-bday-tagline { display: none; }
 }

@@ -556,8 +556,13 @@ export default function RoomList() {
       )}
       {joinOpen && <JoinRoomModal initialCode={deepLinkCode} onClose={closeJoin} />}
       {/* 첫 방문이면 스스로 열린다(clov-guide-done / clov-guide-skipped 를 본다).
-          프로필 → "가이드 다시 보기"도 이 인스턴스를 guideStore 로 연다. */}
-      <OnboardingGuide />
+          프로필 → "가이드 다시 보기"도 이 인스턴스를 guideStore 로 연다.
+          마지막 장면의 두 버튼은 이 화면이 이미 가진 모달을 그대로 연다 — 가이드가
+          "준비 끝"이라 해놓고 빈 화면에 되돌려놓지 않게. */}
+      <OnboardingGuide
+        onCreateRoom={() => setCreateOpen(true)}
+        onJoinRoom={() => setJoinOpen(true)}
+      />
     </div>
   )
 }

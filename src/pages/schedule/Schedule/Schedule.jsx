@@ -99,20 +99,18 @@ export default function Schedule() {
     queryKey: ['room', roomId, 'members'],   // 대시보드와 같은 키 — 거기서 왔으면 캐시가 그대로 쓰인다
     queryFn: () => getRoomMembers(roomId),
   })
-  /* ★ 날짜로 묶는다 — 같은 날 생일이 둘이면 티켓도 한 장이다(#381 후속).
-     티켓은 "그 날"에 대한 물건이라, 같은 날에 두 장을 세우면 번호(No. 0806)와
-     일련번호(SER. 2026-0806-BDAY)까지 똑같은 쌍둥이가 나온다 — 실제로 그랬다. */
-  const birthdays = Object.values(
-    (members.data?.items ?? [])
-      .filter((m) => m.status === 'ACTIVE')
-      .map((m) => ({ m, date: nextBirthdayDate(m.birthMonthDay) }))   // 생일 미입력·탈퇴 → null
-      .map(({ m, date }) => ({ m, date, d: ddayDiff(date) }))
-      .filter(({ d }) => d !== null && d >= 0 && d <= BIRTHDAY_LEAD_DAYS)
-      .reduce((byDate, { m, date, d }) => {
-        (byDate[date] ??= { date, d, names: [] }).names.push(m.nickname)
-        return byDate
-      }, {}),
-  ).sort((a, b) => a.d - b.d)
+  /* ★ 사람마다 한 장이다. 같은 날 생일이어도 각자의 티켓을 갖는다 — 세로로 쌓는 대신
+     가로 슬라이드로 넘겨 본다(아래 .birthday-rail). 날짜로 묶어 한 장에 몰아넣었던
+     적이 있는데, 리더가 "개인 티켓으로 가고 옆 슬라이드로" 를 골라 되돌렸다.
+     ⚠️ 그래서 번호를 날짜가 아니라 **멤버 id** 로 만든다. 날짜로 만들면 같은 날
+        생일인 두 사람의 No.·SER. 가 완전히 똑같은 쌍둥이가 된다(실제로 그랬다).
+        약속 티켓이 plan.id 를 쓰는 것과 같은 방식이다. */
+  const birthdays = (members.data?.items ?? [])
+    .filter((m) => m.status === 'ACTIVE')
+    .map((m) => ({ m, date: nextBirthdayDate(m.birthMonthDay) }))   // 생일 미입력·탈퇴 → null
+    .map(({ m, date }) => ({ m, date, d: ddayDiff(date) }))
+    .filter(({ d }) => d !== null && d >= 0 && d <= BIRTHDAY_LEAD_DAYS)
+    .sort((a, b) => a.d - b.d || String(a.m.nickname).localeCompare(String(b.m.nickname)))
 
   // 카드별 4컷 상태 — 목록엔 진행도가 없어 약속마다 stage-photos를 조회(계약 §9).
   // 백엔드/R2 미준비 시 실패해도 카드는 중립(1단계 활성·나머지 잠김 근사)으로 렌더.
@@ -227,6 +225,15 @@ export default function Schedule() {
     vp.scrollBy({ left: dir * 320, behavior: 'smooth' })
   }
 
+  // 생일 티켓 슬라이드(#381). 한 장이 뷰포트 폭을 꽉 채우므로 그만큼씩 넘긴다 —
+  // 약속 레일은 카드가 작아 320px 고정이지만, 여기는 티켓 한 장이 한 화면이다.
+  const bdayRailRef = useRef(null)
+  const scrollBdayRail = (dir) => {
+    const vp = bdayRailRef.current
+    if (!vp) return
+    vp.scrollBy({ left: dir * vp.clientWidth, behavior: 'smooth' })
+  }
+
   const selectedPlan = detail.data
 
   const renderCard = (p) => (
@@ -260,10 +267,22 @@ export default function Schedule() {
             ★ 원래 알약(chip)이었는데 티켓으로 바꿨다 — 리더가 "상단에 표시가 나오는" 것 말고
               티켓 자체가 금색으로 서기를 원했다. 생일이 다른 날과 다르게 보이는 게 목적이다. */}
         {birthdays.length > 0 && (
-          <div className="birthday-tickets">
-            {birthdays.map(({ date, d, names }) => (
-              <BirthdayTicket key={date} names={names} planDate={date} dday={d} />
-            ))}
+          <div className="birthday-rail">
+            {/* 화살표는 두 장 이상일 때만. 한 장뿐인데 넘길 곳이 있는 것처럼 보이면 안 된다.
+                모바일은 스와이프가 주 조작이라 화살표가 없어도 넘어간다(scroll-snap). */}
+            {birthdays.length > 1 && (
+              <button type="button" className="carousel-btn" aria-label="이전 생일 보기" onClick={() => scrollBdayRail(-1)}>‹</button>
+            )}
+            <div className="birthday-viewport" ref={bdayRailRef}>
+              <div className="birthday-list">
+                {birthdays.map(({ m, date, d }) => (
+                  <BirthdayTicket key={m.userId} name={m.nickname} userId={m.userId} planDate={date} dday={d} />
+                ))}
+              </div>
+            </div>
+            {birthdays.length > 1 && (
+              <button type="button" className="carousel-btn" aria-label="다음 생일 보기" onClick={() => scrollBdayRail(1)}>›</button>
+            )}
           </div>
         )}
 
@@ -464,21 +483,13 @@ function TicketDatePicker({ value, onChange, min }) {
    ⚠️ items(=GET /plans)에 절대 안 들어간다. 거기 넣으면 stage-photos 를 없는 id 로
       호출하고 필터 개수(전체/인증 가능/…)가 틀어진다.
    ===================================================================== */
-/**
- * 같은 날 생일이 여럿이면 한 장에 모아 적는다.
- * 셋 이상은 이름을 다 적으면 제목이 티켓을 넘어가서 "외 N명"으로 줄인다(멤버 최대 8명).
- */
-function birthdayTitleOf(names) {
-  if (names.length === 1) return `${names[0]}님의 생일`
-  if (names.length === 2) return `${names[0]}님과 ${names[1]}님의 생일`
-  return `${names[0]}님 외 ${names.length - 1}명의 생일`
-}
-
-function BirthdayTicket({ names, planDate, dday }) {
+function BirthdayTicket({ name, userId, planDate, dday }) {
   const ddayText = dday === 0 ? 'D-Day' : `D-${dday}`
   const year = planDate?.slice(0, 4) ?? '----'
-  // 약속처럼 id 가 없다. 월-일을 번호로 쓴다 — 날짜당 한 장이라 이제 겹치지 않는다.
-  const no = (planDate ?? '').slice(5).replace('-', '') || '0000'
+  // ⚠️ 멤버 id 로 만든다. 날짜로 만들면 같은 날 생일인 두 사람이 같은 번호를 갖는다.
+  //    약속 티켓의 ticketNoOf(plan.id) 와 같은 방식이다.
+  const no = String(userId ?? '').padStart(4, '0').slice(-4)
+  const mmdd = (planDate ?? '').slice(5).replace('-', '') || '0000'
 
   return (
     <div className="growth-detail birthday-ticket-wrap" style={{ '--stamp': '#c9922b' }}>
@@ -493,7 +504,7 @@ function BirthdayTicket({ names, planDate, dday }) {
                 <span className="ticket-admit">HAPPY DAY · No. {no}</span>
               </div>
               <div className="ticket-titlewrap">
-                <div className="ticket-title ticket-title--highlight">{birthdayTitleOf(names)}</div>
+                <div className="ticket-title ticket-title--highlight">{name}님의 생일</div>
                 <div className="ticket-kicker">BIRTHDAY · {year}</div>
               </div>
               <div className="ticket-meta">
@@ -502,12 +513,8 @@ function BirthdayTicket({ names, planDate, dday }) {
                 <div><span>D-DAY</span><b>{ddayText}</b></div>
               </div>
               <div className="ticket-foot">
-                {/* 제목이 "외 N명"으로 줄었을 때만 여기에 전원을 적는다 — 누군지 모르면
-                    알림으로서 쓸모가 없다. 둘 이하면 제목에 이미 다 있으니 장식 문구를 둔다. */}
-                {names.length > 2
-                  ? <span className="ticket-bday-names">{names.map((n) => `${n}님`).join(' · ')}</span>
-                  : <span className="ticket-bday-tagline">ONE DAY A YEAR · CELEBRATE TOGETHER</span>}
-                <span className="ticket-serial">SER. {year}-{no}-BDAY</span>
+                <span className="ticket-bday-tagline">ONE DAY A YEAR · CELEBRATE TOGETHER</span>
+                <span className="ticket-serial">SER. {year}-{mmdd}-{no}</span>
               </div>
             </div>
           </div>

@@ -1263,12 +1263,34 @@
    ⚠️ 이 블록은 파일 뒤쪽에 있어야 한다. .ticket-main 등 기본 규칙과 특이도가 같아서
       (둘 다 .proto-schedule .클래스 = 0,2,0) 순서로만 이긴다. 앞으로 옮기면 조용히
       초록으로 돌아간다. */
-.proto-schedule .birthday-tickets {
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
-  margin: 0 auto 18px;
+/* 가로 슬라이드 — 사람마다 한 장이라 세로로 쌓으면 약속이 화면 밖으로 밀린다.
+   아래 약속 레일(.growth-card-rail)과 같은 구조다: 화살표 + 스냅 스크롤 뷰포트.
+   ★ 다만 한 장이 뷰포트 폭을 꽉 채운다 — 약속 카드는 작아서 여러 장이 보이지만
+     티켓은 한 장이 한 화면이라야 읽힌다. */
+.proto-schedule .birthday-rail {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; min-width: 0; margin: 0 auto 18px;
 }
-/* growth-detail 이 원래 갖고 있을 수 있는 아래 여백을 걷어낸다(여기선 gap 이 맡는다). */
-.proto-schedule .birthday-ticket-wrap { margin-bottom: 0; }
+.proto-schedule .birthday-viewport {
+  flex: 0 1 640px; min-width: 0; max-width: 640px;
+  overflow-x: auto; overflow-y: visible;
+  scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+.proto-schedule .birthday-viewport::-webkit-scrollbar { display: none; }
+.proto-schedule .birthday-list { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 12px; }
+/* flex:0 0 100% — 한 장이 정확히 뷰포트 하나. 그래야 스냅이 티켓 경계에 딱 선다. */
+.proto-schedule .birthday-ticket-wrap {
+  flex: 0 0 100%; min-width: 0; margin-bottom: 0;
+  scroll-snap-align: center;
+}
+/* 생일 화살표는 금색으로 — 초록 화살표를 금 티켓 옆에 두면 둘이 따로 논다. */
+.proto-schedule .birthday-rail .carousel-btn {
+  background: rgba(224, 184, 58, 0.12);
+  border-color: rgba(224, 184, 58, 0.3);
+  color: #a8801c;
+}
+.proto-schedule .birthday-rail .carousel-btn:hover { background: rgba(224, 184, 58, 0.24); }
 
 /* 앞면 — 초록 그라디언트를 금색으로. 나머지(반경·그림자·holo)는 물려받는다.
    ★ 처음엔 #4a3a16 계열이었는데 채도가 낮아 갈색으로 읽혔다("골드 색이 좀 별로다").
@@ -1292,8 +1314,6 @@
 /* D-DAY 칸 — 약속은 "스텁을 뜯어보세요"라 흐린 색인데, 여기는 진짜 값이라 또렷해야 한다. */
 .proto-schedule .ticket-card--birthday .ticket-meta b { color: #fff0c2; }
 .proto-schedule .ticket-card--birthday .ticket-stub-dday { color: #ffe9b0; }
-/* 같은 날 생일이 셋 이상일 때 전원 이름 — 장식 문구가 아니라 정보다. */
-.proto-schedule .ticket-bday-names { color: #f6e3af; font-weight: 700; }
 
 /* ⚠️ 좁은 화면에서 스텁을 접는다 — 안 접으면 약속이 화면 밖으로 밀린다.
    720px 이하에서 티켓은 세로로 쌓여(위 @media) 한 장이 291px 이 된다. 생일이 둘이면
@@ -1307,8 +1327,6 @@
   .proto-schedule .ticket-card--birthday .ticket-stub { display: none; }
   .proto-schedule .ticket-card--birthday .ticket-main { border-radius: 14px; }
   .proto-schedule .ticket-card--birthday .ticket-content { padding: 14px 16px 12px; gap: 8px; }
-  /* 장식 문구는 좁은 화면에서 값을 못 한다. 일련번호는 남긴다(티켓다움이 거기서 온다).
-     ⚠️ 이름 목록(.ticket-bday-names)은 안 지운다 — 제목이 "외 N명"으로 줄었을 때
-        누군지 알 수 있는 유일한 자리다. 장식(.ticket-bday-tagline)만 접는다. */
+  /* 장식 문구는 좁은 화면에서 값을 못 한다. 일련번호는 남긴다(티켓다움이 거기서 온다). */
   .proto-schedule .ticket-card--birthday .ticket-bday-tagline { display: none; }
 }

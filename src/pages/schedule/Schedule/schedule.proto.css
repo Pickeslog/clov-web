@@ -1263,33 +1263,12 @@
    ⚠️ 이 블록은 파일 뒤쪽에 있어야 한다. .ticket-main 등 기본 규칙과 특이도가 같아서
       (둘 다 .proto-schedule .클래스 = 0,2,0) 순서로만 이긴다. 앞으로 옮기면 조용히
       초록으로 돌아간다. */
-/* 가로 슬라이드 — 사람마다 한 장이라 세로로 쌓으면 약속이 화면 밖으로 밀린다.
-   아래 약속 레일(.growth-card-rail)과 같은 구조다: 화살표 + 스냅 스크롤 뷰포트.
-   ★ 다만 한 장이 뷰포트 폭을 꽉 채운다 — 약속 카드는 작아서 여러 장이 보이지만
+/* ===== 티켓 가로 슬라이드 (#381) =====
+   ★★ 생일 티켓과 약속 티켓이 **한 레일**에 같이 있다. 레일을 둘로 두니 같은 동작을
+     두 번 나눠 해야 했고 화살표도 두 쌍이었다. 생일이 앞, 약속이 뒤다.
+   아래 필름스트립 레일(.growth-card-rail)과 같은 구조다: 화살표 + 스냅 스크롤 뷰포트.
+   ★ 다만 한 장이 뷰포트를 거의 채운다 — 필름스트립 카드는 작아 여러 장이 보이지만
      티켓은 한 장이 한 화면이라야 읽힌다. */
-/* ===== 약속 티켓 슬라이드 (#381) =====
-   생일 레일과 같은 구조다 — 두 티켓이 같은 조작을 갖는 게 목적이다.
-   ⚠️ .ticket-stage 가 margin-bottom:18px 을 갖고 있어 레일 안에서는 걷어낸다. */
-.proto-schedule .plan-ticket-rail {
-  display: flex; align-items: flex-start; justify-content: center; gap: 8px;
-  width: 100%; min-width: 0;
-}
-.proto-schedule .plan-ticket-viewport {
-  flex: 0 1 640px; min-width: 0; max-width: 640px;
-  overflow-x: auto; overflow-y: visible;
-  scroll-snap-type: x mandatory; scroll-behavior: smooth;
-  scrollbar-width: none;
-}
-.proto-schedule .plan-ticket-viewport::-webkit-scrollbar { display: none; }
-.proto-schedule .plan-ticket-list { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 12px; }
-.proto-schedule .plan-ticket-wrap { flex: 0 0 100%; min-width: 0; scroll-snap-align: center; }
-/* 엿보기 — 생일 레일과 같은 44px. 두 장 이상일 때만. */
-.proto-schedule .plan-ticket-rail.is-multi .plan-ticket-wrap { flex: 0 0 calc(100% - 44px); }
-/* 터치에서는 화살표를 접고 폭을 돌려준다(생일 레일과 같은 규칙 — 폭이 아니라 입력장치). */
-@media (hover: none) and (pointer: coarse) {
-  .proto-schedule .plan-ticket-rail .carousel-btn { display: none; }
-}
-
 /* 라벨 — 개수를 적는 게 핵심이다("다가오는 생일 3명"). 한 장만 보이는 게 이상하다는 걸
    숫자가 알려주고, 그게 슬라이드를 찾게 만든다. 티켓 폭(640)에 맞춰 왼쪽을 맞춘다. */
 .proto-schedule .birthday-label {
@@ -1302,19 +1281,19 @@
   padding: 1px 8px; border-radius: 999px;
   background: rgba(224, 184, 58, 0.18); color: #7a6019; font-weight: 800;
 }
-.proto-schedule .birthday-rail {
+.proto-schedule .slide-rail {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; min-width: 0; margin: 0 auto 18px;
 }
-.proto-schedule .birthday-viewport {
+.proto-schedule .slide-viewport {
   flex: 0 1 640px; min-width: 0; max-width: 640px;
   overflow-x: auto; overflow-y: visible;
   scroll-snap-type: x mandatory; scroll-behavior: smooth;
   scrollbar-width: none;
 }
-.proto-schedule .birthday-viewport::-webkit-scrollbar { display: none; }
-.proto-schedule .birthday-list { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 12px; }
-.proto-schedule .birthday-ticket-wrap {
+.proto-schedule .slide-viewport::-webkit-scrollbar { display: none; }
+.proto-schedule .slide-list { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 12px; }
+.proto-schedule .slide-item {
   flex: 0 0 100%; min-width: 0; margin-bottom: 0;
   scroll-snap-align: center;
 }
@@ -1322,14 +1301,14 @@
    화살표보다 강한 신호다. 캐러셀에서 "첫 화면 밖 콘텐츠는 대부분 안 본다"가 반복되는
    결과인데, 잘린 티켓이 보이면 UI 부품 없이 "더 있다"가 전달된다.
    ⚠️ 한 장뿐일 때는 적용하지 않는다 — 넘길 게 없는데 좁아질 이유가 없다. */
-.proto-schedule .birthday-rail.is-multi .birthday-ticket-wrap { flex: 0 0 calc(100% - 44px); }
+.proto-schedule .slide-rail.is-multi .slide-item { flex: 0 0 calc(100% - 44px); }
 /* 생일 화살표는 금색으로 — 초록 화살표를 금 티켓 옆에 두면 둘이 따로 논다. */
-.proto-schedule .birthday-rail .carousel-btn {
+.proto-schedule .slide-rail .carousel-btn {
   background: rgba(224, 184, 58, 0.12);
   border-color: rgba(224, 184, 58, 0.3);
   color: #a8801c;
 }
-.proto-schedule .birthday-rail .carousel-btn:hover { background: rgba(224, 184, 58, 0.24); }
+.proto-schedule .slide-rail .carousel-btn:hover { background: rgba(224, 184, 58, 0.24); }
 
 /* ★ 터치 기기에서만 화살표를 접는다. 좌우 36px씩(72px)을 티켓에 돌려주고, 넘기는 건
    스와이프가 맡는다 — 터치에서는 스와이프가 스크린리더에도 지원되는 기본 조작이다.
@@ -1337,7 +1316,7 @@
       그때 화살표까지 사라지면 넘길 방법이 아예 없어진다. 그래서 폭이 아니라 **입력장치**로
       가른다(온보딩 가이드의 hover 규칙과 같은 방식). */
 @media (hover: none) and (pointer: coarse) {
-  .proto-schedule .birthday-rail .carousel-btn { display: none; }
+  .proto-schedule .slide-rail .carousel-btn { display: none; }
 }
 
 /* 앞면 — 초록 그라디언트를 금색으로. 나머지(반경·그림자·holo)는 물려받는다.
@@ -1346,8 +1325,10 @@
      밝기 차가 나야 하므로 명도는 유지한다. */
 .proto-schedule .ticket-card--birthday .ticket-main {
   background: linear-gradient(150deg, #6b5310 0%, #4a3908 55%, #755c12 100%);
+  /* ⚠️ 바깥 그림자(drop shadow)를 안 쓴다. 원본 티켓은 0 8px 18px 로 띄워 놨는데,
+     금색은 배경(밝은 나무결)과 명도 차가 커서 그림자가 아래쪽에 검은 띠처럼 남았다.
+     안쪽(inset)만 남긴다 — 위 하이라이트와 금색 테두리는 카드의 형태라 그림자가 아니다. */
   box-shadow:
-    0 1.5px 2px rgba(46, 34, 8, 0.3), 0 8px 18px rgba(46, 34, 8, 0.28),
     inset 0 1px 0 rgba(255, 232, 168, 0.3), inset 0 0 0 1px rgba(255, 206, 84, 0.55);
 }
 /* 스텁도 같이 금색으로 — 앞면만 바꾸면 반쪽만 생일이 된다. */

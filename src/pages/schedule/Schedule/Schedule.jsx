@@ -101,7 +101,7 @@ export default function Schedule() {
     queryFn: () => getRoomMembers(roomId),
   })
   /* ★ 사람마다 한 장이다. 같은 날 생일이어도 각자의 티켓을 갖는다 — 세로로 쌓는 대신
-     가로 슬라이드로 넘겨 본다(아래 .birthday-rail). 날짜로 묶어 한 장에 몰아넣었던
+     가로 슬라이드로 넘겨 본다(약속 티켓과 같은 레일을 쓴다). 날짜로 묶어 한 장에 몰아넣었던
      적이 있는데, 리더가 "개인 티켓으로 가고 옆 슬라이드로" 를 골라 되돌렸다.
      ⚠️ 그래서 번호를 날짜가 아니라 **멤버 id** 로 만든다. 날짜로 만들면 같은 날
         생일인 두 사람의 No.·SER. 가 완전히 똑같은 쌍둥이가 된다(실제로 그랬다).
@@ -228,16 +228,16 @@ export default function Schedule() {
 
   /* ── 약속 티켓 슬라이드(#381) ────────────────────────────────────────
      티켓 ↔ 아래 필름스트립 레일이 같은 선택을 가리켜야 한다. 양방향으로 맞춘다. */
-  const planTicketRailRef = useRef(null)
+  const ticketRailRef = useRef(null)
   const planRailReadyRef = useRef(false)
   // 스크롤이 만든 선택 변경("메아리")을 기억한다. 이걸 ②가 다시 스크롤로 되받으면
   // 둘이 서로 밀어대며 진동한다 — 실제로 연속 클릭이 씹혔다(586 → 588).
   const scrollEchoRef = useRef(null)
 
-  const scrollPlanTicketRail = (dir) => {
-    const vp = planTicketRailRef.current
+  const scrollTicketRail = (dir) => {
+    const vp = ticketRailRef.current
     if (!vp) return
-    const first = vp.querySelector('.plan-ticket-wrap')
+    const first = vp.querySelector('.slide-item')
     const gap = parseFloat(getComputedStyle(vp.firstElementChild).columnGap) || 0
     vp.scrollBy({ left: dir * (first ? first.getBoundingClientRect().width + gap : vp.clientWidth), behavior: 'smooth' })
   }
@@ -246,7 +246,7 @@ export default function Schedule() {
   //    ★ setTimeout 안에서 setState 한다 — 스크롤마다 갱신하면 렌더가 폭주하고,
   //      effect 본문 동기 setState 도 아니게 된다(react-hooks/set-state-in-effect).
   useEffect(() => {
-    const vp = planTicketRailRef.current
+    const vp = ticketRailRef.current
     if (!vp) return
     let timer
     const onScroll = () => {
@@ -283,10 +283,18 @@ export default function Schedule() {
       return
     }
     scrollEchoRef.current = null
+    /* ★ 처음 들어왔는데 생일이 있으면 맨 앞(=생일)에 그대로 둔다. 생일은 7일 이내라
+         제일 임박한 소식인데, 들어오자마자 약속으로 미끄러지면 못 보고 지나친다.
+       ⚠️ 멤버가 아직 안 왔으면 **판단을 미룬다.** 약속이 먼저 도착하면 "생일 0개"로
+          보여서 약속으로 미끄러진 뒤 ready 가 서버려, 뒤늦게 온 생일을 못 보게 된다. */
+    if (!planRailReadyRef.current) {
+      if (members.isPending) return
+      if (birthdays.length > 0) { planRailReadyRef.current = true; return }
+    }
     // ⚠️ rAF 로 한 프레임 미룬다. 목록이 막 붙은 직후엔 폭이 아직 0이라 그 자리에서
     //    재면 offset 이 엉뚱하게 나와 첫 티켓에 머무른다(실제로 그랬다).
     const raf = requestAnimationFrame(() => {
-      const vp = planTicketRailRef.current
+      const vp = ticketRailRef.current
       if (!vp) return
       const el = vp.querySelector(`[data-plan-id="${CSS.escape(String(effectiveId))}"]`)
       if (!el) return
@@ -300,20 +308,10 @@ export default function Schedule() {
       planRailReadyRef.current = true
     })
     return () => cancelAnimationFrame(raf)
-  }, [effectiveId, visible.length, density])
+  }, [effectiveId, visible.length, density, birthdays.length, members.isPending])
 
-  // 생일 티켓 슬라이드(#381).
-  // ★ 뷰포트 폭이 아니라 **티켓 한 장 + 간격**만큼 넘긴다. 다음 장을 살짝 보여주려고
-  //   티켓을 뷰포트보다 좁게 뒀기 때문에(엿보기), 뷰포트 폭으로 넘기면 한 장을 넘어간다.
-  const bdayRailRef = useRef(null)
-  const scrollBdayRail = (dir) => {
-    const vp = bdayRailRef.current
-    if (!vp) return
-    const first = vp.querySelector('.birthday-ticket-wrap')
-    const gap = parseFloat(getComputedStyle(vp.firstElementChild).columnGap) || 0
-    const step = first ? first.getBoundingClientRect().width + gap : vp.clientWidth
-    vp.scrollBy({ left: dir * step, behavior: 'smooth' })
-  }
+  // 한 레일에 생일 + 약속이 같이 들어간다. 화살표·엿보기 판단은 합친 개수로 한다.
+  const slideCount = birthdays.length + visible.length
 
   const selectedPlan = detail.data
 
@@ -347,35 +345,56 @@ export default function Schedule() {
               "약속이 없으니 생일도 숨긴다"가 되면 안 된다. 그래서 plans 상태 밖에 둔다.
             ★ 원래 알약(chip)이었는데 티켓으로 바꿨다 — 리더가 "상단에 표시가 나오는" 것 말고
               티켓 자체가 금색으로 서기를 원했다. 생일이 다른 날과 다르게 보이는 게 목적이다. */}
-        {birthdays.length > 0 && (
+        {/* ★★ 생일 티켓과 약속 티켓이 **한 슬라이드** 안에 있다(#381).
+            레일을 둘로 두니 같은 동작을 두 번 나눠 해야 했다 — 화살표도 두 쌍이었다.
+            생일이 앞, 약속이 뒤다. 생일은 항상 7일 이내라 더 임박했고, 약속의 정렬·필터
+            규칙(|D-day| 순 · 밀도 필터)을 건드리지 않고 앞에 붙일 수 있다.
+            ⚠️ 약속이 0개여도 생일은 뜬다 — 그래서 items.length 안이 아니라 밖에 있다. */}
+        {(birthdays.length > 0 || items.length > 0) && (
           <>
-            {/* ★ 개수를 적는 게 핵심이다. "다가오는 생일"만 적으면 한 장만 보이는 게
-                이상하다는 걸 모른다 — 숫자가 있어야 "3명인데 왜 하나만 보이지"가 되고,
+            {/* ★ 개수를 적는 게 핵심이다. 숫자가 있어야 "2명인데 왜 하나만 보이지"가 되고,
                 그게 슬라이드를 찾게 만든다(화살표보다 강한 신호다).
-                ⚠️ "이번 달"이 아니라 7일 이내다(BIRTHDAY_LEAD_DAYS). 문구를 "이번 달"로
-                   달면 없는 사람을 찾게 만든다. */}
-            <div className="birthday-label">
-              <i className="ti ti-cake" aria-hidden="true" />
-              <span>다가오는 생일</span>
-              {birthdays.length > 1 && <b>{birthdays.length}명</b>}
-            </div>
+                ⚠️ "이번 달"이 아니라 7일 이내다(BIRTHDAY_LEAD_DAYS). */}
+            {birthdays.length > 0 && (
+              <div className="birthday-label">
+                <i className="ti ti-cake" aria-hidden="true" />
+                <span>다가오는 생일</span>
+                {birthdays.length > 1 && <b>{birthdays.length}명</b>}
+              </div>
+            )}
 
-            <div className={`birthday-rail${birthdays.length > 1 ? ' is-multi' : ''}`}>
+            <div className={`slide-rail${slideCount > 1 ? ' is-multi' : ''}`}>
               {/* 화살표는 두 장 이상일 때만. 한 장뿐인데 넘길 곳이 있는 것처럼 보이면 안 된다.
                   ★ 스와이프만 두지 않는 이유: 마우스·키보드 사용자에게 스와이프는 존재하지
                     않는 조작이다. 이건 트렌드가 아니라 접근성이라 없애면 안 된다. */}
-              {birthdays.length > 1 && (
-                <button type="button" className="carousel-btn" aria-label="이전 생일 보기" onClick={() => scrollBdayRail(-1)}>‹</button>
+              {slideCount > 1 && (
+                <button type="button" className="carousel-btn" aria-label="이전 티켓" onClick={() => scrollTicketRail(-1)}>‹</button>
               )}
-              <div className="birthday-viewport" ref={bdayRailRef}>
-                <div className="birthday-list">
+              <div className="slide-viewport" ref={ticketRailRef}>
+                <div className="slide-list">
                   {birthdays.map(({ m, date, d }) => (
-                    <BirthdayTicket key={m.userId} name={m.nickname} userId={m.userId} planDate={date} dday={d} />
+                    <BirthdayTicket key={`b-${m.userId}`} name={m.nickname} userId={m.userId} planDate={date} dday={d} />
+                  ))}
+                  {visible.map((p) => (
+                    <TicketCard
+                      key={p.id}
+                      plan={p}
+                      /* 상세(설명·작성자)는 요약 응답에 없다. 지금 선택된 티켓에만
+                         내려보내고, 모달은 그게 도착해야 연다. */
+                      detailPlan={p.id === effectiveId ? detail.data : null}
+                      currentUserId={currentUserId}
+                      busy={detailBusy}
+                      onSelect={() => setSelectedPlanId(p.id)}
+                      onEdit={() => selectedPlan && setEditing(selectedPlan)}
+                      onDelete={async () => { if (await confirm('정말 이 약속을 삭제하시겠어요?', { confirmText: '삭제', variant: 'danger' })) deleteMutation.mutate() }}
+                      onComplete={() => completeMutation.mutate()}
+                      onCancel={() => cancelMutation.mutate()}
+                    />
                   ))}
                 </div>
               </div>
-              {birthdays.length > 1 && (
-                <button type="button" className="carousel-btn" aria-label="다음 생일 보기" onClick={() => scrollBdayRail(1)}>›</button>
+              {slideCount > 1 && (
+                <button type="button" className="carousel-btn" aria-label="다음 티켓" onClick={() => scrollTicketRail(1)}>›</button>
               )}
             </div>
           </>
@@ -391,39 +410,8 @@ export default function Schedule() {
 
         {items.length > 0 && (
           <section className="growth-shell">
-            {/* 약속 티켓도 슬라이드로(#381) — 생일 티켓과 같은 구조다.
-                ★ 티켓이 선택을 주도하고 아래 필름스트립 레일이 따라온다. 같은 목록을
-                  둘이 따로 고르면 어느 쪽이 진실인지 알 수 없어진다. 스크롤이 멎으면
-                  가운데 티켓이 선택되고, 레일에서 고르면 티켓이 그리로 미끄러진다. */}
-            <div className={`plan-ticket-rail${visible.length > 1 ? ' is-multi' : ''}`}>
-              {visible.length > 1 && (
-                <button type="button" className="carousel-btn" aria-label="이전 약속 티켓" onClick={() => scrollPlanTicketRail(-1)}>‹</button>
-              )}
-              <div className="plan-ticket-viewport" ref={planTicketRailRef}>
-                <div className="plan-ticket-list">
-                  {visible.map((p) => (
-                    <TicketCard
-                      key={p.id}
-                      plan={p}
-                      /* 상세(설명·체크리스트)는 요약 응답에 없다. 지금 선택된 티켓에만
-                         내려보내고, 모달은 그게 도착해야 연다. */
-                      detailPlan={p.id === effectiveId ? detail.data : null}
-                      currentUserId={currentUserId}
-                      busy={detailBusy}
-                      onSelect={() => setSelectedPlanId(p.id)}
-                      onEdit={() => selectedPlan && setEditing(selectedPlan)}
-                      onDelete={async () => { if (await confirm('정말 이 약속을 삭제하시겠어요?', { confirmText: '삭제', variant: 'danger' })) deleteMutation.mutate() }}
-                      onComplete={() => completeMutation.mutate()}
-                      onCancel={() => cancelMutation.mutate()}
-                    />
-                  ))}
-                </div>
-              </div>
-              {visible.length > 1 && (
-                <button type="button" className="carousel-btn" aria-label="다음 약속 티켓" onClick={() => scrollPlanTicketRail(1)}>›</button>
-              )}
-            </div>
-
+            {/* 티켓 슬라이드는 이 위로 올라갔다(#381) — 생일 티켓과 한 레일을 쓴다.
+                여기엔 필터와 필름스트립만 남는다. */}
             <div className="growth-hero">
               <div className="growth-density" aria-label="일정 필터">
                 {DENSITY.map((d) => (
@@ -609,7 +597,7 @@ function BirthdayTicket({ name, userId, planDate, dday }) {
   const mmdd = (planDate ?? '').slice(5).replace('-', '') || '0000'
 
   return (
-    <div className="growth-detail birthday-ticket-wrap" style={{ '--stamp': '#c9922b' }}>
+    <div className="growth-detail slide-item" style={{ '--stamp': '#c9922b' }}>
       <div className="ticket-stage">
         {/* 3D 기울임 — 약속 티켓과 같은 훅을 쓴다(#381). 두 티켓이 같은 손맛이어야 한다.
             ★ 기울임은 "만질 수 있다"지 "누르면 열린다"가 아니다. 여전히 role·tabIndex·
@@ -700,7 +688,7 @@ function TicketCard({
   }
 
   return (
-    <div className="growth-detail plan-ticket-wrap" data-plan-id={plan.id} style={{ '--stamp': isPast ? '#2e5233' : '#c0392b' }}>
+    <div className="growth-detail slide-item" data-plan-id={plan.id} style={{ '--stamp': isPast ? '#2e5233' : '#c0392b' }}>
       <div className="ticket-stage">
         <div className="ticket-tilt" style={tilt.tiltStyle}>
           <div

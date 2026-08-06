@@ -238,8 +238,6 @@
 /* 친구들 단계만 5종을 2줄로 세워야 해서 더 높다. */
 .clov-guide-art.is-tall { height: auto; min-height: 120px; padding: 10px 8px; }
 
-/* 같은 크기 클로버 셋 = "방장 없음 · 모두가 같은 권한". 크기가 다르면 뜻이 바뀐다. */
-.clov-guide-trio { display: flex; gap: 14px; align-items: center; }
 
 /* ⚠️ minmax(0, 1fr) 이다. 그냥 1fr 은 minmax(auto, 1fr) 이고 auto 바닥이 콘텐츠
    최소폭이라, 이름이 길어지면 칸이 밀려 가로로 넘친다(#338에서 밟은 함정). */

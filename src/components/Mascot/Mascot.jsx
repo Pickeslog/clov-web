@@ -329,12 +329,21 @@ export default function Mascot({ roomId }) {
     mutationFn: () => interactMascot(roomId),
     // 스프라이트는 여기서 바꾸지 않는다 — 클릭 시점에 이미 로컬로 바꿨다(onMascotClick).
     // 말풍선만 응답을 기다린다. 교감 성공인지 하루 한도인지는 응답을 봐야 알 수 있어서다.
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['room', roomId, 'level'] })
+      // 헤더 골드 배지도 즉시 갱신 — 상점(Shop.jsx)의 구매 성공 시와 동일한 무효화 키.
+      // ★ 아래 이스터에그 early return보다 위에 둔다 — scared/angry/dizzy 중에도 서버는
+      // 골드를 준다(말풍선만 안 뜬다). 아래로 내리면 그 경우 배지가 안 갱신된다.
+      queryClient.invalidateQueries({ queryKey: ['wallet'] })
       const reaction = pendingReactionRef.current
       pendingReactionRef.current = null
       if (eggModeRef.current !== 'default') return
-      showBubble(reaction?.text || pickLine())
+      // 교감 캡(하루 10회)은 방 단위, 골드 캡(하루 총 6,000 · 계약 §15-4)은 유저 단위라 스코프가
+      // 다르다 — 방 여러 개면 교감은 더 되는데 골드만 먼저 막힌다. 그때 서버는 예외 없이 조용히
+      // 0을 지급하므로, 응답의 실지급액(earnedGold)을 그대로 보여줘야 화면이 거짓말하지 않는다.
+      const gold = data?.earnedGold ?? 0
+      const line = reaction?.text || pickLine()
+      showBubble(gold > 0 ? `${line} (+${gold}G)` : line)
     },
     onError: (err) => {
       pendingReactionRef.current = null

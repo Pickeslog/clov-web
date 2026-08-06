@@ -136,8 +136,9 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
               <li><button type="button" onClick={() => { openSettings(); setMenuOpen(false) }}><i className="ti ti-settings" aria-hidden="true" /> 사용자 설정</button></li>
               {/* 가이드는 방 목록에만 붙어 있다(OnboardingGuide 는 RoomList 가 렌더한다).
                   방 안에서 눌러도 되도록 먼저 방 목록으로 보내고 스토어를 연다 —
-                  이미 방 목록이면 navigate 는 아무 일도 안 하고 스토어만 열린다. */}
-              <li><button type="button" onClick={() => { setMenuOpen(false); navigate('/'); replayGuide() }}><i className="ti ti-help-circle" aria-hidden="true" /> 가이드 다시 보기</button></li>
+                  이미 방 목록이면 navigate 는 아무 일도 안 하고 스토어만 열린다.
+                  replayGuide 에 id 를 넘기는 이유는 저장 키가 계정별이라서다(#362). */}
+              <li><button type="button" onClick={() => { setMenuOpen(false); navigate('/'); replayGuide(me.data?.id) }}><i className="ti ti-help-circle" aria-hidden="true" /> 가이드 다시 보기</button></li>
               <li><button type="button" onClick={() => { setMenuOpen(false); clear(); navigate('/login', { viewTransition: true, replace: true }) }}><i className="ti ti-logout" aria-hidden="true" /> 로그아웃</button></li>
             </ul>
           )}

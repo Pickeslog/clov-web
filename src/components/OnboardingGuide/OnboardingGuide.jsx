@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import './OnboardingGuide.css'
-import { getPreferences } from '../../api/user'
+import { getMe, getPreferences } from '../../api/user'
 import { SHOWCASE_MASCOTS, guideMascotSprite } from './guideMascot'
 import { PIXEL_COLORS, pixelize } from './pixelize'
 import { PixelClover, PixelCoin, PixelText } from './PixelText'
-import { markGuideDone, markGuideSkipped, shouldShowGuide } from '../../lib/onboardingGuide'
+import { dropLegacyGuideKeys, markGuideDone, markGuideSkipped, shouldShowGuide } from '../../lib/onboardingGuide'
 import { useGuideStore } from '../../stores/guideStore'
 
 /* =====================================================================
@@ -100,15 +100,23 @@ export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
   // 원본으로 먼저 채워둔다 — 변환 전에 빈 칸이 보이지 않게.
   const [friends, setFriends] = useState(() => SHOWCASE_MASCOTS.map((m) => ({ ...m, url: m.sprite })))
 
-  // 첫 진입 자동 노출. 저장소가 "이미 봤다"고 하면 열지 않는다.
-  // ref 로 한 번만 도는 이유는 StrictMode 이중 실행 때문이 아니라, 사용자가 닫은 뒤
-  // 리렌더가 나도 다시 열리면 안 되기 때문이다.
+  /* 누구인지 알아야 판단한다 — 저장 키가 계정별이다(#362). Header 가 이미 같은 키로
+     조회하고 있어 캐시를 공유한다(추가 요청이 안 나간다). */
+  const me = useQuery({ queryKey: ['me'], queryFn: getMe })
+  const userId = me.data?.id ?? null
+
+  /* 첫 진입 자동 노출. 저장소가 "이미 봤다"고 하면 열지 않는다.
+     ⚠️ userId 를 알기 전에는 판단하지 않는다 — 모르는 채로 "안 봤다"고 하면 로그인 직후
+        잠깐 떴다 사라지고, "봤다"고 하면 신규 사용자가 못 본다.
+     ref 로 한 번만 도는 이유는 StrictMode 이중 실행 때문이 아니라, 사용자가 닫은 뒤
+     리렌더가 나도 다시 열리면 안 되기 때문이다. */
   const autoOpened = useRef(false)
   useEffect(() => {
-    if (autoOpened.current) return
+    if (autoOpened.current || userId == null) return
     autoOpened.current = true
-    if (shouldShowGuide()) openGuide()
-  }, [openGuide])
+    dropLegacyGuideKeys()
+    if (shouldShowGuide(userId)) openGuide()
+  }, [userId, openGuide])
 
   const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences, enabled: open })
   const spriteUrl = guideMascotSprite(prefs.data)
@@ -143,11 +151,11 @@ export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
      여는 쪽(open)이 아니라 닫는 쪽에서 되돌리는 이유는, 여는 경로가 셋(자동·스토어·
      START 버튼)이라 한 곳에 모으기 어렵고 effect 로 맞추면 렌더가 한 번 더 돌기 때문이다. */
   const close = useCallback((permanent) => {
-    if (permanent) markGuideDone()
-    else markGuideSkipped()
+    if (permanent) markGuideDone(userId)
+    else markGuideSkipped(userId)
     setStep(-1)
     closeGuide()
-  }, [closeGuide])
+  }, [closeGuide, userId])
 
   const skip = () => close(false)
   const never = () => close(true)

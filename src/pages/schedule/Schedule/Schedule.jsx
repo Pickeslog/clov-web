@@ -225,13 +225,17 @@ export default function Schedule() {
     vp.scrollBy({ left: dir * 320, behavior: 'smooth' })
   }
 
-  // 생일 티켓 슬라이드(#381). 한 장이 뷰포트 폭을 꽉 채우므로 그만큼씩 넘긴다 —
-  // 약속 레일은 카드가 작아 320px 고정이지만, 여기는 티켓 한 장이 한 화면이다.
+  // 생일 티켓 슬라이드(#381).
+  // ★ 뷰포트 폭이 아니라 **티켓 한 장 + 간격**만큼 넘긴다. 다음 장을 살짝 보여주려고
+  //   티켓을 뷰포트보다 좁게 뒀기 때문에(엿보기), 뷰포트 폭으로 넘기면 한 장을 넘어간다.
   const bdayRailRef = useRef(null)
   const scrollBdayRail = (dir) => {
     const vp = bdayRailRef.current
     if (!vp) return
-    vp.scrollBy({ left: dir * vp.clientWidth, behavior: 'smooth' })
+    const first = vp.querySelector('.birthday-ticket-wrap')
+    const gap = parseFloat(getComputedStyle(vp.firstElementChild).columnGap) || 0
+    const step = first ? first.getBoundingClientRect().width + gap : vp.clientWidth
+    vp.scrollBy({ left: dir * step, behavior: 'smooth' })
   }
 
   const selectedPlan = detail.data
@@ -267,23 +271,37 @@ export default function Schedule() {
             ★ 원래 알약(chip)이었는데 티켓으로 바꿨다 — 리더가 "상단에 표시가 나오는" 것 말고
               티켓 자체가 금색으로 서기를 원했다. 생일이 다른 날과 다르게 보이는 게 목적이다. */}
         {birthdays.length > 0 && (
-          <div className="birthday-rail">
-            {/* 화살표는 두 장 이상일 때만. 한 장뿐인데 넘길 곳이 있는 것처럼 보이면 안 된다.
-                모바일은 스와이프가 주 조작이라 화살표가 없어도 넘어간다(scroll-snap). */}
-            {birthdays.length > 1 && (
-              <button type="button" className="carousel-btn" aria-label="이전 생일 보기" onClick={() => scrollBdayRail(-1)}>‹</button>
-            )}
-            <div className="birthday-viewport" ref={bdayRailRef}>
-              <div className="birthday-list">
-                {birthdays.map(({ m, date, d }) => (
-                  <BirthdayTicket key={m.userId} name={m.nickname} userId={m.userId} planDate={date} dday={d} />
-                ))}
-              </div>
+          <>
+            {/* ★ 개수를 적는 게 핵심이다. "다가오는 생일"만 적으면 한 장만 보이는 게
+                이상하다는 걸 모른다 — 숫자가 있어야 "3명인데 왜 하나만 보이지"가 되고,
+                그게 슬라이드를 찾게 만든다(화살표보다 강한 신호다).
+                ⚠️ "이번 달"이 아니라 7일 이내다(BIRTHDAY_LEAD_DAYS). 문구를 "이번 달"로
+                   달면 없는 사람을 찾게 만든다. */}
+            <div className="birthday-label">
+              <i className="ti ti-cake" aria-hidden="true" />
+              <span>다가오는 생일</span>
+              {birthdays.length > 1 && <b>{birthdays.length}명</b>}
             </div>
-            {birthdays.length > 1 && (
-              <button type="button" className="carousel-btn" aria-label="다음 생일 보기" onClick={() => scrollBdayRail(1)}>›</button>
-            )}
-          </div>
+
+            <div className={`birthday-rail${birthdays.length > 1 ? ' is-multi' : ''}`}>
+              {/* 화살표는 두 장 이상일 때만. 한 장뿐인데 넘길 곳이 있는 것처럼 보이면 안 된다.
+                  ★ 스와이프만 두지 않는 이유: 마우스·키보드 사용자에게 스와이프는 존재하지
+                    않는 조작이다. 이건 트렌드가 아니라 접근성이라 없애면 안 된다. */}
+              {birthdays.length > 1 && (
+                <button type="button" className="carousel-btn" aria-label="이전 생일 보기" onClick={() => scrollBdayRail(-1)}>‹</button>
+              )}
+              <div className="birthday-viewport" ref={bdayRailRef}>
+                <div className="birthday-list">
+                  {birthdays.map(({ m, date, d }) => (
+                    <BirthdayTicket key={m.userId} name={m.nickname} userId={m.userId} planDate={date} dday={d} />
+                  ))}
+                </div>
+              </div>
+              {birthdays.length > 1 && (
+                <button type="button" className="carousel-btn" aria-label="다음 생일 보기" onClick={() => scrollBdayRail(1)}>›</button>
+              )}
+            </div>
+          </>
         )}
 
         {plans.isPending && <div className="schedule-state">불러오는 중…</div>}

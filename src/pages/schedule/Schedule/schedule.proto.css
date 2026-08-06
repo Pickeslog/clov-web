@@ -1267,6 +1267,18 @@
    아래 약속 레일(.growth-card-rail)과 같은 구조다: 화살표 + 스냅 스크롤 뷰포트.
    ★ 다만 한 장이 뷰포트 폭을 꽉 채운다 — 약속 카드는 작아서 여러 장이 보이지만
      티켓은 한 장이 한 화면이라야 읽힌다. */
+/* 라벨 — 개수를 적는 게 핵심이다("다가오는 생일 3명"). 한 장만 보이는 게 이상하다는 걸
+   숫자가 알려주고, 그게 슬라이드를 찾게 만든다. 티켓 폭(640)에 맞춰 왼쪽을 맞춘다. */
+.proto-schedule .birthday-label {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; max-width: 640px; margin: 0 auto 8px; padding: 0 2px;
+  font-size: 12px; font-weight: 700; color: #8a7333;
+}
+.proto-schedule .birthday-label .ti-cake { font-size: 15px; color: #b08a2a; }
+.proto-schedule .birthday-label b {
+  padding: 1px 8px; border-radius: 999px;
+  background: rgba(224, 184, 58, 0.18); color: #7a6019; font-weight: 800;
+}
 .proto-schedule .birthday-rail {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; min-width: 0; margin: 0 auto 18px;
@@ -1279,11 +1291,15 @@
 }
 .proto-schedule .birthday-viewport::-webkit-scrollbar { display: none; }
 .proto-schedule .birthday-list { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 12px; }
-/* flex:0 0 100% — 한 장이 정확히 뷰포트 하나. 그래야 스냅이 티켓 경계에 딱 선다. */
 .proto-schedule .birthday-ticket-wrap {
   flex: 0 0 100%; min-width: 0; margin-bottom: 0;
   scroll-snap-align: center;
 }
+/* ★★ 엿보기(peek) — 두 장 이상일 때만 티켓을 뷰포트보다 좁게 만들어 옆 장을 살짝 보여준다.
+   화살표보다 강한 신호다. 캐러셀에서 "첫 화면 밖 콘텐츠는 대부분 안 본다"가 반복되는
+   결과인데, 잘린 티켓이 보이면 UI 부품 없이 "더 있다"가 전달된다.
+   ⚠️ 한 장뿐일 때는 적용하지 않는다 — 넘길 게 없는데 좁아질 이유가 없다. */
+.proto-schedule .birthday-rail.is-multi .birthday-ticket-wrap { flex: 0 0 calc(100% - 44px); }
 /* 생일 화살표는 금색으로 — 초록 화살표를 금 티켓 옆에 두면 둘이 따로 논다. */
 .proto-schedule .birthday-rail .carousel-btn {
   background: rgba(224, 184, 58, 0.12);
@@ -1291,6 +1307,15 @@
   color: #a8801c;
 }
 .proto-schedule .birthday-rail .carousel-btn:hover { background: rgba(224, 184, 58, 0.24); }
+
+/* ★ 터치 기기에서만 화살표를 접는다. 좌우 36px씩(72px)을 티켓에 돌려주고, 넘기는 건
+   스와이프가 맡는다 — 터치에서는 스와이프가 스크린리더에도 지원되는 기본 조작이다.
+   ⚠️ max-width 로 접으면 안 된다. 창을 좁힌 데스크톱은 마우스뿐이라 스와이프가 없는데,
+      그때 화살표까지 사라지면 넘길 방법이 아예 없어진다. 그래서 폭이 아니라 **입력장치**로
+      가른다(온보딩 가이드의 hover 규칙과 같은 방식). */
+@media (hover: none) and (pointer: coarse) {
+  .proto-schedule .birthday-rail .carousel-btn { display: none; }
+}
 
 /* 앞면 — 초록 그라디언트를 금색으로. 나머지(반경·그림자·holo)는 물려받는다.
    ★ 처음엔 #4a3a16 계열이었는데 채도가 낮아 갈색으로 읽혔다("골드 색이 좀 별로다").

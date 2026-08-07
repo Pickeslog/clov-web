@@ -87,6 +87,18 @@ const cardTags = (item, isMine) => {
   return ['소중한순간', isMine ? '내기록' : '친구기록', monthTag]
 }
 
+// 해시태그 입력창(#한강 #시험끝, 공백/쉼표 구분) → 배열. 작성·수정 모달 공용(#382).
+const parseTagsInput = (input) =>
+  input.trim()
+    ? [...new Set(
+        input
+          .split(/[\s,]+/)
+          .map((t) => t.trim())
+          .filter(Boolean)
+          .map((t) => (t.startsWith('#') ? t.slice(1) : t)),
+      )].slice(0, 5)
+    : []
+
 // 해시태그 1줄 고정(#125) — 태그 텍스트 길이가 제각각이라 개수만 잘라선 줄바꿈을 못 막는다
 // (예: 짧은 태그 3개는 한 줄에 들어가지만 긴 태그 3개는 넘친다). 실제로 렌더해 줄바꿈 여부를
 // 측정한 뒤, 첫 줄에 들어가는 만큼만 보여주고 나머지는 "+N"으로 묶는다. "+N" 칩 자체가 줄을
@@ -750,16 +762,7 @@ export function CreateMemoryModal({ roomId, members, submitting, errorMessage, i
   useEffect(() => { photosRef.current = photos }, [photos])
   useEffect(() => () => photosRef.current.forEach((p) => URL.revokeObjectURL(p.url)), [])
 
-  const parseTags = () =>
-    tagsInput.trim()
-      ? [...new Set(
-          tagsInput
-            .split(/[\s,]+/)
-            .map((t) => t.trim())
-            .filter(Boolean)
-            .map((t) => (t.startsWith('#') ? t.slice(1) : t)),
-        )].slice(0, 5)
-      : []
+  const parseTags = () => parseTagsInput(tagsInput)
 
   const handleSubmit = () => {
     if (!title.trim() || !content.trim()) return
@@ -1093,6 +1096,7 @@ export function MemoryDetailModal({
   const [isEditing, setEditing] = useState(false)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [tagsInput, setTagsInput] = useState('') // 해시태그 수정 입력(#382), 작성 모달과 같은 패턴
   const [linkedPlanId, setLinkedPlanId] = useState(null) // 약속 연결 변경/해제(#200, clov-api#98). null = 자유 기록
   const [planPickerOpen, setPlanPickerOpen] = useState(false)
   const [newMessageDraft, setNewMessageDraft] = useState('')
@@ -1151,6 +1155,7 @@ export function MemoryDetailModal({
   const startEdit = () => {
     setTitle(memory.title)
     setContent(memory.content ?? '')
+    setTagsInput((memory.tags ?? []).map((t) => `#${t}`).join(' '))
     setLinkedPlanId(memory.planId ?? null)
     setPlanPickerOpen(false)
     setEditing(true)
@@ -1354,6 +1359,18 @@ export function MemoryDetailModal({
                   />
                   <span className="memory-detail-edit-body-count">{content.length}/100</span>
 
+                  {/* 해시태그 수정(#382) — 작성 모달(wm-field 해시태그)과 같은 패턴, tagsInput/parseTags 재사용 */}
+                  <div className="wm-field">
+                    <span className="wm-label">해시태그</span>
+                    <input
+                      className="wm-input"
+                      type="text"
+                      placeholder="#한강 #시험끝 처럼 띄어쓰기나 쉼표로 구분해 입력 (선택)"
+                      value={tagsInput}
+                      onChange={(e) => setTagsInput(e.target.value)}
+                    />
+                  </div>
+
                   {/* 약속 연결 변경/해제(#200) — 작성 모달(wm-schedule-field, mp-connect 계열, mp-sched 계열)과
                       같은 패턴 재사용. 후보는 완료+미스킵 약속만(linkablePlans, 위에서 계산). */}
                   <div className="wm-field wm-schedule-field">
@@ -1421,7 +1438,7 @@ export function MemoryDetailModal({
                       size="sm"
                       disabled={saving}
                       onClick={() => {
-                        const payload = { title: title.trim(), content: content.trim() || null }
+                        const payload = { title: title.trim(), content: content.trim() || null, tags: parseTagsInput(tagsInput) }
                         // 안 바꿨으면 아예 안 보낸다(providedFields로 "미변경"과 "해제(null)"를
                         // 구분하는 서버 계약, clov-api#98) — 매번 같은 값을 보내도 서버는 no-op
                         // 처리하지만 의도를 명확히 하려고 변경분만 싣는다.
@@ -1518,13 +1535,12 @@ export function MemoryDetailModal({
             <div className="mp-remarks">
               <div className="mp-field-k">REMARKS</div>
               <div className="mp-remarks-text">{memory.content || ''}</div>
-              {memory.tags?.length > 0 && (
-                <div className="memory-detail-tags">
-                  {memory.tags.map((tag) => (
-                    <div key={tag} className="memory-tag">#{tag}</div>
-                  ))}
-                </div>
-              )}
+              {/* 카드(cardTags)와 같은 폴백 — 태그 없는 추억도 상세에서 카드와 같은 태그가 보여야 한다(#382) */}
+              <div className="memory-detail-tags">
+                {cardTags(memory, isMine).map((tag) => (
+                  <div key={tag} className="memory-tag">#{tag}</div>
+                ))}
+              </div>
               {memory.participants?.length > 0 && (
                 <div className="memory-detail-date" style={{ marginTop: '8px' }}>함께한 친구 · {memory.participants.map((p) => p.nickname).join(', ')}</div>
               )}

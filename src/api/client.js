@@ -7,7 +7,11 @@ const baseURL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api/
 export const api = axios.create({ baseURL })
 
 // 소셜 로그인 시작 URL — 백엔드 루트(/oauth2/...)라 /api/v1 base가 아니다.
-const apiOrigin = baseURL.replace(/\/api\/v1\/?$/, '')
+// 운영 빌드는 nginx가 프론트·백엔드를 같은 도메인에서 서빙하므로 상대경로면 충분하다 —
+// VITE_API_BASE_URL(clovlabcalss.store 등 팀 공용 값)에서 오리진을 뽑아 쓰면, 지금 어느
+// 도메인에 있든(clovlov.xyz 등) 로그인 시작과 동시에 그 팀 공용 도메인으로 튕겨나간다(#390).
+// dev는 프론트(5173)·백엔드(8080)가 실제로 다른 오리진이라 절대경로가 필요하다.
+const apiOrigin = import.meta.env.DEV ? baseURL.replace(/\/api\/v1\/?$/, '') : ''
 export const oauthAuthorizeUrl = (provider) => `${apiOrigin}/oauth2/authorization/${provider}`
 
 // refresh 전용 인스턴스 — 인터셉터 없음(재귀 방지).

@@ -119,6 +119,40 @@ const MASCOT_STATE_SPRITES = {
     smile: onyxSmileSprite,
   },
 }
+const skinStateSprites = (root) => ({
+  default: `${root}/default.png`,
+  lifted: `${root}/pulled.png`,
+  scared: `${root}/scared.png`,
+  angry: `${root}/angry.png`,
+  dizzy: `${root}/dizzy.png`,
+  sleepy: `${root}/sleepy.png`,
+  find: `${root}/find.png`,
+  pencil: `${root}/pencil.png`,
+  smile: `${root}/smile.png`,
+})
+const EQUIPPED_SKIN_STATE_SPRITES = [
+  '/shop/skins/rob/arcade-boss-legendary',
+  '/shop/skins/rob/last-signal-epic',
+  '/shop/skins/rob/yellow-crew-common',
+  '/shop/skins/rob/explorer-uncommon',
+  '/shop/skins/kim-cheolsu/steel-frame-safety-uncommon',
+  '/shop/skins/kim-cheolsu/junior-developer-uncommon',
+  '/shop/skins/tako-gun/rov-pilot-rare',
+  '/shop/skins/tako-gun/watermelon-rind-hat-common',
+  '/shop/skins/crobi/ocean-rescue-champion-epic',
+  '/shop/skins/crobi/magic-school-student-common',
+  '/shop/skins/crobi/senior-developer-uncommon',
+  '/shop/skins/crobi/dawn-starlight-archivist-legendary',
+  '/shop/skins/onyx/blackstar-atelier-uncommon',
+  '/shop/skins/onyx/development-team-lead-epic',
+].map((root) => ({
+  defaultPath: `${root}/default.png`,
+  states: skinStateSprites(root),
+}))
+const equippedSkinStates = (imageUrl) => {
+  const path = imageUrl?.split(/[?#]/, 1)[0]
+  return EQUIPPED_SKIN_STATE_SPRITES.find(({ defaultPath }) => path?.endsWith(defaultPath))?.states
+}
 const LINES = {
   crobi: ['안녕!', '오늘도 좋은 하루!', '뭐 하고 있었어?', '같이 추억 쌓아볼까?'],
   rob: ['안녕, 나는 롭이야!', '오늘도 함께해줘서 고마워', '다음 약속은 뭐야?', '추억을 기록해보자'],
@@ -234,12 +268,12 @@ export default function Mascot({ roomId }) {
   //    SPRITES[stored]로 판정하면 src에 함수가 들어가 이미지가 깨진다(실제로 재현됨).
   const stored = prefs.data?.mascotType === 'robot' ? 'rob' : prefs.data?.mascotType
   const mascotType = Object.hasOwn(SPRITES, stored ?? '') ? stored : 'crobi'
-  const stateSprites = MASCOT_STATE_SPRITES[mascotType] || { default: SPRITES[mascotType] }
-  const hasFullStateSet = INTERACTIVE_STATES.every((state) => Boolean(stateSprites[state]))
-  // 장착한 코스튬이 있으면 기본 스프라이트 대신 코스튬 이미지로 완전히 교체한다(이스터에그
-  // 상태 스프라이트보다도 우선 — 코스튬엔 상태별 변형이 없어서 상태 스프라이트로 바꿔봐야
-  // 의미가 없다).
   const equippedSprite = prefs.data?.equippedItem?.imageUrl
+  const equippedStateSprites = equippedSkinStates(equippedSprite)
+  const stateSprites = equippedStateSprites || MASCOT_STATE_SPRITES[mascotType] || { default: SPRITES[mascotType] }
+  const hasFullStateSet = INTERACTIVE_STATES.every((state) => Boolean(stateSprites[state]))
+  // 9개 상태를 가진 스킨은 현재 상태에 맞는 스킨 이미지를 쓰고, 단일 이미지 코스튬은 기존처럼
+  // 장착 이미지 한 장이 모든 상태보다 우선한다.
   // 롭만 코드창 말풍선을 쓴다 — '> ' 프롬프트 + 한 글자씩 타이핑(#216, 목업 TEXT.robot).
   const isRob = mascotType === 'rob'
   const withPrompt = (text) => (isRob ? `> ${text}` : text)
@@ -247,7 +281,9 @@ export default function Mascot({ roomId }) {
   // 상태 세트가 아예 없는 캐릭터(버거노인)와, 세트는 있는데 그 상태만 빠진 경우를 둘 다
   // 받아야 한다. 어느 쪽이든 stateSprites.default → SPRITES[mascotType] 순으로 내려간다.
   const activeState = eggMode !== 'default' ? eggMode : reactionMode
-  const spriteSrc = equippedSprite || stateSprites[activeState] || stateSprites.default || SPRITES[mascotType]
+  const spriteSrc = equippedStateSprites
+    ? stateSprites[activeState] || stateSprites.default
+    : equippedSprite || stateSprites[activeState] || stateSprites.default || SPRITES[mascotType]
 
   const showBubble = (text) => {
     setBubble(text)
@@ -293,12 +329,21 @@ export default function Mascot({ roomId }) {
     mutationFn: () => interactMascot(roomId),
     // 스프라이트는 여기서 바꾸지 않는다 — 클릭 시점에 이미 로컬로 바꿨다(onMascotClick).
     // 말풍선만 응답을 기다린다. 교감 성공인지 하루 한도인지는 응답을 봐야 알 수 있어서다.
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['room', roomId, 'level'] })
+      // 헤더 골드 배지도 즉시 갱신 — 상점(Shop.jsx)의 구매 성공 시와 동일한 무효화 키.
+      // ★ 아래 이스터에그 early return보다 위에 둔다 — scared/angry/dizzy 중에도 서버는
+      // 골드를 준다(말풍선만 안 뜬다). 아래로 내리면 그 경우 배지가 안 갱신된다.
+      queryClient.invalidateQueries({ queryKey: ['wallet'] })
       const reaction = pendingReactionRef.current
       pendingReactionRef.current = null
       if (eggModeRef.current !== 'default') return
-      showBubble(reaction?.text || pickLine())
+      // 교감 캡(하루 10회)은 방 단위, 골드 캡(하루 총 6,000 · 계약 §15-4)은 유저 단위라 스코프가
+      // 다르다 — 방 여러 개면 교감은 더 되는데 골드만 먼저 막힌다. 그때 서버는 예외 없이 조용히
+      // 0을 지급하므로, 응답의 실지급액(earnedGold)을 그대로 보여줘야 화면이 거짓말하지 않는다.
+      const gold = data?.earnedGold ?? 0
+      const line = reaction?.text || pickLine()
+      showBubble(gold > 0 ? `${line} (+${gold}G)` : line)
     },
     onError: (err) => {
       pendingReactionRef.current = null
@@ -484,7 +529,18 @@ export default function Mascot({ roomId }) {
     interactMutation.mutate()
   }
 
-  if (prefs.isPending || prefs.isError) return null
+  // 로딩 중에만 감춘다. 기본 크로비를 먼저 띄웠다가 내 마스코트로 바뀌면 깜빡임이 된다.
+  //
+  // ★ isError 로는 감추지 않는다. 감췄더니 "모바일에서 마스코트가 사라진 채 안 돌아온다"가
+  //   됐다 — 전역 쿼리 설정이 retry: 1 · refetchOnWindowFocus: false 라(lib/queryClient.js),
+  //   이동 중 네트워크가 한 번 끊겨 이 요청이 실패하면 앱으로 돌아와도 재요청이 없어서
+  //   새로고침 전까지 isError 가 유지된다. 모바일에서 훨씬 자주 밟히는 경로다.
+  //
+  //   그런데 이 컴포넌트는 prefs 없이도 그릴 수 있다. 쓰는 값이 둘뿐인데 둘 다 이미
+  //   옵셔널이다 — mascotType 은 DB 기본값이 'crobi' 라 SPRITES[mascotType] 로 떨어지고,
+  //   equippedSprite 는 없으면 기본 스프라이트를 쓴다. 설정을 못 읽었을 뿐 마스코트가
+  //   없는 게 아니므로, 교감(클릭·드래그·말풍선)은 그대로 되는 게 맞다.
+  if (prefs.isPending) return null
 
   // 롭은 상태 문구(들어올림/무서움/화남/어지러움/수면)든 기본 대사든 '> ' 프롬프트를 붙인다
   // (#155·#216, 목업 그대로 — 목업도 robot이면 모든 말풍선에 '> '를 붙인다).
@@ -513,8 +569,21 @@ export default function Mascot({ roomId }) {
     >
       {eggBubbleText && (
         <div className="clov-mascot-bubble">
-          {eggBubbleText}
-          {isTypingBubble && <span className="clov-mascot-type-cursor" />}
+          {isTypingBubble ? (
+            // 말풍선 배경(테두리·박스)이 먼저 최종 크기로 뜨고, 그 안에서 글자만
+            // 한 자씩 보이게 채워지는 것처럼 보이려고 — 아직 안 친 나머지 글자를
+            // 지우는 대신 visibility:hidden으로 숨긴 채 같이 렌더링해서 레이아웃
+            // 폭·높이가 처음부터 완성 문장 기준으로 고정되게 한다(위 Mascot.css
+            // .clov-mascot-bubble-hidden 참고). 지우면 그 자리만큼 매 글자마다
+            // 박스가 넓어지는 것처럼 보였다.
+            <>
+              {`> ${bubble.slice(0, typedLen)}`}
+              <span className="clov-mascot-type-cursor" />
+              <span className="clov-mascot-bubble-hidden" aria-hidden="true">{bubble.slice(typedLen)}</span>
+            </>
+          ) : (
+            eggBubbleText
+          )}
         </div>
       )}
       <button

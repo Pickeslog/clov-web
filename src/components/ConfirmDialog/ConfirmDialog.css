@@ -1,11 +1,13 @@
 /* =====================================================================
    공유 확인 다이얼로그 — window.confirm 대체. 자체완결 팔레트(기본 다크 +
    body.light-mode), 기존 .clov-btn(Button 컴포넌트)를 액션 버튼으로 재사용.
-   z-index 500: 기존 오버레이 중 가장 높은 값(Dashboard 400)보다 위에 뜨게 해서
-   다른 모달 위에서도 항상 보이게 한다.
+   z-index 10000: 앱에서 가장 높은 오버레이(feed 라이트박스 9600, schedule 티켓
+   달력 2000 등)보다도 위에 떠서, 어떤 모달 안에서 열려도 항상 최상단에 보이게 한다.
+   과거엔 500(당시 최고값이던 Dashboard 400 기준)이었는데, 이후 다른 화면의 오버레이가
+   그보다 높아지면서 확인창이 모달 뒤에 숨는 문제가 있었다.
    ===================================================================== */
 .clov-confirm-overlay {
-  position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center;
+  position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center;
   padding: 20px; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px);
   animation: clovConfirmFadeIn .15s ease;
 }

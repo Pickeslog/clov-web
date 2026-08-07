@@ -13,14 +13,17 @@ import { useCreateMemory } from '../../../hooks/useCreateMemory'
 import { useMemoryDetail } from '../../../hooks/useMemoryDetail'
 import { useAuthStore } from '../../../stores/authStore'
 import { currentUserIdFromToken } from '../../../lib/jwt'
-import { parseUtc, ddayDiff, formatDate, formatTime } from '../../../lib/datetime'
+import { parseUtc, ddayDiff, formatDate, formatTime, nextBirthdayDate } from '../../../lib/datetime'
+import { shouldShowCelebration, markCelebrationSeen } from '../../../lib/birthdayCelebration'
+import BirthdayCelebration from '../../../components/BirthdayCelebration/BirthdayCelebration'
 import Header from '../../../components/Header/Header'
 import Button from '../../../components/Button/Button'
 import Mascot from '../../../components/Mascot/Mascot'
 import { useConfirm } from '../../../components/ConfirmDialog/useConfirm'
+import { avatarColorForKey } from '../../../lib/avatarColor'
 // 우정공간에서 작성 모달을 인라인으로 띄우기 위해 각 화면의 모달을 재사용.
 import { ScheduleEditorModal } from '../../schedule/Schedule/Schedule'
-import { SCHEDULE_LIGHT_PALETTE } from '../../schedule/Schedule/palette'
+import { SCHEDULE_LIGHT_PALETTE, SCHEDULE_MODAL_CARD_STYLE } from '../../schedule/Schedule/palette'
 import { CreateMemoryModal, MemoryDetailModal } from '../../feed/Feed/Feed'
 
 // 우정 성장 티어(프로토타입 desktop.js 정본 — 이름·구간은 그대로, 아이콘만 팀 표준(#123, 팀장
@@ -35,8 +38,6 @@ const TIERS = [
   { name: '전설의 클로버 우정', icon: 'diamond', max: 777 },
 ]
 const tierFor = (level) => TIERS.find((t) => (level ?? 1) <= t.max) ?? TIERS[TIERS.length - 1]
-
-const MINI_AV_COLORS = ['#1b4332', '#52b788', '#74c69d', '#95d5b2']
 
 const DAY = 86400000
 // 계절: 이미지 키 + 한글 라벨.
@@ -207,9 +208,12 @@ const ddayLabel = (n) => (n === 0 ? 'D-DAY' : n > 0 ? `D-${n}` : `D+${-n}`)
 // 뱃지 색상 구분(프로토타입 getDdayAccent 이식) — 지남=회색, 오늘=장미, 7일 이내=주황, 그 외=초록.
 // 'past'(회색)는 D-day 3칸에서는 안 쓰인다(#206) — 다가오는 약속만 채우고 지난 약속으로 채우지 않는다.
 const ddayUrgency = (n) => (n == null ? 'far' : n < 0 ? 'past' : n === 0 ? 'today' : n <= 7 ? 'soon' : 'far')
+// 생일을 며칠 전부터 D-day 칸에 띄우나(#376). 원안이 "생일 7일 전"이었고, 배지 색이
+// 주황(is-soon)으로 바뀌는 경계도 7이라 같은 값을 쓴다.
+const BIRTHDAY_LEAD_DAYS = 7
 const initialOf = (name) => (name || '?').trim().slice(0, 1)
-// 상태 메시지 가중 길이(한글 2, 그 외 1) — 프로토타입 "한글 20자 / 영어 40자".
-const weightedLen = (s) => [...(s || '')].reduce((n, ch) => n + (/[㄰-㆏가-힣]/.test(ch) ? 2 : 1), 0)
+// 상태 메시지 최대 길이 — 한글/영어 구분 없이 40자 통일(계약은 @Size(max=100)까지 허용하지만
+// 프론트 표시 규칙은 40자로 정함, #240).
 const STATUS_MAX = 40
 
 // 경험치 히스토리 actionType → 한글 라벨(계약 §12, 이벤트정의서 §9.1).
@@ -396,6 +400,19 @@ export default function Dashboard() {
     setTierBursts([])
   }, [roomId])
 
+  // ★ 원래 fireTierCelebration 안에 있던 것을 밖으로 뺐다(#383) — 생일 폭죽이 같은 기계를
+  //   쓴다. 웨이브마다 자기 타이머로 사라지는 구조·타이머 정리·파티클 수 상한이 여기 다 들어
+  //   있어서, 새로 만들면 그 셋을 전부 다시 맞춰야 한다.
+  const spawnBurstStage = useCallback((point, count, spread, delay) => {
+    const startTimer = setTimeout(() => {
+      const stageId = `${Date.now()}-${Math.random()}`
+      setTierBursts((cur) => [...cur, { id: stageId, x: point.x, y: point.y, particles: buildTierBurstParticles(count, spread) }])
+      const endTimer = setTimeout(() => setTierBursts((cur) => cur.filter((b) => b.id !== stageId)), 1800)
+      tierBurstTimersRef.current.push(endTimer)
+    }, delay)
+    tierBurstTimersRef.current.push(startTimer)
+  }, [])
+
   const fireTierCelebration = useCallback((isMax) => {
     if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
     const mascotEl = document.querySelector('.clov-mascot-sprite') ?? document.querySelector('.clov-mascot')
@@ -405,16 +422,7 @@ export default function Dashboard() {
       ? { x: bannerRect.left + bannerRect.width / 2, y: bannerRect.top + bannerRect.height / 2 }
       : { x: window.innerWidth / 2, y: window.innerHeight / 2 }
     const mascotPoint = mascotRect ? { x: mascotRect.left + mascotRect.width / 2, y: mascotRect.top + mascotRect.height / 2 } : fallback
-
-    const spawnStage = (point, count, spread, delay) => {
-      const startTimer = setTimeout(() => {
-        const stageId = `${Date.now()}-${Math.random()}`
-        setTierBursts((cur) => [...cur, { id: stageId, x: point.x, y: point.y, particles: buildTierBurstParticles(count, spread) }])
-        const endTimer = setTimeout(() => setTierBursts((cur) => cur.filter((b) => b.id !== stageId)), 1800)
-        tierBurstTimersRef.current.push(endTimer)
-      }, delay)
-      tierBurstTimersRef.current.push(startTimer)
-    }
+    const spawnStage = spawnBurstStage
 
     if (isMax) {
       // 만렙 6단계(프로토타입 triggerTierUpEvent 그대로): 정중앙(0ms) → 좌상(400) → 우상(800) →
@@ -429,7 +437,49 @@ export default function Dashboard() {
     } else {
       spawnStage(mascotPoint, 100, 400, 0)
     }
-  }, [])
+  }, [spawnBurstStage])
+
+  /* 생일 폭죽(#383) — 양쪽 위에서 하나씩 터뜨리고 가운데로 마무리한다.
+     ★ 티어업(마스코트 위 한 방)과 다르게 화면 위쪽 양옆에서 올린다 — 축하 모달이
+       가운데를 덮고 있어서, 거기서 터뜨리면 카드 뒤로 다 가려진다.
+     ⚠️ prefers-reduced-motion 이면 안 터뜨린다. 모달은 그래도 뜬다(축하 메시지는 정보다). */
+  const fireBirthdayCelebration = useCallback(() => {
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const w = window.innerWidth, h = window.innerHeight
+    spawnBurstStage({ x: w * 0.18, y: h * 0.24 }, 90, 320, 260)
+    spawnBurstStage({ x: w * 0.82, y: h * 0.24 }, 90, 320, 620)
+    spawnBurstStage({ x: w * 0.5, y: h * 0.16 }, 120, 420, 1000)
+  }, [spawnBurstStage])
+
+  /* 생일 축하 모달(#383) — 하루에 한 번만.
+     ★ ref 로 한 번만 판정한다. members/me 쿼리가 갱신될 때마다 effect 가 다시 도는데,
+       그때 이미 "봤음"으로 저장돼 있어 두 번은 안 뜨지만 — 사용자가 닫은 직후 재조회가
+       일어나면 판정이 또 돌아 깜빡일 수 있다. ref 가 그걸 막는다.
+     ★ 저장은 띄우는 순간 한다(닫을 때가 아니라). 닫지 않고 이동해도 오늘 몫은 끝난 것으로
+       친다 — 안 그러면 화면을 옮길 때마다 다시 뜬다. */
+  const [celebration, setCelebration] = useState(null)   // null | { variant, name }
+  const celebrationDecidedRef = useRef(false)
+  const celebrationTimerRef = useRef(null)
+  useEffect(() => {
+    if (celebrationDecidedRef.current) return
+    // 토큰(JWT sub)에서 오므로 보통 첫 렌더에 이미 있다. 그래도 막아두는 건 이 값으로
+    // 저장 키를 만들기 때문이다 — null 로 저장하면 "모르는 사람" 키가 생겨 진짜 사용자가
+    // 자기 생일에 못 본다(가이드에서 밟은 자리 — #362).
+    if (currentUserId == null) return
+    if (!isMyBirthday && !birthdayFriend) return
+    celebrationDecidedRef.current = true
+    if (!shouldShowCelebration(currentUserId)) return
+    markCelebrationSeen(currentUserId)
+    // 내 생일이 친구 생일보다 우선(둘 다인 날은 드물다).
+    const next = isMyBirthday ? { variant: 'me' } : { variant: 'friend', name: birthdayFriend.nickname }
+    fireBirthdayCelebration()
+    // ★ 폭죽이 먼저 오르고 카드가 뜬다. 동시에 내면 카드가 화면 가운데를 덮어 폭죽의
+    //   시작을 가린다. 첫 폭죽이 260ms 라 그 뒤에 놓았다.
+    //   (이 지연 덕분에 effect 본문에서 동기 setState 를 하지 않게 되는 것도 맞다 —
+    //    react-hooks/set-state-in-effect. 레벨업 축하도 같은 구조다.)
+    celebrationTimerRef.current = setTimeout(() => setCelebration(next), 420)
+  }, [currentUserId, isMyBirthday, birthdayFriend, fireBirthdayCelebration])
+  useEffect(() => () => { if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current) }, [])
 
   // 마지막으로 본 레벨을 방마다 기기-로컬(localStorage)에 저장해뒀다가 새 값과 비교해서
   // "티어가 바뀌었는지/만렙을 찍었는지" 판정한다. 같은 방을 쓰는 누구의 XP든(내 것이든 친구
@@ -506,16 +556,28 @@ export default function Dashboard() {
     // 다가오는 칸은 아직 안 한 약속만 — 완료/취소된 약속은 "다가오는"이 아니다.
     .filter((p) => p.status === 'SCHEDULED')
     .filter((p) => { const d = ddayDiff(p.planDate); return d !== null && d >= 0 })
+
+  // 생일 D-7 예고(#376) — 서버에 Plan 행을 만들지 않고 여기서 파생시킨다(clov-api#143 결정).
+  // ★ 본인도 포함한다. 생일 배너 쪽은 "{내 닉네임}님의 생일입니다!" 오표기를 막느라 본인을
+  //   뺐지만, D-day 칸에서 "내 생일 D-3"은 오히려 자연스럽다.
+  // ★ ACTIVE 멤버만 — 나간 사람 생일이 뜨면 안 된다(생일 배너가 이미 쓰는 규칙).
+  //   행을 저장하지 않으므로 나가는 순간 그냥 사라진다. "이미 생성됐으면 유지" 같은 갈래가 없다.
+  const birthdaySlots = activeMemberItems
+    .map((m) => ({ m, planDate: nextBirthdayDate(m.birthMonthDay) }))  // 생일 미입력·탈퇴 → null
+    .filter(({ planDate }) => { const d = ddayDiff(planDate); return d !== null && d >= 0 && d <= BIRTHDAY_LEAD_DAYS })
+    .map(({ m, planDate }) => ({ id: `birthday-${m.userId}`, title: `${m.nickname}님의 생일`, planDate, isBirthday: true }))
+
+  const ddaySlots = [...futurePlans, ...birthdaySlots]
     .sort((a, b) => a.planDate.localeCompare(b.planDate))
-  const ddaySlots = futurePlans.slice(0, 3)
+    .slice(0, 3)
   const memoryItems = (memories.data?.items ?? []).slice(0, 24)
 
   const savedStatus = data.myStatusMessage ?? ''
   const statusValue = statusDraft ?? savedStatus
-  const statusWeight = weightedLen(statusValue)
+  const statusLen = statusValue.length
   const statusDirty = statusDraft !== null && statusDraft.trim() !== savedStatus.trim()
-  const statusOver = statusWeight > STATUS_MAX
-  const go = (path) => navigate(`/rooms/${roomId}/${path}`)
+  const statusOver = statusLen > STATUS_MAX
+  const go = (path) => navigate(`/rooms/${roomId}/${path}`, { viewTransition: true })
 
   return (
     <>
@@ -583,8 +645,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 대표 커버 카드 */}
-        <div className="main-photo-card">
+        {/* 대표 커버 카드 — RoomList의 방 카드(view-transition-name: room-card-{id})가
+            "입장" 클릭 시 이 카드로 자라 들어가는 셰어드 엘리먼트 전환의 짝. */}
+        <div className="main-photo-card" style={{ viewTransitionName: `room-card-${roomId}` }}>
           <div className="main-photo-wrapper">
             {data.coverPhotoUrl ? (
               <img
@@ -606,12 +669,12 @@ export default function Dashboard() {
                 <input
                   className="cover-status-input"
                   value={statusValue}
-                  maxLength={40}
+                  maxLength={STATUS_MAX}
                   placeholder="상태 메시지를 남겨보세요"
-                  onChange={(e) => setStatusDraft(e.target.value)}
+                  onChange={(e) => setStatusDraft(e.target.value.slice(0, STATUS_MAX))}
                 />
-                <span className="cover-status-count">{statusWeight} / {STATUS_MAX}</span>
-                <span className="cover-status-hint">(한글 20자 / 영어 40자)</span>
+                <span className="cover-status-count">{statusLen} / {STATUS_MAX}</span>
+                {!statusValue && <span className="cover-status-hint">(최대 {STATUS_MAX}자)</span>}
                 {statusDirty && (
                   <button
                     type="button"
@@ -631,8 +694,8 @@ export default function Dashboard() {
               <div className="member-highlight-card" onClick={() => setMembersOpen(true)} title="참여 멤버 보기">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div className="member-mini-avatars">
-                    {activeMemberItems.slice(0, 4).map((m, i) => (
-                      <span key={m.membershipId ?? m.userId} className="mini-av" style={{ background: MINI_AV_COLORS[i % MINI_AV_COLORS.length] }}>
+                    {activeMemberItems.slice(0, 4).map((m) => (
+                      <span key={m.membershipId ?? m.userId} className="mini-av" style={{ background: avatarColorForKey(m.userId ?? m.membershipId) }}>
                         {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
                       </span>
                     ))}
@@ -666,19 +729,20 @@ export default function Dashboard() {
                   <div className="schedule-info">
                     <span className="schedule-icon">+</span>
                     <span className="schedule-title">새로운 약속 만들기</span>
-                    <span className="schedule-date">클릭하여 일정을 추가해보세요</span>
                   </div>
                 </div>
               )
             }
             return (
-              <div key={p.id} className="schedule-banner" onClick={() => go('schedule')}>
+              <div key={p.id} className={`schedule-banner${p.isBirthday ? ' schedule-banner--birthday' : ''}`} onClick={() => go('schedule')}>
                 <div className="schedule-info">
-                  <i className="ti ti-calendar schedule-icon" aria-hidden="true" />
+                  <i className={`ti ${p.isBirthday ? 'ti-cake' : 'ti-calendar'} schedule-icon`} aria-hidden="true" />
                   <span className="schedule-title">{p.title}</span>
                   <span className="schedule-date">{p.planDate}</span>
                 </div>
-                <span className={`schedule-dday-badge is-${ddayUrgency(ddayDiff(p.planDate))}`}>{ddayLabel(ddayDiff(p.planDate))}</span>
+                {/* 생일은 늘 금색이다 — 약속처럼 긴박도(주황/초록)로 물들이지 않는다.
+                    "며칠 남았나"가 아니라 "이건 다른 종류의 날"이라는 표시다. */}
+                <span className={`schedule-dday-badge is-${p.isBirthday ? 'birthday' : ddayUrgency(ddayDiff(p.planDate))}`}>{ddayLabel(ddayDiff(p.planDate))}</span>
               </div>
             )
           })}
@@ -709,9 +773,9 @@ export default function Dashboard() {
             <button type="button" className="member-invite-btn" onClick={() => { setMembersOpen(false); setInviteOpen(true) }}>
               ＋ 친구 초대 (초대코드 보내기)
             </button>
-            {activeMemberItems.map((m, i) => (
+            {activeMemberItems.map((m) => (
               <div className="member-row" key={m.membershipId ?? m.userId}>
-                <span className="member-row-av" style={{ background: MINI_AV_COLORS[i % MINI_AV_COLORS.length] }}>
+                <span className="member-row-av" style={{ background: avatarColorForKey(m.userId ?? m.membershipId) }}>
                   {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
                 </span>
                 <div>
@@ -730,6 +794,17 @@ export default function Dashboard() {
 
       {historyOpen && (
         <ExpHistoryModal roomId={roomId} onClose={() => setHistoryOpen(false)} />
+      )}
+
+      {/* 생일 축하 모달(#383). 포탈로 body 에 붙인다 — 대시보드 안에 두면 배너의
+          stacking context 에 갇혀서 폭죽 레이어와 앞뒤가 뒤집힌다. */}
+      {celebration && createPortal(
+        <BirthdayCelebration
+          variant={celebration.variant}
+          name={celebration.name}
+          onClose={() => setCelebration(null)}
+        />,
+        document.body,
       )}
 
       {tierBursts.length > 0 && createPortal(
@@ -765,7 +840,7 @@ export default function Dashboard() {
     {/* 우정공간에 머문 채 작성 모달을 인라인으로. 각 화면의 스코프·팔레트를 래퍼로 공급.
         .proto-dashboard 밖 형제로 둬 대시보드 CSS와 격리(min-height는 0으로 눌러 빈 공간 방지). */}
     {composeSchedule && (
-      <div className="proto-schedule" style={{ ...SCHEDULE_LIGHT_PALETTE, minHeight: 0 }}>
+      <div className="proto-schedule" style={{ ...SCHEDULE_LIGHT_PALETTE, ...SCHEDULE_MODAL_CARD_STYLE }}>
         <ScheduleEditorModal
           plan={null}
           submitting={createPlanMutation.isPending}
@@ -826,7 +901,7 @@ function InviteModal({ roomId, roomName, onClose }) {
   const cancelMutation = useMutation({ mutationFn: (inviteId) => cancelInvite(inviteId), onSuccess: invalidate })
 
   const shareText = code
-    ? `우리 우정공간 "${roomName ?? 'Clov'}"에 초대해요! 🍀\nClov 앱에서 아래 코드로 입장을 신청하세요.\n초대코드: ${code}`
+    ? `우리 우정공간 "${roomName ?? 'Clov'}"에 초대해요!\nClov 앱에서 아래 코드로 입장을 신청하세요.\n초대코드: ${code}`
     : ''
   const copy = async (text, key) => {
     try {
@@ -924,7 +999,7 @@ function ExpHistoryModal({ roomId, onClose }) {
         )}
         {logsQuery.isSuccess && groupedItems.map((log) => (
           <div className="exp-history-row" key={log.id}>
-            <span className="member-row-av exp-history-av">{initialOf(log.triggeredBy?.nickname)}</span>
+            <span className="member-row-av exp-history-av" style={{ background: avatarColorForKey(log.triggeredBy?.id) }}>{log.triggeredBy?.profileImageUrl ? <img src={log.triggeredBy.profileImageUrl} alt="" /> : initialOf(log.triggeredBy?.nickname)}</span>
             <div className="exp-history-main">
               <div className="exp-history-label">
                 {log.triggeredBy?.nickname ?? '알 수 없음'}님 · {expActionLabel(log.actionType)}{log.count > 1 ? ` ×${log.count}` : ''}
@@ -1040,7 +1115,7 @@ function ClinePolaroid({ memory, isActive, onOpen }) {
       <div className="cline-card-header">
         <div className="cline-avatars">
           {avatars.map((p, idx) => (
-            <span key={p.id ?? idx} className={`cline-avatar ${idx === 0 ? '' : 'is-friend'}`} title={p.nickname}>
+            <span key={p.id ?? idx} className={`cline-avatar ${idx === 0 ? '' : 'is-friend'}`} style={{ background: avatarColorForKey(p.id) }} title={p.nickname}>
               {p.profileImageUrl ? <img src={p.profileImageUrl} alt="" /> : initialOf(p.nickname)}
             </span>
           ))}
@@ -1121,8 +1196,16 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
 
   // index가 바뀌면 현재 프레임을 필름 중앙으로 스크롤.
   useEffect(() => {
-    const cur = framesRef.current?.querySelector('.cline-film-frame.is-current')
-    cur?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    const container = framesRef.current
+    const cur = container?.querySelector('.cline-film-frame.is-current')
+    if (container && cur) {
+      // scrollIntoView는 컨테이너가 overflow-y:hidden이라 세로 스크롤을 못 찾고 window까지
+      // 올라가 대시보드 전체를 아래로 끌어내렸다(#240). scrollLeft만 직접 계산해 가로로만 맞춘다.
+      const containerRect = container.getBoundingClientRect()
+      const curRect = cur.getBoundingClientRect()
+      const offset = (curRect.left + curRect.width / 2) - (containerRect.left + containerRect.width / 2)
+      container.scrollTo({ left: container.scrollLeft + offset, behavior: 'smooth' })
+    }
     // 카드가 넘어가면 .cline-cards가 통째로 리마운트되므로(P2의 key 교체) 기울여 뒀던 카드는
     // DOM에서 떨어져 나간다. 참조만 남으면 그 노드가 회수되지 않으니 여기서 놓아준다.
     tilted.current = null
@@ -1141,6 +1224,9 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
   const onPointerDown = (e) => {
     const el = framesRef.current
     if (!el) return
+    // 터치·펜은 브라우저의 네이티브 가로 패닝(.cline-film-frames는 overflow-x:auto)이
+    // 이미 처리한다. 여기서 scrollLeft까지 같이 밀면 한 번의 스와이프가 두 배로 움직인다.
+    if (e.pointerType !== 'mouse') return
     drag.current = { active: true, startX: e.clientX, startLeft: el.scrollLeft, moved: false }
   }
   const onPointerMove = (e) => {
@@ -1155,6 +1241,42 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
     const el = framesRef.current
     if (el && Math.abs(e.deltaY) >= Math.abs(e.deltaX) && e.deltaY) { el.scrollLeft += e.deltaY; e.preventDefault() }
   }
+
+  // ── 카드 스와이프 ──────────────────────────────────────────────────
+  // 카드 뷰어에는 원래 클릭밖에 없었다 — 옆 카드를 정확히 눌러야만 넘어갔다.
+  // 데스크톱은 그걸로 됐지만 모바일에선 카드가 겹쳐 있어 조준이 어렵고, 애초에
+  // 손가락은 밀어서 넘긴다. 필름스트립 드래그는 필름스트립만 움직이지 카드를 안 넘긴다.
+  const swipe = useRef({ active: false, startX: 0, startY: 0, fired: false, moved: false })
+  // 40px — 탭이 미끄러진 것과 넘기려는 의도를 가르는 선.
+  const SWIPE_THRESHOLD = 40
+
+  const onSwipeDown = (e) => {
+    swipe.current = { active: true, startX: e.clientX, startY: e.clientY, fired: false, moved: false }
+    // 손가락이 카드 밖으로 나가도 제스처를 놓치지 않게 잡아둔다.
+    // 마우스는 제외 — 캡처하면 이벤트 타깃이 이 컨테이너로 바뀌어서 3D 틸트의
+    // e.target.closest('.cline-polaroid')가 항상 null이 된다.
+    // 캡처 실패는 삼켜도 된다. 손가락이 이미 떨어진 뒤 핸들러가 돌면 NotFoundError가
+    // 나는데, 그건 어차피 스와이프가 성립 안 하는 경우다 — 여기서 던지면 그것 때문에
+    // 정상 탭까지 같이 죽는다.
+    if (e.pointerType !== 'mouse') {
+      try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* 이미 놓친 포인터 */ }
+    }
+  }
+  const onSwipeMove = (e) => {
+    const s = swipe.current
+    if (!s.active || s.fired) return
+    const dx = e.clientX - s.startX
+    const dy = e.clientY - s.startY
+    // 클릭 억제용 — 문턱보다 훨씬 작다. 살짝 밀린 채 손을 떼도 상세보기가 열리면 안 된다.
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) s.moved = true
+    // 세로가 더 크면 페이지를 스크롤하려는 것이다 — 가로로 해석하지 않는다.
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) <= Math.abs(dy)) return
+    // 과거 카드는 왼쪽, 최신 카드는 오른쪽에 있다(SLOTS: +1=past, -1=newer).
+    // 오른쪽으로 밀면 왼쪽 것이 가운데로 온다 = 과거로.
+    goTo(index + (dx > 0 ? 1 : -1))
+    s.fired = true
+  }
+  const onSwipeEnd = () => { swipe.current.active = false }
 
   // ── 겹침 카드 3D 마우스 틸트 (#114 P3) ─────────────────────────────────
   // 정본 space.js:1330-1360은 window에 리스너를 달고 뷰어를 closest로 찾아 위임하지만,
@@ -1197,7 +1319,15 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
       onPointerMove={isStack ? onTiltMove : undefined}
       onPointerLeave={isStack ? untilt : undefined}
     >
-      <div className="cline-stage">
+      {/* 스와이프는 .cline-stage 에만 건다 — .cline-viewer 에 걸면 형제인 필름스트립
+          드래그까지 버블링으로 같이 잡혀서 필름을 미는 동안 카드가 넘어가 버린다. */}
+      <div
+        className="cline-stage"
+        onPointerDown={onSwipeDown}
+        onPointerMove={onSwipeMove}
+        onPointerUp={onSwipeEnd}
+        onPointerCancel={onSwipeEnd}
+      >
         {isDiary && <DiaryStage />}
         <div className="cline-wire-area">
           <div className="cline-wire" />
@@ -1226,10 +1356,16 @@ function EvidenceViewer({ memories, cardTheme = 'stack', onOpen }) {
                 <div
                   key={cls}
                   className={`cline-card-slot cline-slot--${cls} ${isActive ? 'is-active' : ''}`}
-                  onClick={opensDetail ? undefined : () => goTo(target)}
+                  // 스와이프가 끝나면 click도 뒤따라 온다 — 밀어서 넘긴 김에 옆 카드로
+                  // 한 번 더 가거나 상세보기가 열리면 안 된다(필름스트립의 drag.moved와 같은 가드).
+                  onClick={opensDetail ? undefined : () => { if (!swipe.current.moved) goTo(target) }}
                 >
                   {!isFanned && <Clothespin />}
-                  <ClinePolaroid memory={memories[i]} isActive={isActive} onOpen={opensDetail ? () => onOpen(memories[i]?.id) : undefined} />
+                  <ClinePolaroid
+                    memory={memories[i]}
+                    isActive={isActive}
+                    onOpen={opensDetail ? () => { if (!swipe.current.moved) onOpen(memories[i]?.id) } : undefined}
+                  />
                 </div>
               )
             })}

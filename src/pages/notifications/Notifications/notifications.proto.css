@@ -9,7 +9,7 @@
   --border-color: #2a2c1e;
   --nav-item-bg-active: #2b3020;
   color: var(--text-color);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--sans);
 }
 
 .proto-notifications *, .proto-notifications *::before, .proto-notifications *::after { box-sizing: border-box; }

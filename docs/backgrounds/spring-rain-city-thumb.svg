@@ -1,0 +1,150 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 512 기준 모서리 반경 108 — 기존 썸네일 실측값 -->
+    <clipPath id="round"><rect width="512" height="512" rx="108" ry="108"/></clipPath>
+
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#3d9ee0"/>
+      <stop offset="0.5"  stop-color="#84c7ee"/>
+      <stop offset="1"    stop-color="#d3ecfa"/>
+    </linearGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cfe3f2"/>
+      <stop offset="1" stop-color="#9dbfda"/>
+    </linearGradient>
+    <linearGradient id="towerDim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b9d4e8"/>
+      <stop offset="1" stop-color="#88afcd"/>
+    </linearGradient>
+    <linearGradient id="canal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#7fb2d8"/>
+      <stop offset="0.5" stop-color="#a9cde6"/>
+      <stop offset="1"   stop-color="#cfe0ee"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0"    stop-color="#ffffff" stop-opacity="0.6"/>
+      <stop offset="0.62" stop-color="#ffffff" stop-opacity="0.2"/>
+      <stop offset="1"    stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <g clip-path="url(#round)">
+    <rect width="512" height="512" fill="url(#sky)"/>
+
+    <!-- 뭉게구름 -->
+    <g fill="#ffffff">
+      <ellipse cx="352" cy="96"  rx="46" ry="20"/>
+      <ellipse cx="392" cy="84"  rx="32" ry="22"/>
+      <ellipse cx="316" cy="104" rx="28" ry="14"/>
+      <ellipse cx="150" cy="72"  rx="34" ry="15" opacity="0.85"/>
+      <ellipse cx="182" cy="64"  rx="24" ry="13" opacity="0.85"/>
+    </g>
+
+    <!-- 도시 스카이라인 -->
+    <g>
+      <rect x="196" y="176" width="34" height="164" fill="url(#towerDim)"/>
+      <rect x="238" y="150" width="46" height="190" fill="url(#tower)"/>
+      <path d="M292 340 V186 L310 150 L328 186 V340 Z" fill="url(#towerDim)"/>
+      <rect x="336" y="164" width="40" height="176" fill="url(#tower)"/>
+      <rect x="384" y="196" width="52" height="144" fill="url(#towerDim)"/>
+      <rect x="444" y="172" width="46" height="168" fill="url(#tower)"/>
+      <rect x="140" y="206" width="46" height="134" fill="url(#tower)"/>
+      <rect x="88"  y="232" width="42" height="108" fill="url(#towerDim)"/>
+      <!-- 창문 -->
+      <g fill="#ffffff" opacity="0.55">
+        <rect x="246" y="168" width="30" height="5" rx="2"/>
+        <rect x="246" y="186" width="30" height="5" rx="2"/>
+        <rect x="246" y="204" width="30" height="5" rx="2"/>
+        <rect x="344" y="182" width="24" height="5" rx="2"/>
+        <rect x="344" y="200" width="24" height="5" rx="2"/>
+        <rect x="452" y="190" width="30" height="5" rx="2"/>
+        <rect x="452" y="208" width="30" height="5" rx="2"/>
+        <rect x="148" y="222" width="30" height="5" rx="2"/>
+        <rect x="392" y="212" width="36" height="5" rx="2"/>
+      </g>
+    </g>
+
+    <!-- 다리 + 전철 -->
+    <g>
+      <rect x="0" y="330" width="512" height="12" fill="#cbdcea"/>
+      <rect x="112" y="306" width="252" height="24" rx="8" fill="#eef5fb"/>
+      <g fill="#8fb8d6">
+        <rect x="126" y="313" width="26" height="10" rx="3"/>
+        <rect x="162" y="313" width="26" height="10" rx="3"/>
+        <rect x="198" y="313" width="26" height="10" rx="3"/>
+        <rect x="234" y="313" width="26" height="10" rx="3"/>
+        <rect x="270" y="313" width="26" height="10" rx="3"/>
+        <rect x="306" y="313" width="26" height="10" rx="3"/>
+      </g>
+    </g>
+
+    <!-- 운하 + 젖은 산책로 -->
+    <path d="M0 342 H512 V512 H0 Z" fill="url(#canal)"/>
+    <!-- 비 온 뒤 반사 -->
+    <g fill="#ffffff" opacity="0.4">
+      <rect x="240" y="366" width="52" height="6" rx="3"/>
+      <rect x="150" y="392" width="86" height="6" rx="3"/>
+      <rect x="316" y="404" width="70" height="6" rx="3"/>
+      <rect x="196" y="432" width="120" height="6" rx="3"/>
+      <rect x="86"  y="456" width="64" height="6" rx="3"/>
+      <rect x="348" y="464" width="92" height="6" rx="3"/>
+    </g>
+    <!-- 분홍 반사 -->
+    <g fill="#f2a8c4" opacity="0.35">
+      <rect x="40"  y="380" width="70" height="8" rx="4"/>
+      <rect x="410" y="392" width="80" height="8" rx="4"/>
+      <rect x="24"  y="424" width="56" height="8" rx="4"/>
+      <rect x="436" y="440" width="60" height="8" rx="4"/>
+    </g>
+
+    <!-- 벚나무 — 왼쪽 -->
+    <g>
+      <rect x="66" y="300" width="9" height="96" rx="4" fill="#8a6a58"/>
+      <g fill="#f6b3cd">
+        <ellipse cx="48"  cy="248" rx="62" ry="42"/>
+        <ellipse cx="96"  cy="222" rx="48" ry="32"/>
+        <ellipse cx="16"  cy="204" rx="44" ry="30"/>
+      </g>
+      <g fill="#fcd6e4">
+        <ellipse cx="70"  cy="216" rx="34" ry="20"/>
+        <ellipse cx="10"  cy="238" rx="28" ry="17"/>
+      </g>
+    </g>
+    <!-- 벚나무 — 오른쪽 -->
+    <g>
+      <rect x="446" y="300" width="9" height="96" rx="4" fill="#8a6a58"/>
+      <g fill="#f6b3cd">
+        <ellipse cx="470" cy="252" rx="58" ry="40"/>
+        <ellipse cx="426" cy="228" rx="44" ry="29"/>
+        <ellipse cx="502" cy="208" rx="40" ry="28"/>
+      </g>
+      <g fill="#fcd6e4">
+        <ellipse cx="452" cy="220" rx="30" ry="18"/>
+        <ellipse cx="500" cy="242" rx="26" ry="16"/>
+      </g>
+    </g>
+
+    <!-- 흩날리는 꽃잎 -->
+    <g fill="#f8bcd3">
+      <ellipse cx="168" cy="150" rx="7" ry="4.5" transform="rotate(-25 168 150)"/>
+      <ellipse cx="214" cy="118" rx="6" ry="4"   transform="rotate(18 214 118)"/>
+      <ellipse cx="300" cy="256" rx="7" ry="4.5" transform="rotate(-12 300 256)"/>
+      <ellipse cx="380" cy="146" rx="6" ry="4"   transform="rotate(30 380 146)"/>
+      <ellipse cx="130" cy="356" rx="7" ry="4.5" transform="rotate(-18 130 356)"/>
+      <ellipse cx="404" cy="352" rx="6" ry="4"   transform="rotate(22 404 352)"/>
+    </g>
+
+    <!-- 클로버 — 브랜드 마크 -->
+    <g transform="translate(256 300)">
+      <circle r="118" fill="url(#halo)"/>
+      <g fill="#1f7a4c" stroke="#eafaf0" stroke-width="5" stroke-linejoin="round">
+        <g transform="rotate(-45) scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+        <g transform="rotate(45)  scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+        <g transform="rotate(135) scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+        <g transform="rotate(-135) scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+      </g>
+      <path d="M4 52 Q14 88 -12 108" stroke="#1f7a4c" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M-40 -66 L-16 -30" stroke="#eafaf0" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+    </g>
+  </g>
+</svg>

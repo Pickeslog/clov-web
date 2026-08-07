@@ -23,7 +23,7 @@
   padding: 32px;
   overflow-x: hidden;
   color: var(--text);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   background:
     radial-gradient(circle at 12% 12%, rgba(217, 201, 143, .28), transparent 28%),
     radial-gradient(circle at 84% 82%, rgba(232, 220, 174, .2), transparent 32%),
@@ -154,7 +154,7 @@
 }
 .proto-login .login-panel-title {
   /* 전역 index.css의 h1{font-family:var(--heading);color:var(--text-h)} 리셋 무력화(team-guides/19 §8) */
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   color: #fff;
   font-size: 2.55rem;
   line-height: 1.08;
@@ -209,7 +209,7 @@
 }
 .proto-login .login-form-title {
   /* 전역 index.css의 h2{font-family:var(--heading)} 리셋 무력화(team-guides/19 §8) */
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   font-size: 2rem;
   font-weight: 900;
   color: var(--text);
@@ -232,7 +232,7 @@
   border-radius: 18px;
   background: rgba(255, 255, 255, .82);
   color: var(--text);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   font-size: 0.96rem;
   font-weight: 600;
   outline: none;
@@ -302,7 +302,7 @@
   background: linear-gradient(135deg, #093d26, #16874b 56%, #50d990);
   color: #fff;
   box-shadow: 0 14px 32px rgba(22, 135, 75, .3);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--sans);
   font-size: 1rem;
   font-weight: 900;
   cursor: pointer;

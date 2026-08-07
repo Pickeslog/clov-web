@@ -1,0 +1,19 @@
+{
+  "skinId": "senior-developer-uncommon",
+  "mascotId": "crobi",
+  "displayName": "개발 경력자 크로비",
+  "rarity": "UNCOMMON",
+  "shopCategory": "COSTUME",
+  "assetUrl": "/shop/skins/crobi/senior-developer-uncommon/default.png",
+  "states": {
+    "default": "default.png",
+    "angry": "angry.png",
+    "dizzy": "dizzy.png",
+    "find": "find.png",
+    "pencil": "pencil.png",
+    "pulled": "pulled.png",
+    "scared": "scared.png",
+    "sleepy": "sleepy.png",
+    "smile": "smile.png"
+  }
+}

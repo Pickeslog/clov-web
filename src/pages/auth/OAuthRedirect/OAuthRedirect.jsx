@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import './oauthredirect.proto.css'
 import { exchangeOAuthCode, submitOAuthConsent } from '../../../api/auth'
 import { useAuthStore } from '../../../stores/authStore'
 import { takeReturnTo } from '../../../lib/returnUrl'
-import * as S from './OAuthRedirect.style'
 
 const initialAgreements = { service: false, privacy: false, marketing: false }
 const exchangeRequests = new Map()
@@ -75,40 +75,40 @@ export default function OAuthRedirect() {
 
   if (status === 'exchanging') {
     return (
-      <S.Page>
-        <S.Panel aria-live="polite">
-          <S.LoadingMark aria-hidden="true" />
-          <S.Title>로그인 정보를 확인하고 있어요</S.Title>
-          <S.Description>잠시만 기다려주세요.</S.Description>
-        </S.Panel>
-      </S.Page>
+      <main className="proto-oauthredirect">
+        <section className="oauthredirect-panel" aria-live="polite">
+          <div className="oauthredirect-loading-mark" aria-hidden="true" />
+          <h1 className="oauthredirect-title">로그인 정보를 확인하고 있어요</h1>
+          <p className="oauthredirect-description">잠시만 기다려주세요.</p>
+        </section>
+      </main>
     )
   }
 
   if (!code || status === 'error') {
     return (
-      <S.Page>
-        <S.Panel>
-          <S.Kicker>소셜 로그인</S.Kicker>
-          <S.Title>로그인을 완료하지 못했어요</S.Title>
-          <S.Description>{message || '소셜 로그인 정보가 없습니다. 다시 시도해주세요.'}</S.Description>
-          <S.LoginLink as={Link} to="/login">로그인 화면으로 돌아가기</S.LoginLink>
-        </S.Panel>
-      </S.Page>
+      <main className="proto-oauthredirect">
+        <section className="oauthredirect-panel">
+          <p className="oauthredirect-kicker">소셜 로그인</p>
+          <h1 className="oauthredirect-title">로그인을 완료하지 못했어요</h1>
+          <p className="oauthredirect-description">{message || '소셜 로그인 정보가 없습니다. 다시 시도해주세요.'}</p>
+          <Link className="oauthredirect-login-link" to="/login">로그인 화면으로 돌아가기</Link>
+        </section>
+      </main>
     )
   }
 
   return (
-    <S.Page>
-      <S.Panel>
-        <S.Kicker>{registration.profile.provider}로 시작하기</S.Kicker>
-        <S.Title>Clov.에 오신 것을 환영해요</S.Title>
-        <S.Description>
+    <main className="proto-oauthredirect">
+      <section className="oauthredirect-panel">
+        <p className="oauthredirect-kicker">{registration.profile.provider}로 시작하기</p>
+        <h1 className="oauthredirect-title">Clov.에 오신 것을 환영해요</h1>
+        <p className="oauthredirect-description">
           <strong>{registration.profile.nickname}</strong>님, 서비스 이용을 위해 아래 약관에 동의해주세요.
-        </S.Description>
-        <S.Email>{registration.profile.email}</S.Email>
+        </p>
+        <p className="oauthredirect-email">{registration.profile.email}</p>
 
-        <S.AgreementList>
+        <div className="oauthredirect-agreement-list">
           <AgreementRow
             checked={agreements.service}
             label="서비스 이용약관 동의"
@@ -126,15 +126,15 @@ export default function OAuthRedirect() {
             label="마케팅 정보 수신 동의"
             onChange={() => toggleAgreement('marketing')}
           />
-        </S.AgreementList>
+        </div>
 
-        {message && <S.Message role="alert">{message}</S.Message>}
-        <S.ConfirmButton type="button" onClick={submitConsent} disabled={submitting}>
+        {message && <p className="oauthredirect-message" role="alert">{message}</p>}
+        <button type="button" className="oauthredirect-confirm-btn" onClick={submitConsent} disabled={submitting}>
           {submitting ? '가입하는 중...' : '동의하고 시작하기'}
-        </S.ConfirmButton>
-        <S.LoginLink as={Link} to="/login">다른 계정으로 로그인</S.LoginLink>
-      </S.Panel>
-    </S.Page>
+        </button>
+        <Link className="oauthredirect-login-link" to="/login">다른 계정으로 로그인</Link>
+      </section>
+    </main>
   )
 }
 
@@ -147,12 +147,12 @@ function exchangeOnce(code) {
 
 function AgreementRow({ checked, label, required = false, onChange }) {
   return (
-    <S.AgreementRow>
-      <S.Checkbox type="checkbox" checked={checked} onChange={onChange} />
-      <S.AgreementLabel>
-        {label} {required && <S.Required>필수</S.Required>}
-      </S.AgreementLabel>
-    </S.AgreementRow>
+    <label className="oauthredirect-agreement-row">
+      <input type="checkbox" className="oauthredirect-checkbox" checked={checked} onChange={onChange} />
+      <span className="oauthredirect-agreement-label">
+        {label} {required && <span className="oauthredirect-required">필수</span>}
+      </span>
+    </label>
   )
 }
 

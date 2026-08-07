@@ -5,12 +5,12 @@ import { getInvites, createInvite } from '../../../api/invite'
 import { getNotifications } from '../../../api/notification'
 import { parseUtc } from '../../../lib/datetime'
 import { validateRoomName } from '../../../lib/roomName'
+import { avatarColorForKey } from '../../../lib/avatarColor'
 
 // 방 미리보기 모달 — 프로토타입 #room-preview-modal(무탭 소식 피드 + 방 프로필 편집 + 친구 초대) 이식.
 // 소식 피드 = 실제 알림(FRIEND=편지 / JOIN=합류 / NOTICE=공지).
 
 const HEX6 = /^#[0-9a-fA-F]{6}$/
-const AVATAR_COLORS = ['#5a7a3e', '#357a58', '#6a7e73', '#52b788']
 // 이동수단 = 프로토타입과 동일(비행기/시외버스/배/기차).
 const VEHICLES = [
   { value: 'airplane', label: '비행기', icon: 'ti-plane' },
@@ -39,11 +39,36 @@ const relTime = (v) => {
 }
 
 const FEED_META = {
-  FRIEND: { cls: 'letter', icon: 'ti-mail', tail: '님의 행운편지', fallback: '새 편지가 도착했어요' },
-  JOIN: { cls: 'join', icon: 'ti-user-plus', tail: '님이 합류했어요', fallback: '새 가입 신청이 있어요' },
   NOTICE: { cls: 'sched', icon: 'ti-calendar-heart', tail: '님의 공지', fallback: '새 공지가 등록됐어요' },
 }
-const metaFor = (type) => FEED_META[type] ?? { cls: 'member', icon: 'ti-bell', tail: '님의 새 소식', fallback: '새 소식이 있어요' }
+// FRIEND 하나가 계약 §13 subType 8개(LETTER_RECEIVE는 생산자가 아직 없어 실제로는 7개)를 겸한다 —
+// type만 보면 전부 "행운편지"로 나온다(#239). MEMBER_JOINED·JOIN_ACCEPTED는 원래 JOIN 탭이었는데,
+// JOIN 탭이 알림 테이블을 조회하지 않아(Notifications.jsx) 안 보이는 문제 때문에 FRIEND로 옮겨왔다
+// (web-design-repository#51) — JOIN 분기는 더 이상 없다. MEMBER_LEFT는 clov-api #124에서 신설.
+// LEVEL_UP은 계약상 actor가 null이라 tail이 아니라 fallback으로 보내고, payload.level을 보간해야
+// 해서 fallback을 함수로 둔다(Notifications.jsx messageFor의 LEVEL_UP 문구와 맞춤).
+const FRIEND_SUBTYPE_META = {
+  MEMORY_WRITE: { cls: 'letter', icon: 'ti-pencil', tail: '님이 추억을 남겼어요', fallback: '새 추억이 등록됐어요' },
+  PLAN_CREATE: { cls: 'letter', icon: 'ti-calendar', tail: '님이 새 약속을 만들었어요', fallback: '새 약속이 등록됐어요' },
+  PLAN_COMPLETE: { cls: 'letter', icon: 'ti-calendar', tail: '님이 약속을 완료했어요', fallback: '약속이 완료됐어요' },
+  ROOM_UPDATE: { cls: 'letter', icon: 'ti-settings', tail: '님이 우정공간 정보를 바꿨어요', fallback: '우정공간 정보가 바뀌었어요' },
+  LEVEL_UP: { cls: 'letter', icon: 'ti-award', tail: null, fallback: (n) => `우정공간이 Lv.${n.payload?.level}이 됐어요! 🎉` },
+  MEMBER_JOINED: { cls: 'join', icon: 'ti-user-plus', tail: '님이 합류했어요', fallback: '새 멤버가 합류했어요' },
+  JOIN_ACCEPTED: { cls: 'join', icon: 'ti-user-plus', tail: '님이 가입을 수락했어요', fallback: '가입 신청이 수락됐어요' },
+  MEMBER_LEFT: { cls: 'join', icon: 'ti-user-minus', tail: '님이 나갔어요', fallback: '멤버가 나갔어요' },
+}
+const DEFAULT_META = { cls: 'member', icon: 'ti-bell', tail: '님의 새 소식', fallback: '새 소식이 있어요' }
+const metaFor = (n) => {
+  if (n.type === 'FRIEND') {
+    // LETTER_RECEIVE는 계약엔 있지만 생산자가 아직 없다(존재하지 않는 subType이 아니라 미구현) —
+    // 지금은 DEFAULT_META로 모호하게 떨어지고, 생산자가 생기면 그때 케이스를 추가한다.
+    // 옛 JOIN 데이터(sub_type='JOIN_REQUEST', #90 이전, actor가 수락자로 잘못 박혀 있음)도
+    // 같은 이유로 모호한 기본 문구로 떨어진다.
+    return FRIEND_SUBTYPE_META[n.subType] ?? DEFAULT_META
+  }
+  return FEED_META[n.type] ?? DEFAULT_META
+}
+const fallbackText = (meta, n) => (typeof meta.fallback === 'function' ? meta.fallback(n) : meta.fallback)
 const initialOf = (name) => (name === '나' ? '나' : (name?.slice(-2, -1) || name?.slice(0, 1) || '?'))
 const asList = (data) => (Array.isArray(data) ? data : (data?.items ?? []))
 
@@ -57,7 +82,7 @@ export default function RoomPreviewModal({ roomId, onClose, onEnter }) {
   const notis = useQuery({ queryKey: ['room', roomId, 'preview-noti'], queryFn: () => getNotifications(roomId, undefined, 0, 5), enabled: !!roomId })
 
   const r = room.data
-  const memberList = asList(members.data)
+  const memberList = asList(members.data).filter((m) => m.status === 'ACTIVE')
   const memberCount = r?.memberCount ?? memberList.length
 
   const title = view === 'invite'
@@ -127,7 +152,9 @@ function MainView({ r, level, memberList, memberCount, feed, feedPending, onInvi
 
       <div className="rp-mrow">
         {memberList.slice(0, 6).map((m, i) => (
-          <span key={m.id ?? m.memberId ?? i} className="rp-av" style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}>{initialOf(m.nickname)}</span>
+          <span key={m.id ?? m.memberId ?? i} className="rp-av" style={{ background: avatarColorForKey(m.id ?? m.memberId ?? m.userId) }}>
+            {m.profileImageUrl ? <img src={m.profileImageUrl} alt="" /> : initialOf(m.nickname)}
+          </span>
         ))}
         <span className="rp-mrow-n">{memberCount}명 참여 중</span>
       </div>
@@ -144,12 +171,12 @@ function MainView({ r, level, memberList, memberCount, feed, feedPending, onInvi
       ) : (
         <div className="rp-feed">
           {feed.slice(0, 3).map((n) => {
-            const meta = metaFor(n.type)
+            const meta = metaFor(n)
             const who = n.actor?.nickname
             return (
               <div key={n.id} className={`rp-fi${!n.isRead ? ' unread' : ''}`}>
                 <div className={`rp-fi-ic ${meta.cls}`}><i className={`ti ${meta.icon}`} aria-hidden="true" /></div>
-                <div className="rp-fi-tx"><div className="rp-fi-t">{who ? <><span className="who">{who}</span>{meta.tail}</> : meta.fallback}</div></div>
+                <div className="rp-fi-tx"><div className="rp-fi-t">{who && meta.tail ? <><span className="who">{who}</span>{meta.tail}</> : fallbackText(meta, n)}</div></div>
                 <span className="rp-fi-time">{relTime(n.createdAt)}</span>
               </div>
             )

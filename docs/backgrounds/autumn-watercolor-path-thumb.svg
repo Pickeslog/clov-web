@@ -1,0 +1,128 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 512 기준 모서리 반경 108 — 기존 썸네일 실측값 -->
+    <clipPath id="round"><rect width="512" height="512" rx="108" ry="108"/></clipPath>
+
+    <!-- 소실점의 안개빛 — 원본 워터컬러의 중앙 발광 -->
+    <radialGradient id="mist" cx="0.5" cy="0.44" r="0.62">
+      <stop offset="0"    stop-color="#fffaf0"/>
+      <stop offset="0.42" stop-color="#fdeed6"/>
+      <stop offset="1"    stop-color="#f6dcb4"/>
+    </radialGradient>
+    <linearGradient id="path" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#efe4d2"/>
+      <stop offset="0.5" stop-color="#ddd0bb"/>
+      <stop offset="1"   stop-color="#c9b9a1"/>
+    </linearGradient>
+    <linearGradient id="redCanopy" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0"   stop-color="#d93b2b"/>
+      <stop offset="0.6" stop-color="#ef6a35"/>
+      <stop offset="1"   stop-color="#f79f56"/>
+    </linearGradient>
+    <linearGradient id="goldCanopy" x1="1" y1="0" x2="0.6" y2="1">
+      <stop offset="0"   stop-color="#e8a51c"/>
+      <stop offset="0.6" stop-color="#f5c343"/>
+      <stop offset="1"   stop-color="#fadf85"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0"    stop-color="#ffffff" stop-opacity="0.62"/>
+      <stop offset="0.62" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="1"    stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <g clip-path="url(#round)">
+    <rect width="512" height="512" fill="url(#mist)"/>
+
+    <!-- 돌길 — 소실점으로 좁아지는 사다리꼴 -->
+    <path d="M236 268 H276 L400 512 H112 Z" fill="url(#path)"/>
+    <!-- 포석 가로줄 -->
+    <g stroke="#b6a48c" stroke-width="2.5" opacity="0.55">
+      <line x1="240" y1="292" x2="272" y2="292"/>
+      <line x1="233" y1="322" x2="279" y2="322"/>
+      <line x1="224" y1="358" x2="288" y2="358"/>
+      <line x1="212" y1="400" x2="300" y2="400"/>
+      <line x1="196" y1="450" x2="316" y2="450"/>
+      <line x1="178" y1="502" x2="334" y2="502"/>
+    </g>
+    <!-- 젖은 노면 반사 -->
+    <g fill="#fffdf7" opacity="0.45">
+      <path d="M248 276 L264 276 L292 512 L220 512 Z"/>
+    </g>
+
+    <!-- 길가 낮은 돌담 -->
+    <g fill="#bcae9a">
+      <path d="M236 270 L120 512 L88 512 L214 270 Z"/>
+      <path d="M276 270 L392 512 L424 512 L298 270 Z"/>
+    </g>
+
+    <!-- 왼쪽 단풍 — 붉은 계열 -->
+    <g>
+      <rect x="86" y="230" width="12" height="150" rx="5" fill="#8a6a55" transform="rotate(-4 92 300)"/>
+      <rect x="26" y="252" width="10" height="130" rx="5" fill="#8a6a55"/>
+      <g fill="url(#redCanopy)">
+        <ellipse cx="60"  cy="150" rx="96" ry="62"/>
+        <ellipse cx="150" cy="118" rx="72" ry="48"/>
+        <ellipse cx="8"   cy="86"  rx="70" ry="46"/>
+        <ellipse cx="128" cy="204" rx="58" ry="34"/>
+      </g>
+      <g fill="#f8b06a" opacity="0.75">
+        <ellipse cx="104" cy="146" rx="42" ry="24"/>
+        <ellipse cx="30"  cy="196" rx="36" ry="20"/>
+      </g>
+    </g>
+
+    <!-- 오른쪽 은행 — 금빛 계열 -->
+    <g>
+      <rect x="418" y="234" width="12" height="150" rx="5" fill="#8a6a55" transform="rotate(4 424 304)"/>
+      <rect x="480" y="256" width="10" height="128" rx="5" fill="#8a6a55"/>
+      <g fill="url(#goldCanopy)">
+        <ellipse cx="454" cy="154" rx="92" ry="60"/>
+        <ellipse cx="368" cy="124" rx="68" ry="46"/>
+        <ellipse cx="506" cy="90"  rx="66" ry="44"/>
+        <ellipse cx="388" cy="208" rx="54" ry="32"/>
+      </g>
+      <g fill="#fdeeb0" opacity="0.7">
+        <ellipse cx="412" cy="150" rx="40" ry="23"/>
+        <ellipse cx="486" cy="198" rx="34" ry="19"/>
+      </g>
+    </g>
+
+    <!-- 떨어진 잎 -->
+    <g>
+      <g fill="#d9452f">
+        <ellipse cx="150" cy="430" rx="11" ry="6" transform="rotate(-24 150 430)"/>
+        <ellipse cx="356" cy="452" rx="10" ry="5.5" transform="rotate(18 356 452)"/>
+        <ellipse cx="118" cy="486" rx="12" ry="6.5" transform="rotate(-10 118 486)"/>
+      </g>
+      <g fill="#ef8b2f">
+        <ellipse cx="206" cy="468" rx="10" ry="5.5" transform="rotate(28 206 468)"/>
+        <ellipse cx="392" cy="496" rx="11" ry="6" transform="rotate(-16 392 496)"/>
+        <ellipse cx="284" cy="424" rx="9"  ry="5"   transform="rotate(12 284 424)"/>
+      </g>
+      <g fill="#f2c246">
+        <ellipse cx="330" cy="392" rx="9"  ry="5"   transform="rotate(-22 330 392)"/>
+        <ellipse cx="176" cy="378" rx="8"  ry="4.5" transform="rotate(16 176 378)"/>
+      </g>
+    </g>
+    <!-- 흩날리는 잎 -->
+    <g>
+      <ellipse cx="196" cy="238" rx="9" ry="5" fill="#e05a35" transform="rotate(-30 196 238)"/>
+      <ellipse cx="316" cy="268" rx="8" ry="4.5" fill="#f0a83a" transform="rotate(24 316 268)"/>
+      <ellipse cx="262" cy="196" rx="7" ry="4" fill="#d9452f" transform="rotate(-14 262 196)"/>
+    </g>
+
+    <!-- 클로버 — 브랜드 마크 -->
+    <g transform="translate(256 306)">
+      <circle r="118" fill="url(#halo)"/>
+      <g fill="#1f7a4c" stroke="#fdf6ea" stroke-width="5" stroke-linejoin="round">
+        <g transform="rotate(-45) scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+        <g transform="rotate(45)  scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+        <g transform="rotate(135) scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+        <g transform="rotate(-135) scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+      </g>
+      <path d="M4 52 Q14 88 -12 108" stroke="#1f7a4c" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M-40 -66 L-16 -30" stroke="#fdf6ea" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+    </g>
+  </g>
+</svg>

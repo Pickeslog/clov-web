@@ -550,7 +550,7 @@ body.light-mode .proto-feed .feed-controls-divider { background: rgba(27, 67, 50
 /* 여권 커버(초록 그라디언트 헤더) */
 .proto-feed .mp-cover { position: relative; padding: 16px 22px 13px; background: linear-gradient(135deg, #12301d, #1b4332); }
 .proto-feed .mp-cover-kicker { font: 700 8px var(--sans); letter-spacing: 3px; color: rgba(231, 217, 166, 0.85); }
-.proto-feed .mp-cover-title { font: 900 22px var(--sans); color: #f6f2e6; margin-top: 5px; word-break: keep-all; }
+.proto-feed .mp-cover-title { font: 900 22px var(--sans); color: #f6f2e6; margin-top: 5px; word-break: keep-all; overflow-wrap: anywhere; }
 .proto-feed .mp-cover-sub { font: 700 8px var(--sans); letter-spacing: 2px; color: rgba(231, 217, 166, 0.7); margin-top: 4px; }
 .proto-feed .mp-cover-author { font: 700 11px var(--sans); color: rgba(246, 242, 230, 0.72); margin-top: 7px; }
 .proto-feed .mp-close {

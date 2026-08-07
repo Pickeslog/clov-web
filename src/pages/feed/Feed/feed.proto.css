@@ -637,6 +637,7 @@ body.light-mode .proto-feed .feed-controls-divider { background: rgba(27, 67, 50
 .proto-feed .mp-receipt-birthday {
   margin-top: 10px; padding: 6px 10px; border-radius: 10px; text-align: center;
   font: 800 12px var(--sans); color: #7a5216; background: #f3ddaa;
+  overflow-wrap: anywhere;
 }
 .proto-feed .mp-receipt-btn:hover .mp-receipt-cta { text-decoration: underline; text-underline-offset: 2px; }
 

@@ -120,6 +120,7 @@ export default function Letters() {
   const [content, setContent] = useState('')
   const [emoji, setEmoji] = useState('💌')
   const [message, setMessage] = useState('')
+  const [birthdayPickerOpen, setBirthdayPickerOpen] = useState(false) // 생일 2명 이상일 때 말풍선 목록(#391)
 
   const box = boxOfTab(tab)
   const letters = useQuery({ queryKey: ['letters', roomId, box], queryFn: () => getLetters(roomId, box) })
@@ -137,10 +138,21 @@ export default function Letters() {
   const items = letters.data?.items ?? []
   const visibleItems = tab === 'favorite' ? items.filter((letter) => letter.isFavorite) : items
   const memberItems = (members.data?.items ?? []).filter((member) => member.status === 'ACTIVE')
-  // 오늘 생일인 멤버(본인 제외, Dashboard.jsx의 birthdayFriend와 같은 규칙) — CTA 배너용.
-  const birthdayMember = memberItems.find(
+  // 오늘 생일인 멤버 전원(본인 제외, Dashboard.jsx의 birthdayFriend와 같은 규칙) — CTA 배너용.
+  // 2명 이상 동시 생일도 전부 잡아야 해서 find가 아니라 filter(#391).
+  const birthdayMembers = memberItems.filter(
     (m) => String(m.userId) !== String(currentUserId) && isTodayMonthDay(m.birthMonthDay),
   )
+  const birthdayBubbleText = birthdayMembers.length > 0
+    ? `${birthdayMembers.map((m) => `${m.nickname}님`).join(', ')} 생일이에요, 축하 편지 보내보세요`
+    : ''
+  const handleBirthdayBubbleClick = () => {
+    if (birthdayMembers.length === 1) {
+      openCompose(birthdayMembers[0].userId)
+      return
+    }
+    setBirthdayPickerOpen((open) => !open)
+  }
 
   // 발송 애니메이션(연필이 사각거리다 통! 사라지고(~1.0s), 이어서 카드가 우체통으로
   // 빨려 들어가기(~0.45s), 총 1.45s)이 실제로 재생될 시간을 보장한다 — 로컬/빠른
@@ -253,22 +265,50 @@ export default function Letters() {
             <h2>행운 편지함</h2>
             <p>상자를 열어 편지를 천천히 확인해보세요.</p>
           </div>
-          <button
-            type="button"
-            className={`letter-box-trigger${isPostboxTheme ? ' theme-mailbox' : ''}${hasMail ? ' has-mail' : ''}${opening ? ' is-opening' : ''}`}
-            onClick={openInbox}
-            aria-label="받은 편지함 열기"
-          >
-            <span className="letter-box-ground-shadow" aria-hidden="true" />
-            <span className="letter-box-visual letter-box-visual-giftbox" aria-hidden="true">
-              <GiftboxSvg />
-              <span className="letter-box-lid" />
-              <span className="letter-box-body" />
-            </span>
-            <span className="letter-box-visual letter-box-visual-mailbox" aria-hidden="true">
-              <MailboxSvg />
-            </span>
-          </button>
+          <div className="letter-box-wrap">
+            <button
+              type="button"
+              className={`letter-box-trigger${isPostboxTheme ? ' theme-mailbox' : ''}${hasMail ? ' has-mail' : ''}${opening ? ' is-opening' : ''}`}
+              onClick={openInbox}
+              aria-label="받은 편지함 열기"
+            >
+              <span className="letter-box-ground-shadow" aria-hidden="true" />
+              <span className="letter-box-visual letter-box-visual-giftbox" aria-hidden="true">
+                <GiftboxSvg />
+                <span className="letter-box-lid" />
+                <span className="letter-box-body" />
+              </span>
+              <span className="letter-box-visual letter-box-visual-mailbox" aria-hidden="true">
+                <MailboxSvg />
+              </span>
+            </button>
+            {/* 생일 축하 CTA(#377) — 우체통 위에 뜨는 말풍선(#391). 우체통 버튼 안에 넣으면
+                버튼 속 버튼(중첩 interactive)이 되어 letter-box-wrap 기준으로 형제로 띄운다.
+                말풍선+선택목록을 한 컨테이너(letter-birthday-cta)로 묶어 절대배치는 거기 한 번만
+                걸고, 목록은 그 안에서 일반 흐름(flex column)으로 말풍선 아래 쌓이게 한다. */}
+            {birthdayMembers.length > 0 && (
+              <div className="letter-birthday-cta">
+                <button type="button" className="letter-birthday-bubble" onClick={handleBirthdayBubbleClick}>
+                  🎂 {birthdayBubbleText}
+                </button>
+                {birthdayPickerOpen && birthdayMembers.length > 1 && (
+                  <div className="letter-birthday-picker" role="menu">
+                    {birthdayMembers.map((m) => (
+                      <button
+                        key={m.userId}
+                        type="button"
+                        role="menuitem"
+                        className="letter-birthday-picker-item"
+                        onClick={() => { openCompose(m.userId); setBirthdayPickerOpen(false) }}
+                      >
+                        {m.nickname}님에게 편지 쓰기
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           {/* 텅 빈 상태에서 "정적 이미지"로만 보이지 않게 — 클릭 유도 힌트를 살짝 더한다
               (행운편지 작업 내용.md ③, 편지가 있을 땐 이미 안 봐도 뻔해서 뺀다). */}
           {!hasMail && <span className="letter-box-hint" aria-hidden="true">눌러서 열어보기</span>}
@@ -280,11 +320,6 @@ export default function Letters() {
           <button type="button" className="letter-filter-btn action-btn letter-write-btn" onClick={() => openCompose()}>
             <span>편지 작성</span>
           </button>
-          {birthdayMember && (
-            <button type="button" className="letter-birthday-nudge" onClick={() => openCompose(birthdayMember.userId)}>
-              🎂 {birthdayMember.nickname}님 생일이에요, 축하 편지 보내보세요
-            </button>
-          )}
         </section>
       </div>
 

@@ -240,8 +240,9 @@ export default function Feed() {
   // 나간 사람이 남긴 한 줄 메시지를 formerComments로 따로 보여줘야 해서다(MemoryDetailModal).
   const memberItems = members.data?.items ?? []
   const activeMemberItems = memberItems.filter((m) => m.status === 'ACTIVE')
-  // 작성자 생일(월-일) 조회용 — 추억 카드가 생일 당일 기록인지 표시하는 데 쓴다(#378).
-  const birthMonthDayByWriter = new Map(memberItems.map((m) => [String(m.userId), m.birthMonthDay]))
+  // 멤버 생일(월-일) 조회용 — 추억 카드가 생일 당일 기록인지 표시하는 데 쓴다(#378).
+  // 작성자뿐 아니라 참여자도 봐야 해서(#393) userId 기준 맵으로 둔다("writer" 전용 이름 아님).
+  const birthMonthDayByUserId = new Map(memberItems.map((m) => [String(m.userId), m.birthMonthDay]))
 
   // 작성자 필터 적용
   const byWriter = allItems.filter((item) => {
@@ -349,8 +350,16 @@ export default function Feed() {
                 const visibleAv = avatars.slice(0, 4)
                 const restAv = avatars.length - visibleAv.length
                 const preview = previewText(item.content)
-                const writerBirthMonthDay = birthMonthDayByWriter.get(String(item.writer?.id))
-                const isBirthdayMemory = Boolean(writerBirthMonthDay) && isSameMonthDay(item.memoryDate, writerBirthMonthDay)
+                // 생일 배지(#393) — 작성자 한정이 아니라 참여자도 본다. 같은 memoryDate에
+                // 생일이 겹치는 사람이 여럿이면(사용자 지시) 전원을 배지 문구에 나열한다.
+                // Map으로 id 기준 중복 제거(작성자가 참여자 목록에도 들어있는 경우 대비).
+                const memoryPeople = [...new Map(
+                  [item.writer, ...(item.participants ?? [])].filter(Boolean).map((p) => [String(p.id), p]),
+                ).values()]
+                const birthdayPeople = memoryPeople.filter((p) => {
+                  const birthMonthDay = birthMonthDayByUserId.get(String(p.id))
+                  return Boolean(birthMonthDay) && isSameMonthDay(item.memoryDate, birthMonthDay)
+                })
                 return (
                   <div className="memory-card" key={item.id}>
                     <div className={`polaroid-card ${isMine ? 'mine' : 'friend'}`}>
@@ -397,7 +406,9 @@ export default function Feed() {
                         <MemoryFooterTags tags={tags} />
                         <div className="memory-meta-row">
                           <span className="memory-date">{item.memoryDate || '날짜 미정'}</span>
-                          {isBirthdayMemory && <span className="memory-birthday-badge" title={`${item.writer?.nickname}님의 생일`}>🎂 생일</span>}
+                          {birthdayPeople.length > 0 && (
+                            <span className="memory-birthday-badge" title={`${birthdayPeople.map((p) => p.nickname).join(', ')}님의 생일`}>🎂 생일</span>
+                          )}
                           <span className="memory-message-count"><IconComment />{item.commentCount ?? 0}</span>
                         </div>
                       </div>
@@ -1144,8 +1155,14 @@ export function MemoryDetailModal({
     ? { text: '약속 기록', cls: '' }
     : { text: '자유 기록 · FREE MEMORY', cls: 'free' }
   // 생일 당일 기록 표시(#378) — 피드 카드와 같은 판정, 영수증 아래 빈 공간에 보여준다.
-  const writerBirthMonthDay = members.find((m) => String(m.userId) === String(memory?.writer?.id))?.birthMonthDay
-  const isBirthdayMemory = memory && Boolean(writerBirthMonthDay) && isSameMonthDay(memory.memoryDate, writerBirthMonthDay)
+  // 작성자 한정이 아니라 참여자도 본다(#393) — 여럿이 겹치면(사용자 지시) 사람당 하나씩 나열한다.
+  const memoryPeople = memory
+    ? [...new Map([memory.writer, ...(memory.participants ?? [])].filter(Boolean).map((p) => [String(p.id), p])).values()]
+    : []
+  const birthdayPeople = memoryPeople.filter((p) => {
+    const birthMonthDay = members.find((m) => String(m.userId) === String(p.id))?.birthMonthDay
+    return Boolean(birthMonthDay) && isSameMonthDay(memory.memoryDate, birthMonthDay)
+  })
 
   const photoNav = (dir) => {
     if (photoCount < 2) return
@@ -1515,9 +1532,12 @@ export function MemoryDetailModal({
                 ) : (
                   <MemoryReceipt planId={memory.planId} plan={planQuery.data} />
                 )}
-                {isBirthdayMemory && (
-                  <div className="mp-receipt-birthday">🎂 {memory.writer?.nickname}님의 생일</div>
-                )}
+                {/* 생일자 한 명당 하나씩(사용자 지시) — 영수증 아래 여유 공간에 세로로 쌓는다.
+                    쉼표로 이어붙이면 닉네임이 길 때 좁은 mp-receipt-col을 넘칠 수 있어서
+                    (#382의 mp-cover-title과 같은 종류) 사람별로 나눴다. */}
+                {birthdayPeople.map((p) => (
+                  <div key={p.id} className="mp-receipt-birthday">🎂 {p.nickname}님의 생일</div>
+                ))}
               </div>
             </div>
 

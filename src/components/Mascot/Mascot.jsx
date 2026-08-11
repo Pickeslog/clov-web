@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './Mascot.css'
 import { getMe, getPreferences } from '../../api/user'
-import { interactMascot } from '../../api/room'
+import { getRoomMembers, interactMascot } from '../../api/room'
+import { isTodayBirthday, isTodayMonthDay } from '../../lib/datetime'
 // 스프라이트는 assets/mascot/<캐릭터>/<상태>.png 로 캐릭터별 폴더에 둔다.
 // 새 캐릭터는 assets/mascot/_template의 9개 표준 상태와 파일명을 따른다.
 import crobiSprite from '../../assets/mascot/crobi/default.png'
@@ -161,6 +162,22 @@ const LINES = {
   kimCheolsu: ['안녕, 김철수야!', '오늘도 차근차근 만들어보자!', '좋은 추억은 오래가는 법이지!', '필요하면 내가 뚝딱 해줄게!'],
   onyx: ['안녕, 오닉스야!', '빛나는 추억을 세공해볼까?', '작은 순간도 보석처럼 소중해!', '오늘의 추억은 어떤 빛일까?'],
 }
+// 생일 대사(#403) — 캐릭터별 기본 대사를 대체하지 않고 풀에 더해서 섞는다.
+const BIRTHDAY_LINES_ME = [
+  '생일 축하해요! 오늘 하루 마음껏 즐겨요',
+  '오늘의 주인공은 바로 당신이에요!',
+  '생일인데 추억 하나 남겨보는 건 어때요?',
+]
+const birthdayFriendLines = (name) => [
+  `오늘 ${name}님 생일이에요!`,
+  `${name}님한테 축하 인사 남겨보는 건 어때요?`,
+  `${name}님의 특별한 하루, 같이 축하해줄까요?`,
+]
+// 생일 대사가 나올 확률 — 평소 대사 풀에 그냥 더하면 캐릭터별 대사 개수·이스터에그
+// 유무에 따라 비율이 들쭉날쭉해진다(4개 풀에 3개면 43%, 반응 스프라이트가 더 붙으면
+// 30%까지 떨어짐). "3번 중 1번은 나와야 한다"는 요구를 풀 크기와 무관하게 지키려면
+// 확률을 고정값으로 따로 뽑아야 한다.
+const BIRTHDAY_LINE_CHANCE = 1 / 3
 const LIMIT_MESSAGE = '오늘은 여기까지!'
 const SAY_MS = 1800
 const IDLE_MS = 20000
@@ -210,6 +227,12 @@ export default function Mascot({ roomId }) {
   const queryClient = useQueryClient()
   const me = useQuery({ queryKey: ['me'], queryFn: getMe })
   const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
+  // 생일 대사(#403) — Dashboard와 같은 쿼리 키를 써서 그 페이지에서 이미 받아온 응답이
+  // 있으면 재사용한다(캐시 공유). LEFT 멤버·본인은 "친구 생일" 후보에서 뺀다(Dashboard와 동일 규칙).
+  const members = useQuery({ queryKey: ['room', roomId, 'members'], queryFn: () => getRoomMembers(roomId) })
+  const isMyBirthday = isTodayBirthday(me.data?.birthdate)
+  const birthdayFriend = (members.data?.items ?? [])
+    .find((m) => m.status === 'ACTIVE' && String(m.userId) !== String(me.data?.id) && isTodayMonthDay(m.birthMonthDay))
   const [bubble, setBubble] = useState('')
   const bubbleTimer = useRef(null)
   const [reactionMode, setReactionMode] = useState('default')
@@ -310,11 +333,26 @@ export default function Mascot({ roomId }) {
       setTypedLen(text.length)
     }
   }
+  // 생일 대사(#403) — 본인/친구 생일이면 BIRTHDAY_LINE_CHANCE 확률로 그 전용 풀에서 뽑고,
+  // 그 외엔 평소처럼 캐릭터 풀(+반응 스프라이트)에서 뽑는다. 대체가 아니라 확률적으로 섞는 것.
+  const birthdaySpecialLines = () => {
+    if (isMyBirthday) return BIRTHDAY_LINES_ME
+    if (birthdayFriend) return birthdayFriendLines(birthdayFriend.nickname)
+    return null
+  }
   const pickLine = () => {
+    const special = birthdaySpecialLines()
+    if (special && Math.random() < BIRTHDAY_LINE_CHANCE) {
+      return special[Math.floor(Math.random() * special.length)]
+    }
     const pool = LINES[mascotType]
     return pool[Math.floor(Math.random() * pool.length)]
   }
   const pickReaction = () => {
+    const special = birthdaySpecialLines()
+    if (special && Math.random() < BIRTHDAY_LINE_CHANCE) {
+      return { text: special[Math.floor(Math.random() * special.length)] }
+    }
     const pool = LINES[mascotType].map((text) => ({ text }))
     pool.push(...CLICK_EXTRAS.filter(({ spriteKey }) => stateSprites[spriteKey]))
     return pool[Math.floor(Math.random() * pool.length)]

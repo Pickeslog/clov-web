@@ -79,6 +79,13 @@ export function isTodayMonthDay(monthDay) {
   return isSameMonthDay(toDateKey(today), monthDay)
 }
 
+// 오늘이 내 생일인가(getMe.birthdate, "YYYY-MM-DD" — 연도 포함, RoomMember.birthMonthDay와
+// 달리 연도가 있다). 월-일만 뽑아 위 isTodayMonthDay에 그대로 태운다.
+export function isTodayBirthday(birthdate) {
+  const m = String(birthdate || '').match(/^\d{4}-(\d{2})-(\d{2})/)
+  return m ? isTodayMonthDay(`${m[1]}-${m[2]}`) : false
+}
+
 // 오늘과의 날짜 차이(숫자)만 반환한다. 'D-3' 같은 라벨 문자열은 각 화면이 만든다.
 export function ddayDiff(dateStr) {
   const m = String(dateStr || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/)

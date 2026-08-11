@@ -240,9 +240,6 @@ export default function Feed() {
   // 나간 사람이 남긴 한 줄 메시지를 formerComments로 따로 보여줘야 해서다(MemoryDetailModal).
   const memberItems = members.data?.items ?? []
   const activeMemberItems = memberItems.filter((m) => m.status === 'ACTIVE')
-  // 멤버 생일(월-일) 조회용 — 추억 카드가 생일 당일 기록인지 표시하는 데 쓴다(#378).
-  // 작성자뿐 아니라 참여자도 봐야 해서(#393) userId 기준 맵으로 둔다("writer" 전용 이름 아님).
-  const birthMonthDayByUserId = new Map(memberItems.map((m) => [String(m.userId), m.birthMonthDay]))
 
   // 작성자 필터 적용
   const byWriter = allItems.filter((item) => {
@@ -350,16 +347,11 @@ export default function Feed() {
                 const visibleAv = avatars.slice(0, 4)
                 const restAv = avatars.length - visibleAv.length
                 const preview = previewText(item.content)
-                // 생일 배지(#393) — 작성자 한정이 아니라 참여자도 본다. 같은 memoryDate에
-                // 생일이 겹치는 사람이 여럿이면(사용자 지시) 전원을 배지 문구에 나열한다.
-                // Map으로 id 기준 중복 제거(작성자가 참여자 목록에도 들어있는 경우 대비).
-                const memoryPeople = [...new Map(
-                  [item.writer, ...(item.participants ?? [])].filter(Boolean).map((p) => [String(p.id), p]),
-                ).values()]
-                const birthdayPeople = memoryPeople.filter((p) => {
-                  const birthMonthDay = birthMonthDayByUserId.get(String(p.id))
-                  return Boolean(birthMonthDay) && isSameMonthDay(item.memoryDate, birthMonthDay)
-                })
+                // 생일 배지(#393 → #404) — 작성자·참여자로 좁히면 그 기록에 태그 안 된 멤버의
+                // 생일은 memoryDate가 맞아도 빠진다(사용자 지시로 확장). 이제 memoryDate가 방
+                // 멤버 누군가의 생일과 같으면, 그 기록에 안 묶인 사람이어도 보여준다. 여럿이
+                // 겹치면 전원을 배지 문구에 나열한다.
+                const birthdayPeople = activeMemberItems.filter((m) => isSameMonthDay(item.memoryDate, m.birthMonthDay))
                 return (
                   <div className="memory-card" key={item.id}>
                     <div className={`polaroid-card ${isMine ? 'mine' : 'friend'}`}>
@@ -1154,15 +1146,12 @@ export function MemoryDetailModal({
   const status = memory?.planId
     ? { text: '약속 기록', cls: '' }
     : { text: '자유 기록 · FREE MEMORY', cls: 'free' }
-  // 생일 당일 기록 표시(#378) — 피드 카드와 같은 판정, 영수증 아래 빈 공간에 보여준다.
-  // 작성자 한정이 아니라 참여자도 본다(#393) — 여럿이 겹치면(사용자 지시) 사람당 하나씩 나열한다.
-  const memoryPeople = memory
-    ? [...new Map([memory.writer, ...(memory.participants ?? [])].filter(Boolean).map((p) => [String(p.id), p])).values()]
+  // 생일 당일 기록 표시(#378 → #404) — 피드 카드와 같은 판정. memoryDate가 방 멤버 누군가의
+  // 생일과 같으면 그 기록에 참여자로 안 묶인 사람이어도 보여준다(사용자 지시로 확장).
+  // LEFT 멤버는 뺀다(생일 배너·피드 카드와 같은 규칙) — members prop은 LEFT까지 포함해서 온다.
+  const birthdayPeople = memory
+    ? members.filter((m) => m.status === 'ACTIVE' && isSameMonthDay(memory.memoryDate, m.birthMonthDay))
     : []
-  const birthdayPeople = memoryPeople.filter((p) => {
-    const birthMonthDay = members.find((m) => String(m.userId) === String(p.id))?.birthMonthDay
-    return Boolean(birthMonthDay) && isSameMonthDay(memory.memoryDate, birthMonthDay)
-  })
 
   const photoNav = (dir) => {
     if (photoCount < 2) return

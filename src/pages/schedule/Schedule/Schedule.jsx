@@ -614,6 +614,9 @@ function BirthdayTicket({ name, userId, planDate, dday }) {
                 <div className="ticket-titlewrap">
                   <div className="ticket-title ticket-title--highlight">{name}님의 생일</div>
                   <div className="ticket-kicker">BIRTHDAY · {year}</div>
+                  {/* #381 — 리더 결정: "우리 clov가 챙겨줬다"로 표시. writer_id는 여전히 사람이라
+                      isWriter 기반 수정·삭제 권한은 그대로다(이건 순수 표시용 배지). */}
+                  <span className="ticket-clov-badge">🍀 Clov가 챙긴 생일</span>
                 </div>
                 <div className="ticket-meta">
                   <div><span>DATE</span><b>{formatFriendlyDate(planDate)}</b></div>

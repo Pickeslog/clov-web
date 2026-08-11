@@ -244,6 +244,9 @@ export default function Mascot({ roomId }) {
   const idleTimerRef = useRef(null)
   const reactionTimerRef = useRef(null)
   const pendingReactionRef = useRef(null)
+  // 하루 교감 한도 초과 안내(#400)는 이번 세션에서 처음 걸렸을 때만 보여준다 — 안 그러면
+  // 한도를 넘긴 뒤 클릭할 때마다 매번 API가 같은 에러를 돌려줘서 LIMIT_MESSAGE만 계속 반복된다.
+  const limitMessageShownRef = useRef(false)
   // nudge: '' | 'nudge' | 'nudge2' — 콤보 중간 클릭의 흔들림. 목업과 같이 키프레임 2벌을
   // 번갈아 쓴다(같은 클래스를 다시 붙이면 CSS 애니메이션이 재시작하지 않는다).
   const [nudge, setNudge] = useState('')
@@ -346,10 +349,23 @@ export default function Mascot({ roomId }) {
       showBubble(gold > 0 ? `${line} (+${gold}G)` : line)
     },
     onError: (err) => {
+      const reaction = pendingReactionRef.current
       pendingReactionRef.current = null
       // ★ 여기서 setReaction('default')을 하지 않는다 — 하루 한도를 다 쓴 뒤에도 마스코트는
       // 눌리면 반응해야 한다. 한도에 걸렸다는 건 말풍선 문구로 알린다.
-      showBubble(err.code === 'MASCOT_INTERACTION_LIMIT_REACHED' ? LIMIT_MESSAGE : (err.message || '잠시 후 다시 시도해 주세요.'))
+      if (err.code === 'MASCOT_INTERACTION_LIMIT_REACHED') {
+        // 처음 걸렸을 때만 안내하고, 그 이후 클릭은 평소처럼 랜덤 대사를 보여준다(#400) —
+        // 계속 호출은 되지만(서버가 유일한 판정자) 매번 같은 안내만 반복되면 마스코트가
+        // 말은 안 하고 표정만 바뀌는 것처럼 보인다.
+        if (limitMessageShownRef.current) {
+          showBubble(reaction?.text || pickLine())
+        } else {
+          limitMessageShownRef.current = true
+          showBubble(LIMIT_MESSAGE)
+        }
+        return
+      }
+      showBubble(err.message || '잠시 후 다시 시도해 주세요.')
     },
   })
 

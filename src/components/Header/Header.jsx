@@ -120,7 +120,15 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
           <NavIcon><path d="M4 8h16l-1.2 10a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8L4 8zM8.5 8V6a3.5 3.5 0 0 1 7 0v2" /></NavIcon>
           <span className="clov-hdr-shop-label">상점</span>
           {/* balance가 비면 헤더가 통째로 죽는다 — Shop.jsx도 같은 이유로 ?? 0을 쓴다(#208). */}
-          {wallet.data && <span className="clov-hdr-gold"><i aria-hidden="true">G</i>{(wallet.data.balance ?? 0).toLocaleString()}</span>}
+          {wallet.data ? (
+            <span className="clov-hdr-gold"><i aria-hidden="true">G</i>{(wallet.data.balance ?? 0).toLocaleString()}</span>
+          ) : wallet.isError ? (
+            // #314 — 예전엔 실패하면 배지가 조용히 사라졌다. 재시도가 다 실패해도 최소한
+            // "값을 모른다"는 표시는 남긴다 — 0G로 보이면 "다 썼나?"로 오해할 수 있다.
+            <span className="clov-hdr-gold err" title="보유 골드를 불러오지 못했습니다.">
+              <i aria-hidden="true">G</i>—
+            </span>
+          ) : null}
         </button>
 
         <div className="clov-hdr-avatar-wrap">

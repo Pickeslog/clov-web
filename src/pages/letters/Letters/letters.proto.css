@@ -1,7 +1,11 @@
-@scope (.proto-letters) {
-        /* 프로토타입 전역 모달 시스템(프로덕션 미이식분 보강) — 이 스코프 내에서만 정의.
-           modal-box 기본은 각 모달(letter-inbox-modal/detail/write-card)이 뒤에서 덮어쓴다(소스 순서). */
-        .modal-overlay {
+        /* 프로토타입 전역 모달 시스템(프로덕션 미이식분 보강) — .proto-letters 스코프 안에서만 쓴다.
+           modal-box 기본은 각 모달(letter-inbox-modal/detail/write-card)이 뒤에서 덮어쓴다(소스 순서).
+           ★ 예전엔 @scope(.proto-letters){}로 감싸 스코프를 잡았는데, 사용자 환경에서 @scope 자체가
+           반영 안 되는 문제가 실측됐고, 그래서 "반드시 먹어야 하는" 규칙만 골라 스코프 밖·클래스
+           접두(.proto-letters .foo) 방식으로 이중 정의해온 게 파일 아래쪽에 계속 쌓였다. 이 파일
+           전체를 처음부터 클래스 접두 방식으로 통일해 @scope를 걷어냈다(#345) — 이제 안/밖 구분
+           자체가 없다. 아래에 남은 "@scope 안/밖" 언급은 그 역사적 배경 설명이니 참고만 할 것. */
+        .proto-letters .modal-overlay {
             position: fixed;
             inset: 0;
             z-index: 1000;
@@ -15,8 +19,8 @@
             -webkit-backdrop-filter: blur(10px) saturate(1.08);
             animation: letterModalOverlayIn 0.24s ease both;
         }
-        .modal-overlay > .modal-box { margin: auto; }
-        .modal-box {
+        .proto-letters .modal-overlay > .modal-box { margin: auto; }
+        .proto-letters .modal-box {
             position: relative;
             z-index: 1;
             background:
@@ -34,20 +38,20 @@
             transform-origin: 50% 46%;
             animation: letterModalBoxIn 0.34s cubic-bezier(0.2, 0.9, 0.2, 1.08) both;
         }
-        .modal-box h3 { color: var(--primary-green); font-size: 16px; margin-bottom: 14px; }
-        .modal-form-group { margin-bottom: 12px; }
-        .modal-form-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
-        .modal-buttons { display: flex; gap: 8px; margin-top: 18px; }
+        .proto-letters .modal-box h3 { color: var(--primary-green); font-size: 16px; margin-bottom: 14px; }
+        .proto-letters .modal-form-group { margin-bottom: 12px; }
+        .proto-letters .modal-form-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+        .proto-letters .modal-buttons { display: flex; gap: 8px; margin-top: 18px; }
 
         /* 행운편지 작성 모달 전용 스타일 */
-        .letter-emoji-picker {
+        .proto-letters .letter-emoji-picker {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
             margin-top: 6px;
         }
 
-        .letter-emoji-chip {
+        .proto-letters .letter-emoji-chip {
             width: 38px;
             height: 38px;
             border-radius: 12px;
@@ -61,20 +65,20 @@
             transition: all 0.2s ease;
         }
 
-        .letter-emoji-chip:hover {
+        .proto-letters .letter-emoji-chip:hover {
             border-color: var(--accent-green);
             background: var(--nav-item-bg-active);
             transform: scale(1.12);
         }
 
-        .letter-emoji-chip.active {
+        .proto-letters .letter-emoji-chip.active {
             border-color: var(--primary-green);
             background: var(--nav-item-bg-active);
             box-shadow: 0 0 0 2px rgba(82, 183, 136, 0.22);
             transform: scale(1.08);
         }
 
-        .letter-preview {
+        .proto-letters .letter-preview {
             margin-top: 14px;
             padding: 16px;
             border-radius: 14px;
@@ -95,7 +99,7 @@
             }
         }
 
-        .letter-preview-label {
+        .proto-letters .letter-preview-label {
             font-size: 10px;
             font-weight: 700;
             color: var(--primary-green);
@@ -104,17 +108,17 @@
             margin-bottom: 8px;
         }
 
-        .letter-preview-content {
+        .proto-letters .letter-preview-content {
             font-size: 13px;
             line-height: 1.7;
             color: var(--text-color);
         }
 
-        .letter-preview-content strong {
+        .proto-letters .letter-preview-content strong {
             color: var(--primary-green);
         }
 
-        .letter-send-success {
+        .proto-letters .letter-send-success {
             animation: letterSendPop 0.5s cubic-bezier(0.2, 0.9, 0.2, 1.08) both;
         }
 
@@ -136,13 +140,13 @@
         /* ==========================================
            11. 행운 편지 즐겨찾기 및 필터 스타일
            ========================================== */
-        .letter-filter-container {
+        .proto-letters .letter-filter-container {
             display: flex;
             gap: 8px;
             margin-bottom: 16px;
         }
 
-        .letter-filter-btn {
+        .proto-letters .letter-filter-btn {
             background-color: var(--btn-primary-bg);
             border: 1px solid var(--btn-primary-bg);
             color: var(--button-text);
@@ -158,22 +162,22 @@
             gap: 4px;
         }
 
-        .letter-filter-btn:hover {
+        .proto-letters .letter-filter-btn:hover {
             border-color: var(--accent-green);
             background-color: var(--bg-light);
         }
 
-        .letter-filter-btn.active {
+        .proto-letters .letter-filter-btn.active {
             background-color: var(--card-bg);
             color: var(--btn-primary-bg);
             border-color: var(--btn-primary-bg);
         }
 
-        .letter-item {
+        .proto-letters .letter-item {
             position: relative;
         }
 
-        .letter-favorite-btn {
+        .proto-letters .letter-favorite-btn {
             position: absolute;
             top: 12px;
             right: 14px;
@@ -188,161 +192,439 @@
             opacity: 1;
         }
 
-        .letter-favorite-btn:hover {
+        .proto-letters .letter-favorite-btn:hover {
             transform: scale(1.2);
         }
 
-        .letter-favorite-btn.inactive {
+        .proto-letters .letter-favorite-btn.inactive {
             filter: grayscale(1) brightness(0.8);
             opacity: 0.3;
         }
 
         /* 행운편지 탭 전체 폭 통일 — 위 카드/아래 작성 카드를 같은 중앙 정렬 컨테이너로 묶음 */
-        .letter-tab-container {
+        /* 페이지 여백은 여기가 맡는다(헤더 아래 본문만). 위 .proto-letters 주석 참고 —
+           루트에 주면 <Header>까지 밀려 들어간다. 좌우는 원래 이 컨테이너 값(20px)에
+           루트가 갖고 있던 24px 을 합치지 않고, 다른 화면과 같은 폭감으로 24px 로 맞춘다. */
+        .proto-letters .letter-tab-container {
             max-width: 900px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 26px 24px 72px;
         }
 
-        .letter-write-card {
+        /* 편지 확인 모달(.letter-detail-paper)의 "편지지" 감성을 절충해서 가져온다
+           (사용자 요청) — 크림 배경 + 아주 옅은 가로 줄무늬(편지지 라인) 텍스처만
+           가져오고, 상세보기의 핑크 포인트·기울임(rotate)·세리프체는 가져오지 않는다.
+           이 화면 전체가 그린 브랜드 톤으로 통일돼 있어 포인트 컬러를 바꾸면 깨지고,
+           입력 폼(textarea·버튼)이 있는 화면에서 기울어진 채로 두면 조작감이 어색해질
+           수 있어서다(의견 공유 후 절충안으로 합의). */
+        .proto-letters .letter-write-card {
+            position: relative;
             max-width: 100%;
             margin: 20px 0 0;
             padding: 28px 32px;
-            background: var(--card-bg, #fff);
-            border: 1px solid var(--border-color);
+            background:
+                repeating-linear-gradient(180deg, transparent 0 30px, rgba(45, 140, 97, 0.07) 30px 31px),
+                radial-gradient(circle at 88% 0%, rgba(82, 183, 136, 0.14), transparent 42%),
+                linear-gradient(175deg, #fffaf2, #fff6ea);
+            border: 1px solid rgba(45, 140, 97, 0.22);
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(20, 40, 30, 0.1);
+            box-shadow: 0 24px 48px rgba(20, 40, 30, 0.14);
+            overflow: hidden;
         }
 
-        .letter-write-textarea {
-            height: 140px;
-            resize: vertical;
+        /* 원형 이모지 배지(💌)는 제거하고 텍스트 3줄(kicker/제목/부제)만으로 배치한다
+           (사용자 요청). */
+        .proto-letters .letter-write-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 12px;
+            /* 헤더 블록과 "편지 내용" 사이 간격이 너무 붙어 있었다(사용자 지적) — 한 단
+               더 벌려 숨 쉴 공간을 준다. */
+            margin-bottom: 22px;
+        }
+        .proto-letters .letter-write-heading {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* 빈 편지함(letter-stage-kicker)과 같은 브랜드 톤 — 작성 모달만 갑자기 밋밋한
+           일반 폼처럼 보이던 문제 보완(사용자 지적). */
+        .proto-letters .letter-write-kicker {
+            display: block;
+            color: var(--primary-green);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        /* 제목(선택 입력) — 이슈 #352. content-group과 같은 톤이라 별도 박스 없이 라벨만. */
+        .proto-letters .letter-title-group {
+            padding: 0;
+            border: 0;
+            background: none;
+        }
+
+        .proto-letters .letter-title-optional {
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .proto-letters .letter-write-title-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: #fff;
+            color: var(--text-color);
+            border: 1px solid var(--input-border, #d8ebd2);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .proto-letters .letter-write-title-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* recipient-group과 짝 맞추려고 여기도 박스로 감쌌었는데, 텍스트영역이 이미 자체
+           테두리를 갖고 있어 "박스 안에 박스"가 겹쳐 보기 안 좋았다(사용자 지적) — 박스
+           장식은 걷어내고 레이블만 남긴다. */
+        .proto-letters .letter-content-group {
+            padding: 0;
+            border: 0;
+            background: none;
+        }
+
+        /* 발송 애니메이션(사용자 요청)의 "연필이 훑고 지나가는" 단계 — 연필 아이콘을
+           textarea 위에 절대 위치로 올려야 해서 감싸는 relative 컨테이너가 필요하다. */
+        .proto-letters .letter-content-canvas {
+            position: relative;
+        }
+
+        .proto-letters .letter-write-textarea {
+            height: 190px;
+            /* 사용자 요청으로 리사이즈 비활성화(Letters.jsx의 LETTER_TEXTAREA_STYLE도 동일하게
+               resize:'none' — 인라인 스타일이 우선 적용되지만 값을 맞춰 둔다). */
+            resize: none;
             line-height: 1.7;
             padding: 14px 16px !important;
+            /* 기본 HTML textarea 그대로인 느낌이었다(사용자 지적) — 옅은 점 텍스처 대신
+               실제 편지지처럼 가로 줄을 그어 "쓰는 중"인 연필 애니메이션이 그 줄 위를
+               지나가는 것처럼 보이게 한다(사용자 요청). 간격(22px)은 font-size 13px ×
+               line-height 1.7 ≈ 22.1px에 맞췄다. */
+            background-image: repeating-linear-gradient(180deg, transparent 0 21px, rgba(82, 183, 136, 0.18) 21px 22px) !important;
+            background-size: 100% 22px !important;
+            background-position: 0 12px !important;
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
-        .letter-write-buttons {
+        /* 글자수 안내 — 예전엔 "0 / 1000 (한글 500자 / 영어 1000자)"가 전부 같은 크기로 붙어
+           약관처럼 빽빽했다(사용자 지적). 실제 글자수만 배지로 도드라지게 하고 언어별 세부
+           기준은 title 툴팁으로 옮겼다(Letters.jsx). */
+        .proto-letters .letter-content-count {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 4px;
+            margin-top: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .proto-letters .letter-content-count b {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--primary-green);
+        }
+
+        /* 발송 애니메이션 — 연필이 "실제로 마지막 내용이 적힌 자리"(JS의
+           measureTextEndPosition)에 자리잡고 사각사각 긁다가 통! 하고 사라진다
+           (사용자 요청). 위치(left/top)는 JS가 잰 좌표로 트랜지션 슬라이드하고, 좌우
+           까딱거림(svg의 rotate)·통 팝(바깥 요소의 scale)은 서로 다른 요소·다른
+           속성이라 부딪히지 않는다. */
+        .proto-letters .letter-write-card.is-sending {
+            pointer-events: none;
+        }
+
+        .proto-letters .letter-send-pencil {
+            position: absolute;
+            z-index: 2;
+            /* 아이콘 좌상단이 아니라 "심 끝"이 좌표에 오도록 당겨준다 — 심은 46px 기준
+               좌상단에서 (8.8px, 37.2px) 지점이다(64뷰박스의 (4,32)를 -45° 회전한 값). */
+            margin: -37px 0 0 -9px;
+            filter: drop-shadow(0 3px 5px rgba(27, 67, 50, 0.3));
+            transition:
+                left 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                top 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.22s ease;
+        }
+        /* 좌우 까딱거림(사각사각)은 svg에 따로 건다 — 위치(left/top, transition)와
+           transform(rotate, animation)을 한 요소에서 같이 다루면 서로 안 부딪히니까. */
+        .proto-letters .letter-send-pencil svg {
+            display: block;
+            /* 심 끝을 축으로 돌린다 — 64뷰박스의 심 (4,32)를 -45° 회전하면 (12.2, 51.8),
+               즉 요소 기준 19%/81% 지점이다. 기본값(가운데)으로 두면 회전할 때마다 심이
+               좌우로 크게 쓸려나가 "쓰는 중"이 아니라 휘두르는 것처럼 보인다. */
+            transform-origin: 19% 81%;
+            animation: letterPencilScratch 0.17s ease-in-out infinite;
+        }
+
+        /* 마지막에 살짝 부풀었다가 훅 사라지는 "통!"(사용자 요청) — 바깥 요소의
+           scale/opacity에 건다(svg의 rotate와 다른 요소라 안 부딪힘). */
+        .proto-letters .letter-send-pencil.is-popping {
+            animation: letterPencilPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes letterPencilPop {
+            0%   { transform: scale(1); opacity: 1; }
+            45%  { transform: scale(1.4); opacity: 1; }
+            100% { transform: scale(0.15); opacity: 0; }
+        }
+
+        /* (연필 다음 단계 — 카드가 우체통으로 빨려 들어가는 연출은 파일 아래쪽
+           .proto-letters .letter-write-card.is-sucking 참고. .modal-box의 등장
+           애니메이션을 같은 animation 속성으로 덮어써야 하는데, 같은 요소에 두 클래스
+           (modal-box + letter-write-card.is-sucking)가 같이 붙어 있어 후자가 클래스
+           2개라 특정도로 이긴다. */
+
+        /* 사각사각 — 심을 축으로 좌우로 까딱까딱 흔든다(사용자 요청). transform-origin을
+           심 끝(SVG 좌하단)에 두어야 연필이 통째로 미끄러지지 않고 그 자리에서 회전한다. */
+        @keyframes letterPencilScratch {
+            0%, 100% { transform: rotate(-9deg); }
+            50%      { transform: rotate(9deg); }
+        }
+
+        .proto-letters .letter-write-buttons {
             justify-content: flex-end;
         }
 
-        .letter-write-buttons .btn-sub,
-        .letter-write-buttons .btn-main {
+        .proto-letters .letter-write-buttons .btn-sub,
+        .proto-letters .letter-write-buttons .btn-main {
             flex: 0 0 auto;
             width: 200px;
         }
 
-        /* 행운편지 작성 모달 전용 스타일 */
-        #dt-letter-to-all-btn:hover {
-            transform: scale(1.07);
-        }
-
-        .letter-recipient-picker {
+        /* "받는 사람" 선택 — 예전엔 헤더 아래 별도 박스에 이름까지 붙은 칩으로 늘어놨는데,
+           헤더 우측(빈 자리)에 아바타만 압축해서 붙이면 그 자체로 바로 누를 수 있는 선택
+           UI가 된다(사용자 요청). 다만 아바타만 둥둥 떠 있으니 뭘 고르는 UI인지 안
+           읽혔다(사용자 지적) — 위에 작은 라벨, 아래에 "지금 선택된 대상" 문구를 붙인
+           3단 세로 구성으로 가독성을 높인다. */
+        .proto-letters .letter-recipient-picker-mini {
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 6px;
-        }
-
-        .letter-recipient-chip {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 12px 5px 5px;
-            border-radius: 20px;
-            border: 1.5px solid var(--input-border);
-            background: var(--bg-light);
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-color);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .letter-recipient-chip:hover {
-            border-color: var(--accent-green);
-            background: var(--nav-item-bg-active);
-            transform: scale(1.07);
-        }
-
-        .letter-recipient-chip.active {
-            border-color: var(--primary-green);
-            background: var(--nav-item-bg-active);
-            box-shadow: 0 0 0 2px rgba(82, 183, 136, 0.22);
-        }
-
-        .letter-recipient-chip.muted {
-            background: #eef1f4;
-            border-color: #e4e8ec;
-            color: #8c93a3;
-        }
-
-        .letter-recipient-chip.muted:hover {
-            border-color: #c9d0da;
-            background: #e6eaef;
-        }
-
-        .letter-recipient-chip.muted .letter-recipient-avatar {
-            filter: grayscale(0.4);
-            opacity: 0.85;
-        }
-
-        .letter-recipient-avatar {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            color: #fff;
-            font-size: 11px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
             flex-shrink: 0;
+            max-width: 150px;
         }
 
-        .letter-stage {
+        .proto-letters .letter-recipient-mini-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+        }
+
+        .proto-letters .letter-recipient-mini-avatars {
+            position: relative;
+            display: flex;
+            align-items: center;
+            /* 간격을 살짝 늘려 필이 이동할 거리를 벌렸다 — 이동 구간이 짧으면 스쿼시가
+               채 눈에 들어오기 전에 도착해버려 쫀득한 느낌이 약했다(사용자 요청). */
+            gap: 11px;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        /* 받는 사람이 많아 아바타 줄이 길어지면(최대 8명) 좁은 화면에서 제목과 겹쳤다 —
+           헤더 자체를 세로로 쌓고 아바타 줄이 자기 폭만큼 온전히 쓰게 한다.
+           ★ 이 블록은 반드시 위의 .letter-recipient-picker-mini/.letter-recipient-mini-avatars
+           기본 규칙보다 뒤에 와야 한다 — 소스 순서상 앞에 있으면 같은 우선순위의 기본
+           규칙(max-width:150px 등)이 나중에 다시 이겨서 미디어쿼리가 적용 안 된 것처럼
+           보인다(실제 겪은 버그). ★ "같은 우선순위"라는 전제 때문에 이 블록 안 선택자도
+           위 기본 규칙과 똑같이 .proto-letters 접두를 받아야 한다(#345) — 한쪽만 접두가
+           붙으면 특정도가 갈려서 소스 순서가 무의미해진다. */
+        @media (max-width: 480px) {
+            /* flex-wrap:wrap(.letter-write-header 기본 규칙)과 flex-direction:column을
+               같이 쓰면 "아래로 쌓이는" 게 아니라 세로축 기준 새 칸이 옆으로 생겨 버린다 —
+               column일 땐 반드시 nowrap으로 되돌려야 진짜로 한 줄씩 쌓인다. */
+            .proto-letters .letter-write-header { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+            .proto-letters .letter-recipient-picker-mini { max-width: 100%; align-items: flex-start; }
+            .proto-letters .letter-recipient-mini-avatars { flex-wrap: wrap; }
+        }
+
+        /* "물감이 옆으로 스륵 이동해 그 자리 색으로 물드는" 하이라이트(사용자 요청).
+           위치(left/top/width/height)는 transition으로 부드럽게 슬라이드하고, 쫀득한
+           스쿼시&스트레치는 별도 transform 애니메이션(.is-squashing)으로 얹는다 — 서로
+           다른 속성이라 같은 타이밍에 걸어도 부딪히지 않는다. 대상 아바타보다 살짝 크게
+           그려 테두리 밖으로 색이 번지고(Letters.jsx의 BLEED), 같은 색 글로우(box-shadow)를
+           둘러서 멈춰 있을 때도 색이 또렷이 보인다(사용자 지적: 물감 색이 잘 안 보였다).
+           filter: saturate로 색 자체도 한 단 더 선명하게. */
+        .proto-letters .letter-recipient-pill {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: saturate(1.5) brightness(1.04);
+            transition:
+                left 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+                top 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+                width 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+                height 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+                background-color 0.3s ease,
+                box-shadow 0.3s ease,
+                opacity 0.22s ease;
+        }
+        .proto-letters .letter-recipient-pill.is-squashing {
+            animation: letterPillSquash 0.42s cubic-bezier(0.33, 1.4, 0.55, 1) both;
+        }
+        /* 간격을 늘려 이동 거리가 길어진 만큼 스쿼시 폭도 조금 키우고, 끝에 살짝
+           되튕기는 단계를 하나 더 넣어 "쭉 늘어났다 출렁이며 붙는" 물감 느낌을 강조. */
+        @keyframes letterPillSquash {
+            0% { transform: scaleX(1) scaleY(1); }
+            34% { transform: scaleX(1.42) scaleY(0.82); }
+            62% { transform: scaleX(0.94) scaleY(1.06); }
+            100% { transform: scaleX(1) scaleY(1); }
+        }
+
+        /* broadcast(모두에게)가 켜지면 개별 수신자 선택은 의미가 없어진다 — 전체를 흐리고
+           살짝 줄여 "지금은 이 선택이 꺼져 있다"를 분명히 한다. 클릭은 막지 않는다(멤버를
+           눌러 broadcast를 끄고 바로 그 사람으로 바꾸는 기존 동작을 살려둬야 하니까). */
+        .proto-letters .letter-recipient-picker-mini.is-broadcast .letter-recipient-avatar-btn:not(.broadcast) {
+            opacity: 0.45;
+            transform: scale(0.92);
+        }
+
+        .proto-letters .letter-recipient-avatar-btn {
+            position: relative;
+            z-index: 1;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 800;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+            /* 프로필 사진(#339)이 원 밖으로 삐져나오지 않게 자른다 — Feed의 .presence-dot과
+               같은 패턴. */
+            overflow: hidden;
+        }
+        .proto-letters .letter-recipient-avatar-btn img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .proto-letters .letter-recipient-avatar-btn.broadcast {
+            background: linear-gradient(150deg, var(--primary-green), var(--accent-green));
+        }
+
+        .proto-letters .letter-recipient-avatar-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .proto-letters .letter-recipient-avatar-btn.active {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.25);
+        }
+
+        /* 지금 선택된 대상을 짧은 문구로 — 아바타 클릭만으론 몰랐던 "누구에게 보내는지"를
+           바로 읽을 수 있게 한다(사용자 지적: 가독성). 아직 아무도 안 고르면 눈에 덜 띄는
+           색으로, 실제 대상이 정해지면 브랜드 그린으로 강조. */
+        .proto-letters .letter-recipient-mini-selected {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .proto-letters .letter-recipient-mini-selected.is-set {
+            color: var(--primary-green);
+            font-weight: 800;
+        }
+
+        .proto-letters .letter-recipient-empty {
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .proto-letters .letter-stage {
             position: relative;
             min-height: 360px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 24px;
+            gap: 18px;
             text-align: center;
-            padding: 44px 20px 36px;
+            padding: 44px 20px 40px;
             border-radius: 24px;
             background:
                 radial-gradient(circle at 50% 28%, rgba(214, 139, 68, 0.18), transparent 34%),
                 linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 247, 0.82));
             border: 1px solid rgba(45, 140, 97, 0.14);
+            /* overflow는 그대로 visible 유지 — 상자 호버 시 위로 뜨는 연출(-8px)·플로팅
+               애니메이션이 이 박스 padding-box를 살짝 넘나들 수 있어서(#원본 의도), 아래
+               점패턴 장식은 inset:0로 이미 부모 박스 안에 갇혀 있어 overflow 값과 무관하다. */
             overflow: visible;
         }
+        /* 빈 공간이 "미완성처럼" 보이던 문제(행운편지 작업 내용.md ①) — 점 패턴을 옅게 깔아
+           카드 전체에 은은한 질감(기대감을 주는 배경)을 준다. 클릭에 방해되면 안 되니 매우
+           옅게만 얹고, inset:0라 부모 박스를 넘지 않아 별도 클리핑이 필요 없다. */
+        .proto-letters .letter-stage::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background-image: radial-gradient(rgba(27, 67, 50, 0.14) 1.4px, transparent 1.4px);
+            background-size: 22px 22px;
+            -webkit-mask-image: radial-gradient(circle at 50% 38%, black, transparent 72%);
+            mask-image: radial-gradient(circle at 50% 38%, black, transparent 72%);
+            opacity: 0.55;
+            pointer-events: none;
+        }
+        .proto-letters .letter-stage > * { position: relative; z-index: 1; }
 
         /* (편지 화면은 항상 라이트 종이 미감 — 앱은 body.dark-mode 클래스를 쓰지 않으므로
            과거의 body.dark-mode .letter-* 오버라이드는 죽은 코드였고 제거함. 기본 팔레트가 라이트라
            다크 모드에서도 스테이지·카드가 크림/흰색으로 프로토타입과 동일하게 렌더된다.) */
 
-        .letter-stage-kicker {
+        .proto-letters .letter-stage-kicker {
             display: block;
             color: var(--primary-green);
             font-size: 11px;
             font-weight: 800;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.16em;
             text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-
-        .letter-stage-copy h2 {
-            color: var(--title-color);
-            font-size: 28px;
             margin-bottom: 8px;
         }
 
-        .letter-stage-copy p {
-            color: var(--text-muted);
-            font-size: 13px;
+        /* 타이포 스케일을 한 단 더 벌려(28→32, 두께↑) 타이틀부터 CTA까지 시선이
+           또렷하게 내려가게 한다(행운편지 작업 내용.md ②). */
+        .proto-letters .letter-stage-copy h2 {
+            color: var(--title-color);
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -0.01em;
+            margin-bottom: 10px;
         }
 
-        .letter-box-trigger {
+        .proto-letters .letter-stage-copy p {
+            color: var(--text-muted);
+            font-size: 13.5px;
+        }
+
+        .proto-letters .letter-box-trigger {
             position: relative;
             width: 250px;
             height: 230px;
@@ -354,11 +636,55 @@
             animation: letterBoxFloat 4.5s ease-in-out infinite;
         }
 
-        .letter-box-trigger:hover {
+        .proto-letters .letter-box-trigger:hover {
             transform: translateY(-8px);
         }
 
-        .letter-box-ground-shadow {
+        /* 정적 이미지로만 보이지 않게 — 클릭 가능함을 은은하게 알리는 펄스 링
+           (행운편지 작업 내용.md ③). 상자 뒤(z-index 없음=기본 stacking, SVG는 각 파츠가
+           z-index를 쓰므로 이 ::before는 자연히 맨 아래 페인트된다). */
+        .proto-letters .letter-box-trigger::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 6px;
+            width: 130px;
+            height: 44px;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, rgba(82, 183, 136, 0.32), transparent 72%);
+            animation: letterBoxPulse 2.6s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .proto-letters .letter-box-trigger:hover::before,
+        .proto-letters .letter-box-trigger.is-opening::before {
+            animation-play-state: paused;
+            opacity: 0;
+        }
+        @keyframes letterBoxPulse {
+            0%, 100% { opacity: 0.35; transform: translateX(-50%) scale(0.9); }
+            50% { opacity: 0.75; transform: translateX(-50%) scale(1.15); }
+        }
+
+        /* "눌러서 열어보기" 힌트 — 상자가 그냥 그림이 아니라 버튼임을 알려준다. 상자
+           자체 위에 겹치면 시야를 가리니 아래쪽에 살짝 떠 있는 라벨로 분리. */
+        .proto-letters .letter-box-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: -8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary-green);
+            opacity: 0.72;
+            animation: letterHintBob 1.8s ease-in-out infinite;
+        }
+        @keyframes letterHintBob {
+            0%, 100% { transform: translateY(0); opacity: 0.6; }
+            50% { transform: translateY(-3px); opacity: 0.9; }
+        }
+
+        .proto-letters .letter-box-ground-shadow {
             position: absolute;
             left: 50%;
             bottom: -18px;
@@ -371,64 +697,64 @@
         }
 
         /* 우정편지 테마 — 선물상자 / 우체통 전환 (사용자설정 > 화면 > 우정편지 테마) */
-        .letter-box-visual {
+        .proto-letters .letter-box-visual {
             position: absolute;
             inset: 0;
         }
 
-        .letter-box-visual-mailbox {
+        .proto-letters .letter-box-visual-mailbox {
             display: none;
         }
 
-        .letter-box-trigger.theme-mailbox .letter-box-visual-giftbox {
+        .proto-letters .letter-box-trigger.theme-mailbox .letter-box-visual-giftbox {
             display: none;
         }
 
-        .letter-box-trigger.theme-mailbox .letter-box-visual-mailbox {
+        .proto-letters .letter-box-trigger.theme-mailbox .letter-box-visual-mailbox {
             display: block;
         }
 
-        .letter-box-trigger.theme-mailbox {
+        .proto-letters .letter-box-trigger.theme-mailbox {
             perspective: 800px;
         }
 
         /* ── 우체통 (Mailbox) 전용 스타일 및 3D 개폐 애니메이션 ── */
-        .mailbox-svg {
+        .proto-letters .mailbox-svg {
             width: 100%;
             height: 100%;
             overflow: visible;
         }
 
-        .mailbox-door-group {
+        .proto-letters .mailbox-door-group {
             transform-origin: 125px 142px;
             transform: rotateX(0deg);
             transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .letter-box-trigger:hover .mailbox-door-group {
+        .proto-letters .letter-box-trigger:hover .mailbox-door-group {
             transform: rotateX(-32deg);
         }
 
-        .letter-box-trigger.is-opening .mailbox-door-group {
+        .proto-letters .letter-box-trigger.is-opening .mailbox-door-group {
             transform: rotateX(-75deg);
         }
 
         /* 편지가 없을 때 (기본 상태) - 깃발 내려감 & 내부 편지 없음 */
-        .mailbox-flag-group {
+        .proto-letters .mailbox-flag-group {
             transform-origin: 199px 115px;
             transform: rotate(85deg);
             transition: transform 0.52s cubic-bezier(0.34, 1.6, 0.64, 1);
         }
 
-        .letter-box-trigger:hover .mailbox-flag-group {
+        .proto-letters .letter-box-trigger:hover .mailbox-flag-group {
             transform: rotate(72deg);
         }
 
-        .letter-box-trigger.is-opening .mailbox-flag-group {
+        .proto-letters .letter-box-trigger.is-opening .mailbox-flag-group {
             transform: rotate(60deg);
         }
 
-        .mailbox-letter-item {
+        .proto-letters .mailbox-letter-item {
             transform-origin: 125px 95px;
             transform: translateY(24px) scale(0.85);
             opacity: 0;
@@ -437,33 +763,33 @@
         }
 
         /* ── 편지가 도착해 있을 때 (.has-mail) — 깃발 솟구침 & 편지 노출 ── */
-        .letter-box-trigger.has-mail .mailbox-flag-group {
+        .proto-letters .letter-box-trigger.has-mail .mailbox-flag-group {
             transform: rotate(0deg);
         }
 
-        .letter-box-trigger.has-mail:hover .mailbox-flag-group {
+        .proto-letters .letter-box-trigger.has-mail:hover .mailbox-flag-group {
             transform: rotate(-10deg) scale(1.06);
         }
 
-        .letter-box-trigger.has-mail.is-opening .mailbox-flag-group {
+        .proto-letters .letter-box-trigger.has-mail.is-opening .mailbox-flag-group {
             transform: rotate(-16deg) scale(1.12);
         }
 
-        .letter-box-trigger.has-mail .mailbox-letter-item {
+        .proto-letters .letter-box-trigger.has-mail .mailbox-letter-item {
             display: block;
         }
 
-        .letter-box-trigger.has-mail:hover .mailbox-letter-item {
+        .proto-letters .letter-box-trigger.has-mail:hover .mailbox-letter-item {
             transform: translateY(-2px) scale(0.98);
             opacity: 1;
         }
 
-        .letter-box-trigger.has-mail.is-opening .mailbox-letter-item {
+        .proto-letters .letter-box-trigger.has-mail.is-opening .mailbox-letter-item {
             transform: translateY(-38px) scale(1.15);
             opacity: 1;
         }
 
-        .letter-box-lid {
+        .proto-letters .letter-box-lid {
             position: absolute;
             left: 8px;
             top: 52px;
@@ -480,18 +806,18 @@
             z-index: 5;
         }
 
-        .letter-box-trigger:hover .letter-box-lid {
+        .proto-letters .letter-box-trigger:hover .letter-box-lid {
             transform: translateY(-18px) rotate(-3deg);
             box-shadow:
                 inset 0 -10px 16px rgba(18, 44, 34, 0.06),
                 0 20px 28px rgba(8, 28, 22, 0.18);
         }
 
-        .letter-box-trigger.is-opening .letter-box-lid {
+        .proto-letters .letter-box-trigger.is-opening .letter-box-lid {
             transform: translateY(-64px) rotate(-10deg);
         }
 
-        .letter-box-body {
+        .proto-letters .letter-box-body {
             position: absolute;
             left: 20px;
             top: 78px;
@@ -503,7 +829,7 @@
             z-index: 3;
         }
 
-        .letter-box-count {
+        .proto-letters .letter-box-count {
             position: absolute;
             top: 8px;
             right: 8px;
@@ -521,7 +847,7 @@
             z-index: 5;
         }
 
-        .gift-bow {
+        .proto-letters .gift-bow {
             position: absolute;
             left: 0;
             top: 8px;
@@ -533,17 +859,17 @@
             transition: transform 0.38s cubic-bezier(0.2, 0.9, 0.2, 1.08);
         }
 
-        .gift-bow-svg {
+        .proto-letters .gift-bow-svg {
             width: 100%;
             height: 100%;
             overflow: visible;
         }
 
-        .letter-box-trigger:hover .gift-bow {
+        .proto-letters .letter-box-trigger:hover .gift-bow {
             transform: translateY(-14px) rotate(-2deg);
         }
 
-        .letter-box-trigger.is-opening .gift-bow {
+        .proto-letters .letter-box-trigger.is-opening .gift-bow {
             transform: translateY(-58px) rotate(-8deg);
         }
 
@@ -552,21 +878,114 @@
             50% { transform: translateY(-7px); }
         }
 
-        .letter-write-btn:hover {
-            color: #1b2b1f;
+        /* 우체통 옆에 뜨는 생일 말풍선(#391) — letter-box-wrap 기준 절대 배치, 우체통 오른쪽
+           옆에 세로 중앙 정렬(사용자 지시: 위가 아니라 좌우에). 말풍선+선택목록은
+           letter-birthday-cta 하나로 묶어 절대배치를 한 번만 걸고, 내부는 flex column
+           일반 흐름이라 목록이 말풍선 아래 자연스럽게 쌓인다.
+           max-width는 calc(100vw - 260px)로 우체통 폭 + 여백만큼을 빼서, 창이 좁아질수록
+           옆으로 나갈 자리가 줄어드는 만큼 말풍선 폭도 같이 줄어 화면 밖으로 안 나간다. */
+        .proto-letters .letter-box-wrap {
+            position: relative;
+        }
+        .proto-letters .letter-birthday-cta {
+            position: absolute;
+            top: 50%;
+            left: 100%;
+            margin-left: 14px;
+            transform: translateY(-50%);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .proto-letters .letter-birthday-bubble {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: max-content;
+            max-width: min(190px, calc(100vw - 260px));
+            padding: 8px 16px;
+            border: none;
+            border-radius: 16px;
+            font: 800 12.5px inherit;
+            line-height: 1.4;
+            text-align: center;
+            white-space: normal;
+            color: #7a5216;
+            background: #f3ddaa;
+            box-shadow: 0 8px 18px rgba(122, 82, 22, 0.22);
+            cursor: pointer;
+        }
+        .proto-letters .letter-birthday-bubble:hover {
+            filter: brightness(0.97);
+        }
+        /* 말풍선 꼬리 — 우체통 쪽(왼쪽)을 가리키는 삼각형. 목록이 펼쳐지면(뒤에 형제가
+           생기면) 말풍선 옆이 더 이상 우체통 쪽이 아니라서 숨긴다. */
+        .proto-letters .letter-birthday-bubble::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 100%;
+            transform: translateY(-50%);
+            border: 7px solid transparent;
+            border-right-color: #f3ddaa;
+        }
+        .proto-letters .letter-birthday-bubble:not(:last-child)::after {
+            display: none;
+        }
+        /* 동시 생일 2명 이상 — 말풍선 클릭 시 그 아래 뜨는 선택 목록 */
+        .proto-letters .letter-birthday-picker {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            width: max-content;
+            max-width: min(240px, calc(100vw - 48px));
+            padding: 6px;
+            border-radius: 12px;
+            background: var(--card-bg, #fff);
+            box-shadow: 0 12px 26px rgba(8, 28, 22, 0.22);
+        }
+        .proto-letters .letter-birthday-picker-item {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font: 700 12.5px inherit;
+            color: var(--text-color);
+            background: transparent;
+            text-align: left;
+            cursor: pointer;
+        }
+        .proto-letters .letter-birthday-picker-item:hover {
+            background: var(--bg-light, #f7f8f5);
         }
 
-        .letter-write-btn {
-            margin-top: 20px;
+        .proto-letters .letter-write-btn:hover {
+            color: #1b2b1f;
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(27, 67, 50, 0.32);
+        }
+
+        /* CTA를 한 단계 더 키우고 그림자를 얹어 시선이 마지막에 여기서 멈추게 한다
+           (행운편지 작업 내용.md ②) — display:flex는 위에서 추가한 이모지 아이콘과
+           텍스트를 가운데 정렬로 나란히 두기 위함. */
+        .proto-letters .letter-write-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 22px;
             margin-bottom: 8px;
-            padding: 12px 32px;
-            font-size: 15px;
+            padding: 14px 36px;
+            font-size: 15.5px;
+            font-weight: 800;
             background: var(--btn-primary-bg);
             color: var(--button-text);
             border-color: var(--btn-primary-bg);
+            box-shadow: 0 10px 22px rgba(27, 67, 50, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
         }
 
-        .letter-box-summary {
+        .proto-letters .letter-box-summary {
             min-height: 0;
             text-align: center;
             color: var(--text-color);
@@ -576,12 +995,12 @@
             margin-top: -4px;
         }
 
-        .letter-inbox-modal {
+        .proto-letters .letter-inbox-modal {
             max-width: 560px;
             padding: 24px;
         }
 
-        .letter-inbox-head {
+        .proto-letters .letter-inbox-head {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -589,12 +1008,12 @@
             margin-bottom: 14px;
         }
 
-        .letter-inbox-head h3 {
+        .proto-letters .letter-inbox-head h3 {
             margin: 0;
             font-size: 20px;
         }
 
-        .letter-modal-close {
+        .proto-letters .letter-modal-close {
             width: 34px;
             height: 34px;
             border: 0;
@@ -605,13 +1024,13 @@
             cursor: pointer;
         }
 
-        .letter-inbox-tabs {
+        .proto-letters .letter-inbox-tabs {
             display: flex;
             gap: 8px;
             margin-bottom: 16px;
         }
 
-        .letter-inbox-list {
+        .proto-letters .letter-inbox-list {
             display: grid;
             gap: 10px;
             min-height: 278px;
@@ -620,7 +1039,7 @@
             align-content: start;
         }
 
-        .letter-inbox-card {
+        .proto-letters .letter-inbox-card {
             position: relative;
             width: 100%;
             /* 편지 본문 길이와 무관하게 항상 균일한 컴팩트 박스 유지 */
@@ -640,7 +1059,7 @@
             overflow: hidden;
         }
 
-        .letter-inbox-card::before {
+        .proto-letters .letter-inbox-card::before {
             content: "💌";
             position: absolute;
             left: 12px;
@@ -657,7 +1076,7 @@
             box-shadow: 0 4px 10px rgba(224, 86, 127, 0.28);
         }
 
-        .letter-inbox-card::after {
+        .proto-letters .letter-inbox-card::after {
             content: "";
             position: absolute;
             left: 0;
@@ -667,20 +1086,20 @@
             background: linear-gradient(180deg, #ffd6e4, #ff8fb3);
         }
 
-        .letter-inbox-card:hover {
+        .proto-letters .letter-inbox-card:hover {
             transform: translateY(-3px) scale(1.01);
             box-shadow: 0 18px 34px rgba(224, 86, 127, 0.18);
             border-color: rgba(255, 143, 179, 0.55);
         }
 
-        .letter-inbox-card strong {
+        .proto-letters .letter-inbox-card strong {
             display: block;
             color: #e0567f;
             font-size: 13px;
             margin-bottom: 6px;
         }
 
-        .letter-inbox-card p {
+        .proto-letters .letter-inbox-card p {
             color: var(--text-muted);
             font-size: 13px;
             line-height: 1.55;
@@ -691,12 +1110,25 @@
             text-overflow: ellipsis;
         }
 
-        .letter-inbox-card .letter-favorite-btn {
+        /* 목록 카드의 제목(선택 입력, 이슈 #352) — 보낸 사람 줄과 내용 미리보기 사이에
+           한 줄로. 없으면 렌더 자체를 안 하니(Letters.jsx) 여백은 따로 신경 쓸 필요 없다. */
+        .proto-letters .letter-inbox-title {
+            display: block;
+            color: var(--text-color);
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .proto-letters .letter-inbox-card .letter-favorite-btn {
             top: 14px;
             right: 14px;
         }
 
-        .letter-inbox-empty {
+        .proto-letters .letter-inbox-empty {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -708,7 +1140,7 @@
             background: var(--bg-light);
         }
 
-        .letter-inbox-pager {
+        .proto-letters .letter-inbox-pager {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -716,7 +1148,7 @@
             margin-top: 18px;
         }
 
-        .letter-inbox-pager button {
+        .proto-letters .letter-inbox-pager button {
             min-width: 64px;
             border: 1px solid var(--border-color);
             border-radius: 999px;
@@ -728,19 +1160,19 @@
             cursor: pointer;
         }
 
-        .letter-inbox-pager button:disabled {
+        .proto-letters .letter-inbox-pager button:disabled {
             opacity: 0.38;
             cursor: default;
         }
 
-        .letter-inbox-pager span {
+        .proto-letters .letter-inbox-pager span {
             min-width: 52px;
             color: var(--text-muted);
             font-size: 12px;
             text-align: center;
         }
 
-        .letter-detail-modal {
+        .proto-letters .letter-detail-modal {
             max-width: 420px;
             background: none;
             border: none;
@@ -748,7 +1180,7 @@
             padding: 0;
         }
 
-        .letter-detail-paper {
+        .proto-letters .letter-detail-paper {
             position: relative;
             margin-top: 0;
             text-align: left;
@@ -766,7 +1198,7 @@
             animation: letterPaperIn 0.32s ease both;
         }
 
-        .letter-detail-heading {
+        .proto-letters .letter-detail-heading {
             margin: 0 0 18px;
             padding-bottom: 12px;
             font-size: 16px;
@@ -775,7 +1207,7 @@
             border-bottom: 1px dashed rgba(224, 86, 127, 0.3);
         }
 
-        .letter-paper-btn {
+        .proto-letters .letter-paper-btn {
             position: absolute;
             top: 12px;
             width: 28px;
@@ -794,13 +1226,13 @@
             transition: background 0.15s ease, transform 0.15s ease;
         }
 
-        .letter-paper-btn:hover {
+        .proto-letters .letter-paper-btn:hover {
             background: #ffe3ec;
             transform: scale(1.08);
         }
 
-        .letter-paper-back { left: 12px; }
-        .letter-paper-close { right: 12px; font-size: 16px; }
+        .proto-letters .letter-paper-back { left: 12px; }
+        .proto-letters .letter-paper-close { right: 12px; font-size: 16px; }
 
         @keyframes letterPaperIn {
             from {
@@ -814,7 +1246,7 @@
             }
         }
 
-        .letter-detail-paper::before {
+        .proto-letters .letter-detail-paper::before {
             content: "";
             position: absolute;
             left: 26px;
@@ -824,35 +1256,34 @@
             background: rgba(224, 86, 127, 0.22);
         }
 
-        .letter-detail-paper::after {
-            content: "🍀";
-            position: absolute;
-            top: 10px;
-            right: 14px;
-            font-size: 20px;
-            opacity: 0.32;
-            transform: rotate(8deg);
-        }
-
-        .letter-detail-to,
-        .letter-detail-from {
+        .proto-letters .letter-detail-to,
+        .proto-letters .letter-detail-from {
             font-weight: 800;
             font-size: 15px;
             position: relative;
         }
 
-        .letter-detail-to {
+        .proto-letters .letter-detail-to {
             color: var(--text-color);
             margin-bottom: 18px;
         }
 
-        .letter-detail-from {
+        /* 제목(선택 입력, 이슈 #352) — 받는 사람 줄과 내용 사이, 편지지 톤에 맞춰 세리프체로. */
+        .proto-letters .letter-detail-title {
+            font-family: Georgia, 'Nanum Myeongjo', serif;
+            font-weight: 800;
+            font-size: 17px;
+            color: var(--text-color);
+            margin: -8px 0 16px;
+        }
+
+        .proto-letters .letter-detail-from {
             color: #e0567f;
             text-align: right;
             margin-top: 20px;
         }
 
-        .letter-detail-content {
+        .proto-letters .letter-detail-content {
             position: relative;
             color: var(--text-color);
             font-size: 15px;
@@ -875,7 +1306,7 @@
         }
 
 /* 편지 작성 대상 선택 칩 스타일 */
-.recipient-chip {
+.proto-letters .recipient-chip {
     padding: 8px 16px;
     border-radius: 20px;
     border: 1px solid var(--border-color);
@@ -888,14 +1319,14 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.recipient-chip:hover {
+.proto-letters .recipient-chip:hover {
     border-color: var(--primary-green);
     color: var(--primary-green);
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(82, 183, 136, 0.15);
 }
 
-.recipient-chip.active {
+.proto-letters .recipient-chip.active {
     background: var(--primary-green);
     color: white;
     border-color: var(--primary-green);
@@ -906,24 +1337,124 @@
 /* 편지는 항상 크림/라이트 종이 미감이라 기본 팔레트를 라이트로 고정한다(이전엔 다크 기본이라 앱 기본
    다크에서 깨졌음). color-scheme: light → color-scheme:light dark로 인해 다크 브라우저에서 native
    텍스트영역이 검게 나오던 문제까지 근본 해결(caret·스크롤바 포함 라이트 렌더). */
-.proto-letters { --primary-green: #1b4332; --accent-green: #52b788; --title-color: #1b4332; --card-bg: #ffffff; --bg-light: #f7f8f5; --text-color: #2c3e35; --text-muted: #61766a; --border-color: #eadfd0; --input-border: #e2e8e4; --nav-item-bg-active: #edf4ec; --btn-primary-bg: #1b4332; --button-text: #ffffff; --shadow-color: rgba(8, 28, 22, 0.12); color-scheme: light; min-height: calc(100vh - 74px); padding: 26px 24px 72px; color: var(--text-color); }
+/* ⚠️ 여백을 이 루트에 주면 안 된다. <Header>가 이 안에 들어 있어서, padding 이 헤더까지
+   밀어 넣어 헤더만 좌우가 파이고 메뉴 글자가 두 줄로 접혔다(다른 화면과 달라 보였다).
+   다른 화면은 전부 안쪽 래퍼에 준다 — .proto-schedule → .schedule-wrap,
+   .proto-dashboard → .dash-main. 여기도 .letter-tab-container 로 옮겼다. */
+.proto-letters { --primary-green: #1b4332; --accent-green: #52b788; --title-color: #1b4332; --card-bg: #ffffff; --bg-light: #f7f8f5; --text-color: #2c3e35; --text-muted: #61766a; --border-color: #eadfd0; --input-border: #e2e8e4; --nav-item-bg-active: #edf4ec; --btn-primary-bg: #1b4332; --button-text: #ffffff; --shadow-color: rgba(8, 28, 22, 0.12); color-scheme: light; min-height: calc(100vh - 74px); color: var(--text-color); }
 .proto-letters .letter-stage { margin: 0 auto; }
-.proto-letters .letter-write-card { width: min(680px, 100%); margin: 24px auto; display: block; text-align: left; }
 .proto-letters .letter-write-card h3, .proto-letters .letter-write-card > p { text-align: left; }
 /* 텍스트영역: 전역 다크 input 스타일을 받아 검게 나오던 문제 → 크림 종이 카드에 맞춰 흰 배경 고정 */
 .proto-letters .letter-write-textarea {
+  /* box-sizing 미지정 시 기본값(content-box)이라 width:100% 위에 padding(14px 16px)·
+     border(1.5px)가 더 얹혀 카드 우측 밖으로 35px 삐져나갔다(#333). 카드(.letter-write-card,
+     아래)의 overflow-x:hidden이 그걸 잘라내 텍스트영역 우측 테두리가 헤더·버튼 줄과 어긋나
+     보였다. */
+  box-sizing: border-box;
   width: 100%; background: #ffffff; color: var(--text-color);
   border: 1.5px solid var(--input-border); border-radius: 12px;
   font-family: inherit; font-size: 14px;
 }
 .proto-letters .letter-write-textarea::placeholder { color: #9aa7a0; }
-.proto-letters .letter-write-textarea:focus { outline: none; border-color: var(--accent-green); box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.16); }
-.proto-letters .letter-recipient-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.proto-letters .letter-write-textarea:focus { outline: none; border-color: var(--accent-green); box-shadow: 0 0 0 4px rgba(82, 183, 136, 0.2), 0 4px 14px rgba(27, 67, 50, 0.08); }
+/* 제목 입력도 텍스트영역과 같은 이유로 box-sizing을 @scope 밖에서 못박는다(위 #333 참고). */
+.proto-letters .letter-write-title-input { box-sizing: border-box; width: 100%; }
+.proto-letters .letter-write-title-input:focus { outline: none; border-color: var(--accent-green); box-shadow: 0 0 0 4px rgba(82, 183, 136, 0.2), 0 4px 14px rgba(27, 67, 50, 0.08); }
 .proto-letters .letter-emoji-picker button.active { outline: 2px solid var(--accent-green); }
 .proto-letters .letter-error { color: #ef7777; font-size: 12px; font-weight: 700; }
 .proto-letters .letter-read-btn { margin-top: 8px; border: 0; background: var(--primary-green); color: #fff; border-radius: 7px; padding: 6px 9px; font: inherit; font-size: 11px; cursor: pointer; }
 body.light-mode .proto-letters { --primary-green: #1b4332; --accent-green: #52b788; --card-bg: #ffffff; --bg-light: #f7f8f5; --text-color: #2c3e35; --text-muted: #61766a; --border-color: #eadfd0; --nav-item-bg-active: #edf4ec; }
-@media (max-width: 640px) { .proto-letters { padding: 18px 14px 52px; } .proto-letters .letter-stage { padding: 30px 18px; } }
+@media (max-width: 640px) { .proto-letters .letter-tab-container { padding: 18px 14px 52px; } .proto-letters .letter-stage { padding: 30px 18px; } }
+/* 좁은 화면(행운편지 작업 내용.md ④) — 250x230 상자를 그대로 두면 375px 폭 화면에서
+   좌우 여백이 거의 없어져 카드가 답답해 보인다. */
+@media (max-width: 480px) {
+  .proto-letters .letter-stage { gap: 14px; min-height: 0; }
+  .proto-letters .letter-box-trigger { width: 190px; height: 175px; }
+  .proto-letters .letter-stage-copy h2 { font-size: 26px; }
+  .proto-letters .letter-box-summary { font-size: 16px; }
+  .proto-letters .letter-write-btn { padding: 12px 28px; }
+}
+
+/* 작성 카드 — 예전엔 letter-tab-container 안에 인라인으로 놓여 폭을 100%로 맞췄지만,
+   이제 modal-overlay 안 시트라 폭은 대화상자답게 제한한다(사용자 요청: 아래에서 위로
+   올라오는 블러 배경 모달). box-sizing:border-box는 width:100%와 함께 필수 — padding:28px
+   32px + border:1px(위쪽 기본 규칙)가 있어서 content-box면 넘친다. */
+.proto-letters .letter-write-card {
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  margin: 0 auto;
+  display: block;
+  text-align: left;
+}
+
+/* 편지 작성 모달 — 아래에서 올라오는 시트로 바꿨다가 "원래대로 화면 중앙 모달"로
+   되돌린다(사용자 요청). .letter-compose-overlay는 이제 다른 두 모달과 똑같이
+   .modal-overlay 기본값(중앙 정렬)을 그대로 쓰고, 카드도 위쪽 .modal-box의
+   기본 등장 애니메이션(letterModalBoxIn)을 그대로 쓴다 — 여기선 별도 오버라이드가
+   필요 없다. */
+
+/* 카드가 우체통으로 쏙 빨려 들어가는 연출(사용자 요청) — 이동 거리는 JS(Letters.jsx)가
+   우체통 실제 위치를 재서 --suck-x/--suck-y로 넘긴다.
+
+   반드시 animation으로 해야 한다: .modal-box에 `animation: letterModalBoxIn ... both`가
+   걸려 있어 fill-mode:both 때문에 등장 애니메이션의 마지막 키프레임(transform:none,
+   opacity:1)이 끝난 뒤에도 계속 적용되는데, CSS 애니메이션은 캐스케이드에서 인라인
+   스타일보다 우선이라 인라인 transform/transition으로는 절대 못 이긴다(실제로 카드가
+   전혀 안 움직이고 모서리만 둥글어지는 증상이 났다). 같은 animation 속성으로 덮어써서
+   등장 애니메이션 자체를 교체한다 — .letter-write-card.is-sucking이 클래스 2개라
+   .modal-box(클래스 1개)보다 특정도가 높아 확실히 이긴다. */
+.proto-letters .letter-write-card.is-sucking {
+  animation: letterSuckIn 0.5s cubic-bezier(0.5, 0, 0.9, 0.4) both;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+@keyframes letterSuckIn {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+    border-radius: 20px;
+  }
+  /* 빨려 들어가기 직전 살짝 뒤로 물러났다가(진공에 빨리기 전 반동) 훅 들어간다. */
+  18% {
+    transform: translate(calc(var(--suck-x, 0px) * -0.04), calc(var(--suck-y, 0px) * -0.04)) scale(1.04) rotate(-2deg);
+    opacity: 1;
+    border-radius: 20px;
+  }
+  100% {
+    transform: translate(var(--suck-x, 0px), var(--suck-y, 0px)) scale(0.05) rotate(9deg);
+    opacity: 0;
+    border-radius: 999px;
+  }
+}
+
+/* 카드가 우체통으로 빨려 들어가는 동안(is-sucking) 배경 블러도 같이 옅어져야
+   "블러 진 배경 속으로 사라지는" 것처럼 안 보이고, 블러가 걷히며 우체통이 드러나는
+   동시에 편지가 그리로 들어가는 것처럼 읽힌다(의견 공유 후 합의, Letters.jsx가 카드의
+   is-sucking과 같은 타이밍에 이 클래스를 건다). 이 요소엔 modal-overlay·letter-compose-
+   overlay 두 클래스가 같이 붙어 있어(Letters.jsx:267), .letter-compose-overlay.is-fading이
+   클래스 2개라 .modal-overlay(클래스 1개)의 background/backdrop-filter 기본값을
+   확실히 이긴다. */
+.proto-letters .letter-compose-overlay.is-fading {
+  transition: background 0.45s ease, backdrop-filter 0.45s ease;
+  background: transparent;
+  backdrop-filter: blur(0px) saturate(1);
+  -webkit-backdrop-filter: blur(0px) saturate(1);
+}
+
+/* 모션을 줄이길 원하는 사용자(prefers-reduced-motion) — 물감 필 애니메이션을 끄고
+   즉시 상태만 반영한다. */
+@media (prefers-reduced-motion: reduce) {
+  .proto-letters .letter-recipient-pill { transition: none; }
+  .proto-letters .letter-recipient-pill.is-squashing { animation: none; }
+  /* 발송 애니메이션(연필 훑기·우체통으로 빨려들기)도 끈다 — JS에서도
+     prefersReducedMotion()으로 아예 시작하지 않지만(모달이 빈 채로 대기하지 않게),
+     혹시 모를 경우를 위한 이중 안전장치. */
+  .proto-letters .letter-send-pencil { display: none; }
+  .proto-letters .letter-write-card.is-sucking { animation: none; }
+  .proto-letters .letter-compose-overlay.is-fading { transition: none; }
 }
 
 /* 공통 <Button>을 편지 작성에 쓰되, 편지 카드는 항상 라이트 종이라 다크 앱 모드에서도
@@ -935,7 +1466,7 @@ body.light-mode .proto-letters { --primary-green: #1b4332; --accent-green: #52b7
 }
 .proto-letters .letter-write-buttons .clov-btn--secondary:not(:disabled):hover { background: rgba(27, 67, 50, 0.1); }
 
-/* 모달 등장 애니메이션(@scope 밖 — keyframes는 전역) */
+/* 모달 등장 애니메이션(keyframes는 전역이라 스코프 개념이 원래 없다) */
 @keyframes letterModalOverlayIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes letterModalBoxIn {
   from { opacity: 0; transform: translateY(18px) scale(0.965); }

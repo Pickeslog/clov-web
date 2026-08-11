@@ -1,0 +1,288 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import './OnboardingGuide.css'
+import { getMe } from '../../api/user'
+import { SHOWCASE_MASCOTS } from '../../lib/mascotShowcase'
+import { pixelize } from './pixelize'
+import { PixelClover, PixelText } from './PixelText'
+import './StepMockup.css'
+import { MockGold, MockRoomCard, MockRoutes } from './StepMockup'
+import { dropLegacyGuideKeys, markGuideDone, markGuideSkipped, shouldShowGuide } from '../../lib/onboardingGuide'
+import { useGuideStore } from '../../stores/guideStore'
+
+/* =====================================================================
+   신규 사용자 온보딩 가이드 — 방 목록 위에 뜨는 픽셀 창.
+
+   레퍼런스는 마인크래프트 / Sun Haven / 소니 스파이디 트래커의 시작 화면이다.
+   START 를 누르면 5단계 가이드로 넘어간다.
+
+   ★ 한글은 일반 폰트다(PixelText.jsx 참고). 픽셀 느낌은 테두리·버튼·그림이 만들고,
+     영문 라벨과 도형만 비트맵으로 그린다.
+
+   ★ 방이 있든 없든 모두에게 뜬다(2026-08-06 결정). 대신 "다시는 안 보기"로 영구
+     해제할 수 있고, 프로필 → "가이드 다시 보기"로 되돌릴 수 있다.
+     방이 없을 때만 띄우려면 RoomList 의 hasNoRooms 를 조건으로 걸면 된다.
+   ===================================================================== */
+
+const STEPS = [
+  {
+    label: 'CLOVER',
+    art: 'room',
+    heading: '우정공간이 뭐예요?',
+    body: '친구들과 함께 쓰는 하나의 공간이에요. 약속을 잡고, 사진을 남기고, 편지를 주고받아요. 방장은 없어요 — 모두가 같은 권한이에요.',
+  },
+  {
+    label: 'ROUTE',
+    art: 'routes',
+    heading: '들어오는 길은 두 가지',
+    body: '직접 우정공간을 만들거나, 친구에게 받은 초대 코드로 들어와요. 코드는 CLV-JOIN- 으로 시작해요.',
+  },
+  {
+    label: 'GOLD',
+    art: 'gold',
+    heading: '추억을 남기면 골드를 받아요',
+    body: '글과 사진을 올리거나 마스코트를 눌러도 쌓여요. 모은 골드로 상점에서 배경과 코스튬을 사요.',
+  },
+  {
+    label: 'FRIENDS',
+    art: 'mascots',
+    heading: '함께할 친구들',
+    body: '프로필 메뉴의 "마스코트 꾸미기"에서 언제든 바꿀 수 있어요. 상점에서 산 코스튬을 입히면 우정공간마다 다른 모습으로 나와요.',
+  },
+  {
+    label: 'START',
+    art: 'mine',
+    heading: '준비 끝!',
+    body: '이제 시작해볼까요? 이 가이드는 프로필 메뉴에서 언제든 다시 볼 수 있어요.',
+  },
+]
+
+const LOAD_BAR_CELLS = 9
+const LOAD_BAR_FILLED = 6
+// START 화면 로스터가 한 마스코트를 보여주는 시간. 5종이라 한 바퀴 8초다 —
+// 더 빠르면 누가 지나갔는지 안 남고, 더 느리면 START 를 누를 때까지 한 명만 본다.
+const ROSTER_MS = 1600
+
+/* 단계별 그림.
+   ★ 1~3단계는 **실제 화면을 닮은 미니 목업**이 움직인다(StepMockup.jsx). 처음엔 은유
+     (클로버 셋 · CLV-JOIN 글자 · 동전)를 썼는데, 그림이 예뻐도 "그래서 화면 어디서
+     하는데?"가 안 풀렸다. 사용자가 곧 볼 화면과 닮아야 가이드가 안내가 된다. */
+function StepArt({ kind }) {
+  if (kind === 'room') return <MockRoomCard />
+  if (kind === 'routes') return <MockRoutes />
+  if (kind === 'gold') return <MockGold />
+  if (kind === 'mascots') {
+    return (
+      <div className="clov-guide-friends">
+        {/* ★ 원본을 그대로 쓴다. 픽셀로 줄이면 칸 너비(약 87px) 안에서 1픽셀이 2px 남짓이라
+            얼굴이 뭉갠다 — 누구인지 알아보라고 세운 자리에서 그게 제일 손해다.
+            CSS 에서 image-rendering 을 auto 로 되돌려야 한다(창 전체가 pixelated 다). */}
+        {SHOWCASE_MASCOTS.map((m) => (
+          <div className="clov-guide-friend" key={m.key}>
+            <img src={m.sprite} alt="" />
+            <span>{m.name}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+  /* 마지막 장면 — 다섯이 웃으며 배웅한다.
+     ★ 여기만 픽셀 변환을 안 한다. 배웅하는 자리라 가장 잘 나온 그림으로 보낸다.
+       그래서 CSS 에서 image-rendering 을 auto 로 되돌려야 한다(창 전체가 pixelated 다).
+     ★ 조금씩 겹쳐 세운다 — 5명을 안 겹치면 한 명이 50px 남짓이라 얼굴이 안 보인다.
+       겹치면 같은 폭에서 훨씬 크게 세울 수 있다(방 카드 멤버 아바타와 같은 방식). */
+  return (
+    <div className="clov-guide-lineup">
+      {SHOWCASE_MASCOTS.map((m) => <img key={m.key} src={m.smile} alt={m.name} />)}
+    </div>
+  )
+}
+
+export default function OnboardingGuide({ onCreateRoom, onJoinRoom }) {
+  const open = useGuideStore((s) => s.open)
+  const openGuide = useGuideStore((s) => s.openGuide)
+  const closeGuide = useGuideStore((s) => s.closeGuide)
+
+  const [step, setStep] = useState(-1)      // -1 = START 화면, 0.. = 가이드 단계
+  // 원본으로 먼저 채워둔다 — 변환 전에 빈 칸이 보이지 않게.
+  // 픽셀 변환이 필요한 곳은 이제 START 화면 로스터 하나뿐이다(4·5단계는 원본을 쓴다).
+  const [roster, setRoster] = useState(() => SHOWCASE_MASCOTS.map((m) => ({ ...m, big: m.sprite })))
+  const [rosterAt, setRosterAt] = useState(0)
+
+  /* 누구인지 알아야 판단한다 — 저장 키가 계정별이다(#362). Header 가 이미 같은 키로
+     조회하고 있어 캐시를 공유한다(추가 요청이 안 나간다). */
+  const me = useQuery({ queryKey: ['me'], queryFn: getMe })
+  const userId = me.data?.id ?? null
+
+  /* 첫 진입 자동 노출. 저장소가 "이미 봤다"고 하면 열지 않는다.
+     ⚠️ userId 를 알기 전에는 판단하지 않는다 — 모르는 채로 "안 봤다"고 하면 로그인 직후
+        잠깐 떴다 사라지고, "봤다"고 하면 신규 사용자가 못 본다.
+     ref 로 한 번만 도는 이유는 StrictMode 이중 실행 때문이 아니라, 사용자가 닫은 뒤
+     리렌더가 나도 다시 열리면 안 되기 때문이다. */
+  const autoOpened = useRef(false)
+  useEffect(() => {
+    if (autoOpened.current || userId == null) return
+    autoOpened.current = true
+    dropLegacyGuideKeys()
+    if (shouldShowGuide(userId)) openGuide()
+  }, [userId, openGuide])
+
+  /* 5종을 두 크기로 미리 변환해 둔다. 열릴 때 한 번만 돌고, 이미지는 한 번만 불러온다.
+     big   START 화면 로스터 — 132px 로 띄우니 64px(1픽셀 2.1px)
+     small 친구들 단계 격자 — 64px 로 띄우니 32px(1픽셀 2px)
+     4단계에 도착해서 변환하면 눈에 띄어서 미리 한다. */
+  useEffect(() => {
+    if (!open) return undefined
+    let alive = true
+    Promise.all(SHOWCASE_MASCOTS.map((m) => new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => resolve({ ...m, big: pixelize(img) || m.sprite })
+      img.onerror = () => resolve({ ...m, big: m.sprite })
+      img.src = m.sprite
+    }))).then((list) => { if (alive) setRoster(list) })
+    return () => { alive = false }
+  }, [open])
+
+  /* START 화면에서 로스터가 돈다 — 크로비 · 롭 · 타코군 · 김철수 · 오닉스 순.
+     ★ 여기서 내 마스코트를 안 쓰는 이유: 이 장면은 "환영"이라 서비스에 누가 사는지를
+       보여주는 자리다. 내 마스코트는 마지막 장면(STEP 5)에 그대로 남아 개인화를 지킨다.
+     단계로 넘어가면 멈춘다 — 안 보이는 화면에서 타이머를 돌릴 이유가 없다. */
+  useEffect(() => {
+    if (!open || step >= 0) return undefined
+    // 움직임을 줄여 달라고 한 사용자에게는 첫 장만 보여준다(자동 전환도 움직임이다).
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
+    const id = setInterval(() => setRosterAt((v) => (v + 1) % SHOWCASE_MASCOTS.length), ROSTER_MS)
+    return () => clearInterval(id)
+  }, [open, step])
+
+  /* 닫을 때 START 화면으로 되돌린다 — "다시 보기"로 들어와도 처음부터 보여야 한다.
+     여는 쪽(open)이 아니라 닫는 쪽에서 되돌리는 이유는, 여는 경로가 셋(자동·스토어·
+     START 버튼)이라 한 곳에 모으기 어렵고 effect 로 맞추면 렌더가 한 번 더 돌기 때문이다. */
+  const close = useCallback((permanent) => {
+    if (permanent) markGuideDone(userId)
+    else markGuideSkipped(userId)
+    setStep(-1)
+    closeGuide()
+  }, [closeGuide, userId])
+
+  const skip = () => close(false)
+  const never = () => close(true)
+
+  // Escape = 건너뛰기(이번 방문만).
+  useEffect(() => {
+    if (!open) return undefined
+    const onKeyDown = (e) => { if (e.key === 'Escape') close(false) }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open, close])
+
+  if (!open) return null
+
+  const inGuide = step >= 0
+  const current = STEPS[step] ?? STEPS[0]
+  const isLast = step === STEPS.length - 1
+  const rosterNow = roster[rosterAt] ?? roster[0]   // START 화면에서 도는 5종 중 지금 차례
+
+  // 마지막 장면의 버튼은 가이드를 끝낸 것으로 본다 — 셋 다 영구 처리다.
+  const finish = (after) => { close(true); after?.() }
+
+  return (
+    <div className="clov-guide-backdrop" onClick={skip} role="presentation">
+      <div
+        className="clov-guide-frame"
+        role="dialog"
+        aria-modal="true"
+        aria-label="클로브 시작 가이드"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="clov-guide-dots" aria-hidden="true" />
+        <div className="clov-guide-watermark" aria-hidden="true"><PixelClover scale={26} fill="#9ccc65" /></div>
+        {['tl', 'tr', 'bl', 'br'].map((pos) => (
+          <div key={pos} className={`clov-guide-corner is-${pos}`} aria-hidden="true">
+            <PixelClover scale={3} fill="#9ccc65" />
+          </div>
+        ))}
+        <div className="clov-guide-topbar"><PixelText text="CLOV GUIDE" scale={3} fill="#eaf3d6" title="클로브 가이드" /></div>
+
+        {!inGuide && (
+          <div className="clov-guide-stage">
+            {/* key 를 주지 않는다 — 같은 <img> 의 src 만 갈아끼워야 자리가 안 흔들린다.
+                alt 에 이름을 넣어 스크린리더에도 누가 지나가는지 전해진다. */}
+            {rosterNow && <img className="clov-guide-mascot" src={rosterNow.big} alt={rosterNow.name} height={132} />}
+            <p className="clov-guide-welcome">
+              클로브에 오신 것을 환영합니다.<br />
+              친구들과 함께 쓰는 우정공간,<br />
+              어떻게 쓰는지 60초면 끝나요.
+            </p>
+            <div className="clov-guide-bar" aria-hidden="true">
+              {Array.from({ length: LOAD_BAR_CELLS }, (_, k) => (
+                <i key={k} className={k < LOAD_BAR_FILLED ? 'is-on' : ''} />
+              ))}
+            </div>
+            <p className="clov-guide-ask">시작하려면 아래를 눌러주세요</p>
+            <div className="clov-guide-row">
+              <button type="button" className="clov-guide-btn is-primary" onClick={() => setStep(0)}>
+                <PixelText text="START" scale={5} fill="#16200c" title="시작" />
+              </button>
+              <button type="button" className="clov-guide-btn" onClick={skip}>건너뛰기</button>
+            </div>
+            <button type="button" className="clov-guide-never" onClick={never}>다시는 안 보기</button>
+          </div>
+        )}
+
+        {inGuide && (
+          <div className="clov-guide-stage is-steps">
+            <div className="clov-guide-win">
+              <div className="clov-guide-winbar">
+                <span>{current.label}</span>
+                <button type="button" className="clov-guide-close" onClick={skip} aria-label="가이드 닫기">×</button>
+              </div>
+              <div className="clov-guide-winbody">
+                <div className={`clov-guide-art${current.art === 'mascots' ? ' is-tall' : ''}`}>
+                  <StepArt kind={current.art} />
+                </div>
+                <p className="clov-guide-stepno">STEP {step + 1} / {STEPS.length}</p>
+                <h2 className="clov-guide-heading">{current.heading}</h2>
+                <p className="clov-guide-body">{current.body}</p>
+                <div className="clov-guide-pips" aria-hidden="true">
+                  {STEPS.map((s, k) => <i key={s.label} className={k === step ? 'is-on' : ''} />)}
+                </div>
+
+                {isLast ? (
+                  /* 마지막은 설명이 아니라 갈림길이다 — 가이드가 실제 동선으로 이어져야
+                     "준비 끝"이라고 해놓고 빈 화면에 되돌려놓는 일이 없다. */
+                  <div className="clov-guide-cta">
+                    <button type="button" className="clov-guide-btn is-primary is-wide" onClick={() => finish(onCreateRoom)}>
+                      우정공간 만들기
+                    </button>
+                    <button type="button" className="clov-guide-btn is-wide" onClick={() => finish(onJoinRoom)}>
+                      초대 코드로 참여
+                    </button>
+                    <div className="clov-guide-row is-split">
+                      <button type="button" className="clov-guide-quiet" onClick={() => setStep((v) => v - 1)}>이전</button>
+                      <button type="button" className="clov-guide-quiet" onClick={() => finish()}>그냥 닫기</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="clov-guide-row is-split">
+                    <button
+                      type="button"
+                      className="clov-guide-btn"
+                      onClick={() => setStep((v) => v - 1)}
+                      style={{ visibility: step === 0 ? 'hidden' : 'visible' }}
+                    >
+                      이전
+                    </button>
+                    <button type="button" className="clov-guide-btn is-primary" onClick={() => setStep((v) => v + 1)}>
+                      다음
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

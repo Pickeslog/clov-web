@@ -12,9 +12,9 @@ import {
 import { parseUtc, formatDate, formatTime } from '../../../lib/datetime'
 
 const TABS = [
-  { id: 'NOTICE', label: '관리진 공지', icon: '📣' },
-  { id: 'FRIEND', label: '친구들 알림', icon: '♧' },
-  { id: 'JOIN', label: '가입 신청', icon: '♧' },
+  { id: 'NOTICE', label: '관리진 공지', icon: 'ti-speakerphone' },
+  { id: 'FRIEND', label: '친구들 알림', icon: 'ti-users' },
+  { id: 'JOIN', label: '가입 신청', icon: 'ti-user-plus' },
 ]
 
 const describeError = (error) => {
@@ -36,6 +36,9 @@ const messageFor = (notification) => {
     case 'PLAN_COMPLETE': return `${actor?.nickname}님이 약속을 완료했어요`
     case 'ROOM_UPDATE': return `${actor?.nickname}님이 우정공간 정보를 바꿨어요`
     case 'LEVEL_UP': return `우정공간이 Lv.${payload?.level}이 됐어요! 🎉`
+    case 'MEMBER_JOINED': return `${actor?.nickname}님이 합류했어요`
+    case 'JOIN_ACCEPTED': return `${actor?.nickname}님이 가입을 수락했어요`
+    case 'MEMBER_LEFT': return `${actor?.nickname}님이 나갔어요`
     default: return actor?.nickname ? `${actor.nickname}님의 새로운 활동이 있습니다.` : '새로운 알림이 있습니다.'
   }
 }
@@ -124,7 +127,7 @@ export default function Notifications({ onClose }) {
           <nav className="noti-tabs" aria-label="알림 분류">
             {TABS.map((tab) => (
               <button key={tab.id} className={`noti-tab${activeTab === tab.id ? ' on' : ''}`} type="button" onClick={() => { setMessage(''); setActiveTab(tab.id) }}>
-                <span aria-hidden="true">{tab.icon} </span>{tab.label}
+                <i className={`ti ${tab.icon}`} aria-hidden="true" /> {tab.label}
                 {tab.id === 'JOIN' && pendingRequests.length > 0 && <span className="noti-count">{pendingRequests.length}</span>}
               </button>
             ))}

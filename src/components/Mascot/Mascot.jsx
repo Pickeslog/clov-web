@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './Mascot.css'
 import { getMe, getPreferences } from '../../api/user'
-import { interactMascot } from '../../api/room'
+import { getRoomMembers, interactMascot } from '../../api/room'
+import { isTodayBirthday, isTodayMonthDay } from '../../lib/datetime'
 // 스프라이트는 assets/mascot/<캐릭터>/<상태>.png 로 캐릭터별 폴더에 둔다.
 // 새 캐릭터는 assets/mascot/_template의 9개 표준 상태와 파일명을 따른다.
 import crobiSprite from '../../assets/mascot/crobi/default.png'
@@ -119,6 +120,40 @@ const MASCOT_STATE_SPRITES = {
     smile: onyxSmileSprite,
   },
 }
+const skinStateSprites = (root) => ({
+  default: `${root}/default.png`,
+  lifted: `${root}/pulled.png`,
+  scared: `${root}/scared.png`,
+  angry: `${root}/angry.png`,
+  dizzy: `${root}/dizzy.png`,
+  sleepy: `${root}/sleepy.png`,
+  find: `${root}/find.png`,
+  pencil: `${root}/pencil.png`,
+  smile: `${root}/smile.png`,
+})
+const EQUIPPED_SKIN_STATE_SPRITES = [
+  '/shop/skins/rob/arcade-boss-legendary',
+  '/shop/skins/rob/last-signal-epic',
+  '/shop/skins/rob/yellow-crew-common',
+  '/shop/skins/rob/explorer-uncommon',
+  '/shop/skins/kim-cheolsu/steel-frame-safety-uncommon',
+  '/shop/skins/kim-cheolsu/junior-developer-uncommon',
+  '/shop/skins/tako-gun/rov-pilot-rare',
+  '/shop/skins/tako-gun/watermelon-rind-hat-common',
+  '/shop/skins/crobi/ocean-rescue-champion-epic',
+  '/shop/skins/crobi/magic-school-student-common',
+  '/shop/skins/crobi/senior-developer-uncommon',
+  '/shop/skins/crobi/dawn-starlight-archivist-legendary',
+  '/shop/skins/onyx/blackstar-atelier-uncommon',
+  '/shop/skins/onyx/development-team-lead-epic',
+].map((root) => ({
+  defaultPath: `${root}/default.png`,
+  states: skinStateSprites(root),
+}))
+const equippedSkinStates = (imageUrl) => {
+  const path = imageUrl?.split(/[?#]/, 1)[0]
+  return EQUIPPED_SKIN_STATE_SPRITES.find(({ defaultPath }) => path?.endsWith(defaultPath))?.states
+}
 const LINES = {
   crobi: ['안녕!', '오늘도 좋은 하루!', '뭐 하고 있었어?', '같이 추억 쌓아볼까?'],
   rob: ['안녕, 나는 롭이야!', '오늘도 함께해줘서 고마워', '다음 약속은 뭐야?', '추억을 기록해보자'],
@@ -127,6 +162,22 @@ const LINES = {
   kimCheolsu: ['안녕, 김철수야!', '오늘도 차근차근 만들어보자!', '좋은 추억은 오래가는 법이지!', '필요하면 내가 뚝딱 해줄게!'],
   onyx: ['안녕, 오닉스야!', '빛나는 추억을 세공해볼까?', '작은 순간도 보석처럼 소중해!', '오늘의 추억은 어떤 빛일까?'],
 }
+// 생일 대사(#403) — 캐릭터별 기본 대사를 대체하지 않고 풀에 더해서 섞는다.
+const BIRTHDAY_LINES_ME = [
+  '생일 축하해요! 오늘 하루 마음껏 즐겨요',
+  '오늘의 주인공은 바로 당신이에요!',
+  '생일인데 추억 하나 남겨보는 건 어때요?',
+]
+const birthdayFriendLines = (name) => [
+  `오늘 ${name}님 생일이에요!`,
+  `${name}님한테 축하 인사 남겨보는 건 어때요?`,
+  `${name}님의 특별한 하루, 같이 축하해줄까요?`,
+]
+// 생일 대사가 나올 확률 — 평소 대사 풀에 그냥 더하면 캐릭터별 대사 개수·이스터에그
+// 유무에 따라 비율이 들쭉날쭉해진다(4개 풀에 3개면 43%, 반응 스프라이트가 더 붙으면
+// 30%까지 떨어짐). "3번 중 1번은 나와야 한다"는 요구를 풀 크기와 무관하게 지키려면
+// 확률을 고정값으로 따로 뽑아야 한다.
+const BIRTHDAY_LINE_CHANCE = 1 / 3
 const LIMIT_MESSAGE = '오늘은 여기까지!'
 const SAY_MS = 1800
 const IDLE_MS = 20000
@@ -176,6 +227,12 @@ export default function Mascot({ roomId }) {
   const queryClient = useQueryClient()
   const me = useQuery({ queryKey: ['me'], queryFn: getMe })
   const prefs = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
+  // 생일 대사(#403) — Dashboard와 같은 쿼리 키를 써서 그 페이지에서 이미 받아온 응답이
+  // 있으면 재사용한다(캐시 공유). LEFT 멤버·본인은 "친구 생일" 후보에서 뺀다(Dashboard와 동일 규칙).
+  const members = useQuery({ queryKey: ['room', roomId, 'members'], queryFn: () => getRoomMembers(roomId) })
+  const isMyBirthday = isTodayBirthday(me.data?.birthdate)
+  const birthdayFriend = (members.data?.items ?? [])
+    .find((m) => m.status === 'ACTIVE' && String(m.userId) !== String(me.data?.id) && isTodayMonthDay(m.birthMonthDay))
   const [bubble, setBubble] = useState('')
   const bubbleTimer = useRef(null)
   const [reactionMode, setReactionMode] = useState('default')
@@ -210,6 +267,9 @@ export default function Mascot({ roomId }) {
   const idleTimerRef = useRef(null)
   const reactionTimerRef = useRef(null)
   const pendingReactionRef = useRef(null)
+  // 하루 교감 한도 초과 안내(#400)는 이번 세션에서 처음 걸렸을 때만 보여준다 — 안 그러면
+  // 한도를 넘긴 뒤 클릭할 때마다 매번 API가 같은 에러를 돌려줘서 LIMIT_MESSAGE만 계속 반복된다.
+  const limitMessageShownRef = useRef(false)
   // nudge: '' | 'nudge' | 'nudge2' — 콤보 중간 클릭의 흔들림. 목업과 같이 키프레임 2벌을
   // 번갈아 쓴다(같은 클래스를 다시 붙이면 CSS 애니메이션이 재시작하지 않는다).
   const [nudge, setNudge] = useState('')
@@ -234,12 +294,12 @@ export default function Mascot({ roomId }) {
   //    SPRITES[stored]로 판정하면 src에 함수가 들어가 이미지가 깨진다(실제로 재현됨).
   const stored = prefs.data?.mascotType === 'robot' ? 'rob' : prefs.data?.mascotType
   const mascotType = Object.hasOwn(SPRITES, stored ?? '') ? stored : 'crobi'
-  const stateSprites = MASCOT_STATE_SPRITES[mascotType] || { default: SPRITES[mascotType] }
-  const hasFullStateSet = INTERACTIVE_STATES.every((state) => Boolean(stateSprites[state]))
-  // 장착한 코스튬이 있으면 기본 스프라이트 대신 코스튬 이미지로 완전히 교체한다(이스터에그
-  // 상태 스프라이트보다도 우선 — 코스튬엔 상태별 변형이 없어서 상태 스프라이트로 바꿔봐야
-  // 의미가 없다).
   const equippedSprite = prefs.data?.equippedItem?.imageUrl
+  const equippedStateSprites = equippedSkinStates(equippedSprite)
+  const stateSprites = equippedStateSprites || MASCOT_STATE_SPRITES[mascotType] || { default: SPRITES[mascotType] }
+  const hasFullStateSet = INTERACTIVE_STATES.every((state) => Boolean(stateSprites[state]))
+  // 9개 상태를 가진 스킨은 현재 상태에 맞는 스킨 이미지를 쓰고, 단일 이미지 코스튬은 기존처럼
+  // 장착 이미지 한 장이 모든 상태보다 우선한다.
   // 롭만 코드창 말풍선을 쓴다 — '> ' 프롬프트 + 한 글자씩 타이핑(#216, 목업 TEXT.robot).
   const isRob = mascotType === 'rob'
   const withPrompt = (text) => (isRob ? `> ${text}` : text)
@@ -247,7 +307,9 @@ export default function Mascot({ roomId }) {
   // 상태 세트가 아예 없는 캐릭터(버거노인)와, 세트는 있는데 그 상태만 빠진 경우를 둘 다
   // 받아야 한다. 어느 쪽이든 stateSprites.default → SPRITES[mascotType] 순으로 내려간다.
   const activeState = eggMode !== 'default' ? eggMode : reactionMode
-  const spriteSrc = equippedSprite || stateSprites[activeState] || stateSprites.default || SPRITES[mascotType]
+  const spriteSrc = equippedStateSprites
+    ? stateSprites[activeState] || stateSprites.default
+    : equippedSprite || stateSprites[activeState] || stateSprites.default || SPRITES[mascotType]
 
   const showBubble = (text) => {
     setBubble(text)
@@ -271,11 +333,26 @@ export default function Mascot({ roomId }) {
       setTypedLen(text.length)
     }
   }
+  // 생일 대사(#403) — 본인/친구 생일이면 BIRTHDAY_LINE_CHANCE 확률로 그 전용 풀에서 뽑고,
+  // 그 외엔 평소처럼 캐릭터 풀(+반응 스프라이트)에서 뽑는다. 대체가 아니라 확률적으로 섞는 것.
+  const birthdaySpecialLines = () => {
+    if (isMyBirthday) return BIRTHDAY_LINES_ME
+    if (birthdayFriend) return birthdayFriendLines(birthdayFriend.nickname)
+    return null
+  }
   const pickLine = () => {
+    const special = birthdaySpecialLines()
+    if (special && Math.random() < BIRTHDAY_LINE_CHANCE) {
+      return special[Math.floor(Math.random() * special.length)]
+    }
     const pool = LINES[mascotType]
     return pool[Math.floor(Math.random() * pool.length)]
   }
   const pickReaction = () => {
+    const special = birthdaySpecialLines()
+    if (special && Math.random() < BIRTHDAY_LINE_CHANCE) {
+      return { text: special[Math.floor(Math.random() * special.length)] }
+    }
     const pool = LINES[mascotType].map((text) => ({ text }))
     pool.push(...CLICK_EXTRAS.filter(({ spriteKey }) => stateSprites[spriteKey]))
     return pool[Math.floor(Math.random() * pool.length)]
@@ -293,18 +370,40 @@ export default function Mascot({ roomId }) {
     mutationFn: () => interactMascot(roomId),
     // 스프라이트는 여기서 바꾸지 않는다 — 클릭 시점에 이미 로컬로 바꿨다(onMascotClick).
     // 말풍선만 응답을 기다린다. 교감 성공인지 하루 한도인지는 응답을 봐야 알 수 있어서다.
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['room', roomId, 'level'] })
+      // 헤더 골드 배지도 즉시 갱신 — 상점(Shop.jsx)의 구매 성공 시와 동일한 무효화 키.
+      // ★ 아래 이스터에그 early return보다 위에 둔다 — scared/angry/dizzy 중에도 서버는
+      // 골드를 준다(말풍선만 안 뜬다). 아래로 내리면 그 경우 배지가 안 갱신된다.
+      queryClient.invalidateQueries({ queryKey: ['wallet'] })
       const reaction = pendingReactionRef.current
       pendingReactionRef.current = null
       if (eggModeRef.current !== 'default') return
-      showBubble(reaction?.text || pickLine())
+      // 교감 캡(하루 10회)은 방 단위, 골드 캡(하루 총 6,000 · 계약 §15-4)은 유저 단위라 스코프가
+      // 다르다 — 방 여러 개면 교감은 더 되는데 골드만 먼저 막힌다. 그때 서버는 예외 없이 조용히
+      // 0을 지급하므로, 응답의 실지급액(earnedGold)을 그대로 보여줘야 화면이 거짓말하지 않는다.
+      const gold = data?.earnedGold ?? 0
+      const line = reaction?.text || pickLine()
+      showBubble(gold > 0 ? `${line} (+${gold}G)` : line)
     },
     onError: (err) => {
+      const reaction = pendingReactionRef.current
       pendingReactionRef.current = null
       // ★ 여기서 setReaction('default')을 하지 않는다 — 하루 한도를 다 쓴 뒤에도 마스코트는
       // 눌리면 반응해야 한다. 한도에 걸렸다는 건 말풍선 문구로 알린다.
-      showBubble(err.code === 'MASCOT_INTERACTION_LIMIT_REACHED' ? LIMIT_MESSAGE : (err.message || '잠시 후 다시 시도해 주세요.'))
+      if (err.code === 'MASCOT_INTERACTION_LIMIT_REACHED') {
+        // 처음 걸렸을 때만 안내하고, 그 이후 클릭은 평소처럼 랜덤 대사를 보여준다(#400) —
+        // 계속 호출은 되지만(서버가 유일한 판정자) 매번 같은 안내만 반복되면 마스코트가
+        // 말은 안 하고 표정만 바뀌는 것처럼 보인다.
+        if (limitMessageShownRef.current) {
+          showBubble(reaction?.text || pickLine())
+        } else {
+          limitMessageShownRef.current = true
+          showBubble(LIMIT_MESSAGE)
+        }
+        return
+      }
+      showBubble(err.message || '잠시 후 다시 시도해 주세요.')
     },
   })
 
@@ -484,7 +583,18 @@ export default function Mascot({ roomId }) {
     interactMutation.mutate()
   }
 
-  if (prefs.isPending || prefs.isError) return null
+  // 로딩 중에만 감춘다. 기본 크로비를 먼저 띄웠다가 내 마스코트로 바뀌면 깜빡임이 된다.
+  //
+  // ★ isError 로는 감추지 않는다. 감췄더니 "모바일에서 마스코트가 사라진 채 안 돌아온다"가
+  //   됐다 — 전역 쿼리 설정이 retry: 1 · refetchOnWindowFocus: false 라(lib/queryClient.js),
+  //   이동 중 네트워크가 한 번 끊겨 이 요청이 실패하면 앱으로 돌아와도 재요청이 없어서
+  //   새로고침 전까지 isError 가 유지된다. 모바일에서 훨씬 자주 밟히는 경로다.
+  //
+  //   그런데 이 컴포넌트는 prefs 없이도 그릴 수 있다. 쓰는 값이 둘뿐인데 둘 다 이미
+  //   옵셔널이다 — mascotType 은 DB 기본값이 'crobi' 라 SPRITES[mascotType] 로 떨어지고,
+  //   equippedSprite 는 없으면 기본 스프라이트를 쓴다. 설정을 못 읽었을 뿐 마스코트가
+  //   없는 게 아니므로, 교감(클릭·드래그·말풍선)은 그대로 되는 게 맞다.
+  if (prefs.isPending) return null
 
   // 롭은 상태 문구(들어올림/무서움/화남/어지러움/수면)든 기본 대사든 '> ' 프롬프트를 붙인다
   // (#155·#216, 목업 그대로 — 목업도 robot이면 모든 말풍선에 '> '를 붙인다).
@@ -513,8 +623,21 @@ export default function Mascot({ roomId }) {
     >
       {eggBubbleText && (
         <div className="clov-mascot-bubble">
-          {eggBubbleText}
-          {isTypingBubble && <span className="clov-mascot-type-cursor" />}
+          {isTypingBubble ? (
+            // 말풍선 배경(테두리·박스)이 먼저 최종 크기로 뜨고, 그 안에서 글자만
+            // 한 자씩 보이게 채워지는 것처럼 보이려고 — 아직 안 친 나머지 글자를
+            // 지우는 대신 visibility:hidden으로 숨긴 채 같이 렌더링해서 레이아웃
+            // 폭·높이가 처음부터 완성 문장 기준으로 고정되게 한다(위 Mascot.css
+            // .clov-mascot-bubble-hidden 참고). 지우면 그 자리만큼 매 글자마다
+            // 박스가 넓어지는 것처럼 보였다.
+            <>
+              {`> ${bubble.slice(0, typedLen)}`}
+              <span className="clov-mascot-type-cursor" />
+              <span className="clov-mascot-bubble-hidden" aria-hidden="true">{bubble.slice(typedLen)}</span>
+            </>
+          ) : (
+            eggBubbleText
+          )}
         </div>
       )}
       <button

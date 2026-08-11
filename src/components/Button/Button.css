@@ -42,7 +42,7 @@ body.light-mode .clov-btn--action:not(:disabled):hover { color: #2e5233; }
 .clov-btn--dashed {
   background: rgba(156, 204, 101, 0.08); color: #9ccc65;
   border: 1.5px dashed rgba(156, 204, 101, 0.5);
-  font-family: 'Space Mono', 'Courier New', monospace; letter-spacing: .3px;
+  letter-spacing: .3px;
 }
 .clov-btn--dashed:not(:disabled):hover { transform: translateY(-1px); background: rgba(156, 204, 101, 0.15); }
 body.light-mode .clov-btn--dashed { background: #faf6ee; color: #2e5233; border-color: rgba(46, 82, 51, 0.45); }

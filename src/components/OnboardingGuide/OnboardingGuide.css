@@ -1,0 +1,294 @@
+/* =====================================================================
+   온보딩 가이드 — 픽셀 창.
+
+   ★ 라이트/다크에 적응하지 않는다. 행운편지가 항상 크림 종이인 것과 같은 판단으로,
+     이 화면은 항상 어두운 픽셀 패널이다. 팔레트를 여기 지역 변수로 못박아 앱 토큰이
+     바뀌어도 이 창의 미감이 흔들리지 않게 한다.
+
+   z-index 9800 — 추억피드 라이트박스(9600) 위, ConfirmDialog(10000) 아래.
+   가이드 위에 확인 다이얼로그가 뜨는 건 정상이고 그 반대는 아니다.
+   ===================================================================== */
+
+.clov-guide-backdrop {
+  position: fixed; inset: 0; z-index: 9800;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px 16px;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.clov-guide-frame {
+  --guide-ink: #14150e;
+  --guide-panel: #1a1f14;
+  --guide-acc: #9ccc65;
+  --guide-acc-d: #4a6330;
+  --guide-acc-l: #cfe3a8;
+  --guide-muted: #8fa876;
+
+  position: relative;
+  width: min(360px, 100%);
+  /* ⚠️ dvh 다. 모바일에서 주소창이 보이는 상태여도 아래 버튼이 화면 안에 있어야 한다
+     (#316 설정 모달에서 같은 걸 밟았다). vh 면 주소창 높이만큼 잘린다. */
+  height: min(640px, calc(100dvh - 40px));
+  background: var(--guide-panel);
+  border: 4px solid var(--guide-acc);
+  box-shadow:
+    0 0 0 4px var(--guide-ink),
+    9px 9px 0 rgba(0, 0, 0, 0.16),
+    inset 0 0 0 4px var(--guide-acc-d);
+  overflow: hidden;
+}
+
+.clov-guide-frame img,
+.clov-guide-frame svg { display: block; image-rendering: pixelated; }
+
+.clov-guide-dots {
+  position: absolute; inset: 0; opacity: 0.45; pointer-events: none;
+  background-image: radial-gradient(var(--guide-acc-d) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+.clov-guide-watermark {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  opacity: 0.06; pointer-events: none;
+}
+
+.clov-guide-corner {
+  position: absolute; width: 32px; height: 32px; pointer-events: none;
+  display: grid; place-items: center;
+  background: var(--guide-panel);
+  box-shadow:
+    0 -3px 0 var(--guide-acc), 0 3px 0 var(--guide-acc),
+    -3px 0 0 var(--guide-acc), 3px 0 0 var(--guide-acc);
+}
+.clov-guide-corner.is-tl { top: 12px; left: 12px; }
+.clov-guide-corner.is-tr { top: 12px; right: 12px; }
+.clov-guide-corner.is-bl { bottom: 12px; left: 12px; }
+.clov-guide-corner.is-br { bottom: 12px; right: 12px; }
+
+.clov-guide-topbar {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  padding: 6px 14px; background: var(--guide-acc-d);
+  box-shadow:
+    0 -3px 0 var(--guide-acc), 0 3px 0 var(--guide-acc),
+    -3px 0 0 var(--guide-acc), 3px 0 0 var(--guide-acc);
+}
+
+/* 내용판. 세로로 넘치면 여기서 스크롤한다 — 작은 화면에서 버튼이 잘리면 안 된다.
+   overflow-x 는 건드리지 않는다(hidden 을 주면 반대 축이 auto 로 승격돼 #334 처럼
+   가로 스크롤이 생긴다). */
+.clov-guide-stage {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; padding: 62px 22px 22px;
+  overflow-y: auto;
+}
+.clov-guide-stage.is-steps { justify-content: center; padding: 62px 18px 18px; }
+
+/* ★ 정사각 상자에 가둔다. height 만 고정하면 가로가 캐릭터 비율대로 제각각이 되어
+   rob(900x510)이 132px 높이에서 233px까지 벌어진다 — crobi 85px 의 2.7배라 로스터가
+   돌 때 한 명만 화면을 덮는다. 앱의 Mascot.css 가 같은 이유로 이미 쓰는 규칙이다. */
+.clov-guide-mascot {
+  height: 132px; width: auto; max-width: 132px; object-fit: contain;
+  animation: clov-guide-bob 1.4s steps(2, end) infinite;
+}
+@keyframes clov-guide-bob {
+  0%, 50% { transform: translateY(0); }
+  51%, 100% { transform: translateY(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clov-guide-mascot { animation: none; }
+}
+
+.clov-guide-welcome {
+  color: var(--guide-acc-l); font-size: 13px; font-weight: 700; line-height: 1.9; text-align: center;
+}
+.clov-guide-bar { display: flex; gap: 4px; }
+.clov-guide-bar i { width: 11px; height: 13px; background: var(--guide-acc-d); }
+.clov-guide-bar i.is-on { background: var(--guide-acc); }
+.clov-guide-ask {
+  color: var(--guide-muted); font-size: 11px; font-weight: 800; letter-spacing: 0.06em;
+}
+
+.clov-guide-row { display: flex; gap: 9px; align-items: center; }
+
+.clov-guide-btn {
+  border: 0; cursor: pointer; font: inherit; font-size: 13px; font-weight: 800;
+  padding: 11px 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--guide-panel); color: var(--guide-acc-l);
+  box-shadow:
+    0 -3px 0 var(--guide-acc-d), 0 3px 0 var(--guide-acc-d),
+    -3px 0 0 var(--guide-acc-d), 3px 0 0 var(--guide-acc-d);
+}
+.clov-guide-btn:active { transform: translateY(2px); }
+
+.clov-guide-btn.is-primary {
+  background: var(--guide-acc); color: #16200c;
+  box-shadow:
+    0 -3px 0 var(--guide-ink), 0 3px 0 var(--guide-ink),
+    -3px 0 0 var(--guide-ink), 3px 0 0 var(--guide-ink),
+    0 7px 0 var(--guide-acc-d), 0 10px 0 var(--guide-ink);
+}
+/* 눌리면 아래 그림자 두 겹만큼 내려앉는다 — 실제로 눌리는 물리 버튼처럼 보이게. */
+.clov-guide-btn.is-primary:active {
+  transform: translateY(6px);
+  box-shadow:
+    0 -3px 0 var(--guide-ink), 0 3px 0 var(--guide-ink),
+    -3px 0 0 var(--guide-ink), 3px 0 0 var(--guide-ink);
+}
+
+/* ── 커서를 올렸을 때 ────────────────────────────────────────────
+   ⚠️ hover 관련은 전부 이 미디어 쿼리 안에 둔다. 이유가 둘이다.
+      ① 터치 기기는 :hover 가 탭 후에 눌러붙어서, 건너뛰기를 눌러도 START 가 계속
+        떠 있는 것처럼 보인다.
+      ② 화살표는 숨겨도 자리를 차지하는데, hover 가 없는 기기에선 영영 안 보이므로
+        **가장 좁은 화면에서 폭만 잡아먹는다.** 아예 만들지 않는다. */
+@media (hover: hover) and (pointer: fine) {
+  /* 선택 표시 화살표 — START 양옆에 나타난다(JRPG·마인크래프트 메뉴 관례).
+     ★ 흐름에 넣지 않고 버튼 안쪽 여백(padding 18px)에 겹친다. 흐름에 두면 버튼이
+       181 → 231px 로 늘어 옆의 "건너뛰기"가 두 줄로 깨진다 — 실제로 그렇게 됐다.
+       absolute 라 폭에 아무 영향이 없고, hover 순간 레이아웃도 안 흔들린다.
+     계단형 clip-path 로 픽셀 모양을 낸다(이 창의 다른 그림도 전부 계단이다).
+     ⚠️ translate/scale 을 transform 대신 각각 쓴다 — transform 하나에 둘을 넣으면
+        ::after 의 좌우 반전이 세로 중앙 정렬을 덮어쓴다. */
+  .clov-guide-btn.is-primary { position: relative; }
+  .clov-guide-btn.is-primary::before,
+  .clov-guide-btn.is-primary::after {
+    content: ''; position: absolute; top: 50%; translate: 0 -50%;
+    width: 9px; height: 15px;
+    background: #16200c; opacity: 0;
+    transition: opacity 0.1s steps(2, end);
+    clip-path: polygon(
+      0 0, 33% 0, 33% 17%, 67% 17%, 67% 33%, 100% 33%,
+      100% 67%, 67% 67%, 67% 83%, 33% 83%, 33% 100%, 0 100%
+    );
+  }
+  .clov-guide-btn.is-primary::before { left: 3px; }
+  .clov-guide-btn.is-primary::after { right: 3px; scale: -1 1; }
+  .clov-guide-btn.is-primary:hover::before,
+  .clov-guide-btn.is-primary:hover::after { opacity: 1; }
+
+  /* 떠오르고 아래 그림자가 깊어진다 — 누를 때 6px 내려앉는 :active 와 이어져야
+     "실제로 눌리는 물건"으로 읽힌다. hover 가 없으면 그 사실이 누른 뒤에야 전달된다. */
+  .clov-guide-btn.is-primary:hover {
+    transform: translateY(-2px);
+    background: #b2dd7f;
+    box-shadow:
+      0 -3px 0 var(--guide-ink), 0 3px 0 var(--guide-ink),
+      -3px 0 0 var(--guide-ink), 3px 0 0 var(--guide-ink),
+      0 9px 0 var(--guide-acc-d), 0 12px 0 var(--guide-ink);
+  }
+  /* :active 가 :hover 를 이기도록 뒤에 다시 쓴다 — 미디어쿼리는 특이도를 안 올리므로
+     순서로만 결정된다(#342에서 밟은 함정). */
+  .clov-guide-btn.is-primary:active {
+    transform: translateY(6px);
+    box-shadow:
+      0 -3px 0 var(--guide-ink), 0 3px 0 var(--guide-ink),
+      -3px 0 0 var(--guide-ink), 3px 0 0 var(--guide-ink);
+  }
+  .clov-guide-btn:not(.is-primary):hover { background: #26301c; color: #eaf3d6; }
+
+  /* ★ 버튼만 반응하면 UI 가 반응한 것이고, 마스코트가 같이 반응하면 캐릭터가 반응한 것이다.
+     :has() 로 JS 없이 앞선 형제를 바꾼다(선택자가 뒤를 못 보므로 부모에서 건다). */
+  .clov-guide-stage:has(.clov-guide-btn.is-primary:hover) .clov-guide-mascot {
+    animation: clov-guide-hop 0.36s steps(2, end) infinite;
+  }
+}
+@keyframes clov-guide-hop {
+  0%, 45% { transform: translateY(0); }
+  46%, 100% { transform: translateY(-7px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clov-guide-btn.is-primary:hover { transform: none; }
+  .clov-guide-stage:has(.clov-guide-btn.is-primary:hover) .clov-guide-mascot { animation: none; }
+}
+
+.clov-guide-never {
+  margin-top: 2px; border: 0; background: none; cursor: pointer; font: inherit;
+  font-size: 11px; font-weight: 700; color: #7f9268; text-decoration: underline; padding: 5px;
+}
+.clov-guide-never:hover { color: var(--guide-acc); }
+
+/* ── 4단계 창 ──────────────────────────────────────────────── */
+.clov-guide-win {
+  width: 100%; background: var(--guide-panel);
+  box-shadow:
+    0 -4px 0 var(--guide-acc), 0 4px 0 var(--guide-acc),
+    -4px 0 0 var(--guide-acc), 4px 0 0 var(--guide-acc),
+    0 12px 0 rgba(0, 0, 0, 0.4);
+}
+.clov-guide-winbar {
+  background: var(--guide-acc-d); padding: 8px 11px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.clov-guide-winbar span {
+  color: #eaf3d6; font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+}
+.clov-guide-close {
+  width: 19px; height: 19px; border: 0; cursor: pointer; background: #c94f4f; color: #fff;
+  font: inherit; font-size: 11px; font-weight: 900; line-height: 1;
+  box-shadow:
+    0 -2px 0 var(--guide-ink), 0 2px 0 var(--guide-ink),
+    -2px 0 0 var(--guide-ink), 2px 0 0 var(--guide-ink);
+}
+.clov-guide-winbody { padding: 13px 14px; display: flex; flex-direction: column; gap: 9px; }
+.clov-guide-art {
+  height: 120px; background: #111509; display: grid; place-items: center;
+  box-shadow: inset 0 0 0 2px #2a3a1c;
+}
+/* 친구들 단계만 5종을 2줄로 세워야 해서 더 높다. */
+.clov-guide-art.is-tall { height: auto; min-height: 120px; padding: 10px 8px; }
+
+
+/* ⚠️ minmax(0, 1fr) 이다. 그냥 1fr 은 minmax(auto, 1fr) 이고 auto 바닥이 콘텐츠
+   최소폭이라, 이름이 길어지면 칸이 밀려 가로로 넘친다(#338에서 밟은 함정). */
+.clov-guide-friends {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 6px; justify-items: center; width: 100%;
+}
+.clov-guide-friend { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+/* ★ 원본 그림이라 image-rendering 을 auto 로 되돌린다(창 전체는 pixelated 다).
+   정사각 상자 + contain — rob(900x510)처럼 가로로 긴 캐릭터가 칸을 밀어내지 않게. */
+.clov-guide-friend img {
+  width: 100%; max-width: 72px; aspect-ratio: 1;
+  object-fit: contain; object-position: bottom;
+  image-rendering: auto;
+}
+.clov-guide-friend span {
+  color: var(--guide-acc-l); font-size: 10px; font-weight: 700; white-space: nowrap;
+}
+
+/* 마지막 장면 — 다섯이 조금씩 겹쳐 선다.
+   ★ 안 겹치면 한 명이 50px 남짓이라 얼굴이 안 보인다. 겹치면 같은 폭에서 훨씬 크게 선다.
+   ★ image-rendering 을 auto 로 되돌린다 — 이 그림만 원본이라, 창 전체에 걸린 pixelated
+     를 그대로 두면 축소될 때 계단이 진다.
+   object-position: bottom 으로 발밑을 맞춰 한 줄로 선 것처럼 보이게 한다. */
+.clov-guide-lineup { display: flex; justify-content: center; align-items: flex-end; width: 100%; }
+.clov-guide-lineup img {
+  flex: none; width: 74px; height: 74px;
+  object-fit: contain; object-position: bottom;
+  image-rendering: auto;
+}
+.clov-guide-lineup img + img { margin-left: -21px; }
+.clov-guide-stepno {
+  color: var(--guide-acc); font-size: 10px; font-weight: 800; letter-spacing: 0.12em;
+}
+.clov-guide-heading { color: #eef0e2; font-size: 15px; font-weight: 800; line-height: 1.4; }
+.clov-guide-body { color: #b7c99a; font-size: 12px; font-weight: 500; line-height: 1.8; }
+.clov-guide-pips { display: flex; gap: 5px; justify-content: center; }
+.clov-guide-pips i { width: 7px; height: 7px; background: #3d4a2c; }
+.clov-guide-pips i.is-on { background: var(--guide-acc); }
+.clov-guide-winbody .clov-guide-row { padding-top: 3px; }
+.clov-guide-row.is-split { justify-content: space-between; width: 100%; }
+
+/* 마지막 장면 — 설명이 아니라 갈림길이라 버튼을 세로로 쌓는다.
+   창 안쪽 너비가 290px 남짓이라 셋을 가로로 놓으면 글자가 깨진다. */
+.clov-guide-cta { display: flex; flex-direction: column; gap: 7px; padding-top: 3px; }
+.clov-guide-btn.is-wide { width: 100%; }
+
+/* "이전"·"그냥 닫기"는 주 동선이 아니라 픽셀 버튼 껍데기를 씌우지 않는다 —
+   셋 다 같은 무게로 보이면 무엇을 눌러야 하는지가 사라진다. */
+.clov-guide-quiet {
+  border: 0; background: none; cursor: pointer; font: inherit;
+  font-size: 11px; font-weight: 700; color: #7f9268; text-decoration: underline; padding: 6px 4px;
+}
+.clov-guide-quiet:hover { color: var(--guide-acc); }

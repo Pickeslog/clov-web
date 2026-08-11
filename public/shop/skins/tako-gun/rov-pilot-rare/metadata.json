@@ -1,0 +1,19 @@
+{
+  "skinId": "rov-pilot-rare",
+  "mascotId": "tako-gun",
+  "displayName": "ROV 조종사 타코군",
+  "rarity": "RARE",
+  "shopCategory": "COSTUME",
+  "assetUrl": "/shop/skins/tako-gun/rov-pilot-rare/default.png",
+  "states": {
+    "default": "default.png",
+    "angry": "angry.png",
+    "dizzy": "dizzy.png",
+    "find": "find.png",
+    "pencil": "pencil.png",
+    "pulled": "pulled.png",
+    "scared": "scared.png",
+    "sleepy": "sleepy.png",
+    "smile": "smile.png"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "skinId": "arcade-boss-legendary",
+  "mascotId": "rob",
+  "displayName": "아케이드 게임 보스",
+  "rarity": "LEGENDARY",
+  "shopCategory": "COSTUME",
+  "assetUrl": "/shop/skins/rob/arcade-boss-legendary/default.png",
+  "states": {
+    "default": "default.png",
+    "angry": "angry.png",
+    "dizzy": "dizzy.png",
+    "find": "find.png",
+    "pencil": "pencil.png",
+    "pulled": "pulled.png",
+    "scared": "scared.png",
+    "sleepy": "sleepy.png",
+    "smile": "smile.png"
+  }
+}

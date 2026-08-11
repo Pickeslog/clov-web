@@ -11,8 +11,8 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'KCC-Ganpan', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'KCC-Ganpan', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
@@ -50,6 +50,14 @@
   }
 }
 
+/* 브라우저 기본값 — button/input/select/textarea는 페이지 폰트를 상속하지 않고 OS
+   컨트롤 폰트(대개 Arial류)를 쓴다. 컴포넌트마다 font-family:inherit를 개별로 붙여왔는데
+   빠진 곳(예: 설정 배경 스와치)마다 전역 폰트가 안 먹혔다 — 여기서 한 번에 리셋한다(#258 후속). */
+button, input, select, textarea, optgroup {
+  font-family: inherit;
+  font-size: inherit;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -65,6 +73,76 @@ body {
   background-position: var(--clov-app-bg-pos, center);
   background-repeat: no-repeat;
   background-attachment: fixed;
+}
+
+/* =====================================================================
+   한정 배경 '은하수 아래 개발자의 밤' 전용 별 반짝임 — 이 배경에서만 붙는다.
+   applyAppBackground()가 :root 에 data-app-bg 를 세팅한다.
+
+   ★ 이 레이어가 이 배경만 LEGENDARY 인 근거다(계약 §15-4: "등급도 같고 내용도
+     같으면 값도 같게"). 다른 배경 4종은 정지 이미지 한 장이라 RARE 2,800 이다.
+     이 효과를 빼면 등급도 같이 내려야 한다.
+
+   ★ 쌓임 — z-index: -1 이 정확히 "배경 위 · 콘텐츠 아래"에 놓는다.
+     html 에 background 가 없어서 body 의 배경이 캔버스로 승격되고, 캔버스는
+     스택의 맨 아래에 칠해진다. 그래서 음수 z-index 의사요소가 그 위에 오고
+     #root(양수 아님, 문서 순서상 뒤)는 다시 그 위에 온다.
+     #root 에 position/z-index 를 주는 방식은 쓰지 않았다 — 전역 쌓임을 건드리면
+     모달(z-index 240~9600)과의 관계까지 다시 봐야 한다.
+
+   ★ pointer-events: none 없으면 화면 전체 클릭이 막힌다. 지우지 말 것.
+
+   두 겹인 이유: 한 겹으로는 별이 통째로 같이 깜빡여 부자연스럽다. 주기와
+   지연을 다르게 준 두 겹이 엇갈리면서 개별 반짝임처럼 보인다.
+   ===================================================================== */
+:root[data-app-bg='developer-gemini-night'] body::before,
+:root[data-app-bg='developer-gemini-night'] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-repeat: repeat;
+}
+
+:root[data-app-bg='developer-gemini-night'] body::before {
+  background-image:
+    radial-gradient(1.6px 1.6px at 18% 22%, rgba(255, 255, 255, 0.95), transparent 60%),
+    radial-gradient(1.2px 1.2px at 62% 12%, rgba(206, 226, 255, 0.85), transparent 60%),
+    radial-gradient(1.8px 1.8px at 83% 34%, rgba(255, 248, 220, 0.9), transparent 60%),
+    radial-gradient(1px 1px at 41% 44%, rgba(255, 255, 255, 0.7), transparent 60%);
+  background-size: 420px 420px;
+  animation: clov-bg-twinkle-a 4.2s ease-in-out infinite;
+}
+
+:root[data-app-bg='developer-gemini-night'] body::after {
+  background-image:
+    radial-gradient(1.3px 1.3px at 32% 9%, rgba(255, 255, 255, 0.85), transparent 60%),
+    radial-gradient(1.7px 1.7px at 74% 26%, rgba(226, 214, 255, 0.9), transparent 60%),
+    radial-gradient(1px 1px at 9% 38%, rgba(255, 255, 255, 0.65), transparent 60%);
+  background-size: 560px 560px;
+  background-position: 90px 40px;
+  animation: clov-bg-twinkle-b 6.8s ease-in-out infinite;
+}
+
+@keyframes clov-bg-twinkle-a {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 1; }
+}
+
+@keyframes clov-bg-twinkle-b {
+  0%, 100% { opacity: 0.9; }
+  45%      { opacity: 0.25; }
+}
+
+/* 움직임을 줄이도록 설정한 사용자에게는 반짝이지 않고 은은하게 켜두기만 한다.
+   레이어 자체를 없애면 "산 것과 안 산 것"의 차이가 사라지므로 끄지는 않는다. */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-app-bg='developer-gemini-night'] body::before,
+  :root[data-app-bg='developer-gemini-night'] body::after {
+    animation: none;
+    opacity: 0.65;
+  }
 }
 
 #root {
@@ -119,4 +197,27 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+/* ── 라우트 전환(View Transitions API) — navigate(to, {viewTransition:true})나
+   <Link viewTransition>을 쓴 이동에만 적용된다. 미지원 브라우저는 그냥 즉시
+   전환되므로(자동 폴백) 별도 분기가 필요 없다. ── */
+::view-transition-old(root) {
+  animation: clov-route-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}
+::view-transition-new(root) {
+  animation: clov-route-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes clov-route-out {
+  to { opacity: 0; transform: scale(0.99) translateY(-4px); }
+}
+@keyframes clov-route-in {
+  from { opacity: 0; transform: scale(0.99) translateY(6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }

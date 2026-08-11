@@ -1,0 +1,121 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 512 기준 모서리 반경 108 — 기존 썸네일 6종 실측값 -->
+    <clipPath id="round"><rect width="512" height="512" rx="108" ry="108"/></clipPath>
+
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#5fb3e4"/>
+      <stop offset="0.55" stop-color="#9ed6f0"/>
+      <stop offset="1"   stop-color="#cfeaf8"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#1668b5"/>
+      <stop offset="0.35" stop-color="#22a8bd"/>
+      <stop offset="0.72" stop-color="#4fd3c8"/>
+      <stop offset="1"    stop-color="#a9e8dd"/>
+    </linearGradient>
+    <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6ecd7"/>
+      <stop offset="1" stop-color="#e8d9ba"/>
+    </linearGradient>
+    <linearGradient id="cliffL" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0" stop-color="#d9d5c6"/>
+      <stop offset="1" stop-color="#f0ede3"/>
+    </linearGradient>
+    <linearGradient id="cliffR" x1="1" y1="0" x2="0" y2="0.3">
+      <stop offset="0" stop-color="#dedac9"/>
+      <stop offset="1" stop-color="#f2efe6"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0"    stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="0.62" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="1"    stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <g clip-path="url(#round)">
+    <rect width="512" height="512" fill="url(#sky)"/>
+
+    <!-- 구름 -->
+    <g fill="#ffffff" opacity="0.9">
+      <ellipse cx="330" cy="120" rx="34" ry="13"/>
+      <ellipse cx="356" cy="112" rx="24" ry="15"/>
+      <ellipse cx="300" cy="124" rx="20" ry="10"/>
+    </g>
+
+    <!-- 바다 -->
+    <path d="M0 236 H512 V512 H0 Z" fill="url(#sea)"/>
+    <!-- 수면 반짝임 -->
+    <g fill="#ffffff" opacity="0.5">
+      <rect x="190" y="268" width="52" height="4" rx="2"/>
+      <rect x="262" y="290" width="78" height="4" rx="2"/>
+      <rect x="150" y="308" width="40" height="4" rx="2"/>
+      <rect x="322" y="322" width="60" height="4" rx="2"/>
+      <rect x="228" y="346" width="46" height="4" rx="2"/>
+    </g>
+
+    <!-- 왼쪽 절벽 -->
+    <path d="M0 0 H198 L188 92 L206 150 L176 214 L120 258 L54 268 L0 252 Z" fill="url(#cliffL)"/>
+    <path d="M0 96 L64 108 L120 96 L176 116 L206 150 L176 214 L120 258 L54 268 L0 252 Z"
+          fill="#000000" opacity="0.07"/>
+    <!-- 왼쪽 절벽 초목 -->
+    <g fill="#6b9e4b">
+      <ellipse cx="150" cy="40"  rx="30" ry="15"/>
+      <ellipse cx="186" cy="62"  rx="22" ry="12"/>
+      <ellipse cx="106" cy="28"  rx="24" ry="12"/>
+      <ellipse cx="196" cy="140" rx="16" ry="9"/>
+    </g>
+
+    <!-- 오른쪽 절벽 -->
+    <path d="M512 0 H392 L402 78 L386 138 L410 196 L462 232 L512 240 Z" fill="url(#cliffR)"/>
+    <path d="M512 90 L462 104 L410 92 L386 138 L410 196 L462 232 L512 240 Z"
+          fill="#000000" opacity="0.06"/>
+    <g fill="#6b9e4b">
+      <ellipse cx="440" cy="34"  rx="26" ry="13"/>
+      <ellipse cx="404" cy="58"  rx="18" ry="10"/>
+      <ellipse cx="470" cy="16"  rx="22" ry="11"/>
+      <ellipse cx="398" cy="126" rx="14" ry="8"/>
+    </g>
+
+    <!-- 모래사장 -->
+    <path d="M0 404 Q150 356 300 402 Q400 434 512 470 V512 H0 Z" fill="url(#sand)"/>
+    <!-- 물가 얕은 띠 -->
+    <path d="M0 400 Q150 352 300 398 Q400 430 512 466 L512 480 Q396 444 298 412 Q150 366 0 414 Z"
+          fill="#ffffff" opacity="0.42"/>
+
+    <!-- 차양(원본의 흰 캐노피) -->
+    <g>
+      <path d="M22 430 L146 400 L206 434 L86 452 Z" fill="#fbf7ee"/>
+      <path d="M22 430 L146 400 L206 434 Z" fill="#ffffff" opacity="0.6"/>
+      <rect x="20" y="428" width="5" height="58" rx="2.5" fill="#c8a97a"/>
+      <rect x="202" y="432" width="5" height="52" rx="2.5" fill="#c8a97a"/>
+    </g>
+
+    <!-- 부두 -->
+    <g>
+      <path d="M398 470 L512 448 L512 486 L410 500 Z" fill="#c9a476"/>
+      <g stroke="#a8865c" stroke-width="3" opacity="0.8">
+        <line x1="418" y1="468" x2="424" y2="496"/>
+        <line x1="446" y1="463" x2="452" y2="491"/>
+        <line x1="474" y1="458" x2="480" y2="486"/>
+      </g>
+      <rect x="400" y="466" width="8" height="46" rx="4" fill="#a8865c"/>
+    </g>
+
+    <!-- 클로버 — 브랜드 마크. 물 위에 얹어 대비를 확보한다 -->
+    <g transform="translate(256 268)">
+      <circle r="118" fill="url(#halo)"/>
+      <!-- 잎 4장 — 끝이 파인 하트형(기존 썸네일과 같은 계열). 밝은 테두리로 어느 배경에서도 갈라짐이 읽힌다 -->
+      <g fill="#1f7a4c" stroke="#eafaf0" stroke-width="5" stroke-linejoin="round">
+        <g transform="rotate(-45) scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+        <g transform="rotate(45)  scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+        <g transform="rotate(135) scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+        <g transform="rotate(-135) scale(0.86)"><path d="M0 0 C -26 -16 -50 -36 -50 -58 C -50 -80 -26 -92 -10 -80 C -5 -76 -2 -74 0 -70 C 2 -74 5 -76 10 -80 C 26 -92 50 -80 50 -58 C 50 -36 26 -16 0 0 Z"/></g>
+      </g>
+      <!-- 줄기 -->
+      <path d="M4 52 Q14 88 -12 108" stroke="#1f7a4c" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <!-- 하이라이트 — 기존 썸네일처럼 왼쪽 위 잎에만 한 줄 -->
+      <path d="M-40 -66 L-16 -30" stroke="#eafaf0" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+    </g>
+  </g>
+</svg>

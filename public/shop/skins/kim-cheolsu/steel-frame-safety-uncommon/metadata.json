@@ -1,0 +1,19 @@
+{
+  "skinId": "steel-frame-safety-uncommon",
+  "mascotId": "kim-cheolsu",
+  "displayName": "철골 작업반 김철수",
+  "rarity": "UNCOMMON",
+  "shopCategory": "COSTUME",
+  "assetUrl": "/shop/skins/kim-cheolsu/steel-frame-safety-uncommon/default.png",
+  "states": {
+    "default": "default.png",
+    "angry": "angry.png",
+    "dizzy": "dizzy.png",
+    "find": "find.png",
+    "pencil": "pencil.png",
+    "pulled": "pulled.png",
+    "scared": "scared.png",
+    "sleepy": "sleepy.png",
+    "smile": "smile.png"
+  }
+}

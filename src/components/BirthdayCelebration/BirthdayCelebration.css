@@ -1,0 +1,93 @@
+/* =====================================================================
+   생일 축하 모달 (#383).
+
+   ★ 마스코트를 절대 배치(원형)로 두고 가운데 글을 흐름에 둔다. 반대로 하면
+     글 길이에 따라 마스코트가 밀려서 이름이 긴 사람에게만 배치가 무너진다.
+   ===================================================================== */
+
+.bday-backdrop {
+  position: fixed; inset: 0; z-index: 9700;   /* 온보딩 가이드(9800)보다 아래 — 첫 방문이면 가이드가 먼저다 */
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  background: rgba(10, 16, 10, 0.72);
+  animation: bday-fade 0.28s ease both;
+}
+@keyframes bday-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.bday-card {
+  position: relative;
+  width: min(420px, 100%);
+  padding: 116px 26px 30px;   /* 위쪽 여백 = 마스코트 줄이 앉는 자리 */
+  border-radius: 24px;
+  background: linear-gradient(180deg, #fdf6e0 0%, #f6efdc 100%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+  text-align: center;
+  animation: bday-pop 0.42s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+@keyframes bday-pop {
+  from { opacity: 0; transform: translateY(18px) scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ── 마스코트 줄 ────────────────────────────────────────────────
+   카드 위쪽에 아치로 앉힌다. 5명이라 가운데(index 2)가 제일 높다. */
+.bday-ring { position: absolute; inset: 0; pointer-events: none; }
+/* ⚠️ 정사각 상자 — height 만 주면 rob(900x510)이 가로로 퍼져 옆 마스코트를 덮는다.
+   Mascot.css:88-103 이 같은 이유로 쓰는 규칙이다.
+   ⚠️ image-rendering: auto — 원본 그림이라 pixelated 로 두면 축소될 때 계단이 진다. */
+.bday-mascot {
+  position: absolute;
+  width: 74px; height: 74px;
+  object-fit: contain; object-position: bottom;
+  image-rendering: auto;
+  animation: bday-bob 2.4s ease-in-out infinite;
+}
+.bday-mascot.is-0 { left: 2%;  top: 46px; animation-delay: 0s; }
+.bday-mascot.is-1 { left: 21%; top: 20px; animation-delay: 0.18s; }
+.bday-mascot.is-2 { left: 40%; top: 6px;  animation-delay: 0.36s; }
+.bday-mascot.is-3 { left: 59%; top: 20px; animation-delay: 0.54s; }
+.bday-mascot.is-4 { left: 78%; top: 46px; animation-delay: 0.72s; }
+@keyframes bday-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+/* ── 가운데 ─────────────────────────────────────────────────── */
+.bday-center { position: relative; }
+.bday-cake { display: block; font-size: 34px; line-height: 1; }
+.bday-heading {
+  margin: 10px 0 0;
+  font-size: 22px; font-weight: 900; color: #1b4332; letter-spacing: -0.02em;
+  overflow-wrap: anywhere;   /* 닉네임이 길어도 카드를 안 넓힌다 */
+}
+.bday-lead { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: #61766a; }
+.bday-close {
+  margin-top: 20px; padding: 11px 30px;
+  border: 0; border-radius: 999px; cursor: pointer;
+  background: #1b4332; color: #fdf6e0;
+  font: inherit; font-size: 14px; font-weight: 800;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.bday-close:hover { background: #245c44; }
+.bday-close:active { transform: translateY(1px); }
+.bday-close:focus-visible { outline: 3px solid #52b788; outline-offset: 2px; }
+
+/* ── 좁은 화면 ──────────────────────────────────────────────────
+   5명이 375px 안에 들어가야 한다. 폭을 줄이고 아치를 낮춘다. */
+@media (max-width: 420px) {
+  .bday-card { padding: 96px 18px 26px; }
+  .bday-mascot { width: 60px; height: 60px; }
+  .bday-mascot.is-0 { left: 1%;  top: 40px; }
+  .bday-mascot.is-1 { left: 21%; top: 18px; }
+  .bday-mascot.is-2 { left: 40.5%; top: 6px; }
+  .bday-mascot.is-3 { left: 60%; top: 18px; }
+  .bday-mascot.is-4 { left: 80%; top: 40px; }
+  .bday-heading { font-size: 19px; }
+}
+
+/* ── 움직임을 줄여 달라고 한 사용자 ──────────────────────────────
+   ★ 모달 자체는 그대로 뜬다 — 축하 메시지는 정보지 장식이 아니다.
+     흔들림과 등장 애니메이션만 끈다(폭죽은 Dashboard 쪽에서 안 터진다). */
+@media (prefers-reduced-motion: reduce) {
+  .bday-backdrop, .bday-card, .bday-mascot { animation: none; }
+}

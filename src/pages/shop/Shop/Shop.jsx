@@ -126,9 +126,30 @@ export default function Shop() {
 
   const wallet = useQuery({ queryKey: ['wallet'], queryFn: getWallet })
   const preferences = useQuery({ queryKey: ['preferences'], queryFn: getPreferences })
+  // #303 — 활성 탭 무관하게 카테고리별 개수만 세려고 별도로 전체 카탈로그를 한 번 가져온다
+  // (카운트는 자주 안 바뀌니 staleTime을 길게 둬서 탭 전환마다 다시 안 부른다).
+  const catalogAll = useQuery({
+    queryKey: ['shop', 'items', 'all', 'all'],
+    queryFn: () => getShopItems({ category: 'all', rarity: 'all' }),
+    staleTime: 60_000,
+  })
+  const categoryCounts = (catalogAll.data?.items ?? []).reduce((acc, item) => {
+    acc[item.category] = (acc[item.category] ?? 0) + 1
+    return acc
+  }, {})
+  // 개수를 아직 모르면(로딩·에러) 숨기지 않는다 — 잘못 숨겼다가 다시 보이는 깜빡임보다,
+  // 잠깐 빈 탭이 보이는 쪽이 낫다. 보고 있던 탭이 방금 개수 0으로 밝혀지면 렌더링 중에
+  // 바로 '전체'로 보정한다(useEffect+setState로 하면 리렌더가 한 번 더 생긴다).
+  const visibleCategories = !catalogAll.data
+    ? CATEGORIES
+    : CATEGORIES.filter((tab) => tab.key === 'all' || (categoryCounts[tab.key] ?? 0) > 0)
+  const effectiveCategory = (!owned && catalogAll.data && category !== 'all' && !(categoryCounts[category] > 0))
+    ? 'all'
+    : category
+
   const catalog = useQuery({
-    queryKey: ['shop', 'items', category, rarity],
-    queryFn: () => getShopItems({ category, rarity }),
+    queryKey: ['shop', 'items', effectiveCategory, rarity],
+    queryFn: () => getShopItems({ category: effectiveCategory, rarity }),
     enabled: !owned,
   })
   const inventory = useQuery({
@@ -240,11 +261,11 @@ export default function Shop() {
         </header>
 
         <nav className="shop-tabs">
-          {CATEGORIES.map((tab) => (
+          {visibleCategories.map((tab) => (
             <button
               key={tab.key}
               type="button"
-              className={`shop-tab${!owned && category === tab.key ? ' active' : ''}`}
+              className={`shop-tab${!owned && effectiveCategory === tab.key ? ' active' : ''}`}
               onClick={() => changeCategory(tab.key)}
             >
               <tab.Icon size={14} />

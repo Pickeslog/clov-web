@@ -64,6 +64,9 @@ export default function Notifications({ onClose }) {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['notifications', roomId] })
     queryClient.invalidateQueries({ queryKey: ['joinRequests', roomId] })
+    // 종 아이콘 배지(web-design-repository#89)는 room 무관 별도 쿼리키라 따로 무효화해야
+    // 읽음 처리 직후 폴링(30초)을 기다리지 않고 바로 꺼진다.
+    queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] })
   }
 
   // 수락·되돌리기는 멤버 구성을 바꾸므로 방 상세(인원수)·멤버 목록·방 목록 캐시까지 무효화한다.

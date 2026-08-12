@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import './oauthredirect.proto.css'
-import { exchangeOAuthCode, submitOAuthConsent } from '../../../api/auth'
+import { confirmOAuthLink, exchangeOAuthCode, submitOAuthConsent } from '../../../api/auth'
 import { useAuthStore } from '../../../stores/authStore'
 import { takeReturnTo } from '../../../lib/returnUrl'
 
@@ -14,6 +14,9 @@ export default function OAuthRedirect() {
   const setTokens = useAuthStore((state) => state.setTokens)
   const [status, setStatus] = useState('exchanging')
   const [registration, setRegistration] = useState(null)
+  // (C) 이메일 매칭 계정 연결 후보(§4-2, web-design-repository#90) — registration과 별도 상태.
+  // registrationToken은 같은 필드명이지만 가리키는 대상이 다르다(신규 프로필 vs 연결 확인).
+  const [linkCandidate, setLinkCandidate] = useState(null)
   const [agreements, setAgreements] = useState(initialAgreements)
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -32,6 +35,21 @@ export default function OAuthRedirect() {
           setTokens({ accessToken: exchangeResult.accessToken, refreshToken: exchangeResult.refreshToken })
           // 소셜은 백엔드로 전체 페이지 이동을 했다 돌아온다 — 목적지가 sessionStorage에 있어 살아남는다(#137).
           navigate(takeReturnTo(), { replace: true })
+          return
+        }
+
+        if (exchangeResult.linkCandidate) {
+          setLinkCandidate({ registrationToken: exchangeResult.registrationToken, maskedEmail: exchangeResult.maskedEmail })
+          setStatus('link-confirm')
+          return
+        }
+
+        // profile 없이 여기로 오면 안 된다 — 백엔드가 (B)/(C) 어느 쪽도 아닌 걸 보낸 것이라
+        // 신뢰할 수 없는 상태다. 화면을 깨뜨리는 대신 에러로 처리한다(프론트/백엔드 배포 순서가
+        // 어긋나 서로 다른 응답 모양을 주고받을 때 실제로 이 경로를 탈 수 있다).
+        if (!exchangeResult.profile) {
+          setStatus('error')
+          setMessage('로그인 처리 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.')
           return
         }
 
@@ -73,6 +91,20 @@ export default function OAuthRedirect() {
     }
   }
 
+  const confirmLink = async () => {
+    setSubmitting(true)
+    setMessage('')
+    try {
+      const result = await confirmOAuthLink(linkCandidate.registrationToken)
+      setTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken })
+      navigate(takeReturnTo(), { replace: true })
+    } catch (error) {
+      setMessage(errorMessage(error))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   if (status === 'exchanging') {
     return (
       <main className="proto-oauthredirect">
@@ -93,6 +125,27 @@ export default function OAuthRedirect() {
           <h1 className="oauthredirect-title">로그인을 완료하지 못했어요</h1>
           <p className="oauthredirect-description">{message || '소셜 로그인 정보가 없습니다. 다시 시도해주세요.'}</p>
           <Link className="oauthredirect-login-link" to="/login">로그인 화면으로 돌아가기</Link>
+        </section>
+      </main>
+    )
+  }
+
+  if (status === 'link-confirm') {
+    return (
+      <main className="proto-oauthredirect">
+        <section className="oauthredirect-panel">
+          <p className="oauthredirect-kicker">계정 연결 확인</p>
+          <h1 className="oauthredirect-title">이 계정으로 연결할까요?</h1>
+          <p className="oauthredirect-description">
+            <strong>{linkCandidate.maskedEmail}</strong> 이메일로 이미 가입된 계정이 있어요.
+            같은 사람이 맞다면 연결해서 기존 우정공간·기록을 그대로 이어서 쓸 수 있어요.
+          </p>
+
+          {message && <p className="oauthredirect-message" role="alert">{message}</p>}
+          <button type="button" className="oauthredirect-confirm-btn" onClick={confirmLink} disabled={submitting}>
+            {submitting ? '연결하는 중...' : '이 계정으로 연결하기'}
+          </button>
+          <Link className="oauthredirect-login-link" to="/login">다른 계정으로 로그인</Link>
         </section>
       </main>
     )

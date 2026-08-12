@@ -8,6 +8,9 @@ export const logout = (refreshToken) => api.post('/auth/logout', { refreshToken 
 export const exchangeOAuthCode = (code) => api.post('/auth/oauth/exchange', { code })
 export const submitOAuthConsent = (registrationToken, agreements) =>
   api.post('/auth/oauth/consent', { registrationToken, agreements })
+// 이메일 매칭 계정 연결 확인(§4-2 (C), web-design-repository#90).
+export const confirmOAuthLink = (registrationToken) =>
+  api.post('/auth/oauth/link-confirm', { registrationToken })
 
 // 비밀번호 재설정(§4-4).
 // forgot은 계정 유무·소셜 전용 여부와 무관하게 항상 200이다 — 호출부에서 성공/실패로 갈라

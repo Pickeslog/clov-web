@@ -44,6 +44,15 @@ export default function OAuthRedirect() {
           return
         }
 
+        // profile 없이 여기로 오면 안 된다 — 백엔드가 (B)/(C) 어느 쪽도 아닌 걸 보낸 것이라
+        // 신뢰할 수 없는 상태다. 화면을 깨뜨리는 대신 에러로 처리한다(프론트/백엔드 배포 순서가
+        // 어긋나 서로 다른 응답 모양을 주고받을 때 실제로 이 경로를 탈 수 있다).
+        if (!exchangeResult.profile) {
+          setStatus('error')
+          setMessage('로그인 처리 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.')
+          return
+        }
+
         setRegistration({ registrationToken: exchangeResult.registrationToken, profile: exchangeResult.profile })
         setStatus('consent')
       } catch (error) {

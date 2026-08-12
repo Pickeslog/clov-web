@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import './Header.css'
 import { getMe } from '../../api/user'
 import { getWallet } from '../../api/shop'
+import { getUnreadNotification } from '../../api/notification'
 import { useAuthStore } from '../../stores/authStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useGuideStore } from '../../stores/guideStore'
@@ -40,6 +41,14 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
   // 헤더 골드는 상점에서 구매하면 즉시 반영돼야 한다 — Shop이 같은 키를 무효화한다.
   const wallet = useQuery({ queryKey: ['wallet'], queryFn: getWallet })
   const onShop = location.pathname === '/shop'
+  // 종 아이콘 배지(web-design-repository#89) — room 무관 유저 전체 기준이라 roomId 없이 조회.
+  // 실시간 푸시가 없어 폴링으로 신선도를 최소한만 보장한다. 알림 모달을 닫으면(읽음 처리 이후)
+  // Notifications.jsx가 이 쿼리키를 무효화해서 그때는 폴링을 안 기다리고 바로 갱신된다.
+  const unread = useQuery({
+    queryKey: ['notifications', 'unread'],
+    queryFn: getUnreadNotification,
+    refetchInterval: 30_000,
+  })
 
   const [menuOpen, setMenuOpen] = useState(false)
   // 설정 모달만 스토어다 — 상점 카드("설정에서 적용")가 형제 컴포넌트라 여기 state 에 못 닿는다.
@@ -95,9 +104,10 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
               className="clov-hdr-nav-btn clov-hdr-nav-icon-btn"
               onClick={() => setNotificationsOpen(true)}
               title="알림"
-              aria-label="알림"
+              aria-label={unread.data?.hasUnread ? '알림 (안 읽은 알림 있음)' : '알림'}
             >
               <NavIcon><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6M10 20a2 2 0 0 0 4 0" /></NavIcon>
+              {unread.data?.hasUnread && <span className="clov-hdr-nav-badge" aria-hidden="true" />}
             </button>
           </nav>
         )}

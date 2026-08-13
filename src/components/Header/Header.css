@@ -49,6 +49,9 @@
   background: #ef5350; box-shadow: 0 0 0 2px #14150e;
 }
 body.light-mode .clov-hdr-nav-badge { box-shadow: 0 0 0 2px #fff; }
+/* 방 목록(홈) 종 아이콘(clov-web#413) — 클릭 동작이 없는 표시 전용이라 버튼처럼 보이면 안 된다. */
+.clov-hdr-nav-icon-static { cursor: default; }
+.clov-hdr-nav-icon-static:hover { background: none; color: #79ad90; }
 .clov-hdr-nav-btn svg { display: block; }
 /* 몽토리체는 폰트 박스 안 실제 잉크가 위로 치우쳐 있어(descent 여백이 큼) align-items:center로
    맞춰도 아이콘보다 글자가 시각적으로 더 높아 보인다(#258, 캔버스 measureText로 실측:

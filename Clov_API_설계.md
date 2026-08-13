@@ -1,5 +1,7 @@
 # Clov. API 설계
 
+> ⚠️ **대체됨(2026-07-14) — 이 문서는 더 이상 유효하지 않다.** 즉시 입장 흐름·OAuth 전용 인증·Spring Boot 3.5 등 여기 적힌 내용은 전부 구버전 설계다. 현재 API 계약(SSOT)은 [`web-design-repository/docs/API-CONTRACT.md`](https://github.com/Pickeslog/web-design-repository/blob/main/docs/API-CONTRACT.md)를 따른다. 아래 내용은 과거 기록으로만 남겨둔다.
+
 > [Clov_DB_설계.md](Clov_DB_설계.md)의 테이블 구조를 기준으로 작성한 REST API 명세다. 백엔드 스택(Spring Boot 3.5, Java 21, Spring Security + OAuth2 Client, MyBatis, MySQL)에 맞춰 설계했다.
 
 ## 1. 권한 모델 — "방장 없음"을 API 레벨에서 어떻게 지킬 것인가

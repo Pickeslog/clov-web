@@ -4,7 +4,6 @@ import { equipItem, getInventory, unequipItem } from '../../api/shop'
 import { getPreferences, updatePreferences } from '../../api/user'
 import crobiSprite from '../../assets/mascot/crobi/default.png'
 import robSprite from '../../assets/mascot/rob/idle.png'
-import burgerOldmanSprite from '../../assets/mascot/burger-oldman/default.png'
 import takoGunSprite from '../../assets/mascot/tako-gun/default.png'
 import kimCheolsuSprite from '../../assets/mascot/kim-cheolsu/default.png'
 import onyxSprite from '../../assets/mascot/onyx/default.png'
@@ -12,7 +11,6 @@ import onyxSprite from '../../assets/mascot/onyx/default.png'
 const MASCOT_SPRITES = {
   crobi: crobiSprite,
   rob: robSprite,
-  burgerOldman: burgerOldmanSprite,
   takoGun: takoGunSprite,
   kimCheolsu: kimCheolsuSprite,
   onyx: onyxSprite,
@@ -20,7 +18,6 @@ const MASCOT_SPRITES = {
 const MASCOT_LABELS = {
   crobi: '크로비',
   rob: '롭',
-  burgerOldman: '버거노인',
   takoGun: '타코군',
   kimCheolsu: '김철수',
   onyx: '오닉스',
@@ -35,7 +32,6 @@ const MASCOTS = Object.keys(MASCOT_SPRITES)
 const MASCOT_CODE_TOKEN = {
   crobi: 'CROBI',
   rob: 'ROB',
-  burgerOldman: 'BURGER_OLDMAN',
   takoGun: 'TAKO_GUN',
   kimCheolsu: 'KIM_CHEOLSU',
   onyx: 'ONYX',

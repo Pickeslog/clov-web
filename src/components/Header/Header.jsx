@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import './Header.css'
 import { getMe } from '../../api/user'
 import { getWallet } from '../../api/shop'
-import { getUnreadNotification, getUnreadNotificationForRoom } from '../../api/notification'
+import { getUnreadNotificationForRoom } from '../../api/notification'
 import { useAuthStore } from '../../stores/authStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useGuideStore } from '../../stores/guideStore'
@@ -41,16 +41,16 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
   // 헤더 골드는 상점에서 구매하면 즉시 반영돼야 한다 — Shop이 같은 키를 무효화한다.
   const wallet = useQuery({ queryKey: ['wallet'], queryFn: getWallet })
   const onShop = location.pathname === '/shop'
-  // 종 아이콘 배지(clov-api#174) — 방 안(variant=room)은 그 방만, 방 목록(variant=home)은
-  // 유저 전체(모든 방) 기준. 쿼리키에 roomId를 실어야 방을 옮길 때마다 새로 조회된다
-  // (없으면 이전 방의 캐시된 hasUnread를 그대로 보여주는 사고가 난다).
+  // 종 아이콘 배지(clov-api#174) — 방 안(variant=room)만, 그 방 기준. 쿼리키에 roomId를 실어야
+  // 방을 옮길 때마다 새로 조회된다(없으면 이전 방의 캐시된 hasUnread를 그대로 보여주는 사고가
+  // 난다). 방 목록(홈) 화면 종 아이콘은 제거했다(clov-web#412) — 방 안 종으로 충분하다는 결론.
   // 실시간 푸시가 없어 폴링으로 신선도를 최소한만 보장한다. 알림 모달을 닫으면(읽음 처리 이후)
   // Notifications.jsx가 이 쿼리키 접두사(['notifications','unread'])를 통째로 무효화해서
-  // 방 안/방 목록 쿼리 둘 다 폴링을 안 기다리고 바로 갱신된다.
+  // 폴링을 안 기다리고 바로 갱신된다.
   const unread = useQuery({
-    queryKey: variant === 'room' ? ['notifications', 'unread', roomId] : ['notifications', 'unread'],
-    queryFn: () => (variant === 'room' ? getUnreadNotificationForRoom(roomId) : getUnreadNotification()),
-    enabled: variant !== 'room' || Boolean(roomId),
+    queryKey: ['notifications', 'unread', roomId],
+    queryFn: () => getUnreadNotificationForRoom(roomId),
+    enabled: variant === 'room' && Boolean(roomId),
     refetchInterval: 30_000,
   })
 
@@ -114,20 +114,6 @@ export default function Header({ variant = 'room', roomId, activeTab }) {
               {unread.data?.hasUnread && <span className="clov-hdr-nav-badge" aria-hidden="true" />}
             </button>
           </nav>
-        )}
-
-        {/* 방 목록(홈) — 계정 전체 기준 배지만 보여준다. 알림 모달은 roomId 컨텍스트가
-            있어야 열 수 있어(Notifications.jsx가 useParams().roomId로 방 알림을 조회) 여기선
-            클릭 동작을 안 만든다(clov-web#413 범위 밖 — 후속 이슈로 남긴다). */}
-        {variant === 'home' && (
-          <span
-            className="clov-hdr-nav-btn clov-hdr-nav-icon-btn clov-hdr-nav-icon-static"
-            title={unread.data?.hasUnread ? '다른 우정공간에 안 읽은 알림이 있어요' : '알림'}
-            aria-label={unread.data?.hasUnread ? '안 읽은 알림 있음' : undefined}
-          >
-            <NavIcon><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6M10 20a2 2 0 0 0 4 0" /></NavIcon>
-            {unread.data?.hasUnread && <span className="clov-hdr-nav-badge" aria-hidden="true" />}
-          </span>
         )}
 
         {/* 상점(버튼+골드 표시) — 방 안/밖 어디서든 보인다.

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './notifications.proto.css'
-import { getNotifications, markNotificationRead } from '../../../api/notification'
+import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../../../api/notification'
 import {
   acceptJoinRequest,
   getJoinRequests,
@@ -49,7 +49,10 @@ export default function Notifications({ onClose }) {
   const { roomId } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState('NOTICE')
+  // #412 원인1 — NOTICE는 관리진 공지 발행 기능이 아직 없어 항상 빈 상태다(NotificationList
+  // 주석 참고). 기본 탭을 NOTICE로 열면 실제 안읽음이 쌓이는 FRIEND를 못 보고 닫는 경우가
+  // 많아 배지가 안 꺼진 채로 남았다 — 실제 내용이 있는 탭을 기본값으로 연다.
+  const [activeTab, setActiveTab] = useState('FRIEND')
   const [acceptedList, setAcceptedList] = useState([])
   const [message, setMessage] = useState('')
   const [now, setNow] = useState(() => Date.now())
@@ -78,6 +81,10 @@ export default function Notifications({ onClose }) {
   }
 
   const readMutation = useMutation({ mutationFn: markNotificationRead, onSuccess: invalidate })
+  // #412 원인3 — 목록은 최신 20건 고정이라 안읽음이 20건을 넘으면 화면에 뜨지도 않는 채로
+  // 영원히 안읽음으로 남아 배지가 안 꺼졌다. 개별 클릭 대신 서버가 이미 갖고 있는
+  // read-all 엔드포인트(§13 계약)로 한 번에 정리한다.
+  const readAllMutation = useMutation({ mutationFn: () => markAllNotificationsRead(roomId), onSuccess: invalidate })
   const acceptMutation = useMutation({
     mutationFn: acceptJoinRequest,
     onSuccess: (result, requestId) => {
@@ -125,7 +132,10 @@ export default function Notifications({ onClose }) {
         <section className="noti-modal" role="dialog" aria-modal="true" aria-labelledby="notifications-title">
           <header className="noti-head">
             <h1 id="notifications-title"><BellIcon />알림</h1>
-            <button className="noti-close" type="button" onClick={close}>✕ 닫기</button>
+            <div className="noti-head-actions">
+              <button className="noti-read-all" type="button" disabled={readAllMutation.isPending} onClick={() => readAllMutation.mutate()}>모두 읽음</button>
+              <button className="noti-close" type="button" onClick={close}>✕ 닫기</button>
+            </div>
           </header>
           <nav className="noti-tabs" aria-label="알림 분류">
             {TABS.map((tab) => (
